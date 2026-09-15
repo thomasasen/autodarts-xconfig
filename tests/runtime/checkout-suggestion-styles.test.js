@@ -14,6 +14,7 @@ import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 import { createModernX01Fixture } from "./modern-x01-fixture.js";
 import {
   LAYOUT_CLASS,
+  COLOR_NUMBERS_CLASS,
   MODERN_CLASS,
   NO_LABEL_CLASS,
   STYLE_CLASSES,
@@ -84,6 +85,32 @@ test("checkout-suggestion-styles schedules only suggestion, turn, variant, and g
   cleanup();
 });
 
+test("checkout colors follow the selected palette only when enabled and reset cleanly", () => {
+  const fixture = createModernX01Fixture({ throws: [], route: ["T20", "25", "D18"] });
+  for (const [theme, expected] of [["amber", "#f59e0b"], ["cyan", "#06b6d4"], ["rose", "#f43f5e"]]) {
+    fixture.rows.forEach(({ row }) => {
+      applySuggestionStyle(row, { colorTheme: theme, colorNumbers: true });
+      assert.equal(row.style.getPropertyValue("--ad-ext-checkout-value-color"), expected);
+      assert.equal(row.classList.contains(COLOR_NUMBERS_CLASS), true);
+      applySuggestionStyle(row, { colorTheme: theme, colorNumbers: false });
+      assert.equal(row.style.getPropertyValue("--ad-ext-checkout-value-color"), "");
+      assert.equal(row.classList.contains(COLOR_NUMBERS_CLASS), false);
+      applySuggestionStyle(row, { colorTheme: theme, colorNumbers: true });
+      resetSuggestionNode(row);
+      assert.equal(row.style.getPropertyValue("--ad-ext-checkout-value-color"), "");
+      assert.equal(row.classList.contains(COLOR_NUMBERS_CLASS), false);
+    });
+  }
+  assert.equal(fixture.total.style.getPropertyValue("--ad-ext-checkout-value-color"), "");
+});
+
+test("checkout layout shares value sizing between every throw slot and the turn total", () => {
+  const css = buildStyleText();
+  assert.match(css, /\.ad-ext-checkout-suggestion-layout > :first-child > \.font-number > span:not\(\[aria-hidden="true"\]\),\s*\.ad-ext-checkout-suggestion-layout > \.font-number,\s*\.ad-ext-checkout-suggestion-layout > \.font-number > span \{\s*font-size: var\(--ad-ext-checkout-turn-value-font-size\)/);
+  assert.doesNotMatch(css, /font-size:.*cqw/);
+  assert.doesNotMatch(css, /nth-child\(3\)/);
+});
+
 test("checkout-suggestion-styles targets only the native modern turn route", () => {
   const fixture = createModernX01Fixture({
     throws: [],
@@ -94,6 +121,36 @@ test("checkout-suggestion-styles targets only the native modern turn route", () 
 
   assert.deepEqual(suggestions, fixture.rows.map(({ row }) => row));
   assert.equal(suggestions.includes(fixture.cardRoute), false);
+});
+
+test("checkout-suggestion-styles decorates setup recommendations and removes styling after the throw", () => {
+  const fixture = createModernX01Fixture({ score: 83, throws: ["S20", "S18"], route: ["T17"] });
+  const third = fixture.rows[2].row;
+  third.classList.remove("text-checkout-suggestion");
+  third.classList.add("text-checkout-setup");
+  const suggestions = collectSuggestions(fixture.documentRef, fixture.windowRef);
+  assert.equal(suggestions.length, 1);
+  assert.equal(suggestions[0], third);
+  let render;
+  const cleanup = initializeCheckoutSuggestionStyles({
+    ...fixture,
+    domGuards: createDomGuards({ documentRef: fixture.documentRef }),
+    helpers: { createRafScheduler(callback) {
+      render = callback;
+      return { schedule: callback, cancel() {} };
+    } },
+    gameState: { isX01Variant: () => false },
+    config: { getFeatureConfig: () => ({ style: "badge", labelText: "CHECKOUT" }) },
+  });
+  assert.equal(third.classList.contains(MODERN_CLASS), true);
+  assert.equal(third.dataset.adExtLabel, "CHECKOUT");
+  assert.equal(fixture.rows[0].row.dataset.adExtLabel, undefined);
+  fixture.setVisit(["S20", "S18", "T17"], []);
+  third.classList.remove("text-checkout-setup");
+  render();
+  assert.equal(third.classList.contains(MODERN_CLASS), false);
+  assert.equal(third.dataset.adExtLabel, undefined);
+  cleanup();
 });
 
 test("checkout-suggestion-styles recognizes modern X01 when game state has no variant", () => {

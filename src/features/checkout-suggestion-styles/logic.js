@@ -1,5 +1,6 @@
 import {
   BASE_CLASS,
+  COLOR_NUMBERS_CLASS,
   LAYOUT_CLASS,
   MODERN_CLASS,
   NO_LABEL_CLASS,
@@ -9,10 +10,12 @@ import {
 import {
   findModernTurnSurface,
   isMatchNodeVisible,
+  isModernCheckoutHint,
+  MODERN_CHECKOUT_HINT_SELECTOR,
 } from "../shared/x01-match-surface.js";
 
 export const SUGGESTION_SELECTOR = ".suggestion";
-export const MODERN_SUGGESTION_SELECTOR = ".text-checkout-suggestion";
+export const MODERN_SUGGESTION_SELECTOR = MODERN_CHECKOUT_HINT_SELECTOR;
 export const VARIANT_ELEMENT_ID = "ad-ext-game-variant";
 
 const COLOR_THEMES = Object.freeze({
@@ -45,7 +48,7 @@ function getTheme(themeName) {
 }
 
 export function isModernSuggestionNode(node) {
-  return Boolean(node?.classList?.contains("text-checkout-suggestion"));
+  return isModernCheckoutHint(node);
 }
 
 export function findModernSuggestionLayoutNode(
@@ -132,7 +135,8 @@ export function resetSuggestionNode(node) {
     return;
   }
 
-  node.classList.remove(BASE_CLASS, MODERN_CLASS, NO_LABEL_CLASS, ...STYLE_CLASS_LIST);
+  node.classList.remove(BASE_CLASS, MODERN_CLASS, NO_LABEL_CLASS, COLOR_NUMBERS_CLASS, ...STYLE_CLASS_LIST);
+  node.style.removeProperty("--ad-ext-checkout-value-color");
   delete node.dataset?.adExtLabel;
   node.style.removeProperty("--ad-ext-accent");
   node.style.removeProperty("--ad-ext-accent-soft");
@@ -157,6 +161,12 @@ export function applySuggestionStyle(node, featureConfig = {}, options = {}) {
     : String(featureConfig.labelText || "").trim();
 
   node.classList.add(BASE_CLASS);
+  node.classList.toggle(COLOR_NUMBERS_CLASS, featureConfig.colorNumbers === true);
+  if (featureConfig.colorNumbers === true) {
+    node.style.setProperty("--ad-ext-checkout-value-color", theme.accentColor);
+  } else {
+    node.style.removeProperty("--ad-ext-checkout-value-color");
+  }
   node.classList.toggle(MODERN_CLASS, isModernSuggestionNode(node));
   node.classList.remove(...STYLE_CLASS_LIST);
   node.classList.add(desiredClass);

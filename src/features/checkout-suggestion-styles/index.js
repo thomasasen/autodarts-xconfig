@@ -4,6 +4,7 @@ import {
   collectSuggestions,
   findModernSuggestionLayoutNode,
   isModernSuggestionNode,
+  MODERN_SUGGESTION_SELECTOR,
   isX01Active,
   resetSuggestionLayout,
   resetSuggestionNode,
@@ -108,7 +109,7 @@ export function initializeCheckoutSuggestionStyles(context = {}) {
         if (hasRelevantTurnSurfaceMutation(mutations, {
           extraSelectors: [
             ".suggestion",
-            ".text-checkout-suggestion",
+            MODERN_SUGGESTION_SELECTOR,
             ".bg-surface-surface",
             "#ad-ext-game-variant",
           ],

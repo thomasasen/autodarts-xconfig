@@ -3,6 +3,7 @@ export const BASE_CLASS = "ad-ext-checkout-suggestion";
 export const LAYOUT_CLASS = "ad-ext-checkout-suggestion-layout";
 export const MODERN_CLASS = "ad-ext-checkout-suggestion--modern";
 export const NO_LABEL_CLASS = "ad-ext-checkout-suggestion--no-label";
+export const COLOR_NUMBERS_CLASS = "ad-ext-checkout-suggestion--color-numbers";
 export const STYLE_CLASSES = Object.freeze({
   badge: "ad-ext-checkout-suggestion--badge",
   ribbon: "ad-ext-checkout-suggestion--ribbon",
@@ -16,6 +17,7 @@ export const STYLE_CLASS_LIST = Object.freeze(Object.values(STYLE_CLASSES));
 export function buildStyleText() {
   return `
 .${LAYOUT_CLASS} {
+  --ad-ext-checkout-turn-value-font-size: var(--ad-game-layout-turn-value-font-size, clamp(2.625rem, 3.35vw, 3rem));
   position: relative;
   left: 50%;
   flex: 0 0 444px;
@@ -37,8 +39,10 @@ export function buildStyleText() {
   padding-top: 10px;
 }
 
-.${LAYOUT_CLASS} > :first-child > .font-number > span:not([aria-hidden="true"]) {
-  font-size: clamp(2.625rem, 42cqw, 3rem);
+.${LAYOUT_CLASS} > :first-child > .font-number > span:not([aria-hidden="true"]),
+.${LAYOUT_CLASS} > .font-number,
+.${LAYOUT_CLASS} > .font-number > span {
+  font-size: var(--ad-ext-checkout-turn-value-font-size);
 }
 
 .${LAYOUT_CLASS} > .font-number {
@@ -47,6 +51,7 @@ export function buildStyleText() {
 
 @media (max-width: 900px) {
   .${LAYOUT_CLASS} {
+    --ad-ext-checkout-turn-value-font-size: var(--ad-game-layout-turn-value-font-size, min(2.5rem, 6vw));
     left: auto;
     flex: 1 1 0;
     width: 100%;
@@ -65,8 +70,10 @@ export function buildStyleText() {
     padding-top: 6px;
   }
 
-  .${LAYOUT_CLASS} > :first-child > .font-number > span:not([aria-hidden="true"]) {
-    font-size: min(2.5rem, 40cqw);
+  .${LAYOUT_CLASS} > :first-child > .font-number > span:not([aria-hidden="true"]),
+  .${LAYOUT_CLASS} > .font-number,
+  .${LAYOUT_CLASS} > .font-number > span {
+    font-size: var(--ad-ext-checkout-turn-value-font-size);
   }
 }
 
@@ -139,11 +146,11 @@ export function buildStyleText() {
 
 .${LAYOUT_CLASS} > :first-child > .${MODERN_CLASS} > span:not([aria-hidden="true"]),
 .${LAYOUT_CLASS} > :first-child > .${MODERN_CLASS} > span:not([aria-hidden="true"]) * {
-  color: color-mix(
+  color: var(--ad-ext-checkout-value-color, color-mix(
     in srgb,
     var(--ad-ext-theme-throw-label-color, #f2f5f8) 25%,
     #ffffff 75%
-  ) !important;
+  )) !important;
   -webkit-text-fill-color: currentColor !important;
   text-shadow:
     0 2px 2px rgba(0, 0, 0, 0.82),
@@ -152,6 +159,12 @@ export function buildStyleText() {
       var(--ad-ext-theme-throw-label-color, #f2f5f8) 45%,
       transparent
     ) !important;
+}
+
+.${BASE_CLASS}.${COLOR_NUMBERS_CLASS}:not(.${MODERN_CLASS}) > *,
+.${BASE_CLASS}.${COLOR_NUMBERS_CLASS}:not(.${MODERN_CLASS}) > * * {
+  color: var(--ad-ext-checkout-value-color) !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 
 .${STYLE_CLASSES.badge}:not(.${MODERN_CLASS}) {

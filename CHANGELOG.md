@@ -12,6 +12,22 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.1.3] - 2026-09-15
+
+### Changed
+
+- Nutzerwirkung: Das Spiel-Layout bietet mehr Platz für Wurfwerte, Spielernamen und Punktestände. Der aktive Spieler bleibt sichtbar, und die Spielerleiste weicht überlagernden Bedienelementen aus. Dartmarker erscheinen in allen Größenstufen um 30 Prozent größer.
+  Technik: Die Layout-Geometrie berücksichtigt variable Kartenhöhen und Hindernisse; dynamische Schriftanpassung und Lebenszyklustests sichern die Ausrichtung ab. Der Größenmultiplikator der Dartmarker wurde angepasst.
+- Nutzerwirkung: Alle drei Wurfwerte und die Turn-Summe verwenden eine einheitliche Schriftgröße. Checkout-Werte können optional in der ausgewählten Akzentfarbe erscheinen; die Einstellung ist standardmäßig ausgeschaltet und wird in der Vorschau angezeigt.
+  Technik: Gemeinsame CSS-Größenvariablen und eine normalisierte Konfigurationsoption verbinden Laufzeit, xConfig-Einstellungen, Vorschau und Dokumentation. Die kleinen Beschriftungen der erweiterten Punkteanzeige bleiben in jedem Wurffeld lesbar.
+- Nutzerwirkung: Temporäre GitHub-Actions-Artefakte belegen weniger Speicher; veröffentlichte Installationsdateien bleiben erhalten.
+  Technik: Diagnoseberichte werden nur bei fehlgeschlagenen Playwright-Läufen für einen Tag gespeichert. Release-Zwischenartefakte werden kürzer aufbewahrt und veraltete temporäre Artefakte regelmäßig bereinigt.
+
+### Fixed
+
+- Nutzerwirkung: Checkout- und Setup-Empfehlungen erhalten die gewünschte Gestaltung, ohne vor einem tatsächlichen Wurf eine Trefferanimation auszulösen oder als geworfener Dart gezählt zu werden.
+  Technik: Der gemeinsame moderne X01-Parser erkennt beide Empfehlungsklassen; die Treffererkennung schließt auch klassische Empfehlungsanker aus. Regressionstests prüfen Erkennung, Übergang zum echten Wurf und vollständiges Cleanup.
+
 ## [3.1.2] - 2026-09-13
 
 ### Added
@@ -2113,6 +2129,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.1.3]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.2...v3.1.3
 [3.1.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.1...v3.1.2
 [3.1.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.0.11...v3.1.0

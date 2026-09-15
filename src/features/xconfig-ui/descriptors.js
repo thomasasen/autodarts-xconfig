@@ -495,6 +495,7 @@ export const xconfigDescriptors = Object.freeze([
         colorPreviewOption("cyan", "Cyan", "checkout-suggestion-cyan"),
         colorPreviewOption("rose", "Rose", "checkout-suggestion-rose"),
       ]),
+      checkboxField("colorNumbers", "Zahlen in ausgewählter Farbe"),
     ],
   }),
   animationDescriptorEntry({

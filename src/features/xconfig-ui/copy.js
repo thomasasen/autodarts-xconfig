@@ -463,7 +463,7 @@ export const xconfigFeatureCopy = deepFreeze({
     visibleDescription:
       "Die drei Turn-Felder werden bei Aktivierung größer; sichtbare Checkout-Empfehlungen erhalten den gewählten Akzentstil.",
     visualDescription:
-      "Schriftart und Textfarbe bleiben beim Theme. Badge, Ribbon, Stripe, Ticket oder Outline ergänzen Fläche, Kontur und optional ein Label im ersten Checkout-Feld.",
+      "Alle drei Wurfwerte und die Turn-Summe verwenden dieselbe Schriftgröße. Badge, Ribbon, Stripe, Ticket oder Outline ergänzen Fläche, Kontur und optional ein Label im ersten Checkout-Feld. Optional erscheinen die Checkout-Werte in der ausgewählten Akzentfarbe; sonst bleibt ihre Textfarbe beim Theme.",
     usefulWhen:
       "Wenn du größere Turn-Felder und klar erkennbare Checkout-Routen möchtest, ohne dein Theme zu übergehen.",
     images: [
@@ -488,7 +488,7 @@ export const xconfigFeatureCopy = deepFreeze({
     fields: {
       style: fieldCopy(
         "Wechselt zwischen mehreren Akzentstilen für die sichtbaren Checkout-Felder.",
-        "Legt Kontur, Akzentkante und Flächenwirkung der Checkout-Felder fest. Schriftart und Textfarbe bleiben beim aktiven Theme.",
+        "Legt Kontur, Akzentkante und Flächenwirkung der Checkout-Felder fest. Die Schriftart bleibt beim aktiven Theme; die Textfarbe lässt sich separat auf die Akzentfarbe umstellen.",
         "Wechselt den Akzentstil der Checkout-Felder."
       ),
       labelText: fieldCopy(
@@ -500,6 +500,11 @@ export const xconfigFeatureCopy = deepFreeze({
         "Wählt die Akzentfarbe des gestylten Vorschlags.",
         "Steuert Akzentfarbe, Hintergründe und Leuchteffekte des Suggestion-Styles. Die inhaltliche Checkout-Empfehlung bleibt unverändert.",
         "Wählt die Akzentfarbe des Suggestion-Styles."
+      ),
+      colorNumbers: fieldCopy(
+        "Färbt die Checkout-Werte in der ausgewählten Akzentfarbe.",
+        "Zeigt Checkout-Werte wie `T17` oder `D18` in der gewählten Farbe. Ausgeschaltet bleibt die Theme-Textfarbe erhalten. Bereits geworfene Werte und die Turn-Summe werden nicht umgefärbt.",
+        "Färbt die Checkout-Werte in der ausgewählten Akzentfarbe; standardmäßig ausgeschaltet."
       ),
       debug: DEBUG_FIELD,
     },
@@ -1391,7 +1396,7 @@ const CHECKOUT_SUGGESTION_STYLE_OPTION_COPY = deepFreeze({
   badge: optionCopy(
     "Markiert die Checkout-Felder mit einer gestrichelten Kontur.",
     "Die Checkout-Felder erhalten eine ruhige Akzentfläche und einen gestrichelten Rahmen. Die Theme-Typografie bleibt sichtbar.",
-    "Diese Variante verbindet die vergrößerten Checkout-Felder mit einer gestrichelten Kontur und einer dezenten Akzentfläche. Schrift und Textfarbe kommen weiterhin aus dem aktiven Theme."
+    "Diese Variante verbindet die vergrößerten Checkout-Felder mit einer gestrichelten Kontur und einer dezenten Akzentfläche. Die Schriftart bleibt beim Theme; optional verwenden die Checkout-Werte die ausgewählte Akzentfarbe."
   ),
   ribbon: optionCopy(
     "Betont die Checkout-Felder mit einer leuchtenden Oberkante.",

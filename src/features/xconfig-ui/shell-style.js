@@ -373,6 +373,7 @@ ${buildColorPreviewRules()}
 #${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo-field:has(.ad-xconfig-checkout-suggestion-demo-label){overflow:visible}
 #${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo-total{background:rgba(8,14,27,.88);border-color:rgba(255,255,255,.08);color:rgba(255,255,255,.74)}
 #${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo-segment,#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo-total{font-size:clamp(1.25rem,6cqw,2.3rem);font-weight:800;line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 2px 3px rgba(0,0,0,.78)}
+#${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo-segment{color:var(--ad-ext-checkout-value-color,inherit)}
 #${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo-label{position:absolute;z-index:2;top:-8px;left:6px;padding:3px 7px;border-radius:999px;background:var(--ad-ext-label-bg);color:var(--ad-ext-label-color);font-size:9px;font-weight:900;line-height:1;letter-spacing:.05em;text-transform:uppercase;border:1px solid rgba(15,12,5,.55);box-shadow:0 1px 5px rgba(0,0,0,.45);pointer-events:none}
 #${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--badge .ad-xconfig-checkout-suggestion-demo-field{border-style:dashed}
 #${PANEL_HOST_ID} .ad-xconfig-checkout-suggestion-demo--ribbon .ad-xconfig-checkout-suggestion-demo-field{border-top:4px solid var(--ad-ext-accent);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 14px var(--ad-ext-accent-strong)}

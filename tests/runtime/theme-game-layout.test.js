@@ -156,12 +156,12 @@ test("board-focus geometry maximizes the board and keeps readable player rows", 
   assert.match(buildThemeGameLayoutStyleText(), /bg-surface-surface>:last-child\{[^}]*flex:1 1 25%!important[^}]*width:25%!important[^}]*max-width:none!important/);
   assert.match(buildThemeGameLayoutStyleText(), /bg-surface-surface\{[^}]*left:auto!important[^}]*flex:1 1 100%!important[^}]*width:100%!important[^}]*transform:none!important/);
   assert.match(buildThemeGameLayoutStyleText(), /--ad-game-layout-turn-value-font-size:clamp\(2\.25rem,3\.35vw,3\.5rem\)/);
-  assert.match(buildThemeGameLayoutStyleText(), /bg-surface-surface>:first-child>\*:not\(\.text-checkout-suggestion\)::before\{[^}]*font-size:var\(--ad-game-layout-turn-value-font-size\)!important/);
-  assert.match(buildThemeGameLayoutStyleText(), /bg-surface-surface>:last-child>span\{[^}]*font-size:var\(--ad-game-layout-turn-value-font-size\)!important/);
+  assert.match(buildThemeGameLayoutStyleText(), /bg-surface-surface>:first-child>\*:not\(\.text-checkout-suggestion,\.text-checkout-setup\)::before\{[^}]*font-size:var\(--ad-game-layout-turn-value-font-size\)!important/);
+  assert.match(buildThemeGameLayoutStyleText(), /bg-surface-surface>:last-child>span,[^{}]*bg-surface-surface>:first-child>\.font-number>span:not\(\[aria-hidden="true"\]\) \*\{[^}]*font-size:var\(--ad-game-layout-turn-value-font-size\)!important/);
   assert.match(buildThemeGameLayoutStyleText(), /\*\.text-checkout-suggestion\{[^}]*padding:10px 12px!important[^}]*box-sizing:border-box!important/);
-  assert.match(buildThemeGameLayoutStyleText(), /\*\.text-checkout-suggestion>span:not\(\[aria-hidden="true"\]\)\{[^}]*font-size:var\(--ad-game-layout-turn-value-font-size\)!important/);
-  assert.match(buildThemeGameLayoutStyleText(), /\*:not\(\.text-checkout-suggestion\)>span:not\(\[aria-hidden="true"\]\)\{[^}]*font-size:1\.6rem!important/);
-  assert.match(buildThemeGameLayoutStyleText(), /text-checkout-suggestion\[data-ad-ext-label\]::before\{[^}]*padding:4\.5px 10\.5px!important[^}]*font-size:16\.5px!important/);
+  assert.doesNotMatch(buildThemeGameLayoutStyleText(), /font-size:1\.6rem!important/);
+  assert.doesNotMatch(buildThemeGameLayoutStyleText(), /nth-child\(3\)/);
+  assert.match(buildThemeGameLayoutStyleText(), /:is\(\.text-checkout-suggestion,\.text-checkout-setup\)\[data-ad-ext-label\]::before\{[^}]*padding:4\.5px 10\.5px!important[^}]*font-size:16\.5px!important/);
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-active="false"[^}]*filter:grayscale\(1\)!important[^}]*opacity:\.55!important/);
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-active="false"[^}]*grid-template-columns:minmax\(0,1fr\) minmax\(110px,\.35fr\) 34px!important[^}]*transform:none!important/);
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-name-region="true"[^}]*zoom:\.84/);
@@ -240,8 +240,18 @@ test("board-focus keeps highlighted and regular throw values at the same font si
 
   assert.match(
     styleText,
-    /bg-surface-surface>:first-child>\*\[data-ad-ext-hit-kind\]:not\(\.text-checkout-suggestion\)::before\{[^}]*font-size:var\(--ad-game-layout-turn-value-font-size\)!important/
+    /bg-surface-surface>:first-child>\*\[data-ad-ext-hit-kind\]:not\(\.text-checkout-suggestion,\.text-checkout-setup\)::before\{[^}]*font-size:var\(--ad-game-layout-turn-value-font-size\)!important/
   );
+});
+
+test("board-focus keeps enhanced scoring captions small in every thrown slot", () => {
+  const css = buildThemeGameLayoutStyleText();
+  assert.match(
+    css,
+    /:root:has\(#ad-ext_style_enhanced-scoring-display\)[^{}]*>\.font-number\.cursor-pointer>span:not\(\[aria-hidden="true"\]\) \*\{[^}]*font-size:1rem!important;[^}]*line-height:1!important;/
+  );
+  assert.doesNotMatch(css, /cursor-pointer[^{}]*nth-child/);
+  assert.match(css, /font-size:var\(--ad-game-layout-turn-value-font-size\)!important/);
 });
 
 test("game-layout self-correction fits text and avoids occupied header space", () => {

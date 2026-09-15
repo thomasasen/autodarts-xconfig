@@ -351,7 +351,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   checkoutScoreHighlight: { enabled: false, effect: "grow-only", colorTheme: "159, 219, 88", intensity: "standard", triggerSource: "suggestion-first", debug: false },
   checkoutTargetHighlights: { enabled: false, visualPreset: "soft-pulse", segmentStyle: "surface-outline", singleRing: "both", targetSelectionMode: "next", colorTheme: "amber", debug: false },
   tvBoardZoom: { enabled: false, zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true, debug: false },
-  checkoutSuggestionStyles: { enabled: false, style: "ribbon", labelText: "CHECKOUT", colorTheme: "amber", debug: false },
+  checkoutSuggestionStyles: { enabled: false, style: "ribbon", labelText: "CHECKOUT", colorTheme: "amber", colorNumbers: false, debug: false },
   x01BustActivePlayerHighlight: { enabled: false, crackCount: 2, soundEnabled: true, debug: false },
   avgTrendArrow: { enabled: false, durationMs: 320, size: "standard", debug: false },
   specialHitHighlights: { enabled: false, colorTheme: "kind-signal", animationStyle: "pop-hit", debug: false },
@@ -606,7 +606,7 @@ const FEATURE_NORMALIZERS = Object.freeze({
     return { enabled: normalizeBoolean(rawConfig.enabled, false), zoomLevel: normalizeNumberChoice(rawConfig.zoomLevel, 2.75, TV_ZOOM_LEVELS), zoomSpeed: normalizeStringChoice(rawConfig.zoomSpeed, "mittel", TV_ZOOM_SPEEDS), checkoutZoomEnabled: normalizeBoolean(rawConfig.checkoutZoomEnabled, true), checkoutZoomTarget: normalizeStringChoice(rawConfig.checkoutZoomTarget, "finish-only", TV_ZOOM_TARGETS), t20SetupZoomEnabled: normalizeBoolean(rawConfig.t20SetupZoomEnabled, true), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   checkoutSuggestionStyles(rawConfig = {}) {
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), style: normalizeStringChoice(rawConfig.style, "ribbon", SUGGESTION_STYLES), labelText: normalizeMappedStringChoice(rawConfig.labelText, "CHECKOUT", { "": "", checkout: "CHECKOUT", finish: "FINISH" }), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "amber", SUGGESTION_COLOR_THEMES), debug: normalizeBoolean(rawConfig.debug, false) };
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), style: normalizeStringChoice(rawConfig.style, "ribbon", SUGGESTION_STYLES), labelText: normalizeMappedStringChoice(rawConfig.labelText, "CHECKOUT", { "": "", checkout: "CHECKOUT", finish: "FINISH" }), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "amber", SUGGESTION_COLOR_THEMES), colorNumbers: normalizeBoolean(rawConfig.colorNumbers, false), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   x01BustActivePlayerHighlight(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), crackCount: normalizeNumberChoice(rawConfig.crackCount, 2, new Set([0, 1, 2, 3])), soundEnabled: normalizeBoolean(rawConfig.soundEnabled, true), debug: normalizeBoolean(rawConfig.debug, false) };

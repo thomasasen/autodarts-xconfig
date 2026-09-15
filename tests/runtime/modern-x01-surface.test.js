@@ -31,6 +31,17 @@ test("native D18 surface separates two thrown darts from duplicate finish displa
   assert.deepEqual(intent(f), { reason: "checkout", segment: "D18" });
 });
 
+test("native setup recommendation is not a third thrown dart", () => {
+  const f = createModernX01Fixture({ score: 83, throws: ["S20", "S18"], route: ["T17"] });
+  f.rows[2].row.classList.remove("text-checkout-suggestion");
+  f.rows[2].row.classList.add("text-checkout-setup");
+  assert.deepEqual(
+    readModernThrows(readModernMatchSurface(f.documentRef, f.windowRef), x01Rules)
+      .map((entry) => entry.segment.name),
+    ["S20", "S18"]
+  );
+});
+
 test("native route preserves repeated targets in one route and ignores the player-card copy", () => {
   const f = createModernX01Fixture({ score: 170, throws: [], route: ["T20", "T20", "BULL"] });
   assert.deepEqual(collectVisibleCheckoutRoute(f.documentRef, f.windowRef, x01Rules), ["T20", "T20", "BULL"]);

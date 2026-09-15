@@ -40,6 +40,7 @@ test("normalizeRuntimeConfig contains wave-2 feature defaults", () => {
   assert.equal(typeof config.features.checkoutTargetHighlights, "object");
   assert.equal(typeof config.features.tvBoardZoom, "object");
   assert.equal(typeof config.features.checkoutSuggestionStyles, "object");
+  assert.equal(config.features.checkoutSuggestionStyles.colorNumbers, false);
   assert.equal(typeof config.features.avgTrendArrow, "object");
   assert.equal(config.features.activePlayerSweep, undefined);
   assert.equal(typeof config.features.specialHitHighlights, "object");
@@ -236,6 +237,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
       checkoutSuggestionStyles: {
         style: "STRIPE",
         labelText: "finish",
+        colorNumbers: "true",
       },
       avgTrendArrow: {
         durationMs: "500",
@@ -372,6 +374,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").t20SetupZoomEnabled, false);
   assert.equal(runtimeConfig.getFeatureConfig("checkoutSuggestionStyles").style, "stripe");
   assert.equal(runtimeConfig.getFeatureConfig("checkoutSuggestionStyles").labelText, "FINISH");
+  assert.equal(runtimeConfig.getFeatureConfig("checkoutSuggestionStyles").colorNumbers, true);
   assert.equal(runtimeConfig.getFeatureConfig("avgTrendArrow").durationMs, 500);
   assert.equal(runtimeConfig.getFeatureConfig("avgTrendArrow").size, "gross");
   assert.equal(runtimeConfig.getFeatureConfig("specialHitHighlights").colorTheme, "ember-rush");

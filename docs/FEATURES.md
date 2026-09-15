@@ -755,10 +755,10 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 
 - Gilt für: `X01`
 - Kurz: Die drei Turn-Felder werden bei Aktivierung größer; sichtbare Checkout-Empfehlungen erhalten den gewählten Akzentstil.
-- Grafisch: Schriftart und Textfarbe bleiben beim Theme. Badge, Ribbon, Stripe, Ticket oder Outline ergänzen Fläche, Kontur und optional ein Label im ersten Checkout-Feld.
+- Grafisch: Alle drei Wurfwerte und die Turn-Summe verwenden dieselbe Schriftgröße. Badge, Ribbon, Stripe, Ticket oder Outline ergänzen Fläche, Kontur und optional ein Label im ersten Checkout-Feld. Optional erscheinen die Checkout-Werte in der ausgewählten Akzentfarbe; sonst bleibt ihre Textfarbe beim Theme.
 - Wann sinnvoll? Wenn du größere Turn-Felder und klar erkennbare Checkout-Routen möchtest, ohne dein Theme zu übergehen.
 - `Darstellung`: Wechselt den Akzentstil der Checkout-Felder.
-  - `Plakette`: Diese Variante verbindet die vergrößerten Checkout-Felder mit einer gestrichelten Kontur und einer dezenten Akzentfläche. Schrift und Textfarbe kommen weiterhin aus dem aktiven Theme.
+  - `Plakette`: Diese Variante verbindet die vergrößerten Checkout-Felder mit einer gestrichelten Kontur und einer dezenten Akzentfläche. Die Schriftart bleibt beim Theme; optional verwenden die Checkout-Werte die ausgewählte Akzentfarbe.
   - `Band`: Diese Variante inszeniert die Checkout-Felder mit einer farbigen Oberkante und einem kontrollierten Glow. Das Label bleibt gerade und die Theme-Typografie vollständig lesbar.
   - `Streifen`: Diese Variante markiert die Checkout-Felder mit einer seitlichen Akzentleiste und einem ruhigen Flächenverlauf. Dadurch bleibt die Route signalstark und zugleich gut lesbar.
   - `Ticket`: Diese Variante formt jedes Checkout-Feld mit einer gestrichelten Innenkontur wie ein Ticket. Der Segmenttext bleibt frei von überlagernden Linien oder Mustern.
@@ -771,6 +771,7 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Amber`: Diese Palette taucht die Hülle in warme Amber- und Goldtöne. Dadurch wirkt die Empfehlung freundlich, energisch und sehr gut vom dunklen Hintergrund abgesetzt.
   - `Cyan`: Diese Farbpalette setzt auf kühle Cyan-Töne für Rahmen, Label und Hintergrundakzent. Der Vorschlag wirkt dadurch moderner, technischer und etwas nüchterner als bei warmen Farben.
   - `Rose`: Diese Palette färbt den Suggestion-Block in rosé- bis rotlastige Akzente. Dadurch wirkt der Hinweis markanter, emotionaler und stärker wie ein bewusst gesetzter Signalblock.
+- `Zahlen in ausgewählter Farbe`: Färbt die Checkout-Werte in der ausgewählten Akzentfarbe; standardmäßig ausgeschaltet.
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ![Checkout-Vorschlag gestalten](screenshots/animation-style-checkout-suggestions.png)

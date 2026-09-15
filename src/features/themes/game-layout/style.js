@@ -89,31 +89,29 @@ export function buildThemeGameLayoutStyleText() {
   height:100%!important;
   padding-top:0!important;
 }
-[data-ad-ext-game-layout-root="true"] [data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:first-child>*:not(.text-checkout-suggestion)::before{
+[data-ad-ext-game-layout-root="true"] [data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:first-child>*:not(.text-checkout-suggestion,.text-checkout-setup)::before{
   font-size:var(--ad-game-layout-turn-value-font-size)!important;
   line-height:1!important;
 }
-[data-ad-ext-game-layout-root="true"] [data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:first-child>*[data-ad-ext-hit-kind]:not(.text-checkout-suggestion)::before{
+[data-ad-ext-game-layout-root="true"] [data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:first-child>*[data-ad-ext-hit-kind]:not(.text-checkout-suggestion,.text-checkout-setup)::before{
   font-size:var(--ad-game-layout-turn-value-font-size)!important;
 }
 [data-ad-ext-game-layout-root="true"] [data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:last-child,
-[data-ad-ext-game-layout-root="true"] [data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:last-child>span{
+[data-ad-ext-game-layout-root="true"] [data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:last-child>span,
+[data-ad-ext-game-layout-root="true"] [data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:first-child>.font-number>span:not([aria-hidden="true"]),
+[data-ad-ext-game-layout-root="true"] [data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:first-child>.font-number>span:not([aria-hidden="true"]) *{
   font-size:var(--ad-game-layout-turn-value-font-size)!important;
+}
+:root:has(#ad-ext_style_enhanced-scoring-display) [data-ad-ext-game-layout-root="true"] [data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:first-child>.font-number.cursor-pointer>span:not([aria-hidden="true"]),
+:root:has(#ad-ext_style_enhanced-scoring-display) [data-ad-ext-game-layout-root="true"] [data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:first-child>.font-number.cursor-pointer>span:not([aria-hidden="true"]) *{
+  font-size:1rem!important;
+  line-height:1!important;
 }
 [data-ad-ext-game-layout-root="true"] [data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:first-child>*.text-checkout-suggestion{
   padding:10px 12px!important;
   box-sizing:border-box!important;
 }
-[data-ad-ext-game-layout-root="true"] [data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:first-child>*.text-checkout-suggestion>span:not([aria-hidden="true"]){
-  max-width:100%!important;
-  font-size:var(--ad-game-layout-turn-value-font-size)!important;
-  line-height:1!important;
-}
-[data-ad-ext-game-layout-root="true"] [data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:first-child>*:not(.text-checkout-suggestion)>span:not([aria-hidden="true"]){
-  font-size:1.6rem!important;
-  line-height:1!important;
-}
-[data-ad-ext-game-layout-root="true"] [data-ad-ext-game-layout-turn-slot="true"] .text-checkout-suggestion[data-ad-ext-label]::before{
+[data-ad-ext-game-layout-root="true"] [data-ad-ext-game-layout-turn-slot="true"] :is(.text-checkout-suggestion,.text-checkout-setup)[data-ad-ext-label]::before{
   top:-9px!important;
   left:9px!important;
   padding:4.5px 10.5px!important;

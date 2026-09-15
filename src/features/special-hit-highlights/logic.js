@@ -13,12 +13,15 @@ import {
 } from "./style.js";
 import {
   findModernTurnSurface,
+  MODERN_CHECKOUT_HINT_SELECTOR,
   readModernThrows,
 } from "../shared/x01-match-surface.js";
 import {
   collectTurnThrowRows,
   getTurnSurfaceSnapshot,
 } from "../shared/turn-surface-adapter.js";
+
+const CHECKOUT_FIELD_SELECTOR = `.suggestion, ${MODERN_CHECKOUT_HINT_SELECTOR}`;
 
 const ROW_DEBUG_TEXT_LIMIT = 72;
 const SUPPORTED_COLOR_THEME = new Set(Object.keys(HIT_THEME_CLASS));
@@ -539,6 +542,11 @@ export function collectThrowRows(documentRef) {
 
 export function getHitMetaFromRow(rowNode) {
   if (!rowNode) {
+    return null;
+  }
+
+  // Checkout fields can also carry legacy throw anchors before a dart is thrown.
+  if (rowNode.closest?.(CHECKOUT_FIELD_SELECTOR) || rowNode.querySelector?.(CHECKOUT_FIELD_SELECTOR)) {
     return null;
   }
 

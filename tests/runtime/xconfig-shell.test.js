@@ -1716,6 +1716,13 @@ test("xConfig style checkout suggestions renders live preview and style option s
     "CHECKOUT"
   );
   assert.equal(previewSuggestion.style.getPropertyValue("--ad-ext-accent"), "#f59e0b");
+  assert.equal(previewSuggestion.style.getPropertyValue("--ad-ext-checkout-value-color"), "");
+  clickSettingToggle(documentRef, "checkout-suggestion-styles", "colorNumbers", true);
+  await waitForStoredConfig(localStorage, (config) => config.features.checkoutSuggestionStyles.colorNumbers === true);
+  assert.equal(await waitFor(() => documentRef.querySelector("[data-adxconfig-checkout-suggestion-styles-preview='true'] .ad-xconfig-checkout-suggestion-demo")?.style.getPropertyValue("--ad-ext-checkout-value-color") === "#f59e0b"), true);
+  clickSettingToggle(documentRef, "checkout-suggestion-styles", "colorNumbers", false);
+  await waitForStoredConfig(localStorage, (config) => config.features.checkoutSuggestionStyles.colorNumbers === false);
+  assert.equal(await waitFor(() => documentRef.querySelector("[data-adxconfig-checkout-suggestion-styles-preview='true'] .ad-xconfig-checkout-suggestion-demo")?.style.getPropertyValue("--ad-ext-checkout-value-color") === ""), true);
 
   const styleOptions = documentRef.querySelectorAll(
     "[data-adxconfig-action='set-setting-select-option'][data-feature-key='checkout-suggestion-styles'][data-setting-key='style']"

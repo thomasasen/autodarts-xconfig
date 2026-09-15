@@ -2,6 +2,12 @@
 export const MODERN_TURN_SELECTOR = "main .bg-surface-surface";
 export const MODERN_PLAYER_SELECTOR = "main .overflow-clip";
 export const MODERN_VARIANT_SELECTOR = "main .flex-wrap";
+export const MODERN_CHECKOUT_HINT_SELECTOR = ".text-checkout-suggestion, .text-checkout-setup";
+
+export function isModernCheckoutHint(node) {
+  return Boolean(node?.classList?.contains("text-checkout-suggestion") ||
+    node?.classList?.contains("text-checkout-setup"));
+}
 export const MODERN_MATCH_SEMANTIC_SELECTORS = Object.freeze([
   MODERN_TURN_SELECTOR,
   MODERN_PLAYER_SELECTOR,
@@ -96,7 +102,7 @@ export function readModernPlayerSurfaces(documentRef, windowRef = documentRef?.d
 export function readModernThrows(surface, x01Rules) {
   const throws = [];
   for (const row of surface?.throwRows || []) {
-    if (row.classList?.contains("text-checkout-suggestion")) break;
+    if (isModernCheckoutHint(row)) break;
     // The hidden placeholder icon is not a throw; only read its visible text sibling.
     const label = Array.from(row.children || []).find((node) =>
       node.getAttribute?.("aria-hidden") !== "true" && text(node));

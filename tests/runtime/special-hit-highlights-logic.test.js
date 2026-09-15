@@ -22,6 +22,8 @@ import {
 } from "../../src/features/special-hit-highlights/style.js";
 import { FakeDocument, createFakeWindow, useHtmlCollectionChildren } from "./fake-dom.js";
 import { createModernX01Fixture } from "./modern-x01-fixture.js";
+import { applySuggestionStyle, resetSuggestionNode } from "../../src/features/checkout-suggestion-styles/logic.js";
+import { BASE_CLASS as CHECKOUT_BASE_CLASS } from "../../src/features/checkout-suggestion-styles/style.js";
 
 function createAnimeStub() {
   const calls = [];
@@ -791,6 +793,86 @@ test("modern native turn decorates actual special hits without touching checkout
     ),
     false
   );
+});
+
+test("third-dart checkout stays styled until thrown even with legacy throw anchors", () => {
+  for (const segment of ["T20", "D18", "BULL", "25"]) {
+    const fixture = createModernX01Fixture({ throws: ["T20", "S20"], route: [segment] });
+    fixture.turn.id = "ad-ext-turn";
+    fixture.rows.forEach(({ row }) => row.classList.add("ad-ext-turn-throw"));
+    const third = fixture.rows[2].row;
+    const state = {
+      trackedRows: new Set(),
+      signatureByRow: new Map(),
+      burstKeyBySlot: new Map(),
+      slotStateByIndex: new Map(),
+      activeAnimeByRow: new Map(),
+      roleStateByRow: new Map(),
+    };
+    const update = () => updateHitDecorations({
+      documentRef: fixture.documentRef,
+      windowRef: fixture.windowRef,
+      x01Rules,
+      ...state,
+      featureConfig: { colorTheme: "kind-signal", animationStyle: "pop-hit" },
+    });
+    const styleCheckout = () => applySuggestionStyle(third, { style: "badge", labelText: "CHECKOUT" });
+
+    styleCheckout();
+    update();
+    assert.equal(third.classList.contains(HIT_BASE_CLASS), false, segment);
+    assert.equal(third.classList.contains(CHECKOUT_BASE_CLASS), true);
+    assert.equal(third.dataset.adExtLabel, "CHECKOUT");
+
+    fixture.setVisit(["T20", "S20", segment], []);
+    resetSuggestionNode(third);
+    update();
+    assert.equal(third.classList.contains(HIT_BASE_CLASS), true, segment);
+
+    fixture.setVisit(["T20", "S20"], [segment]);
+    styleCheckout();
+    update();
+    update();
+    assert.equal(third.classList.contains(HIT_BASE_CLASS), false, segment);
+    assert.equal(third.dataset.adExtHitKind, undefined);
+    assert.equal(third.classList.contains(CHECKOUT_BASE_CLASS), true);
+    assert.equal(third.dataset.adExtLabel, "CHECKOUT");
+  }
+});
+
+test("native third-dart setup stays unhighlighted until thrown and clears a reverted hit", () => {
+  const fixture = createModernX01Fixture({ score: 83, throws: ["S20", "S18"], route: ["T17"] });
+  const third = fixture.rows[2].row;
+  const state = { trackedRows: new Set(), signatureByRow: new Map(), burstKeyBySlot: new Map() };
+  const update = () => updateHitDecorations({ ...fixture, x01Rules, ...state });
+  const setup = () => {
+    fixture.setVisit(["S20", "S18"], ["T17"]);
+    third.classList.remove("text-checkout-suggestion");
+    third.classList.add("text-checkout-setup");
+  };
+  setup();
+  assert.equal(update().rowCount, 2);
+  assert.equal(third.classList.contains(HIT_BASE_CLASS), false);
+  fixture.setVisit(["S20", "S18", "T17"], []);
+  third.classList.remove("text-checkout-setup");
+  assert.equal(update().rowCount, 3);
+  assert.equal(third.classList.contains(HIT_KIND_CLASS.triple), true);
+  setup();
+  assert.equal(update().rowCount, 2);
+  assert.equal(third.classList.contains(HIT_BASE_CLASS), false);
+  assert.equal(third.dataset.adExtHitKind, undefined);
+});
+
+test("legacy checkout markers on a throw row or its label are never highlighted as hits", () => {
+  for (const marker of ["suggestion", "text-checkout-suggestion", "text-checkout-setup"]) {
+    for (const onLabel of [false, true]) {
+      const documentRef = new FakeDocument();
+      const third = appendThrowRow(documentRef, "", "D18");
+      (onLabel ? third.segmentNode : third.row).classList.add(marker);
+      updateHitDecorations({ documentRef });
+      assert.equal(third.row.classList.contains(HIT_BASE_CLASS), false);
+    }
+  }
 });
 
 test("turn timeline and legacy flip alias keep the promised 360 degree spin", () => {

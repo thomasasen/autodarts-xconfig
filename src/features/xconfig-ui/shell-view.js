@@ -1489,6 +1489,11 @@ function applyCheckoutSuggestionPreviewTheme(node, featureConfig = {}) {
   node.style.setProperty("--ad-ext-accent-strong", theme.accentStrongColor);
   node.style.setProperty("--ad-ext-label-bg", theme.labelBackground);
   node.style.setProperty("--ad-ext-label-color", theme.labelTextColor);
+  if (featureConfig.colorNumbers === true) {
+    node.style.setProperty("--ad-ext-checkout-value-color", theme.accentColor);
+  } else {
+    node.style.removeProperty("--ad-ext-checkout-value-color");
+  }
 }
 
 function buildCheckoutSuggestionSample(documentRef, featureConfig = {}, overrides = {}, options = {}) {
