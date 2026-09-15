@@ -75,10 +75,10 @@ function installAppendSupport(documentRef) {
   attachAppend(documentRef.body);
 }
 
-test("dart-marker-replacer resolves size settings twenty percent larger with legacy migration", () => {
-  assert.equal(resolveDartMarkerReplacerConfig({ sizePercent: 108 }).sizeMultiplier, 1.08);
-  assert.equal(resolveDartMarkerReplacerConfig({ sizePercent: 120 }).sizeMultiplier, 1.2);
-  assert.equal(resolveDartMarkerReplacerConfig({ sizePercent: 138 }).sizeMultiplier, 1.38);
+test("dart-marker-replacer resolves size settings thirty percent larger with legacy migration", () => {
+  approxEqual(resolveDartMarkerReplacerConfig({ sizePercent: 108 }).sizeMultiplier, 1.404);
+  approxEqual(resolveDartMarkerReplacerConfig({ sizePercent: 120 }).sizeMultiplier, 1.56);
+  approxEqual(resolveDartMarkerReplacerConfig({ sizePercent: 138 }).sizeMultiplier, 1.794);
   assert.equal(resolveDartMarkerReplacerConfig({ sizePercent: 100 }).sizePercent, 120);
   assert.equal(resolveDartMarkerReplacerConfig({ sizePercent: 115 }).sizePercent, 138);
   assert.equal(resolveDartMarkerReplacerConfig({ sizePercent: 999 }).sizePercent, 120);

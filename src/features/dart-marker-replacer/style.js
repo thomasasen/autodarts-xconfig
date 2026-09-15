@@ -59,7 +59,7 @@ export function resolveDartMarkerReplacerConfig(featureConfig = {}) {
     designKey,
     animateDarts: normalizeBoolean(featureConfig.animateDarts, true),
     sizePercent,
-    sizeMultiplier: sizePercent / 100,
+    sizeMultiplier: (sizePercent / 100) * 1.3,
     hideOriginalMarkers: normalizeBoolean(featureConfig.hideOriginalMarkers, false),
     impactStyle: normalizeDartImpactStyle(featureConfig.impactStyle),
     enableShadow: normalizeBoolean(featureConfig.enableShadow, true),
