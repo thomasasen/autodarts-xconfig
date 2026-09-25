@@ -7,6 +7,9 @@ import {
   hexColorToRgba,
   normalizeHexColor,
 } from "../../../shared/hex-color-utils.js";
+import {
+  MODERN_ACTIVE_PLAYER_SURFACE_SELECTORS as MODERN_X01_ACTIVE_PLAYER_SURFACE_SELECTORS,
+} from "../../shared/x01-match-surface.js";
 export const STYLE_ID = "ad-ext-theme-global-typography-style";
 export const TOOLS_SHADOW_STYLE_ID = "ad-ext-theme-global-typography-tools-style";
 export const THEME_GLOBAL_TYPOGRAPHY_SELECTOR_GROUPS = Object.freeze({
@@ -36,14 +39,15 @@ export const THEME_GLOBAL_TYPOGRAPHY_SELECTOR_GROUPS = Object.freeze({
 });
 
 const MODERN_ACTIVE_PLAYER_SURFACE_SELECTORS = Object.freeze([
-  "main .overflow-clip:has(.bg-mono-white.rounded-full):has(.font-number.overflow-hidden)",
+  ...MODERN_X01_ACTIVE_PLAYER_SURFACE_SELECTORS,
   "main .grid > .relative.isolate.overflow-hidden.bg-raspberry-slush-diagonal:has(.font-display)",
 ]);
 
-const MODERN_ACTIVE_PLAYER_MARKER_SELECTORS = Object.freeze([
-  "main .overflow-clip:has(.font-number.overflow-hidden) .bg-mono-white.rounded-full",
-  "main .grid > .relative.isolate.overflow-hidden.bg-raspberry-slush-diagonal .bg-mono-white.rounded-full",
-]);
+const MODERN_ACTIVE_PLAYER_MARKER_SELECTORS = Object.freeze(
+  MODERN_ACTIVE_PLAYER_SURFACE_SELECTORS.map(
+    (selector) => `${selector} .bg-mono-white.rounded-full`
+  )
+);
 
 export function getThemeGlobalTypographySelectors(applyTo = ["scores"]) {
   const scopeValues = getThemeGlobalTypographyScopeValues(applyTo);

@@ -1,8 +1,23 @@
 // Native Autodarts match presentation. Keep host markup out of checkout rules.
 export const MODERN_TURN_SELECTOR = "main .bg-surface-surface";
 export const MODERN_PLAYER_SELECTOR = "main .overflow-clip";
+export const MODERN_PLAYER_SCORE_SELECTOR = ".font-number.overflow-hidden";
+export const MODERN_PLAYER_SURFACE_SELECTOR =
+  `${MODERN_PLAYER_SELECTOR}:has(${MODERN_PLAYER_SCORE_SELECTOR})`;
 export const MODERN_VARIANT_SELECTOR = "main .flex-wrap";
 export const MODERN_CHECKOUT_HINT_SELECTOR = ".text-checkout-suggestion, .text-checkout-setup";
+export const MODERN_ACTIVE_PLAYER_BACKGROUND_CLASSES = Object.freeze([
+  "bg-raspberry-slush-diagonal",
+  "bg-grey-slush-diagonal",
+]);
+export const MODERN_ACTIVE_PLAYER_SURFACE_SELECTORS = Object.freeze(
+  MODERN_ACTIVE_PLAYER_BACKGROUND_CLASSES.map(
+    (className) => `${MODERN_PLAYER_SELECTOR}.${className}:has(${MODERN_PLAYER_SCORE_SELECTOR})`
+  )
+);
+
+const MODERN_INACTIVE_PLAYER_BACKGROUND_CLASS = "bg-black-80";
+const MODERN_LEGACY_ACTIVE_PLAYER_MARKER_SELECTOR = ".bg-mono-white.rounded-full";
 
 export function isModernCheckoutHint(node) {
   return Boolean(node?.classList?.contains("text-checkout-suggestion") ||
@@ -49,6 +64,18 @@ export function findModernTurnSurface(documentRef, windowRef = documentRef?.defa
   return null;
 }
 
+function isModernPlayerSurfaceActive(cardNode, windowRef) {
+  if (MODERN_ACTIVE_PLAYER_BACKGROUND_CLASSES.some((className) =>
+    cardNode?.classList?.contains(className))) {
+    return true;
+  }
+  if (cardNode?.classList?.contains(MODERN_INACTIVE_PLAYER_BACKGROUND_CLASS)) {
+    return false;
+  }
+  return all(cardNode, MODERN_LEGACY_ACTIVE_PLAYER_MARKER_SELECTOR).some((marker) =>
+    isMatchNodeVisible(marker, windowRef));
+}
+
 export function readModernMatchSurface(documentRef, windowRef = documentRef?.defaultView) {
   const turn = findModernTurnSurface(documentRef, windowRef);
   const headers = all(documentRef, MODERN_VARIANT_SELECTOR).filter((node) =>
@@ -84,17 +111,16 @@ export function readModernMatchSurface(documentRef, windowRef = documentRef?.def
 export function readModernPlayerSurfaces(documentRef, windowRef = documentRef?.defaultView) {
   return all(documentRef, MODERN_PLAYER_SELECTOR).filter((node) => {
     if (!isMatchNodeVisible(node, windowRef)) return false;
-    const scores = all(node, ".font-number.overflow-hidden").filter((scoreNode) =>
+    const scores = all(node, MODERN_PLAYER_SCORE_SELECTOR).filter((scoreNode) =>
       /^\d+$/.test(text(scoreNode)) && isMatchNodeVisible(scoreNode, windowRef));
     return scores.length === 1;
   }).map((cardNode) => {
-    const scores = all(cardNode, ".font-number.overflow-hidden").filter((node) =>
+    const scores = all(cardNode, MODERN_PLAYER_SCORE_SELECTOR).filter((node) =>
       /^\d+$/.test(text(node)) && isMatchNodeVisible(node, windowRef));
     return {
       cardNode,
       scoreNode: scores.length === 1 ? scores[0] : null,
-      active: all(cardNode, ".bg-mono-white.rounded-full").some((marker) =>
-        isMatchNodeVisible(marker, windowRef)),
+      active: isModernPlayerSurfaceActive(cardNode, windowRef),
     };
   });
 }

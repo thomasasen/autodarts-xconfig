@@ -31,6 +31,29 @@ test("native D18 surface separates two thrown darts from duplicate finish displa
   assert.deepEqual(intent(f), { reason: "checkout", segment: "D18" });
 });
 
+test("native active player follows the card background when the identity marker stays left", () => {
+  const f = createModernX01Fixture({ base: 121, score: 82 });
+  f.card.classList.remove("bg-raspberry-slush-diagonal");
+  f.card.classList.add("bg-black-80");
+  const rightCard = f.node(
+    f.documentRef.main,
+    "div",
+    "relative isolate overflow-clip bg-raspberry-slush-diagonal"
+  );
+  f.node(rightCard, "div", "", "Player 2");
+  const rightScore = f.node(rightCard, "div", "font-number overflow-hidden", "121");
+
+  const surface = readModernMatchSurface(f.documentRef, f.windowRef);
+
+  assert.equal(surface.players.length, 2);
+  assert.equal(surface.players[0].active, false);
+  assert.equal(surface.players[1].active, true);
+  assert.equal(surface.playerCard, rightCard);
+  assert.equal(surface.scoreNode, rightScore);
+  assert.equal(surface.activeScore, 121);
+  assert.equal(f.marker.isConnected, true);
+});
+
 test("native setup recommendation is not a third thrown dart", () => {
   const f = createModernX01Fixture({ score: 83, throws: ["S20", "S18"], route: ["T17"] });
   f.rows[2].row.classList.remove("text-checkout-suggestion");
@@ -76,6 +99,8 @@ test("native two T20 throws retain the third-dart setup and respect its switch",
 
 test("native ambiguity, hidden player and Bust cannot select a random or stale finish", () => {
   const f = createModernX01Fixture();
+  f.card.classList.remove("bg-raspberry-slush-diagonal");
+  f.card.classList.add("bg-black-80");
   f.marker.hidden = true;
   assert.ok(Number.isNaN(readModernMatchSurface(f.documentRef, f.windowRef).activeScore));
   assert.equal(intent(f), null);

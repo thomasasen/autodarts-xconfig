@@ -151,8 +151,8 @@ test("modern score bars use the native base and preserve nested score, stats and
   const scoreRow = f.node(stack, "div", "flex justify-center");
   scoreRow.appendChild(f.score);
   const stats = f.node(stack, "div", "", "Leg 60.0 / Match 60.0");
-  const card2 = f.node(f.documentRef.main, "div", "relative overflow-clip");
-  f.node(card2, "div", "", "Player 2").setAttribute("role", "button");
+  const card2 = f.node(f.documentRef.main, "div", "relative overflow-clip bg-black-80");
+  f.node(card2, "div", "", "Player 2");
   f.node(card2, "div", "font-number overflow-hidden", "501");
   const context = { ...f, gameState: {
     getSnapshot: () => ({ match: { id: "old-match", variant: "X01 701" } }),
@@ -169,8 +169,10 @@ test("modern score bars use the native base and preserve nested score, stats and
   assert.equal(host.style.getPropertyValue(WIDTH_PROPERTY), "60.08%");
   assert.ok(host.classList.contains(ACTIVE_CLASS));
   assert.ok(host2.classList.contains(INACTIVE_CLASS));
-  f.marker.remove();
-  f.node(card2, "div", "bg-mono-white rounded-full");
+  f.card.classList.remove("bg-raspberry-slush-diagonal");
+  f.card.classList.add("bg-black-80");
+  card2.classList.remove("bg-black-80");
+  card2.classList.add("bg-raspberry-slush-diagonal");
   f.score.textContent = "241";
   syncScoreProgress(context, state);
   assert.equal(host.style.getPropertyValue(WIDTH_PROPERTY), "48.10%");
@@ -238,8 +240,9 @@ test("modern score bar observer tracks native score mutations after mounting and
   observer.callback([{ type: "characterData", target: { nodeType: 3, parentNode: f.score } }]);
   assert.equal(scheduled, initial + 1);
   assert.equal(host.style.getPropertyValue(WIDTH_PROPERTY), "48.10%");
-  f.marker.hidden = true;
-  observer.callback([{ type: "attributes", target: f.marker, attributeName: "hidden" }]);
+  f.card.classList.remove("bg-raspberry-slush-diagonal");
+  f.card.classList.add("bg-black-80");
+  observer.callback([{ type: "attributes", target: f.card, attributeName: "class" }]);
   assert.ok(host.classList.contains(INACTIVE_CLASS));
   f.variant.textContent = "Cricket";
   observer.callback([{ type: "childList", target: f.variant, addedNodes: [], removedNodes: [] }]);

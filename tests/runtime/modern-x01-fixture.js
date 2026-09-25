@@ -18,7 +18,11 @@ export function createModernX01Fixture(options = {}) {
   const variant = node(header, "div", "rounded-full", String(options.base || 121));
   node(header, "div", "rounded-full", "First to 1 Leg");
   node(header, "div", "rounded-full", "SI-DO");
-  const card = node(documentRef.main, "div", "relative isolate overflow-clip");
+  const card = node(
+    documentRef.main,
+    "div",
+    "relative isolate overflow-clip bg-raspberry-slush-diagonal"
+  );
   const marker = node(card, "div", "size-2 rounded-full bg-mono-white");
   const player = node(card, "div", "", "Player 1");
   player.setAttribute("role", "button");

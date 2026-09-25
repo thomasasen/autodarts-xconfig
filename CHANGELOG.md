@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.1.5] - 2026-09-25
+
+### Fixed
+
+- Nutzerwirkung: Transparenz und Restscore-Balken funktionieren im modernen X01-Layout nun auf beiden Spielerkarten und folgen beim Spielerwechsel zuverlässig dem aktiven Spieler.
+  Technik: Die Kartenerkennung umfasst auch die nicht klickbare rechte Spielerkarte. Der aktive Spieler wird primär anhand der nativen Kartenhintergründe bestimmt; der bisherige Identitätsmarker bleibt nur als kompatibler Rückfall erhalten. Regressionstests bilden die reale Zwei-Spieler-Struktur und den Spielerwechsel ab.
+
 ## [3.1.4] - 2026-09-15
 
 ### Fixed
@@ -2136,6 +2143,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.1.5]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.4...v3.1.5
 [3.1.4]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.3...v3.1.4
 [3.1.3]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.2...v3.1.3
 [3.1.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.1...v3.1.2

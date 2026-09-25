@@ -53,7 +53,14 @@ test("global background, typography and turn darts build isolated CSS", () => {
   assert.match(typographyCss, /Fragment\+Mono/);
   assert.match(typographyCss, /\.ad-ext-player-name/);
   assert.match(typographyCss, /ad-ext-player-active/);
-  assert.match(typographyCss, /main \.overflow-clip:has\(\.bg-mono-white\.rounded-full\)/);
+  assert.match(
+    typographyCss,
+    /main \.overflow-clip\.bg-raspberry-slush-diagonal:has\(\.font-number\.overflow-hidden\)/
+  );
+  assert.doesNotMatch(
+    typographyCss,
+    /main \.overflow-clip:has\(\.bg-mono-white\.rounded-full\)/
+  );
   assert.match(typographyCss, /color: #F7F8FA !important/);
   assert.match(typographyCss, /color: #D9E0EA !important/);
   assert.match(typographyCss, /color: #AAB5C5 !important/);
@@ -64,7 +71,8 @@ test("global background, typography and turn darts build isolated CSS", () => {
     backgroundOpacity: 20,
     playerFieldTransparency: 10,
   });
-  assert.match(backgroundCss, /main \.overflow-clip:has\(\[role="button"\]\)/);
+  assert.match(backgroundCss, /main \.overflow-clip:has\(\.font-number\.overflow-hidden\)/);
+  assert.doesNotMatch(backgroundCss, /:has\(\[role="button"\]\)/);
   assert.match(backgroundCss, /main \.grid > \.relative\.isolate\.overflow-hidden/);
   assert.match(backgroundCss, /background: rgba\(8, 12, 24, 0\.900\) !important/);
 

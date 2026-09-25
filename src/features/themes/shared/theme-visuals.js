@@ -1,5 +1,6 @@
 import { clampNumber } from "./theme-utils.js";
 import { resolveThemePresetAsset } from "#theme-preset-assets";
+import { MODERN_PLAYER_SURFACE_SELECTOR } from "../../shared/x01-match-surface.js";
 
 const BACKGROUND_DISPLAY_MODES = Object.freeze({
   fill: {
@@ -92,7 +93,7 @@ export function buildThemeVisualSettingsCss(featureConfig = {}) {
 #ad-ext-player-display .ad-ext-player > .chakra-stack > *{
   background: transparent !important;
 }
-main .overflow-clip:has([role="button"]):has(.font-number.overflow-hidden),
+${MODERN_PLAYER_SURFACE_SELECTOR},
 main .grid > .relative.isolate.overflow-hidden:has(.font-display){
   background: rgba(8, 12, 24, ${playerFieldAlpha.toFixed(3)}) !important;
 }

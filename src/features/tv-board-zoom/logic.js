@@ -1630,6 +1630,28 @@ function resolveFallbackT20SetupIntent(state, t20SetupZoomEnabled, canUseT20Setu
   return buildAndStoreIntent(state, "t20-setup", "T20");
 }
 
+function hasActiveX01ZoomContext({ gameState, x01Rules, state, documentRef, matchSurface }) {
+  if (!gameState || typeof gameState.isX01Variant !== "function" || !x01Rules) {
+    return false;
+  }
+
+  if (hasExplicitNonX01DomVariant(documentRef) ||
+      (matchSurface.variant && matchSurface.variant !== "X01")) {
+    resetZoomIntentForInactiveVariant(state);
+    return false;
+  }
+
+  const active = gameState.isX01Variant({
+    allowMissing: false,
+    allowEmpty: false,
+    allowNumeric: true,
+  });
+  if (!active) {
+    resetZoomIntentForInactiveVariant(state);
+  }
+  return active;
+}
+
 export function computeZoomIntent(options = {}) {
   const matchSurface = options.matchSurface || readModernMatchSurface(options.documentRef, options.windowRef);
   const {
@@ -1646,26 +1668,7 @@ export function computeZoomIntent(options = {}) {
     finishOnlyCheckoutZoom,
   } = resolveZoomIntentSettings({ ...options, matchSurface });
 
-  if (!gameState || typeof gameState.isX01Variant !== "function") {
-    return null;
-  }
-  if (!x01Rules) {
-    return null;
-  }
-
-  if (hasExplicitNonX01DomVariant(documentRef) ||
-      (matchSurface.variant && matchSurface.variant !== "X01")) {
-    resetZoomIntentForInactiveVariant(state);
-    return null;
-  }
-
-  const active = gameState.isX01Variant({
-    allowMissing: false,
-    allowEmpty: false,
-    allowNumeric: true,
-  });
-  if (!active) {
-    resetZoomIntentForInactiveVariant(state);
+  if (!hasActiveX01ZoomContext({ gameState, x01Rules, state, documentRef, matchSurface })) {
     return null;
   }
 
