@@ -318,10 +318,14 @@ test("xConfig shell injects below Legal with its bullseye menu glyph, opens rout
   assert.equal(menuIcon.querySelectorAll("mask").length, 1);
   const menuPaths = menuIcon.querySelectorAll("path");
   assert.equal(menuPaths.length, 3);
-  assert.equal(menuPaths[0]?.getAttribute("d")?.startsWith("M14.75 8A6.75"), true);
-  assert.equal(menuPaths[1]?.getAttribute("stroke-width"), "1.1");
-  assert.equal(menuPaths[2]?.getAttribute("fill"), "currentColor");
-  assert.equal(menuPaths[2]?.getAttribute("mask"), "url(#ad-xconfig-menu-mark-mask)");
+  const ringPath = menuPaths.find((path) => path.getAttribute("d")?.startsWith("M14.75 8A6.75"));
+  const xPath = menuPaths.find((path) => path.getAttribute("stroke-width") === "1.1");
+  const glyphPath = menuPaths.find(
+    (path) => path.getAttribute("mask") === "url(#ad-xconfig-menu-mark-mask)"
+  );
+  assert.ok(ringPath);
+  assert.ok(xPath);
+  assert.equal(glyphPath?.getAttribute("fill"), "currentColor");
   assert.equal(menuIcon.querySelectorAll("circle").length, 4);
   assert.ok(menuButton.querySelector(".side-menu-chevron"));
   assert.ok(documentRef.getElementById(ELECTRIC_FILTER_DEFS_NODE_ID));

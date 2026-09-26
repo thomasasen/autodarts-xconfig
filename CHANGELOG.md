@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.1.6] - 2026-09-26
+
+### Changed
+
+- Nutzerwirkung: xConfig verwendet das neue Branding. Im Autodarts-Profilmenü erscheint das speziell für 16 Pixel optimierte xConfig-Menüicon; README und Branding-Dokumentation verwenden die gelieferten offiziellen Projektassets für helle und dunkle Hintergründe.
+  Technik: Die SVG-Dateien unter `docs/branding/` bleiben die visuelle Source of Truth, und die Runtime-Menüglyph basiert auf der gelieferten 16-Pixel-Geometrie. Gameplay-Logik und bestehende Einstellungen bleiben unverändert.
+
 ## [3.1.5] - 2026-09-25
 
 ### Fixed
@@ -2143,6 +2150,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.1.6]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.5...v3.1.6
 [3.1.5]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.4...v3.1.5
 [3.1.4]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.3...v3.1.4
 [3.1.3]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.2...v3.1.3
