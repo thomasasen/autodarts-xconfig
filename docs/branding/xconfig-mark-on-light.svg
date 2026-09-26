@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc" shape-rendering="geometricPrecision">
+  <title id="title">xConfig app mark for light backgrounds</title>
+  <desc id="desc">Cyan, black and white xConfig mark prepared for white and light backgrounds.</desc>
+  <path d="M236 128A108 108 0 1 1 20 128A108 108 0 1 1 236 128ZM218 128A90 90 0 1 0 38 128A90 90 0 1 0 218 128Z" fill="#000000" fill-rule="evenodd" clip-rule="evenodd"/>
+<path d="M21.405 28.319Q18 24 23.5 24L55.5 24Q61 24 64.719 28.052L124.281 92.948Q128 97 131.719 92.948L191.281 28.052Q195 24 200.5 24L232.5 24Q238 24 234.595 28.319L159.405 123.681Q156 128 159.405 132.319L234.595 227.681Q238 232 232.5 232L200.5 232Q195 232 191.281 227.948L131.719 163.052Q128 159 124.281 163.052L64.719 227.948Q61 232 55.5 232L23.5 232Q18 232 21.405 227.681L96.595 132.319Q100 128 96.595 123.681Z" fill="#00F8F8" stroke="#000000" stroke-width="12" stroke-linejoin="round" paint-order="stroke fill"/>
+<circle cx="128" cy="128" r="42" fill="#000000"/>
+<circle cx="128" cy="128" r="36" fill="#FFFFFF"/>
+<circle cx="128" cy="128" r="22" fill="#000000"/>
+<circle cx="128" cy="128" r="16" fill="#00F8F8"/>
+</svg>
