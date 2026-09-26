@@ -13,7 +13,7 @@ Das Script schreibt ausschließlich in ein neu angelegtes Verzeichnis unter dem 
 ## Pflichtprüfung in Chrome und Firefox
 
 1. Autodarts unter `https://play.autodarts.com/` öffnen und die Browser-Konsole leeren; während der Umstellung zusätzlich `https://play.autodarts.io/` prüfen, sofern die Adresse noch erreichbar ist.
-2. Das Benutzermenü über das Profilbild öffnen und prüfen, dass `xConfig` direkt unter `Legal` mit dem xConfig-Symbol erscheint. xConfig mehrfach öffnen und schließen; der Drawer muss schließen und Menü, Modal sowie Hintergrund müssen jeweils vollständig verschwinden und wieder erscheinen.
+2. Das Benutzermenü über das Profilbild öffnen und prüfen, dass `xConfig` direkt unter `Legal` mit dem monochromen Bullseye-X-Symbol erscheint. Das 16px-Glyph muss im Normal-, Hover- und Active-Zustand klar lesbar bleiben und die Host-Farbe übernehmen. xConfig mehrfach öffnen und schließen; der Drawer muss schließen und Menü, Modal sowie Hintergrund müssen jeweils vollständig verschwinden und wieder erscheinen.
 3. Bot Board Style aktivieren und die Ebenenreihenfolge von Board, Markern und Overlays prüfen.
 4. Sämtliche Bildauswahlen nacheinander öffnen und auf sichtbare Vorschaufehler prüfen.
 5. In Templates Global prüfen, dass zunächst nur die gewählte Schrift angefordert wird und weitere Schriften erst bei Fokus oder Hover geladen werden.
