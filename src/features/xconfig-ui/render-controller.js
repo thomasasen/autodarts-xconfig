@@ -220,7 +220,9 @@ function createMenuIcon(controller, templateIcon = null) {
   bull.setAttribute("fill", "currentColor");
   bull.setAttribute("stroke", "none");
 
-  svg.append(xPath, bullRing, bull);
+  svg.appendChild(xPath);
+  svg.appendChild(bullRing);
+  svg.appendChild(bull);
   return svg;
 }
 
