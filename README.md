@@ -2,7 +2,7 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/branding/xconfig-logo.svg">
     <source media="(prefers-color-scheme: light)" srcset="docs/branding/xconfig-logo-on-light.svg">
-    <img src="docs/branding/xconfig-logo-on-light.svg" alt="xConfig für Autodarts" width="900">
+    <img src="docs/branding/xconfig-logo-on-light.svg" alt="xConfig für Autodarts" width="640">
   </picture>
 </p>
 
