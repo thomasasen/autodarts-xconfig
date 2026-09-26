@@ -285,7 +285,7 @@ function getUrlWithoutQuery(url) {
   return parsed.toString();
 }
 
-test("xConfig shell injects below Legal with its legacy icon, opens route and closes the drawer", async () => {
+test("xConfig shell injects below Legal with its bullseye menu glyph, opens route and closes the drawer", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   let drawerCloseClicks = 0;
@@ -311,7 +311,14 @@ test("xConfig shell injects below Legal with its legacy icon, opens route and cl
   assert.equal(String(menuButton.querySelector(".ad-xconfig-menu-label")?.textContent || "").trim(), "xConfig");
   const menuIcon = menuButton.querySelector(".ad-xconfig-menu-icon");
   assert.ok(menuIcon);
-  assert.equal(menuIcon.querySelector("path")?.getAttribute("d")?.startsWith("M3 6.5"), true);
+  assert.equal(menuIcon.getAttribute("width"), "16");
+  assert.equal(menuIcon.getAttribute("height"), "16");
+  assert.equal(menuIcon.getAttribute("viewBox"), "0 0 24 24");
+  assert.equal(menuIcon.getAttribute("fill"), "none");
+  assert.equal(menuIcon.getAttribute("stroke"), "currentColor");
+  assert.equal(menuIcon.querySelectorAll("path").length, 1);
+  assert.equal(menuIcon.querySelectorAll("circle").length, 2);
+  assert.equal(menuIcon.querySelector("path")?.getAttribute("stroke-width"), "3.25");
   assert.ok(menuButton.querySelector(".side-menu-chevron"));
   assert.ok(documentRef.getElementById(ELECTRIC_FILTER_DEFS_NODE_ID));
   assert.equal(documentRef.legalLink.nextElementSibling, menuButton);
