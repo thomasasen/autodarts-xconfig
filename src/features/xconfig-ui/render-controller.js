@@ -191,47 +191,84 @@ function createMenuIcon(controller, templateIcon = null) {
   const svg = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("width", "16");
   svg.setAttribute("height", "16");
-  svg.setAttribute("viewBox", "0 0 24 24");
-  svg.setAttribute("fill", "none");
-  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("viewBox", "0 0 16 16");
   svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("shape-rendering", "geometricPrecision");
   const templateIconClass = String(templateIcon?.getAttribute?.("class") || "").trim();
   svg.setAttribute(
     "class",
     templateIconClass ? `${templateIconClass} ad-xconfig-menu-icon` : "ad-xconfig-menu-icon"
   );
 
-  const targetRing = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
-  targetRing.setAttribute("cx", "12");
-  targetRing.setAttribute("cy", "12");
-  targetRing.setAttribute("r", "8.6");
-  targetRing.setAttribute("stroke-width", "1.8");
-  targetRing.setAttribute("stroke-dasharray", "7.1 6.4");
-  targetRing.setAttribute("stroke-dashoffset", "3.55");
+  const defs = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "defs");
+  const mask = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "mask");
+  mask.setAttribute("id", "ad-xconfig-menu-mark-mask");
+  mask.setAttribute("x", "0");
+  mask.setAttribute("y", "0");
+  mask.setAttribute("width", "16");
+  mask.setAttribute("height", "16");
+  mask.setAttribute("maskUnits", "userSpaceOnUse");
+  mask.setAttribute("mask-type", "luminance");
+
+  const ringPath = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "path");
+  ringPath.setAttribute(
+    "d",
+    "M14.75 8A6.75 6.75 0 1 1 1.25 8A6.75 6.75 0 1 1 14.75 8ZM13.45 8A5.45 5.45 0 1 0 2.55 8A5.45 5.45 0 1 0 13.45 8Z"
+  );
+  ringPath.setAttribute("fill", "#FFFFFF");
+  ringPath.setAttribute("fill-rule", "evenodd");
+  ringPath.setAttribute("clip-rule", "evenodd");
 
   const xPath = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "path");
-  xPath.setAttribute("d", "M6.2 6.2 17.8 17.8M17.8 6.2 6.2 17.8");
-  xPath.setAttribute("stroke-width", "2.8");
-  xPath.setAttribute("stroke-linecap", "butt");
+  xPath.setAttribute(
+    "d",
+    "M1.325 1.831Q1.1 1.55 1.46 1.55L3.44 1.55Q3.8 1.55 4.046 1.813L7.754 5.787Q8 6.05 8.246 5.787L11.954 1.813Q12.2 1.55 12.56 1.55L14.54 1.55Q14.9 1.55 14.675 1.831L9.975 7.719Q9.75 8 9.975 8.281L14.675 14.169Q14.9 14.45 14.54 14.45L12.56 14.45Q12.2 14.45 11.954 14.187L8.246 10.213Q8 9.95 7.754 10.213L4.046 14.187Q3.8 14.45 3.44 14.45L1.46 14.45Q1.1 14.45 1.325 14.169L6.025 8.281Q6.25 8 6.025 7.719Z"
+  );
+  xPath.setAttribute("fill", "#FFFFFF");
+  xPath.setAttribute("stroke", "#000000");
+  xPath.setAttribute("stroke-width", "1.1");
+  xPath.setAttribute("stroke-linejoin", "round");
+  xPath.setAttribute("paint-order", "stroke fill");
 
-  const bullRing = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
-  bullRing.setAttribute("cx", "12");
-  bullRing.setAttribute("cy", "12");
-  bullRing.setAttribute("r", "3.2");
-  bullRing.setAttribute("fill", "none");
-  bullRing.setAttribute("stroke-width", "1.8");
+  const bullOuter = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  bullOuter.setAttribute("cx", "8");
+  bullOuter.setAttribute("cy", "8");
+  bullOuter.setAttribute("r", "3.25");
+  bullOuter.setAttribute("fill", "#000000");
 
-  const bull = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
-  bull.setAttribute("cx", "12");
-  bull.setAttribute("cy", "12");
-  bull.setAttribute("r", "1");
-  bull.setAttribute("fill", "currentColor");
-  bull.setAttribute("stroke", "none");
+  const bullWhite = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  bullWhite.setAttribute("cx", "8");
+  bullWhite.setAttribute("cy", "8");
+  bullWhite.setAttribute("r", "2.7");
+  bullWhite.setAttribute("fill", "#FFFFFF");
 
-  svg.appendChild(targetRing);
-  svg.appendChild(xPath);
-  svg.appendChild(bullRing);
-  svg.appendChild(bull);
+  const bullInner = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  bullInner.setAttribute("cx", "8");
+  bullInner.setAttribute("cy", "8");
+  bullInner.setAttribute("r", "1.45");
+  bullInner.setAttribute("fill", "#000000");
+
+  const bullCenter = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  bullCenter.setAttribute("cx", "8");
+  bullCenter.setAttribute("cy", "8");
+  bullCenter.setAttribute("r", "0.9");
+  bullCenter.setAttribute("fill", "#FFFFFF");
+
+  mask.appendChild(ringPath);
+  mask.appendChild(xPath);
+  mask.appendChild(bullOuter);
+  mask.appendChild(bullWhite);
+  mask.appendChild(bullInner);
+  mask.appendChild(bullCenter);
+  defs.appendChild(mask);
+
+  const glyph = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "path");
+  glyph.setAttribute("d", "M0 0H16V16H0Z");
+  glyph.setAttribute("fill", "currentColor");
+  glyph.setAttribute("mask", "url(#ad-xconfig-menu-mark-mask)");
+
+  svg.appendChild(defs);
+  svg.appendChild(glyph);
   return svg;
 }
 
