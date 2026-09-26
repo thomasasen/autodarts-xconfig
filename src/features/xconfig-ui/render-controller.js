@@ -201,25 +201,34 @@ function createMenuIcon(controller, templateIcon = null) {
     templateIconClass ? `${templateIconClass} ad-xconfig-menu-icon` : "ad-xconfig-menu-icon"
   );
 
+  const targetRing = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  targetRing.setAttribute("cx", "12");
+  targetRing.setAttribute("cy", "12");
+  targetRing.setAttribute("r", "8.6");
+  targetRing.setAttribute("stroke-width", "1.8");
+  targetRing.setAttribute("stroke-dasharray", "7.1 6.4");
+  targetRing.setAttribute("stroke-dashoffset", "3.55");
+
   const xPath = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "path");
-  xPath.setAttribute("d", "M6.25 6.25 17.75 17.75M17.75 6.25 6.25 17.75");
-  xPath.setAttribute("stroke-width", "3.25");
+  xPath.setAttribute("d", "M6.2 6.2 17.8 17.8M17.8 6.2 6.2 17.8");
+  xPath.setAttribute("stroke-width", "2.8");
   xPath.setAttribute("stroke-linecap", "butt");
 
   const bullRing = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
   bullRing.setAttribute("cx", "12");
   bullRing.setAttribute("cy", "12");
-  bullRing.setAttribute("r", "3.4");
+  bullRing.setAttribute("r", "3.2");
   bullRing.setAttribute("fill", "none");
-  bullRing.setAttribute("stroke-width", "2");
+  bullRing.setAttribute("stroke-width", "1.8");
 
   const bull = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
   bull.setAttribute("cx", "12");
   bull.setAttribute("cy", "12");
-  bull.setAttribute("r", "1.05");
+  bull.setAttribute("r", "1");
   bull.setAttribute("fill", "currentColor");
   bull.setAttribute("stroke", "none");
 
+  svg.appendChild(targetRing);
   svg.appendChild(xPath);
   svg.appendChild(bullRing);
   svg.appendChild(bull);
