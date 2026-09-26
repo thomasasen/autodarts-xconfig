@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" role="img" aria-labelledby="title desc" shape-rendering="geometricPrecision">
+  <title id="title">xConfig menu icon for light backgrounds</title>
+  <desc id="desc">Single-colour black xConfig mark with transparent separation gaps, built from the same complete layers as the large mark and optimised for a 16 pixel grid on light backgrounds.</desc>
+  <defs>
+    <mask id="menu-mark-mask" x="0" y="0" width="16" height="16" maskUnits="userSpaceOnUse" mask-type="luminance">
+      <path d="M14.75 8A6.75 6.75 0 1 1 1.25 8A6.75 6.75 0 1 1 14.75 8ZM13.45 8A5.45 5.45 0 1 0 2.55 8A5.45 5.45 0 1 0 13.45 8Z" fill="#FFFFFF" fill-rule="evenodd" clip-rule="evenodd"/>
+      <path d="M1.325 1.831Q1.1 1.55 1.46 1.55L3.44 1.55Q3.8 1.55 4.046 1.813L7.754 5.787Q8 6.05 8.246 5.787L11.954 1.813Q12.2 1.55 12.56 1.55L14.54 1.55Q14.9 1.55 14.675 1.831L9.975 7.719Q9.75 8 9.975 8.281L14.675 14.169Q14.9 14.45 14.54 14.45L12.56 14.45Q12.2 14.45 11.954 14.187L8.246 10.213Q8 9.95 7.754 10.213L4.046 14.187Q3.8 14.45 3.44 14.45L1.46 14.45Q1.1 14.45 1.325 14.169L6.025 8.281Q6.25 8 6.025 7.719Z" fill="#FFFFFF" stroke="#000000" stroke-width="1.1" stroke-linejoin="round" paint-order="stroke fill"/>
+      <circle cx="8" cy="8" r="3.25" fill="#000000"/>
+      <circle cx="8" cy="8" r="2.7" fill="#FFFFFF"/>
+      <circle cx="8" cy="8" r="1.45" fill="#000000"/>
+      <circle cx="8" cy="8" r="0.9" fill="#FFFFFF"/>
+    </mask>
+  </defs>
+  <path d="M0 0H16V16H0Z" fill="#FFFFFF" mask="url(#menu-mark-mask)"/>
+</svg>
