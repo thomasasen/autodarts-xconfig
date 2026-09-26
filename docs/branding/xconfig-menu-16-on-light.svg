@@ -12,5 +12,5 @@
       <circle cx="8" cy="8" r="0.9" fill="#FFFFFF"/>
     </mask>
   </defs>
-  <path d="M0 0H16V16H0Z" fill="#FFFFFF" mask="url(#menu-mark-mask)"/>
+  <path d="M0 0H16V16H0Z" fill="#000000" mask="url(#menu-mark-mask)"/>
 </svg>
