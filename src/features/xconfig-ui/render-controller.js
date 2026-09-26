@@ -192,7 +192,8 @@ function createMenuIcon(controller, templateIcon = null) {
   svg.setAttribute("width", "16");
   svg.setAttribute("height", "16");
   svg.setAttribute("viewBox", "0 0 24 24");
-  svg.setAttribute("fill", "currentColor");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
   svg.setAttribute("aria-hidden", "true");
   const templateIconClass = String(templateIcon?.getAttribute?.("class") || "").trim();
   svg.setAttribute(
@@ -200,12 +201,26 @@ function createMenuIcon(controller, templateIcon = null) {
     templateIconClass ? `${templateIconClass} ad-xconfig-menu-icon` : "ad-xconfig-menu-icon"
   );
 
-  const path = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "path");
-  path.setAttribute(
-    "d",
-    "M3 6.5A1.5 1.5 0 0 1 4.5 5h10A1.5 1.5 0 0 1 16 6.5v1A1.5 1.5 0 0 1 14.5 9h-10A1.5 1.5 0 0 1 3 7.5zm0 10A1.5 1.5 0 0 1 4.5 15h6A1.5 1.5 0 0 1 12 16.5v1a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 3 17.5zM18 4a3 3 0 0 1 3 3a3 3 0 0 1-3 3a3 3 0 0 1-3-3a3 3 0 0 1 3-3m0 10a3 3 0 0 1 3 3a3 3 0 0 1-3 3a3 3 0 0 1-3-3a3 3 0 0 1 3-3"
-  );
-  svg.appendChild(path);
+  const xPath = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "path");
+  xPath.setAttribute("d", "M6.25 6.25 17.75 17.75M17.75 6.25 6.25 17.75");
+  xPath.setAttribute("stroke-width", "3.25");
+  xPath.setAttribute("stroke-linecap", "butt");
+
+  const bullRing = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  bullRing.setAttribute("cx", "12");
+  bullRing.setAttribute("cy", "12");
+  bullRing.setAttribute("r", "3.4");
+  bullRing.setAttribute("fill", "none");
+  bullRing.setAttribute("stroke-width", "2");
+
+  const bull = controller.documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  bull.setAttribute("cx", "12");
+  bull.setAttribute("cy", "12");
+  bull.setAttribute("r", "1.05");
+  bull.setAttribute("fill", "currentColor");
+  bull.setAttribute("stroke", "none");
+
+  svg.append(xPath, bullRing, bull);
   return svg;
 }
 
