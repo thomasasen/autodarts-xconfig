@@ -1,28 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
   <title id="title">xConfig für Autodarts</title>
-  <desc id="desc">xConfig companion-tool logo with a cyan X, segmented target ring and bullseye.</desc>
-  <rect width="1200" height="360" rx="36" fill="#0d1117"/>
-  <g transform="translate(54 50)" shape-rendering="geometricPrecision">
+  <desc id="desc">xConfig logo with cyan X, segmented target ring and bullseye.</desc>
+  <rect width="1200" height="360" fill="#081018"/>
+  <g transform="translate(8 8) scale(0.92)" shape-rendering="geometricPrecision">
     <circle
-      cx="130"
-      cy="130"
-      r="92"
+      cx="194"
+      cy="197"
+      r="163"
       fill="none"
-      stroke="#f0f6fc"
-      stroke-width="18"
-      stroke-dasharray="80.3 64.2"
-      stroke-dashoffset="40.15"
+      stroke="#f7f9fb"
+      stroke-width="28"
+      stroke-dasharray="154 102"
+      stroke-dashoffset="77"
     />
-    <path d="M66 53 207 194" fill="none" stroke="#20dfe7" stroke-width="32" stroke-linecap="butt"/>
-    <path d="M194 53 53 194" fill="none" stroke="#20dfe7" stroke-width="32" stroke-linecap="butt"/>
-    <circle cx="130" cy="130" r="36" fill="#f0f6fc"/>
-    <circle cx="130" cy="130" r="24" fill="#0d1117"/>
-    <circle cx="130" cy="130" r="11" fill="#20dfe7"/>
+    <path d="M35 55H102L174 130L150 165L35 80Z" fill="#20dfe7"/>
+    <path d="M353 55H286L214 130L238 165L353 80Z" fill="#20dfe7"/>
+    <path d="M35 339H102L174 264L150 229L35 314Z" fill="#20dfe7"/>
+    <path d="M353 339H286L214 264L238 229L353 314Z" fill="#20dfe7"/>
+    <circle cx="194" cy="197" r="56" fill="#f7f9fb"/>
+    <circle cx="194" cy="197" r="37" fill="#081018"/>
+    <circle cx="194" cy="197" r="19" fill="#20dfe7"/>
   </g>
   <g font-family="Inter, Segoe UI, Arial, sans-serif">
-    <text x="330" y="165" font-size="116" font-weight="700" letter-spacing="-4">
-      <tspan fill="#20dfe7">x</tspan><tspan fill="#f0f6fc">Config</tspan>
+    <text x="390" y="172" font-size="116" font-weight="700" letter-spacing="-4">
+      <tspan fill="#20dfe7">x</tspan><tspan fill="#f7f9fb">Config</tspan>
     </text>
-    <text x="340" y="235" fill="#b8c1cc" font-size="48" font-weight="400" letter-spacing="1">für Autodarts</text>
+    <text x="485" y="236" fill="#c3cbd4" font-size="46" font-weight="400" letter-spacing="1">für Autodarts</text>
   </g>
 </svg>
