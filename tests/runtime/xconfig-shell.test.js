@@ -317,8 +317,9 @@ test("xConfig shell injects below Legal with its bullseye menu glyph, opens rout
   assert.equal(menuIcon.getAttribute("fill"), "none");
   assert.equal(menuIcon.getAttribute("stroke"), "currentColor");
   assert.equal(menuIcon.querySelectorAll("path").length, 1);
-  assert.equal(menuIcon.querySelectorAll("circle").length, 2);
-  assert.equal(menuIcon.querySelector("path")?.getAttribute("stroke-width"), "3.25");
+  assert.equal(menuIcon.querySelectorAll("circle").length, 3);
+  assert.equal(menuIcon.querySelector("path")?.getAttribute("stroke-width"), "2.8");
+  assert.equal(menuIcon.querySelector("circle")?.getAttribute("stroke-dasharray"), "7.1 6.4");
   assert.ok(menuButton.querySelector(".side-menu-chevron"));
   assert.ok(documentRef.getElementById(ELECTRIC_FILTER_DEFS_NODE_ID));
   assert.equal(documentRef.legalLink.nextElementSibling, menuButton);
