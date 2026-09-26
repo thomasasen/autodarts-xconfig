@@ -1,22 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
   <title id="title">xConfig mark</title>
-  <desc id="desc">Cyan X with a segmented target ring and central bullseye on a dark background.</desc>
-  <rect width="512" height="512" rx="96" fill="#0d1117"/>
-  <g shape-rendering="geometricPrecision">
+  <desc id="desc">Cyan X with segmented target ring and central bullseye.</desc>
+  <rect width="512" height="512" rx="96" fill="#081018"/>
+  <g transform="translate(18 22) scale(1.25)" shape-rendering="geometricPrecision">
     <circle
-      cx="256"
-      cy="256"
-      r="150"
+      cx="194"
+      cy="197"
+      r="163"
       fill="none"
-      stroke="#f0f6fc"
-      stroke-width="30"
-      stroke-dasharray="130.9 104.7"
-      stroke-dashoffset="65.45"
+      stroke="#f7f9fb"
+      stroke-width="28"
+      stroke-dasharray="154 102"
+      stroke-dashoffset="77"
     />
-    <path d="M151 130 382 361" fill="none" stroke="#20dfe7" stroke-width="52" stroke-linecap="butt"/>
-    <path d="M361 130 130 361" fill="none" stroke="#20dfe7" stroke-width="52" stroke-linecap="butt"/>
-    <circle cx="256" cy="256" r="58" fill="#f0f6fc"/>
-    <circle cx="256" cy="256" r="38" fill="#0d1117"/>
-    <circle cx="256" cy="256" r="17" fill="#20dfe7"/>
+    <path d="M35 55H102L174 130L150 165L35 80Z" fill="#20dfe7"/>
+    <path d="M353 55H286L214 130L238 165L353 80Z" fill="#20dfe7"/>
+    <path d="M35 339H102L174 264L150 229L35 314Z" fill="#20dfe7"/>
+    <path d="M353 339H286L214 264L238 229L353 314Z" fill="#20dfe7"/>
+    <circle cx="194" cy="197" r="56" fill="#f7f9fb"/>
+    <circle cx="194" cy="197" r="37" fill="#081018"/>
+    <circle cx="194" cy="197" r="19" fill="#20dfe7"/>
   </g>
 </svg>
