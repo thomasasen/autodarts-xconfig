@@ -82,7 +82,7 @@ import {
 
 const CONFIG_PATH = "/ad-xconfig";
 const CONFIG_HASH = "#ad-xconfig";
-const MENU_LABEL = "AD xConfig";
+const MENU_LABEL = "xConfig";
 const README_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md";
 const CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/CHANGELOG.md";
 const ROOT_OBSERVER_KEY = "xconfig-shell:root-observer";

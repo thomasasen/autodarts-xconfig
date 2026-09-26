@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">xConfig für Autodarts</title>
+  <desc id="desc">xConfig companion-tool logo with a cyan X, segmented target ring and bullseye.</desc>
+  <rect width="1200" height="360" rx="36" fill="#0d1117"/>
+  <g transform="translate(54 50)" shape-rendering="geometricPrecision">
+    <circle
+      cx="130"
+      cy="130"
+      r="92"
+      fill="none"
+      stroke="#f0f6fc"
+      stroke-width="18"
+      stroke-dasharray="80.3 64.2"
+      stroke-dashoffset="40.15"
+    />
+    <path d="M66 53 207 194" fill="none" stroke="#20dfe7" stroke-width="32" stroke-linecap="butt"/>
+    <path d="M194 53 53 194" fill="none" stroke="#20dfe7" stroke-width="32" stroke-linecap="butt"/>
+    <circle cx="130" cy="130" r="36" fill="#f0f6fc"/>
+    <circle cx="130" cy="130" r="24" fill="#0d1117"/>
+    <circle cx="130" cy="130" r="11" fill="#20dfe7"/>
+  </g>
+  <g font-family="Inter, Segoe UI, Arial, sans-serif">
+    <text x="330" y="165" font-size="116" font-weight="700" letter-spacing="-4">
+      <tspan fill="#20dfe7">x</tspan><tspan fill="#f0f6fc">Config</tspan>
+    </text>
+    <text x="340" y="235" fill="#b8c1cc" font-size="48" font-weight="400" letter-spacing="1">für Autodarts</text>
+  </g>
+</svg>

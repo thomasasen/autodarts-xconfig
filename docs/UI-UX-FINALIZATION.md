@@ -6,7 +6,7 @@ Abschluss der UI-/UX-Parität für die bestehende Bundle-Architektur ohne Rückk
 
 ## Umgesetzte UI-Korrekturen
 
-- Der Menüeintrag `xConfig` wird idempotent im seitlichen Benutzermenü direkt unter `Legal` eingefügt und verwendet wieder das frühere xConfig-Symbol.
+- Der Menüeintrag `xConfig` wird idempotent im seitlichen Benutzermenü direkt unter `Legal` eingefügt und verwendet die reduzierte monochrome Bullseye-X-Micro-Glyph der xConfig-Marke.
 - Menü- und Panel-Injektion bleiben stabil bei Mutation, Re-Render und Start-/Stop-Zyklen.
 - Interne xConfig-Mutationen triggern keine Observer-Feedbackschleifen.
 - Beim Öffnen von xConfig wird das seitliche Benutzermenü geschlossen; bei dessen erneutem Mount wird der Eintrag automatisch wiederhergestellt.

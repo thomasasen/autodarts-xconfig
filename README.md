@@ -1,6 +1,10 @@
-﻿# Autodarts xConfig
+﻿<p align="center">
+  <img src="docs/branding/xconfig-logo.svg" alt="xConfig für Autodarts" width="900">
+</p>
 
-> Visuelle Erweiterungen für Autodarts: bessere Lesbarkeit, klarere Hinweise, Themes und optionale Effekte.  
+# xConfig für Autodarts
+
+> **Inoffizielle Erweiterung für Autodarts.** Visuelle Erweiterungen für bessere Lesbarkeit, klarere Hinweise, Themes und optionale Effekte.  
 > Die Spiellogik bleibt unverändert.
 
 ## Version 3.0: Migration auf die neue Autodarts-Oberfläche abgeschlossen
@@ -38,7 +42,7 @@ Die Screenshots und Bezeichnungen in dieser Anleitung stammen aus einem Chrome-/
 
 [Releases und Downloads](https://github.com/thomasasen/autodarts-xconfig/releases) · [Changelog](CHANGELOG.md)
 
-## Was ist AD xConfig?
+## Was ist xConfig?
 
 `autodarts-xconfig` ergänzt Autodarts um Themes, Animationen und kleine Komfortfunktionen. Du kannst damit das Spiel übersichtlicher machen und die Oberfläche nach deinem Geschmack anpassen.
 
@@ -496,7 +500,7 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 ## Für Entwickler
 
-Wenn du AD xConfig nur nutzen möchtest, kannst du diesen Abschnitt überspringen. Für Beiträge, lokale Prüfungen und Release-nahes Arbeiten sind diese Befehle relevant:
+Wenn du xConfig nur nutzen möchtest, kannst du diesen Abschnitt überspringen. Für Beiträge, lokale Prüfungen und Release-nahes Arbeiten sind diese Befehle relevant:
 
 ```bash
 npm install
