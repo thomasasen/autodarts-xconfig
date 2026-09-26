@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">xConfig mark</title>
+  <desc id="desc">Cyan X with a segmented target ring and central bullseye on a dark background.</desc>
+  <rect width="512" height="512" rx="96" fill="#0d1117"/>
+  <g shape-rendering="geometricPrecision">
+    <circle
+      cx="256"
+      cy="256"
+      r="150"
+      fill="none"
+      stroke="#f0f6fc"
+      stroke-width="30"
+      stroke-dasharray="130.9 104.7"
+      stroke-dashoffset="65.45"
+    />
+    <path d="M151 130 382 361" fill="none" stroke="#20dfe7" stroke-width="52" stroke-linecap="butt"/>
+    <path d="M361 130 130 361" fill="none" stroke="#20dfe7" stroke-width="52" stroke-linecap="butt"/>
+    <circle cx="256" cy="256" r="58" fill="#f0f6fc"/>
+    <circle cx="256" cy="256" r="38" fill="#0d1117"/>
+    <circle cx="256" cy="256" r="17" fill="#20dfe7"/>
+  </g>
+</svg>
