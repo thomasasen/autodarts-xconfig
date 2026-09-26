@@ -23,7 +23,7 @@ Die SVGs sind die kanonischen Quellen. Rasterdateien werden nur erzeugt, wenn ei
 - Primärtext / Target-Ring: `#f0f6fc`
 - Sekundärtext: `#b8c1cc`
 
-Alle vier Arme des X verwenden in der Vollfarb-Marke dasselbe Cyan.
+Alle vier Arme des X verwenden in der Vollfarb-Marke dasselbe Cyan. Die Arme sind eigenständige breite Geometrien und keine einfachen diagonalen Linien; ihre Proportionen folgen dem ausgewählten Bullseye-X-Entwurf.
 
 ## Menü-Glyph
 
@@ -31,7 +31,7 @@ Das Symbol im Autodarts-Menü ist absichtlich stärker reduziert als die Vollfar
 
 - monochrom über `currentColor`
 - kein Glow, keine Verläufe, keine Schatten
-- kompaktes X mit zentralem Bullseye
+- kompaktes X mit zentralem Bullseye und vier reduzierten Target-Segmenten
 - keine Abhängigkeit von externen Bilddateien
 
 Die Micro-Glyph wird direkt in `src/features/xconfig-ui/render-controller.js` erzeugt, damit sie Host-Farben, Hover- und Active-Zustände automatisch übernimmt.
