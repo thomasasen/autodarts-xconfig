@@ -279,6 +279,24 @@ export function buildThemeGameLayoutStyleText() {
   min-height:52px!important;
   overflow:visible!important;
 }
+[data-ad-ext-game-layout-name-region="true"][data-ad-ext-game-layout-leg-starter="true"]::before{
+  content:"START";
+  flex:0 0 auto!important;
+  margin-right:8px!important;
+  padding:3px 7px 2px!important;
+  border:1px solid rgba(245,158,11,.72)!important;
+  border-radius:999px!important;
+  background:rgba(245,158,11,.16)!important;
+  color:#fbbf24!important;
+  font-family:var(--ad-font-display,inherit)!important;
+  font-size:.625rem!important;
+  font-weight:800!important;
+  line-height:1!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+  white-space:nowrap!important;
+  pointer-events:none!important;
+}
 [data-ad-ext-game-layout-name-container="true"]{
   flex:1 1 auto!important;
   width:auto!important;
