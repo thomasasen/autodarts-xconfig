@@ -8,9 +8,9 @@
 - Spielmodus: X01
 - Implementierung: Core, Config, UI, START-Badge, Tests und generierte Doku umgesetzt
 - Zwischen-QS: erfolgreich (gezielte Runtime-/Config-Tests, Syntax und ESLint)
-- Finale QS: nach Red-Team-Korrekturen erneut ausstehend
+- Finale QS: nach Red-Team-Korrekturen erneut erfolgreich
 - Red-Team-Korrekturen: umgesetzt; gezielte Zwischen-QS erfolgreich
-- Planstatus: Red-Team-Befunde behoben, finale Revalidierung läuft
+- Planstatus: implementiert, Red-Team-Befunde behoben und final revalidiert
 
 ## Umsetzungsstand
 
@@ -55,6 +55,19 @@ Zwischen-QS nach den Korrekturen:
 - gezieltes ESLint – erfolgreich
 
 GitHub-Actions-Lauf: `36321332759` – erfolgreich.
+
+Finale Revalidierung nach den Red-Team-Korrekturen:
+
+- `tests/runtime/theme-game-layout.test.js`: 20/20
+- `tests/runtime/feature-config-spec.test.js`: 12/12
+- `tests/runtime/xconfig-structure-consistency.test.js`: 9/9
+- `tests/runtime/xconfig-shell.test.js`: 61/61
+- `tests/runtime/readme-docs.test.js`: 26/26
+- `npm run check:syntax`: erfolgreich (281 JavaScript- und 2 JSON-Dateien)
+- gezieltes ESLint: erfolgreich
+- `npm run sync:xconfig-docs` + Diff-Prüfung: synchron, kein generierter Doku-Diff
+
+GitHub-Actions-Lauf: `36321397267` – erfolgreich.
 
 ### Finale QS – Ergebnis
 
