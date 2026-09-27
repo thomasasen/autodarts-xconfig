@@ -21,6 +21,42 @@ function normalizeIndex(value, fallback = 0) {
   return Number.isFinite(number) ? Math.max(0, Math.trunc(number)) : fallback;
 }
 
+export function rotatePlayersToActive(players = []) {
+  const orderedPlayers = Array.isArray(players) ? [...players] : [];
+  const activeIndexes = orderedPlayers.reduce((indexes, player, index) => {
+    if (player?.active === true) indexes.push(index);
+    return indexes;
+  }, []);
+
+  if (activeIndexes.length !== 1 || activeIndexes[0] === 0) {
+    return orderedPlayers;
+  }
+
+  const activeIndex = activeIndexes[0];
+  return [
+    ...orderedPlayers.slice(activeIndex),
+    ...orderedPlayers.slice(0, activeIndex),
+  ];
+}
+
+export function resolveGameLayoutPlayerOrder(players = [], playerOrder = "fixed") {
+  const orderedPlayers = Array.isArray(players) ? [...players] : [];
+  return playerOrder === "active-first"
+    ? rotatePlayersToActive(orderedPlayers)
+    : orderedPlayers;
+}
+
+export function resolveLegStarterSeat(snapshot, playerCount) {
+  const count = Math.max(0, Math.trunc(Number(playerCount) || 0));
+  const players = snapshot?.match?.players;
+  if (!count || !Array.isArray(players) || players.length !== count) {
+    return null;
+  }
+
+  const seat = Number(players[0]?.index);
+  return Number.isInteger(seat) && seat >= 0 && seat < count ? seat : null;
+}
+
 export function calculateFittedFontSize(options = {}) {
   const preferredFontSize = Math.max(0, Number(options.preferredFontSize) || 0);
   const minimumFontSize = Math.min(
@@ -144,11 +180,14 @@ export function calculateBoardFocusLayout(options = {}) {
         Math.max(0, playerCount - 1)
       )
     : -1;
+  const pinActiveAtStart = options.pinActiveAtStart === true && activeIndex >= 0;
   let firstVisibleIndex = requestedFirstVisible;
-  if (activeIndex >= 0 && activeIndex < firstVisibleIndex) {
-    firstVisibleIndex = activeIndex;
-  } else if (activeIndex >= firstVisibleIndex + visiblePlayerCount) {
-    firstVisibleIndex = activeIndex - visiblePlayerCount + 1;
+  if (!pinActiveAtStart) {
+    if (activeIndex >= 0 && activeIndex < firstVisibleIndex) {
+      firstVisibleIndex = activeIndex;
+    } else if (activeIndex >= firstVisibleIndex + visiblePlayerCount) {
+      firstVisibleIndex = activeIndex - visiblePlayerCount + 1;
+    }
   }
   firstVisibleIndex = clamp(firstVisibleIndex, 0, maximumFirstVisible);
 
@@ -180,6 +219,7 @@ export function calculateBoardFocusLayout(options = {}) {
     firstVisibleIndex,
     maximumFirstVisible,
     activeIndex,
+    pinActiveAtStart,
     overflow,
     boardSize,
     scrollThumbHeight,
