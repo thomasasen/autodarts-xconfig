@@ -8,8 +8,9 @@
 - Spielmodus: X01
 - Implementierung: Core, Config, UI, START-Badge, Tests und generierte Doku umgesetzt
 - Zwischen-QS: erfolgreich (gezielte Runtime-/Config-Tests, Syntax und ESLint)
-- Finale QS: erfolgreich (Runtime, Config, UI-Struktur, Shell, Doku-Konsistenz, Syntax und ESLint)
-- Planstatus: implementiert und final validiert
+- Finale QS: nach Red-Team-Korrekturen erneut ausstehend
+- Red-Team-Korrekturen: umgesetzt; gezielte Zwischen-QS erfolgreich
+- Planstatus: Red-Team-Befunde behoben, finale Revalidierung läuft
 
 ## Umsetzungsstand
 
@@ -30,6 +31,30 @@ Erfolgreich auf dem integrierten Core-Stand ausgeführt:
 - gezieltes ESLint für die geänderten Runtime-, Config-, UI- und Testdateien
 
 Alle Checks waren grün. Die Tests decken insbesondere zyklische Rotation, mehrdeutige Aktivzustände, Starter-Fallbacks, Leg-Wechsel, unveränderte DOM-Eltern, Cleanup sowie Overflow mit gepinntem aktiven Spieler ab.
+
+### Red-Team-Nachprüfung – Befunde und Korrekturen
+
+Eine zusätzliche adversarielle Prüfung nach der ersten finalen QS hat drei reproduzierbare Schwachstellen gefunden:
+
+1. `null` bzw. leere `player.index`-Werte wurden durch numerische Coercion fälschlich als Sitz `0` interpretiert.
+2. Ein veralteter Game-State aus einem vorherigen Match mit gleicher Spielerzahl konnte kurzzeitig einen falschen START-Badge erzeugen.
+3. Zwei gleichzeitig aktive DOM-Marker konnten Layout-Metrik und tatsächliche Kartenhöhen auseinanderlaufen lassen und den Player-Viewport überfüllen.
+
+Die Korrekturen:
+
+- `player.index` wird nur noch akzeptiert, wenn er bereits eine echte ganzzahlige Zahl im gültigen Bereich ist; alle Sitzindizes müssen eindeutig sein.
+- Der Snapshot wird zusätzlich gegen die sichtbaren Spielernamen in Sitzreihenfolge plausibilisiert. Bei Abweichung oder unvollständiger Evidenz wird kein Starter-Badge gezeigt.
+- Bei keinem oder mehreren aktiven Spielern verwendet das Layout eine neutrale, konsistente Geometrie ohne Rotation und ohne Annahme eines einzelnen aktiven Spielers.
+- Die drei Red-Team-Szenarien sind als dauerhafte Regressionstests in `theme-game-layout.test.js` übernommen.
+
+Zwischen-QS nach den Korrekturen:
+
+- `tests/runtime/theme-game-layout.test.js` – erfolgreich
+- `tests/runtime/feature-config-spec.test.js` – erfolgreich
+- `npm run check:syntax` – erfolgreich
+- gezieltes ESLint – erfolgreich
+
+GitHub-Actions-Lauf: `36321332759` – erfolgreich.
 
 ### Finale QS – Ergebnis
 
