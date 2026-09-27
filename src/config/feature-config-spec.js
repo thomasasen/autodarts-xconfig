@@ -121,6 +121,7 @@ const THEME_BACKGROUND_DISPLAY_MODES = new Set(["fill", "fit", "stretch", "cente
 const THEME_BACKGROUND_OPACITY = new Set([100, 85, 70, 55, 40, 30, 25, 20, 15, 10]);
 const THEME_PLAYER_FIELD_TRANSPARENCY = new Set([0, 5, 10, 15, 30, 45, 60]);
 const THEME_ACTIVE_PLAYER_TINT_INTENSITY = new Set([0, 10, 15, 20, 25, 30]);
+const THEME_GAME_LAYOUT_PLAYER_ORDERS = new Set(["fixed", "active-first"]);
 const THEME_GLOBAL_TYPOGRAPHY_FONT_PRESET_KEYS = new Set(
   THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS.map((preset) => preset.value)
 );
@@ -394,7 +395,12 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
     activePlayerTintIntensity: 15,
     debug: false,
   },
-  "themes.gameLayout": { enabled: false, debug: false },
+  "themes.gameLayout": {
+    enabled: false,
+    playerOrder: "fixed",
+    showLegStarter: false,
+    debug: false,
+  },
   "themes.globalPresets": { enabled: false },
   turnDartDisplay: DEFAULT_TURN_DART_DISPLAY_CONFIG,
 });
@@ -722,6 +728,12 @@ const FEATURE_NORMALIZERS = Object.freeze({
   "themes.gameLayout"(rawConfig = {}) {
     return {
       enabled: normalizeBoolean(rawConfig.enabled, false),
+      playerOrder: normalizeStringChoice(
+        rawConfig.playerOrder,
+        "fixed",
+        THEME_GAME_LAYOUT_PLAYER_ORDERS
+      ),
+      showLegStarter: normalizeBoolean(rawConfig.showLegStarter, false),
       debug: normalizeBoolean(rawConfig.debug, false),
     };
   },

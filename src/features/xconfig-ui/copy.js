@@ -291,15 +291,30 @@ export const xconfigFeatureCopy = deepFreeze({
     },
   }),
   "theme-game-layout": featureCopy({
-    cardDescription: "Ordnet alle X01-Spieler links an und nutzt den rechten Bereich für ein größeres Dartboard.",
+    cardDescription: "Ordnet alle X01-Spieler links an und kann den aktuell werfenden Spieler immer nach oben rotieren.",
     visibleDescription: "Zeigt die Wurfanzeige über kompakten horizontalen Spielerkarten links und vergrößert das native Board rechts.",
-    visualDescription: "Alle nativen Spielerkarten bleiben erhalten und werden in einer scrollbaren linken Leiste angeordnet. Das unverzerrte Dartboard füllt die freie Fläche; Eingabe, Undo und Next stehen in einem beschrifteten Dock rechts.",
+    visualDescription: "Alle nativen Spielerkarten bleiben erhalten und werden nur visuell angeordnet. Optional rotiert die Leiste zyklisch so, dass der aktuell werfende Spieler immer oben steht; ein kleiner START-Badge kann zusätzlich den Spieler markieren, der das aktuelle Leg begonnen hat.",
     usefulWhen: "Wenn das Board im Querformat möglichst groß sein und trotzdem jeder Spieler schnell erfassbar bleiben soll.",
     featuresDetails: [
       "Aktiv ab 1180×650 Pixeln im Querformat; kleinere oder unklare Oberflächen bleiben im nativen Layout.",
-      "Bei vielen Spielern folgt die Leiste dem aktiven Spieler automatisch und kann in ganzen Karten weitergescrollt werden.",
+      "Die Reihenfolge kann fest bleiben oder zyklisch mit dem aktuell werfenden Spieler nach oben rotieren.",
+      "Der optionale START-Badge bleibt beim Leg-Starter und ist unabhängig davon, wer gerade wirft.",
+      "Bei vielen Spielern bleibt der aktive Spieler im Rotationsmodus oben sichtbar; die übrigen Spieler lassen sich weiter durchscrollen.",
     ],
-    fields: { debug: DEBUG_FIELD },
+    images: [image("X01-Spiel-Layout", "theme-game-layout.webp")],
+    fields: {
+      playerOrder: fieldCopy(
+        "Wählt zwischen fester Reihenfolge und aktiver Spielerkarte oben.",
+        "Mit `Fest` bleibt die bisherige Sitzreihenfolge erhalten. `Aktiver Spieler immer oben` rotiert die Spielerkarten zyklisch ab dem aktuell werfenden Spieler, ohne die nativen DOM-Karten umzuhängen.",
+        "Legt fest, ob die Reihenfolge statisch bleibt oder mit dem aktiven Spieler rotiert."
+      ),
+      showLegStarter: fieldCopy(
+        "Kennzeichnet den Spieler, der das aktuelle Leg begonnen hat.",
+        "Blendet an der Namenszeile des Leg-Starters einen kleinen START-Badge ein. Der Badge bleibt bei diesem Spieler, auch wenn die Karten wegen eines Spielerwechsels rotieren.",
+        "Zeigt einen START-Badge beim Leg-Starter."
+      ),
+      debug: DEBUG_FIELD,
+    },
   }),
   "theme-global-presets": featureCopy({
     cardDescription: "Fertige Vorlagen für globalen Hintergrund und globale Schrift.",
@@ -399,7 +414,7 @@ export const xconfigFeatureCopy = deepFreeze({
       "Beim Eintritt in BUST färbt sich die aktive Spielerkarte dunkelrot, erhält einen klaren roten Rahmen und zeigt die konfigurierten Glasrisse an zufälligen Stellen. Optional startet gleichzeitig der Glasbruch-Sound. Die Markierung bleibt ruhig und sichtbar, bis `BUST` verschwindet; danach wird der native Zustand vollständig wiederhergestellt.",
     usefulWhen:
       "Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.",
-    images: [],
+    images: [image("Überworfen (BUST) hervorheben", "x01-bust-active-player-highlight.webp")],
     fields: {
       preview: fieldCopy(
         "Startet eine sofortige BUST-Vorschau auf der Beispielkarte.",
@@ -855,7 +870,7 @@ export const xconfigFeatureCopy = deepFreeze({
       "Auf dem virtuellen Board bleibt das Modul aktiv. Im Live-Modus pausiert es automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.",
       "Leistungsintensive Effekte können auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.",
     ],
-    images: [image("Treffermarkierungen durch Darts ersetzen", "animation-dart-marker-darts.png")],
+    images: [image("Treffermarkierungen durch Darts ersetzen", "dart-marker-replacer.webp")],
     fields: {
       "run-feature-action": fieldCopy(
         "Wirft das aktuell konfigurierte Dart-Design auf einen virtuellen Marker.",
@@ -2303,6 +2318,19 @@ const BOT_BOARD_STYLE_SCOPE_OPTION_COPY = deepFreeze({
   ),
 });
 
+const GAME_LAYOUT_PLAYER_ORDER_OPTION_COPY = deepFreeze({
+  fixed: optionCopy(
+    "Belässt die Spielerkarten in ihrer festen Sitzreihenfolge.",
+    "Die Spielerkarten bleiben in der vom unterstützten Autodarts-Desktoplayout gelieferten Sitzreihenfolge. Nur Aktivstatus und Kartengröße wechseln mit dem Zug.",
+    "Behält die feste Sitzreihenfolge der Spielerkarten bei."
+  ),
+  "active-first": optionCopy(
+    "Rotiert den aktuell werfenden Spieler immer an die erste sichtbare Position.",
+    "Ordnet die sichtbaren Karten zyklisch ab dem aktiven Spieler, ohne native DOM-Knoten umzuhängen. Die nachfolgenden Spieler behalten dabei ihre relative Sitzreihenfolge.",
+    "Rotiert zyklisch so, dass der aktive Spieler immer oben steht."
+  ),
+});
+
 const xconfigFieldOptionCopy = deepFreeze({
   "theme-global-background": {
     backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
@@ -2314,6 +2342,9 @@ const xconfigFieldOptionCopy = deepFreeze({
     remainingScoreSize: THEME_GLOBAL_TYPOGRAPHY_REMAINING_SCORE_SIZE_OPTION_COPY,
     applyTo: THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTION_COPY,
     activePlayerTintIntensity: THEME_ACTIVE_PLAYER_TINT_INTENSITY_OPTION_COPY,
+  },
+  "theme-game-layout": {
+    playerOrder: GAME_LAYOUT_PLAYER_ORDER_OPTION_COPY,
   },
   "turn-dart-display": {
     turnDartStyle: THEME_GLOBAL_TURN_DART_STYLE_OPTION_COPY,

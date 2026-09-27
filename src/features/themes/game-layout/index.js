@@ -10,6 +10,8 @@ import {
   calculateClearRailRange,
   calculateFittedFontSize,
   moveBoardFocusWindow,
+  resolveGameLayoutPlayerOrder,
+  resolveLegStarterSeat,
 } from "./logic.js";
 import { resolveModernX01GameLayoutSurface } from "./surface.js";
 import { STYLE_ID, buildThemeGameLayoutStyleText } from "./style.js";
@@ -34,6 +36,7 @@ const MANAGED_ATTRIBUTES = Object.freeze([
   "data-ad-ext-game-layout-player-body",
   "data-ad-ext-game-layout-player-content",
   "data-ad-ext-game-layout-name-region",
+  "data-ad-ext-game-layout-leg-starter",
   "data-ad-ext-game-layout-name-container",
   "data-ad-ext-game-layout-name-plate",
   "data-ad-ext-game-layout-score-region",
@@ -201,11 +204,18 @@ function clearAppliedState(state, preservedControlBar = null) {
   state.wheelHandler = null;
 }
 
-function markSurface(state, surface, metrics) {
+function markSurface(state, surface, metrics, options = {}) {
   const mark = (node, attribute, value = "true") => {
     rememberNode(state, node);
     setMarker(node, attribute, value);
   };
+  const players = Array.isArray(options.players) ? options.players : surface.players;
+  const pinActiveAtStart = options.pinActiveAtStart === true && metrics.activeIndex === 0;
+  const starterSeat = Number.isInteger(options.starterSeat) ? options.starterSeat : null;
+  const hasUniqueActivePlayer = options.hasUniqueActivePlayer === true;
+  const inactiveVisibleCount = Math.max(0, metrics.visiblePlayerCount - 1);
+  const inactiveWindowStart = metrics.firstVisibleIndex;
+
   mark(surface.root, "data-ad-ext-game-layout-root");
   setMarker(surface.root, "data-ad-ext-game-layout-overflow", String(metrics.overflow));
   surface.root.style?.setProperty?.("--ad-game-layout-rail-width", `${metrics.railWidth}px`);
@@ -224,10 +234,15 @@ function markSurface(state, surface, metrics) {
   surface.playerColumns.forEach((column) => mark(column, "data-ad-ext-game-layout-player-column"));
 
   let nextPlayerY = GAME_LAYOUT_PADDING + GAME_LAYOUT_TURN_HEIGHT + GAME_LAYOUT_TURN_PLAYER_GAP;
-  surface.players.forEach((player, index) => {
-    const visible = index >= metrics.firstVisibleIndex &&
-      index < metrics.firstVisibleIndex + metrics.visiblePlayerCount;
-    const isActive = surface.activeIndex < 0 || player.active;
+  players.forEach((player, index) => {
+    const visible = pinActiveAtStart
+      ? index === 0 || (
+        index >= 1 + inactiveWindowStart &&
+        index < 1 + inactiveWindowStart + inactiveVisibleCount
+      )
+      : index >= metrics.firstVisibleIndex &&
+        index < metrics.firstVisibleIndex + metrics.visiblePlayerCount;
+    const isActive = hasUniqueActivePlayer ? player.active : true;
     const cardHeight = isActive ? metrics.playerHeight : metrics.inactivePlayerHeight;
     const playerY = nextPlayerY;
     if (visible) nextPlayerY += cardHeight + GAME_LAYOUT_PLAYER_GAP;
@@ -245,6 +260,9 @@ function markSurface(state, surface, metrics) {
     mark(player.body, "data-ad-ext-game-layout-player-body");
     mark(player.content, "data-ad-ext-game-layout-player-content");
     mark(player.nameRegion, "data-ad-ext-game-layout-name-region");
+    if (starterSeat !== null && player.seatIndex === starterSeat) {
+      setMarker(player.nameRegion, "data-ad-ext-game-layout-leg-starter");
+    }
     mark(player.nameContainerNode, "data-ad-ext-game-layout-name-container");
     mark(player.namePlateNode, "data-ad-ext-game-layout-name-plate");
     mark(player.scoreRegion, "data-ad-ext-game-layout-score-region");
@@ -277,6 +295,8 @@ export function mountThemeGameLayout(context = {}) {
   const appliedState = createAppliedState();
   let firstVisibleIndex = 0;
   let lastMetrics = null;
+  let lastPlayerOrder = "fixed";
+  let lastActiveSeat = null;
   let controlBar = null;
   let controlsTimer = null;
   const timerHost = windowRef?.setTimeout ? windowRef : globalThis;
@@ -284,6 +304,12 @@ export function mountThemeGameLayout(context = {}) {
     if (controlsTimer !== null) timerHost.clearTimeout(controlsTimer);
     controlsTimer = null;
     controlBar = null;
+  };
+  const resetLayoutTracking = () => {
+    firstVisibleIndex = 0;
+    lastMetrics = null;
+    lastPlayerOrder = "fixed";
+    lastActiveSeat = null;
   };
   const revealControls = () => {
     if (!controlBar) return;
@@ -304,34 +330,86 @@ export function mountThemeGameLayout(context = {}) {
       if (!featureConfig?.enabled || !isThemeGameContextActive({ documentRef, windowRef })) {
         clearAppliedState(appliedState);
         resetControls();
+        resetLayoutTracking();
         domGuards.removeNodeById(STYLE_ID);
-        lastMetrics = null;
         return;
       }
 
       const surface = resolveModernX01GameLayoutSurface(documentRef, windowRef);
+      if (!surface) {
+        clearAppliedState(appliedState);
+        resetControls();
+        resetLayoutTracking();
+        domGuards.removeNodeById(STYLE_ID);
+        return;
+      }
+
+      const playerOrder = featureConfig.playerOrder === "active-first"
+        ? "active-first"
+        : "fixed";
+      const seatedPlayers = surface.players.map((player, seatIndex) => ({
+        ...player,
+        seatIndex,
+      }));
+      const displayPlayers = resolveGameLayoutPlayerOrder(seatedPlayers, playerOrder);
+      const activePlayers = displayPlayers.filter((player) => player.active === true);
+      const hasUniqueActivePlayer = activePlayers.length === 1;
+      const displayActiveIndex = hasUniqueActivePlayer
+        ? displayPlayers.indexOf(activePlayers[0])
+        : -1;
+      const activeSeat = hasUniqueActivePlayer ? activePlayers[0].seatIndex : null;
+      const pinActiveAtStart =
+        playerOrder === "active-first" &&
+        hasUniqueActivePlayer &&
+        displayActiveIndex === 0;
+
+      if (
+        playerOrder !== lastPlayerOrder ||
+        (pinActiveAtStart && activeSeat !== lastActiveSeat)
+      ) {
+        firstVisibleIndex = 0;
+      }
+
+      const visiblePlayerNames = seatedPlayers.map((player) =>
+        String(player.nameNode?.textContent || "").replaceAll(/\s+/g, " ").trim()
+      );
+      const starterSeat = featureConfig.showLegStarter === true
+        ? resolveLegStarterSeat(
+            context.gameState?.getSnapshot?.(),
+            seatedPlayers.length,
+            visiblePlayerNames
+          )
+        : null;
       const layoutSize = readResponsiveLayoutSize(surface, windowRef);
       const metrics = calculateBoardFocusLayout({
         width: layoutSize.width,
         height: layoutSize.height,
-        playerCount: surface?.players?.length,
-        activeIndex: surface?.activeIndex,
+        playerCount: displayPlayers.length,
+        activeIndex: displayActiveIndex,
         firstVisibleIndex,
+        pinActiveAtStart,
       });
-      if (!surface || !metrics.supported) {
+      if (!metrics.supported) {
         clearAppliedState(appliedState);
         resetControls();
+        resetLayoutTracking();
         domGuards.removeNodeById(STYLE_ID);
-        lastMetrics = null;
         return;
       }
 
       firstVisibleIndex = metrics.firstVisibleIndex;
       lastMetrics = metrics;
+      lastPlayerOrder = playerOrder;
+      lastActiveSeat = activeSeat;
       // Preserve opacity markers so frequent updates do not restart the fade.
       clearAppliedState(appliedState, surface.controlBar);
       domGuards.ensureStyle(STYLE_ID, buildThemeGameLayoutStyleText());
-      markSurface(appliedState, surface, metrics);
+      markSurface(appliedState, surface, metrics, {
+        players: displayPlayers,
+        pinActiveAtStart,
+        starterSeat,
+        hasUniqueActivePlayer,
+      });
       controlBar = surface.controlBar;
       if (controlsTimer !== null) setMarker(controlBar, "data-ad-ext-game-layout-controls-visible");
       selfCorrectSurface(surface, metrics, documentRef, windowRef);
@@ -364,6 +442,8 @@ export function mountThemeGameLayout(context = {}) {
         players: metrics.playerCount,
         visiblePlayers: metrics.visiblePlayerCount,
         boardSize: Math.round(metrics.boardSize),
+        playerOrder,
+        starterSeat,
       });
     },
   });
@@ -392,6 +472,7 @@ export function mountThemeGameLayout(context = {}) {
   harness.schedule();
   return harness.createCleanup(() => {
     resetControls();
+    resetLayoutTracking();
     clearAppliedState(appliedState);
     domGuards.removeNodeById(STYLE_ID);
   });

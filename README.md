@@ -194,7 +194,7 @@ Wähle den Spielmodus oder den gewünschten sichtbaren Effekt und öffne anschli
 | [Designvorlagen](#theme-global-presets) | Aktion | `alle Modi` | Fertige Vorlagen für globalen Hintergrund und globale Schrift. |
 | [Hintergrund](#theme-global-background) | Design | `alle Modi` | Globales Wallpaper und transparente Spielerfelder für alle Spielansichten. |
 | [Schrift & Farben](#template-global-typography) | Design | `alle Modi` | Globale Schrift, Textfarben und eine separate Restscore-Größe für Spielerkarten. |
-| [Spiel-Layout](#theme-game-layout) | Design | `X01` | Ordnet alle X01-Spieler links an und nutzt den rechten Bereich für ein größeres Dartboard. |
+| [Spiel-Layout](#theme-game-layout) | Design | `X01` | Ordnet alle X01-Spieler links an und kann den aktuell werfenden Spieler immer nach oben rotieren. |
 | [Dartboard-Design](#bot-board-style) | Funktion | `alle Modi` | Zeigt eines von zehn bekannten Board-Designs entweder nur während Bot-Zügen oder auf allen unterstützten Match-Boards. |
 | [Darts in der Wurfanzeige](#turn-dart-display) | Funktion | `alle Modi` | Globale Darstellung der drei Darts im Wurffeld. |
 | [Finishbaren Restscore hervorheben](#animation-autodarts-animate-checkout-score-highlight) | Funktion | `X01` | Hebt direkt finishbare Restwerte in X01 mit einem gut sichtbaren Score-Effekt hervor. |
@@ -266,6 +266,8 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 - Wann sinnvoll? Wenn das Board im Querformat möglichst groß sein und trotzdem jeder Spieler schnell erfassbar bleiben soll.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#theme-game-layout)
+
+![X01-Spiel-Layout](docs/screenshots/theme-game-layout.webp)
 
 ## Alle Modi
 
@@ -339,7 +341,7 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-dart-marker-replacer)
 
-![Treffermarkierungen durch Darts ersetzen](docs/screenshots/animation-dart-marker-darts.png)
+![Treffermarkierungen durch Darts ersetzen](docs/screenshots/dart-marker-replacer.webp)
 
 <a id="animation-autodarts-animate-take-out-darts-alert"></a>
 <a id="animation-autodarts-animate-remove-darts-notification"></a>
@@ -453,6 +455,8 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 - Wann sinnvoll? Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-x01-bust-active-player-highlight)
+
+![Überworfen (BUST) hervorheben](docs/screenshots/x01-bust-active-player-highlight.webp)
 
 ## Cricket / Tactics
 

@@ -1,7 +1,4 @@
-import {
-  resolveBoardStyleDesignAsset,
-  resolveDartDesignAsset,
-} from "#feature-assets";
+import { resolveBoardStyleDesignAsset } from "#feature-assets";
 import { resolveThemePresetAsset } from "#theme-preset-assets";
 import { resolveXConfigPreviewAsset } from "#xconfig-preview-assets";
 import { THEME_GLOBAL_TEMPLATE_PRESETS } from "../../shared/theme-global-template-presets.js";
@@ -143,9 +140,9 @@ const FEATURE_PREVIEW_RESOLVERS = Object.freeze({
     kind: "board",
     url: resolveBoardStyleDesignAsset(feature?.config?.design),
   }),
-  "dart-marker-replacer": (feature) => ({
+  "dart-marker-replacer": () => ({
     kind: "dart-marker",
-    url: resolveDartDesignAsset(feature?.config?.design),
+    url: resolveXConfigPreviewAsset("dart-marker-replacer"),
   }),
   "take-out-darts-alert": () => ({
     kind: "take-out-darts-alert",

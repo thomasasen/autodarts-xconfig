@@ -249,6 +249,10 @@ const TURN_DART_SIZE_OPTIONS = Object.freeze([
   { value: 115, label: "Standard" },
   { value: 135, label: "Groß" },
 ]);
+const GAME_LAYOUT_PLAYER_ORDER_OPTIONS = Object.freeze([
+  { value: "fixed", label: "Fest" },
+  { value: "active-first", label: "Aktiver Spieler immer oben" },
+]);
 const DEBUG_FIELD = checkboxField("debug", "Diagnose");
 
 const THEME_GLOBAL_TEMPLATE_PRESET_SECTIONS = Object.freeze([
@@ -353,7 +357,16 @@ export const xconfigDescriptors = Object.freeze([
   descriptorEntry({
     featureKey: "theme-game-layout",
     readmeAnchor: "theme-game-layout",
-    fields: [DEBUG_FIELD],
+    fields: [
+      selectField(
+        "playerOrder",
+        "Spielerreihenfolge",
+        GAME_LAYOUT_PLAYER_ORDER_OPTIONS,
+        { section: "Spieler" }
+      ),
+      checkboxField("showLegStarter", "Leg-Starter anzeigen", { section: "Spieler" }),
+      DEBUG_FIELD,
+    ],
   }),
   animationDescriptorEntry({
     featureKey: "bot-board-style",
