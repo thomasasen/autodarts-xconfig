@@ -470,6 +470,7 @@ export function mountThemeGameLayout(context = {}) {
         );
         if (nextIndex === firstVisibleIndex) return;
         event.preventDefault?.();
+        playerTransition.cancel();
         firstVisibleIndex = nextIndex;
         harness.schedule();
       };
