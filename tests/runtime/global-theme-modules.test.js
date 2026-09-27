@@ -16,10 +16,14 @@ import {
 import { buildThemeVisualSettingsCss } from "../../src/features/themes/shared/theme-visuals.js";
 import { mountTurnDartDisplay } from "../../src/features/turn-dart-display/index.js";
 import {
+  MODERN_TURN_DART_PLACEHOLDER_CLASS,
+  MODERN_TURN_DART_ROW_CLASS,
+  MODERN_TURN_DART_SURFACE_CLASS,
   TURN_DART_DISPLAY_STYLE_ID,
   buildTurnDartDisplayStyleText,
 } from "../../src/features/turn-dart-display/style.js";
 import { FakeDocument, FakeEvent, createFakeWindow } from "./fake-dom.js";
+import { createModernX01Fixture } from "./modern-x01-fixture.js";
 
 function createImmediateSchedulerFactory() {
   return (callback) => ({ schedule: callback, cancel() {} });
@@ -92,7 +96,8 @@ test("global background, typography and turn darts build isolated CSS", () => {
     turnDartShineEnabled: true,
   });
   assert.match(dartCss, /img\[alt="Dart"\]/);
-  assert.match(decodeURIComponent(dartCss), /stop-color="#22C55E"/);
+  const encodedTurnDartSvg = dartCss.match(/data:image\/svg\+xml,([^")]+)/)?.[1] || "";
+  assert.match(decodeURIComponent(encodedTurnDartSvg), /stop-color="#22C55E"/);
   assert.doesNotMatch(dartCss, /font-family: "Fragment Mono"/);
 });
 
@@ -118,6 +123,74 @@ test("global typography keeps modern match font scopes independent", () => {
   assert.match(namesCss, /main \.font-display/);
   assert.doesNotMatch(namesCss, /\.font-number/);
   assert.doesNotMatch(namesCss, /\.text-checkout-suggestion/);
+});
+
+test("turn dart display replaces native modern inline darts without styling checkout hints", () => {
+  const fixture = createModernX01Fixture({ throws: [], route: [] });
+  const config = createRuntimeConfig({
+    featureToggles: { turnDartDisplay: true },
+    features: {
+      turnDartDisplay: {
+        enabled: true,
+        turnDartStyle: "preset",
+        turnDartAssetKey: "german-giant",
+        turnDartSizePercent: 135,
+        turnDartShineEnabled: true,
+      },
+    },
+  });
+
+  const cleanup = mountTurnDartDisplay(
+    mountContext(config, fixture.documentRef, fixture.windowRef)
+  );
+  const styleText = String(
+    fixture.documentRef.getElementById(TURN_DART_DISPLAY_STYLE_ID)?.textContent || ""
+  );
+  const placeholders = fixture.rows.map(({ row }) => {
+    return Array.from(row.children).find((node) => node.getAttribute("aria-hidden") === "true");
+  });
+
+  assert.equal(fixture.turn.classList.contains(MODERN_TURN_DART_SURFACE_CLASS), true);
+  fixture.rows.forEach(({ row }) => {
+    assert.equal(row.classList.contains(MODERN_TURN_DART_ROW_CLASS), true);
+  });
+  placeholders.forEach((placeholder) => {
+    assert.equal(placeholder.classList.contains(MODERN_TURN_DART_PLACEHOLDER_CLASS), true);
+  });
+  assert.match(styleText, new RegExp(`\\.${MODERN_TURN_DART_PLACEHOLDER_CLASS} > svg`));
+  assert.match(styleText, /background-size: 96% auto !important/);
+  assert.match(styleText, /\.text-checkout-suggestion, \.text-checkout-setup/);
+
+  const originalPlaceholder = placeholders[0];
+  const replacementPlaceholder = fixture.documentRef.createElement("span");
+  replacementPlaceholder.setAttribute("aria-hidden", "true");
+  originalPlaceholder.remove();
+  fixture.rows[0].row.appendChild(replacementPlaceholder);
+  fixture.documentRef.__mutationObservers[0].callback([
+    {
+      type: "childList",
+      target: fixture.rows[0].row,
+      addedNodes: [replacementPlaceholder],
+      removedNodes: [originalPlaceholder],
+    },
+  ]);
+
+  assert.equal(originalPlaceholder.classList.contains(MODERN_TURN_DART_PLACEHOLDER_CLASS), false);
+  assert.equal(
+    replacementPlaceholder.classList.contains(MODERN_TURN_DART_PLACEHOLDER_CLASS),
+    true
+  );
+  placeholders[0] = replacementPlaceholder;
+
+  cleanup();
+  assert.equal(fixture.turn.classList.contains(MODERN_TURN_DART_SURFACE_CLASS), false);
+  fixture.rows.forEach(({ row }) => {
+    assert.equal(row.classList.contains(MODERN_TURN_DART_ROW_CLASS), false);
+  });
+  placeholders.forEach((placeholder) => {
+    assert.equal(placeholder.classList.contains(MODERN_TURN_DART_PLACEHOLDER_CLASS), false);
+  });
+  assert.equal(fixture.documentRef.getElementById(TURN_DART_DISPLAY_STYLE_ID), null);
 });
 
 test("remaining score size profiles are responsive, score-only and auto stays native", () => {
