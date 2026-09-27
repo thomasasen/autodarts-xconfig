@@ -599,4 +599,19 @@ Die Runtime-Suite deckt nun zusätzlich ab:
 
 ### Finale QS
 
-Wird nach dieser Dokumentation auf dem vollständigen Feature-Branch ausgeführt und hier mit dem finalen Run-Ergebnis ergänzt.
+Die vollständige finale QS wurde in GitHub Actions Run `36332727544` erfolgreich ausgeführt.
+
+Grün waren:
+
+- `node --test tests/runtime/theme-game-layout.test.js`
+- `node --test tests/runtime/feature-config-spec.test.js`
+- `node --test tests/runtime/xconfig-structure-consistency.test.js`
+- `node --test tests/runtime/xconfig-shell.test.js`
+- `node --test tests/runtime/readme-docs.test.js`
+- `npm run check:syntax`
+- gezieltes ESLint für die geänderten Game-Layout-Source-/Testdateien
+- `npm run sync:xconfig-docs` mit anschließendem Diff-Check für `README.md` und `docs/FEATURES.md`
+
+Für das Game-Layout existiert keine dedizierte Playwright-Fixture. Die DOM-Verträge werden deshalb durch die vorhandene Runtime-/Fake-DOM-Suite abgedeckt. Ein vollständiger Browser-Sweep wurde für diese lokalisierte Änderung nicht erzwungen.
+
+Der finale Branch enthält weder Release-/Versionsänderungen noch Änderungen unter `dist/**`.
