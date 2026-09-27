@@ -46,15 +46,42 @@ export function resolveGameLayoutPlayerOrder(players = [], playerOrder = "fixed"
     : orderedPlayers;
 }
 
-export function resolveLegStarterSeat(snapshot, playerCount) {
+function normalizePlayerName(value) {
+  return String(value ?? "").replaceAll(/\s+/g, " ").trim().toLocaleLowerCase();
+}
+
+export function resolveLegStarterSeat(snapshot, playerCount, visiblePlayerNames = []) {
   const count = Math.max(0, Math.trunc(Number(playerCount) || 0));
   const players = snapshot?.match?.players;
   if (!count || !Array.isArray(players) || players.length !== count) {
     return null;
   }
 
-  const seat = Number(players[0]?.index);
-  return Number.isInteger(seat) && seat >= 0 && seat < count ? seat : null;
+  const seats = players.map((player) => {
+    const seat = player?.index;
+    return typeof seat === "number" &&
+      Number.isInteger(seat) &&
+      seat >= 0 &&
+      seat < count
+      ? seat
+      : null;
+  });
+  if (seats.some((seat) => seat === null) || new Set(seats).size !== count) {
+    return null;
+  }
+
+  if (Array.isArray(visiblePlayerNames) && visiblePlayerNames.length === count) {
+    for (let playerIndex = 0; playerIndex < players.length; playerIndex += 1) {
+      const seat = seats[playerIndex];
+      const matchName = normalizePlayerName(players[playerIndex]?.name);
+      const visibleName = normalizePlayerName(visiblePlayerNames[seat]);
+      if (!matchName || !visibleName || matchName !== visibleName) {
+        return null;
+      }
+    }
+  }
+
+  return seats[0];
 }
 
 export function calculateFittedFontSize(options = {}) {
