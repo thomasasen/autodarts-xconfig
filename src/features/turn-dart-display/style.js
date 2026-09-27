@@ -2,6 +2,9 @@ import { resolveTurnDartAsset } from "#feature-assets";
 import { normalizeHexColor } from "../../shared/hex-color-utils.js";
 
 export const TURN_DART_DISPLAY_STYLE_ID = "ad-ext-turn-dart-display-style";
+export const MODERN_TURN_DART_SURFACE_CLASS = "ad-ext-turn-dart-surface--modern";
+export const MODERN_TURN_DART_ROW_CLASS = "ad-ext-turn-dart-row--modern";
+export const MODERN_TURN_DART_PLACEHOLDER_CLASS = "ad-ext-turn-dart-placeholder--modern";
 
 const TURN_DART_PLACEHOLDER_DATA_URL =
   "data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20477%20102%22%3E%3C/svg%3E";
@@ -10,6 +13,7 @@ const TURN_DART_PRESET_SIZE_BOOST = 1.7;
 const TURN_DART_IMAGE_SELECTOR = `#ad-ext-turn > .ad-ext-turn-throw img[alt="Dart"],
 #ad-ext-turn > .score img[alt="Dart"]`;
 const TURN_SUGGESTION_DART_SELECTOR = `#ad-ext-turn > .suggestion img[alt="Dart"]`;
+const TURN_DART_IMAGE_CUSTOM_PROPERTY = "--ad-ext-turn-dart-image";
 
 
 
@@ -91,7 +95,8 @@ function buildTurnDartTextStyleBlock(featureConfig, sizeScale, widthPx, heightPx
 
   const dartColor = normalizeHexColor(featureConfig.turnDartColor, "#FFFFFF");
   const fontSizePx = Math.round(18 * sizeScale);
-  return `#ad-ext-turn {
+  return `#ad-ext-turn,
+.${MODERN_TURN_DART_SURFACE_CLASS} {
   counter-reset: ad-ext-turn-dart-text;
 }
 
@@ -125,12 +130,41 @@ function buildTurnDartTextStyleBlock(featureConfig, sizeScale, widthPx, heightPx
   pointer-events: none;
 }
 
+.${MODERN_TURN_DART_ROW_CLASS} {
+  counter-increment: ad-ext-turn-dart-text;
+}
+
+.${MODERN_TURN_DART_PLACEHOLDER_CLASS} {
+  opacity: 1 !important;
+  pointer-events: none !important;
+}
+
+.${MODERN_TURN_DART_PLACEHOLDER_CLASS} > svg {
+  opacity: 0 !important;
+}
+
+.${MODERN_TURN_DART_PLACEHOLDER_CLASS}::before {
+  content: ${contentValue};
+  color: ${dartColor};
+  font-family: inherit !important;
+  font-size: ${fontSizePx}px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
+  text-shadow: 0 0 7px rgba(0, 0, 0, 0.72), 0 0 12px ${dartColor};
+}
+
 ${buildTurnSuggestionDartGuardStyleBlock()}`;
 }
 function buildTurnSuggestionDartGuardStyleBlock() {
   return `${TURN_SUGGESTION_DART_SELECTOR} {
   opacity: 0 !important;
   pointer-events: none !important;
+}
+
+.${MODERN_TURN_DART_ROW_CLASS}:is(.text-checkout-suggestion, .text-checkout-setup) > .${MODERN_TURN_DART_PLACEHOLDER_CLASS} {
+  opacity: 0 !important;
 }`;
 }
 
@@ -162,25 +196,48 @@ export function buildTurnDartDisplayStyleText(featureConfig = {}) {
   const shineFilter = featureConfig.turnDartShineEnabled === false
     ? "none"
     : "drop-shadow(0 0 5px rgba(255, 255, 255, 0.34))";
-  const imageDeclarations =
+  const legacyImageDeclarations =
     isUploadedImage
       ? [
           `content: url(${cssString(TURN_DART_PLACEHOLDER_DATA_URL)}) !important;`,
-          `background-image: url(${cssString(imageUrl)}) !important;`,
+          `background-image: var(${TURN_DART_IMAGE_CUSTOM_PROPERTY}) !important;`,
           "background-size: contain !important;",
           "background-position: right center !important;",
           "background-repeat: no-repeat !important;",
         ]
-      : [`content: url(${cssString(imageUrl)}) !important;`];
+      : [`content: var(${TURN_DART_IMAGE_CUSTOM_PROPERTY}) !important;`];
+  const modernWidthPercent = Math.min(
+    96,
+    Math.round((normalizedSizePercent / 135) * 94 * (style === "preset" ? 1.15 : 1))
+  );
 
-  return `${TURN_DART_IMAGE_SELECTOR} {
-  ${imageDeclarations.join("\n  ")}
+  return `${TURN_DART_IMAGE_SELECTOR},
+.${MODERN_TURN_DART_PLACEHOLDER_CLASS} {
+  ${TURN_DART_IMAGE_CUSTOM_PROPERTY}: url(${cssString(imageUrl)});
+}
+
+${TURN_DART_IMAGE_SELECTOR} {
+  ${legacyImageDeclarations.join("\n  ")}
   width: ${widthPx}px !important;
   height: ${heightPx}px !important;
   object-fit: contain !important;
   object-position: right center !important;
   opacity: 1 !important;
   filter: ${shineFilter} !important;
+}
+
+.${MODERN_TURN_DART_PLACEHOLDER_CLASS} {
+  background-image: var(${TURN_DART_IMAGE_CUSTOM_PROPERTY}) !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: ${modernWidthPercent}% auto !important;
+  opacity: 1 !important;
+  filter: ${shineFilter} !important;
+  pointer-events: none !important;
+}
+
+.${MODERN_TURN_DART_PLACEHOLDER_CLASS} > svg {
+  opacity: 0 !important;
 }
 
 ${buildTurnSuggestionDartGuardStyleBlock()}`;
