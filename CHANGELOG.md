@@ -12,6 +12,20 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.1.8] - 2026-09-27
+
+### Added
+
+- Nutzerwirkung: Im Spiel-Layout lassen sich für `Aktiver Spieler immer oben` die drei Wechsel-Effekte `FLIP + Resize`, `Smooth FLIP` und `Lane FLIP` auswählen. Die Einstellung zeigt das jeweilige Bewegungsprofil sofort in einer eigenen Vorschau.
+  Technik: Ein gemeinsamer Profilvertrag verbindet normalisierte Konfiguration, xConfig-Vorschau und die WAAPI-basierte Laufzeittransition. Die Animation verschiebt keine nativen Spielerkarten, respektiert reduzierte Bewegung und wird bei Größenänderungen, DOM-Austausch, Overflow-Scrollen, Konfigurationswechseln und Cleanup kontrolliert beendet.
+
+### Fixed
+
+- Nutzerwirkung: `Darts in der Wurfanzeige` ersetzt nun auch in der modernen X01-Oberfläche die drei nativen Dart-Platzhalter durch das gewählte Text-, Farb-, Upload- oder Presetdesign. Checkout- und Setup-Hinweise bleiben davon ausgenommen.
+  Technik: Die Laufzeit erkennt die gemeinsame moderne Turn-Surface semantisch, markiert ausschließlich deren Wurfzeilen und Platzhalter und bereinigt die Marker bei DOM-Austausch, Routenwechsel oder Deaktivierung; die klassische Oberfläche bleibt kompatibel.
+- Nutzerwirkung: Die Kachel `Spiel-Layout` zeigt den aktuellen realen Layout-Screenshot vollständig und klar statt einer abgedunkelten schematischen Nachbildung.
+  Technik: Vorschau-Asset und Dokumentationsbild wurden gemeinsam aktualisiert; die Kachel verwendet die Bildquelle mit `contain` und entfernt die veraltete künstliche DOM-Vorschau.
+
 ## [3.1.7] - 2026-09-27
 
 ### Added
@@ -2157,6 +2171,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.1.8]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.7...v3.1.8
 [3.1.7]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.6...v3.1.7
 [3.1.6]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.5...v3.1.6
 [3.1.5]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.4...v3.1.5

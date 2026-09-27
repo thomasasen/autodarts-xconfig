@@ -100,6 +100,11 @@ function interpolate(value, progress) {
   return 1 + (value - 1) * progress;
 }
 
+function removeTransitionMarker(item) {
+  item?.removeAttribute?.("data-ad-ext-game-layout-transitioning");
+  item?.removeAttribute?.("data-ad-ext-game-layout-transition-effect");
+}
+
 export function buildGameLayoutPlayerTransitionKeyframes(options = {}) {
   const dx = Number(options.dx) || 0;
   const dy = Number(options.dy) || 0;
@@ -146,11 +151,6 @@ export function createGameLayoutPlayerTransitionController(options = {}) {
   const easingOverride = String(options.easing || "").trim();
   const animations = new Map();
 
-  function removeMarker(item) {
-    item?.removeAttribute?.("data-ad-ext-game-layout-transitioning");
-    item?.removeAttribute?.("data-ad-ext-game-layout-transition-effect");
-  }
-
   function cancel() {
     animations.forEach((animation, item) => {
       try {
@@ -158,7 +158,7 @@ export function createGameLayoutPlayerTransitionController(options = {}) {
       } catch (_) {
         // A detached host node must not break layout recovery.
       }
-      removeMarker(item);
+      removeTransitionMarker(item);
     });
     animations.clear();
   }
@@ -269,7 +269,7 @@ export function createGameLayoutPlayerTransitionController(options = {}) {
           }
         );
       } catch (_) {
-        removeMarker(item);
+        removeTransitionMarker(item);
         cancel();
         return false;
       }
@@ -278,7 +278,7 @@ export function createGameLayoutPlayerTransitionController(options = {}) {
       const finish = () => {
         if (animations.get(item) !== animation) return;
         animations.delete(item);
-        removeMarker(item);
+        removeTransitionMarker(item);
       };
       animation.onfinish = finish;
       animation.oncancel = finish;
