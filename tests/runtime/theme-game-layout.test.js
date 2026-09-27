@@ -999,6 +999,10 @@ test("a fast A to B to C change cancels the old FLIP and retargets without stack
   const firstAnimation = fixture.players[1].item.__lastAnimation;
   assert.equal(firstAnimation.playState, "running");
 
+  gameState.setSnapshot({ turn: 1, scoreUpdate: true });
+  assert.equal(firstAnimation.playState, "running");
+  assert.equal(fixture.players[1].item.__lastAnimation, firstAnimation);
+
   setActivePlayer(fixture, 2);
   gameState.setSnapshot({ turn: 2 });
   const retargetedAnimation = fixture.players[2].item.__lastAnimation;
@@ -1130,6 +1134,34 @@ test("replaced player cards and overflow visibility changes fall back to a direc
   );
   assert.ok(visiblePlayers.length < fixture.players.length);
   assert.equal(fixture.players[7].item.style.getPropertyValue("--ad-game-layout-player-y"), "176px");
+
+  cleanup();
+});
+
+
+test("a WAAPI failure falls back to the correct final player layout without leaking markers", () => {
+  const fixture = createLayoutFixture({ playerCount: 3, activeIndex: 0 });
+  const gameState = createGameStateHarness({});
+  const config = createRuntimeConfig({
+    featureToggles: { "themes.gameLayout": true },
+    features: {
+      themes: {
+        gameLayout: { enabled: true, playerOrder: "active-first" },
+      },
+    },
+  });
+  const cleanup = mountThemeGameLayout(mountContext(config, fixture, gameState));
+
+  fixture.players[1].item.animate = () => {
+    throw new Error("simulated detached-animation failure");
+  };
+  setActivePlayer(fixture, 1);
+
+  assert.doesNotThrow(() => gameState.setSnapshot({ turn: 1 }));
+  assert.equal(fixture.players[1].item.style.getPropertyValue("--ad-game-layout-player-y"), "176px");
+  fixture.players.forEach((player) => {
+    assert.equal(player.item.getAttribute("data-ad-ext-game-layout-transitioning"), null);
+  });
 
   cleanup();
 });
