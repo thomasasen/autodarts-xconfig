@@ -23,7 +23,6 @@ export const XCONFIG_PREVIEW_ASSET_FILES = Object.freeze({
 
 export const XCONFIG_ANIMATED_PREVIEW_FEATURE_KEYS = Object.freeze([
   "checkout-score-highlight",
-  "x01-bust-active-player-highlight",
   "tv-board-zoom",
   "special-hit-highlights",
   "dartboard-marker-highlight",
