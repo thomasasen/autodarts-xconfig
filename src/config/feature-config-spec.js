@@ -2,6 +2,7 @@ import { setNestedValue, splitFeaturePath } from "./feature-path-utils.js";
 import { featureCatalog } from "../shared/feature-catalog.js";
 import {
   THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS,
+  THEME_GLOBAL_TYPOGRAPHY_REMAINING_SCORE_SIZE_OPTIONS,
   THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS,
   getThemeGlobalTypographyScopeValues,
 } from "../shared/theme-global-typography-presets.js";
@@ -122,6 +123,9 @@ const THEME_PLAYER_FIELD_TRANSPARENCY = new Set([0, 5, 10, 15, 30, 45, 60]);
 const THEME_ACTIVE_PLAYER_TINT_INTENSITY = new Set([0, 10, 15, 20, 25, 30]);
 const THEME_GLOBAL_TYPOGRAPHY_FONT_PRESET_KEYS = new Set(
   THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS.map((preset) => preset.value)
+);
+const THEME_GLOBAL_TYPOGRAPHY_REMAINING_SCORE_SIZE_KEYS = new Set(
+  THEME_GLOBAL_TYPOGRAPHY_REMAINING_SCORE_SIZE_OPTIONS.map((option) => option.value)
 );
 const THEME_PRESET_ASSET_KEY_SET = new Set(THEME_PRESET_ASSET_KEYS);
 const THEME_GLOBAL_TYPOGRAPHY_SCOPE_KEYS = new Set(
@@ -381,6 +385,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   "themes.globalTypography": {
     enabled: false,
     fontPreset: "system",
+    remainingScoreSize: "auto",
     applyTo: ["scores"],
     accentColor: "",
     scoreColor: "",
@@ -419,6 +424,7 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   "themes.globalTypography": {
     enabled: false,
     fontPreset: "aldrich",
+    remainingScoreSize: "auto",
     applyTo: ["scores", "throws", "names"],
     accentColor: "#00D9FF",
     scoreColor: "#FFFFFF",
@@ -690,6 +696,11 @@ const FEATURE_NORMALIZERS = Object.freeze({
     return {
       enabled: normalizeBoolean(rawConfig.enabled, false),
       fontPreset: normalizeStringChoice(rawConfig.fontPreset, "system", THEME_GLOBAL_TYPOGRAPHY_FONT_PRESET_KEYS),
+      remainingScoreSize: normalizeStringChoice(
+        rawConfig.remainingScoreSize,
+        "auto",
+        THEME_GLOBAL_TYPOGRAPHY_REMAINING_SCORE_SIZE_KEYS
+      ),
       applyTo: normalizeStringChoiceArray(
         rawConfig.applyTo,
         ["scores"],

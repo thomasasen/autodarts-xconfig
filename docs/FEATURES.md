@@ -37,6 +37,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 **Schrift & Farben**
 - `Aktiv`: Aus
 - `Schriftart`: Aldrich
+- `Restscore-Größe`: Automatisch
 - `Schrift anwenden auf`: scores,throws,names
 - `Hintergrund des aktiven Spielers`: 20 %
 - `Diagnose`: Aus
@@ -229,9 +230,9 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ### Schrift & Farben
 
 - Gilt für: `alle Modi`
-- Kurz: Wendet Schrift und Farben auf ausgewählte Bereiche aller Spielansichten an und kann den Hintergrund des aktiven Spielers leicht einfärben.
-- Grafisch: Schriftart und Textfarben ändern nur die ausgewählten stabilen Textbereiche; das Autodarts-Layout bleibt bestehen.
-- Wann sinnvoll? Wenn Scores, Würfe oder Namen spielübergreifend einheitlich lesbar sein sollen.
+- Kurz: Wendet Schrift und Farben auf ausgewählte Bereiche an, kann aktive Spielerkarten einfärben und skaliert den X01-Restscore unabhängig von Namen und Statistiken.
+- Grafisch: Schriftart, Textfarben und das responsive Restscore-Profil ändern nur die ausgewählten stabilen Textbereiche; das Autodarts-Layout bleibt bestehen.
+- Wann sinnvoll? Wenn Scores, Würfe oder Namen einheitlich lesbar sein oder X01-Restscores separat hervorgehoben werden sollen.
 - `Schriftart`: Wählt eine kuratierte Schrift für unterstützte Bereiche.
   - `Standard (deaktiviert)`: Belässt die unterstützten Bereiche bei einer normalen Systemschrift ohne Remote-Download.
   - `Aldrich`: Setzt die unterstützten Bereiche auf Aldrich.
@@ -284,6 +285,12 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Wallpoet`: Setzt die unterstützten Bereiche auf Wallpoet.
   - `Zen Dots`: Setzt die unterstützten Bereiche auf Zen Dots.
   - `Zilla Slab Highlight`: Setzt die unterstützten Bereiche auf Zilla Slab Highlight.
+- `Restscore-Größe`: Passt ausschließlich die Größe des verbleibenden Scores responsiv an.
+  - `Automatisch`: Behält die bisher vorgesehene Restscore-Größe bei.
+  - `Klein`: Zeigt den Restscore kompakt.
+  - `Standard`: Zeigt den Restscore in ausgewogener Größe.
+  - `Groß`: Zeigt den Restscore deutlich größer.
+  - `Sehr groß`: Zeigt den Restscore sehr groß und responsiv begrenzt.
 - `Schrift anwenden auf`: Legt fest, welche stabilen Bereiche die Schrift übernehmen.
   - `Scores`: Gilt für stabile Score- und Punkteanzeigen.
   - `Würfe`: Greift in der Wurfanzeige und bei stabilen Turn-Karten.

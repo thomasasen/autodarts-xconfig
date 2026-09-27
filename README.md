@@ -193,7 +193,7 @@ Wähle den Spielmodus oder den gewünschten sichtbaren Effekt und öffne anschli
 | --- | --- | --- | --- |
 | [Designvorlagen](#theme-global-presets) | Aktion | `alle Modi` | Fertige Vorlagen für globalen Hintergrund und globale Schrift. |
 | [Hintergrund](#theme-global-background) | Design | `alle Modi` | Globales Wallpaper und transparente Spielerfelder für alle Spielansichten. |
-| [Schrift & Farben](#template-global-typography) | Design | `alle Modi` | Globale Schrift- und Textfarben für Scores, Würfe und Spielernamen. |
+| [Schrift & Farben](#template-global-typography) | Design | `alle Modi` | Globale Schrift, Textfarben und eine separate Restscore-Größe für Spielerkarten. |
 | [Spiel-Layout](#theme-game-layout) | Design | `X01` | Ordnet alle X01-Spieler links an und nutzt den rechten Bereich für ein größeres Dartboard. |
 | [Dartboard-Design](#bot-board-style) | Funktion | `alle Modi` | Zeigt eines von zehn bekannten Board-Designs entweder nur während Bot-Zügen oder auf allen unterstützten Match-Boards. |
 | [Darts in der Wurfanzeige](#turn-dart-display) | Funktion | `alle Modi` | Globale Darstellung der drei Darts im Wurffeld. |
@@ -250,8 +250,8 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 ### Schrift & Farben
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Wendet Schrift und Farben auf ausgewählte Bereiche aller Spielansichten an und kann den Hintergrund des aktiven Spielers leicht einfärben.
-- Wann sinnvoll? Wenn Scores, Würfe oder Namen spielübergreifend einheitlich lesbar sein sollen.
+- Was macht es sichtbar? Wendet Schrift und Farben auf ausgewählte Bereiche an, kann aktive Spielerkarten einfärben und skaliert den X01-Restscore unabhängig von Namen und Statistiken.
+- Wann sinnvoll? Wenn Scores, Würfe oder Namen einheitlich lesbar sein oder X01-Restscores separat hervorgehoben werden sollen.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#template-global-typography)
 

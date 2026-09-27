@@ -323,7 +323,7 @@ export function buildThemeGameLayoutStyleText() {
   justify-content:flex-end!important;
 }
 [data-ad-ext-game-layout-root="true"] [data-ad-ext-game-layout-player-item="true"] [data-ad-ext-game-layout-player-card="true"] [data-ad-ext-game-layout-player-content="true"] [data-ad-ext-game-layout-score-region="true"] [data-ad-ext-game-layout-score-value="true"].font-number.overflow-hidden{
-  font-size:clamp(4rem,calc(var(--ad-game-layout-score-span) / .84),7rem)!important;
+  font-size:var(--ad-ext-theme-remaining-score-font-size,clamp(4rem,calc(var(--ad-game-layout-score-span) / .84),7rem))!important;
   line-height:.84!important;
   overflow:visible!important;
 }

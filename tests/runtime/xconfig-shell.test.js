@@ -12,7 +12,10 @@ import {
   THEME_GLOBAL_TEMPLATE_PRESETS,
   getThemeGlobalTemplatePreset,
 } from "../../src/shared/theme-global-template-presets.js";
-import { THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS } from "../../src/shared/theme-global-typography-presets.js";
+import {
+  THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS,
+  THEME_GLOBAL_TYPOGRAPHY_REMAINING_SCORE_SIZE_OPTIONS,
+} from "../../src/shared/theme-global-typography-presets.js";
 import { USERSCRIPT_DOWNLOAD_URL } from "../../src/features/xconfig-ui/update-check.js";
 import { groupXConfigFeatures } from "../../src/features/xconfig-ui/shell-view.js";
 import {
@@ -3661,6 +3664,22 @@ test("xConfig shell renders a compact searchable global font picker and loads th
     "[data-adxconfig-action='set-setting-select-option'][data-feature-key='theme-global-typography'][data-setting-key='applyTo']"
   );
   assert.equal(scopeOptionButtons.length, 3);
+
+  const remainingScoreSizeButtons = documentRef.querySelectorAll(
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='theme-global-typography'][data-setting-key='remainingScoreSize']"
+  );
+  assert.deepEqual(
+    remainingScoreSizeButtons.map((button) => ({
+      value: button.getAttribute("data-setting-value"),
+      label: String(button.querySelector(".ad-xconfig-option-label")?.textContent || "").trim(),
+    })),
+    THEME_GLOBAL_TYPOGRAPHY_REMAINING_SCORE_SIZE_OPTIONS.map(({ value, label }) => ({ value, label }))
+  );
+  clickSelectSettingOption(documentRef, "theme-global-typography", "remainingScoreSize", "very-large");
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features?.themes?.globalTypography?.remainingScoreSize === "very-large"
+  );
   assert.equal(
     scopeOptionButtons.filter((node) => node.getAttribute("data-active") === "true").length,
     3
@@ -3924,6 +3943,7 @@ test("xConfig shell applies global presets immediately with asset-backed preview
   assert.deepEqual(storedConfig.features.themes.globalTypography, {
     enabled: true,
     fontPreset: "audiowide",
+    remainingScoreSize: "auto",
     applyTo: ["scores", "names"],
     accentColor: "#2EF2FF",
     scoreColor: "#E8FF5A",

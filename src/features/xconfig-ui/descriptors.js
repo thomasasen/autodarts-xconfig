@@ -2,6 +2,7 @@ import { getXConfigFeatureCopy, getXConfigFieldCopy, getXConfigFieldOptionCopy }
 import { buildFeatureIndex, buildFeatureMap, normalizeFeatureKey } from "../feature-metadata.js";
 import {
   THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS,
+  THEME_GLOBAL_TYPOGRAPHY_REMAINING_SCORE_SIZE_OPTIONS,
   THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS,
 } from "../../shared/theme-global-typography-presets.js";
 import { THEME_GLOBAL_TEMPLATE_PRESETS } from "../../shared/theme-global-template-presets.js";
@@ -316,6 +317,12 @@ export const xconfigDescriptors = Object.freeze([
       selectField("fontPreset", "Schriftart", THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS, {
         section: "Schrift",
       }),
+      selectField(
+        "remainingScoreSize",
+        "Restscore-Größe",
+        THEME_GLOBAL_TYPOGRAPHY_REMAINING_SCORE_SIZE_OPTIONS,
+        { section: "Schrift" }
+      ),
       selectField("applyTo", "Schrift anwenden auf", THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS, {
         multiple: true,
         section: "Schrift",

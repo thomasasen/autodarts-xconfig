@@ -101,6 +101,12 @@ const THEME_GLOBAL_TYPOGRAPHY_SCOPE_FIELD = fieldCopy(
   "Legt fest, welche stabilen Bereiche die Schrift übernehmen."
 );
 
+const THEME_GLOBAL_TYPOGRAPHY_REMAINING_SCORE_SIZE_FIELD = fieldCopy(
+  "Passt nur die Größe des verbleibenden Scores in der Spielerkarte an. Andere Spielerinformationen bleiben unverändert.",
+  "Wählt ein responsives Größenprofil ausschließlich für den verbleibenden Score in X01-Spielerkarten. Namen, AVG, Legs, Sets, Wurf- und Checkout-Anzeigen behalten ihre bisherige Größe; `Automatisch` überlässt die Darstellung vollständig Autodarts beziehungsweise dem aktiven xConfig-Layout.",
+  "Passt ausschließlich die Größe des verbleibenden Scores responsiv an."
+);
+
 const THEME_GLOBAL_TYPOGRAPHY_ACCENT_COLOR_FIELD = fieldCopy(
   "Setzt die Farbe für aktive oder gewinnende Spieler inklusive Rahmen und aktiver Hauptzahl.",
   "Legt die semantische Akzentfarbe für aktive und gewinnende Spieler fest. Die Farbe wirkt im aktiven xConfig-Theme auf Rahmen, Outline/Glow und die aktive Hauptzahl, ohne zusätzliche Zustandsfarben einzeln freizuschalten.",
@@ -179,6 +185,34 @@ const THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTION_COPY = deepFreeze({
   ),
 });
 
+const THEME_GLOBAL_TYPOGRAPHY_REMAINING_SCORE_SIZE_OPTION_COPY = deepFreeze({
+  auto: optionCopy(
+    "Behält die native oder vom aktiven xConfig-Layout vorgesehene Größe bei.",
+    "Setzt keine eigene Schriftgröße und bewahrt damit das bisherige responsive Verhalten.",
+    "Behält die bisher vorgesehene Restscore-Größe bei."
+  ),
+  small: optionCopy(
+    "Zeigt den Restscore kompakter an.",
+    "Verwendet ein kleines, an Karten- und Bildschirmgröße begrenztes Profil.",
+    "Zeigt den Restscore kompakt."
+  ),
+  standard: optionCopy(
+    "Verwendet eine ausgewogene feste Größenstufe.",
+    "Verwendet ein mittleres responsives Profil mit Schutz vor Überlauf auf schmalen Spielerkarten.",
+    "Zeigt den Restscore in ausgewogener Größe."
+  ),
+  large: optionCopy(
+    "Hebt den Restscore deutlich hervor.",
+    "Vergrößert nur den Restscore und begrenzt ihn weiterhin anhand von Spielerkarte und Bildschirmhöhe.",
+    "Zeigt den Restscore deutlich größer."
+  ),
+  "very-large": optionCopy(
+    "Zeigt den Restscore maximal präsent.",
+    "Nutzt das größte responsive Profil, bleibt bei schmalen Karten und dreistelligen Scores aber begrenzt.",
+    "Zeigt den Restscore sehr groß und responsiv begrenzt."
+  ),
+});
+
 function buildThemeGlobalTypographyFontOptionCopy() {
   return deepFreeze(
     Object.fromEntries(
@@ -239,13 +273,14 @@ export const xconfigFeatureCopy = deepFreeze({
     },
   }),
   "theme-global-typography": featureCopy({
-    cardDescription: "Globale Schrift- und Textfarben für Scores, Würfe und Spielernamen.",
-    visibleDescription: "Wendet Schrift und Farben auf ausgewählte Bereiche aller Spielansichten an und kann den Hintergrund des aktiven Spielers leicht einfärben.",
-    visualDescription: "Schriftart und Textfarben ändern nur die ausgewählten stabilen Textbereiche; das Autodarts-Layout bleibt bestehen.",
-    usefulWhen: "Wenn Scores, Würfe oder Namen spielübergreifend einheitlich lesbar sein sollen.",
+    cardDescription: "Globale Schrift, Textfarben und eine separate Restscore-Größe für Spielerkarten.",
+    visibleDescription: "Wendet Schrift und Farben auf ausgewählte Bereiche an, kann aktive Spielerkarten einfärben und skaliert den X01-Restscore unabhängig von Namen und Statistiken.",
+    visualDescription: "Schriftart, Textfarben und das responsive Restscore-Profil ändern nur die ausgewählten stabilen Textbereiche; das Autodarts-Layout bleibt bestehen.",
+    usefulWhen: "Wenn Scores, Würfe oder Namen einheitlich lesbar sein oder X01-Restscores separat hervorgehoben werden sollen.",
     images: [image("Globale Schrift", "template-theme-global-typography-xConfig.png")],
     fields: {
       fontPreset: THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD,
+      remainingScoreSize: THEME_GLOBAL_TYPOGRAPHY_REMAINING_SCORE_SIZE_FIELD,
       applyTo: THEME_GLOBAL_TYPOGRAPHY_SCOPE_FIELD,
       accentColor: THEME_GLOBAL_TYPOGRAPHY_ACCENT_COLOR_FIELD,
       scoreColor: THEME_GLOBAL_TYPOGRAPHY_SCORE_COLOR_FIELD,
@@ -2276,6 +2311,7 @@ const xconfigFieldOptionCopy = deepFreeze({
   },
   "theme-global-typography": {
     fontPreset: THEME_GLOBAL_TYPOGRAPHY_FONT_OPTION_COPY,
+    remainingScoreSize: THEME_GLOBAL_TYPOGRAPHY_REMAINING_SCORE_SIZE_OPTION_COPY,
     applyTo: THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTION_COPY,
     activePlayerTintIntensity: THEME_ACTIVE_PLAYER_TINT_INTENSITY_OPTION_COPY,
   },
@@ -2449,7 +2485,7 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         ["playerFieldTransparency", "Durchsichtigkeit der Spielerfelder"], ["debug", "Diagnose"],
       ]),
       recommendedSection("Schrift & Farben", "theme-global-typography", [
-        ["enabled", "Aktiv"], ["fontPreset", "Schriftart"], ["applyTo", "Schrift anwenden auf"],
+        ["enabled", "Aktiv"], ["fontPreset", "Schriftart"], ["remainingScoreSize", "Restscore-Größe"], ["applyTo", "Schrift anwenden auf"],
         ["activePlayerTintIntensity", "Hintergrund des aktiven Spielers"], ["debug", "Diagnose"],
       ]),
     ],

@@ -200,7 +200,7 @@ ${buildX01RemainingScoreBarStyleText()}
 #${PANEL_HOST_ID} .ad-xconfig-theme-card-preview-player--active{border-color:color-mix(in srgb,var(--ad-xconfig-theme-card-accent) 72%,white 28%);box-shadow:inset 0 0 0 999px color-mix(in srgb,var(--ad-xconfig-theme-card-accent) 10%,transparent)}
 #${PANEL_HOST_ID} .ad-xconfig-theme-card-preview-player:not(.ad-xconfig-theme-card-preview-player--active){grid-area:opponent}
 #${PANEL_HOST_ID} .ad-xconfig-theme-card-preview-name{overflow:hidden;color:var(--ad-xconfig-theme-card-secondary);font-size:.72rem;font-weight:800;letter-spacing:.04em;text-overflow:ellipsis;white-space:nowrap}
-#${PANEL_HOST_ID} .ad-xconfig-theme-card-preview-score{color:var(--ad-xconfig-theme-card-score);font-size:2rem;font-weight:900;line-height:.9}
+#${PANEL_HOST_ID} .ad-xconfig-theme-card-preview-score{color:var(--ad-xconfig-theme-card-score);font-size:var(--ad-xconfig-theme-card-score-size,2rem);font-weight:900;line-height:.9}
 #${PANEL_HOST_ID} .ad-xconfig-theme-card-preview-throw{grid-area:throw;align-self:center;padding:.28rem .4rem;border:1px solid color-mix(in srgb,var(--ad-xconfig-theme-card-throw) 70%,transparent);border-radius:5px;color:var(--ad-xconfig-theme-card-throw);font:900 .7rem/1.15 Inter,Arial,sans-serif;white-space:nowrap}
 #${PANEL_HOST_ID} .ad-xconfig-card[data-preview-kind="avg-trend-arrow"] .ad-xconfig-card-bg img{object-fit:contain;object-position:center}
 #${PANEL_HOST_ID} .ad-xconfig-card[data-preview-kind="checkout-target-highlights"] .ad-xconfig-card-bg img{object-fit:contain;object-position:center}

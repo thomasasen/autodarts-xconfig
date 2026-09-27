@@ -149,7 +149,10 @@ test("board-focus geometry maximizes the board and keeps readable player rows", 
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-score-value="true"[^}]*align-self:end!important[^}]*height:var\(--ad-game-layout-score-span\)!important/);
   assert.match(buildThemeGameLayoutStyleText(), /left:var\(--ad-game-layout-variant-left,16px\)!important/);
   assert.match(buildThemeGameLayoutStyleText(), /height:auto!important;[^}]*line-height:1!important;[^}]*font-size:var\(--ad-game-layout-name-font-size,clamp\(2rem,calc\(var\(--ad-game-layout-player-height\) \* \.225\),2\.25rem\)\)!important/);
-  assert.match(buildThemeGameLayoutStyleText(), /font-size:clamp\(4rem,calc\(var\(--ad-game-layout-score-span\) \/ \.84\),7rem\)!important/);
+  assert.match(
+    buildThemeGameLayoutStyleText(),
+    /font-size:var\(--ad-ext-theme-remaining-score-font-size,clamp\(4rem,calc\(var\(--ad-game-layout-score-span\) \/ \.84\),7rem\)\)!important/
+  );
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-score-value="true"[^}]*font-number\.overflow-hidden[^}]*overflow:visible!important/);
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-turn-slot="true"[^}]*bg-surface-surface>:first-child>\*[^}]*transform:none!important/);
   assert.match(buildThemeGameLayoutStyleText(), /bg-surface-surface>:first-child\{[^}]*flex:3 1 75%!important[^}]*width:75%!important/);

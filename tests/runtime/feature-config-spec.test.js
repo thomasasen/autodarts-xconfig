@@ -200,6 +200,7 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
   assert.deepEqual(createRecommendedFeatureConfig("themes.globalTypography"), {
     enabled: false,
     fontPreset: "aldrich",
+    remainingScoreSize: "auto",
     applyTo: ["scores", "throws", "names"],
     accentColor: "#00D9FF",
     scoreColor: "#FFFFFF",
@@ -276,6 +277,7 @@ test("theme global typography defaults and normalization stay stable", () => {
   assert.deepEqual(getDefaultFeatureConfig("themes.globalTypography"), {
     enabled: false,
     fontPreset: "system",
+    remainingScoreSize: "auto",
     applyTo: ["scores"],
     accentColor: "",
     scoreColor: "",
@@ -292,6 +294,7 @@ test("theme global typography defaults and normalization stay stable", () => {
     spec.normalizeConfig({
       enabled: "true",
       fontPreset: "fragment-mono",
+      remainingScoreSize: "large",
       applyTo: ["scores", "names"],
       accentColor: "#9fdb58",
       scoreColor: "#123456",
@@ -316,6 +319,7 @@ test("theme global typography defaults and normalization stay stable", () => {
     {
       enabled: true,
       fontPreset: "fragment-mono",
+      remainingScoreSize: "large",
       applyTo: ["scores", "names"],
       accentColor: "#9FDB58",
       scoreColor: "#123456",
@@ -330,6 +334,7 @@ test("theme global typography defaults and normalization stay stable", () => {
     spec.normalizeConfig({
       enabled: "true",
       fontPreset: "fragment-mono",
+      remainingScoreSize: "very-large",
       applyTo: "scores-and-names",
       accentColor: "#abc",
       scoreColor: "",
@@ -354,6 +359,7 @@ test("theme global typography defaults and normalization stay stable", () => {
     {
       enabled: true,
       fontPreset: "fragment-mono",
+      remainingScoreSize: "very-large",
       applyTo: ["scores", "names"],
       accentColor: "#AABBCC",
       scoreColor: "",
@@ -368,6 +374,7 @@ test("theme global typography defaults and normalization stay stable", () => {
     spec.normalizeConfig({
       enabled: "no",
       fontPreset: "missing-font",
+      remainingScoreSize: "oversized",
       applyTo: "everything",
       accentColor: "rgb(0,0,0)",
       scoreColor: "#12",
@@ -392,6 +399,7 @@ test("theme global typography defaults and normalization stay stable", () => {
     {
       enabled: false,
       fontPreset: "system",
+      remainingScoreSize: "auto",
       applyTo: ["scores"],
       accentColor: "",
       scoreColor: "",
@@ -401,6 +409,14 @@ test("theme global typography defaults and normalization stay stable", () => {
       debug: false,
     }
   );
+
+  for (const remainingScoreSize of ["auto", "small", "standard", "large", "very-large"]) {
+    assert.equal(
+      spec.normalizeConfig({ remainingScoreSize }).remainingScoreSize,
+      remainingScoreSize
+    );
+  }
+  assert.equal(spec.normalizeConfig({}).remainingScoreSize, "auto");
 });
 
 test("retired game themes no longer expose config specs", () => {

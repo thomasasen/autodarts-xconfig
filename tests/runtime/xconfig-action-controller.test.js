@@ -266,6 +266,7 @@ test("createShellActionController dispatches runtime, update and theme commands"
             globalTypography: {
               enabled: true,
               fontPreset: "audiowide",
+              remainingScoreSize: "auto",
               applyTo: ["scores", "names"],
               accentColor: "#2EF2FF",
               scoreColor: "#E8FF5A",

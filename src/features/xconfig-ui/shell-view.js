@@ -1660,6 +1660,16 @@ function buildThemeGlobalCardPreviewSample(documentRef, config = {}, label = "")
     },
   });
   applyThemeGlobalTypographyPreviewFont(sample, config.fontPreset);
+  const remainingScorePreviewSizes = {
+    small: "1.55rem",
+    standard: "2rem",
+    large: "2.35rem",
+    "very-large": "2.7rem",
+  };
+  sample.style.setProperty(
+    "--ad-xconfig-theme-card-score-size",
+    remainingScorePreviewSizes[String(config.remainingScoreSize || "").trim()] || "2rem"
+  );
   sample.style.setProperty("--ad-xconfig-theme-card-accent", normalizeHexColor(config.accentColor, "#69D4FF"));
   sample.style.setProperty("--ad-xconfig-theme-card-score", normalizeHexColor(config.scoreColor, "#FFFFFF"));
   sample.style.setProperty(

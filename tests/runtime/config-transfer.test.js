@@ -82,6 +82,60 @@ test("settings export creates a stable versioned backup and optionally omits loc
   assert.equal(compact.payload.features["themes.globalBackground"].settings.backgroundDisplayMode, "fit");
 });
 
+test("remaining score size survives export/import and old or invalid backups stay safe", () => {
+  const configured = normalizeRuntimeConfig({
+    featureToggles: { "themes.globalTypography": true },
+    features: {
+      themes: {
+        globalTypography: {
+          enabled: true,
+          remainingScoreSize: "very-large",
+        },
+      },
+    },
+  });
+  const exported = createSettingsExport(configured, {
+    appVersion: "3.1.6",
+    descriptors: xconfigDescriptors,
+    exportedAt: "2026-09-27T12:34:00.000Z",
+  });
+  assert.equal(
+    exported.payload.features["themes.globalTypography"].settings.remainingScoreSize,
+    "very-large"
+  );
+
+  const roundTrip = analyzeSettingsImport(exported.payload, normalizeRuntimeConfig(), {
+    descriptors: xconfigDescriptors,
+    mode: "replace",
+  });
+  assert.equal(
+    roundTrip.config.features.themes.globalTypography.remainingScoreSize,
+    "very-large"
+  );
+
+  const oldBackup = analyzeSettingsImport(createEnvelope({
+    "themes.globalTypography": {
+      enabled: true,
+      settings: { fontPreset: "aldrich" },
+    },
+  }), configured, { descriptors: xconfigDescriptors, mode: "replace" });
+  assert.equal(oldBackup.config.features.themes.globalTypography.remainingScoreSize, "auto");
+
+  const invalidBackup = analyzeSettingsImport(createEnvelope({
+    "themes.globalTypography": {
+      enabled: true,
+      settings: { remainingScoreSize: "gigantic" },
+    },
+  }), configured, { descriptors: xconfigDescriptors, mode: "merge" });
+  assert.equal(
+    invalidBackup.config.features.themes.globalTypography.remainingScoreSize,
+    "very-large"
+  );
+  assert.ok(
+    invalidBackup.report.issues.some((issue) => issue.settingKey === "remainingScoreSize")
+  );
+});
+
 test("settings import applies valid values and skips incompatible fields without aborting", () => {
   const current = normalizeRuntimeConfig({
     features: {

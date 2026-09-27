@@ -21,6 +21,7 @@ function matchesPresetTypography(config = {}, preset = {}) {
   const configuredScopes = Array.isArray(config.applyTo) ? config.applyTo : [];
   return (
     String(config.fontPreset || "").trim() === preset.fontPreset &&
+    String(config.remainingScoreSize || "auto").trim() === preset.remainingScoreSize &&
     configuredScopes.length === preset.applyTo.length &&
     preset.applyTo.every((scope, index) => configuredScopes[index] === scope) &&
     normalizeComparableColor(config.accentColor) === normalizeComparableColor(preset.accentColor) &&

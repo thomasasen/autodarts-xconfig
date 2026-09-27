@@ -91,6 +91,14 @@ export const THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS = Object.freeze([
   }),
 ]);
 
+export const THEME_GLOBAL_TYPOGRAPHY_REMAINING_SCORE_SIZE_OPTIONS = Object.freeze([
+  Object.freeze({ value: "auto", label: "Automatisch" }),
+  Object.freeze({ value: "small", label: "Klein" }),
+  Object.freeze({ value: "standard", label: "Standard" }),
+  Object.freeze({ value: "large", label: "Groß" }),
+  Object.freeze({ value: "very-large", label: "Sehr groß" }),
+]);
+
 export const THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS = Object.freeze([
   Object.freeze({
     value: "system",

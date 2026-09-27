@@ -6,6 +6,7 @@ function createPreset(definition) {
     label: String(definition?.label || "").trim(),
     description: String(definition?.description || "").trim(),
     fontPreset: String(definition?.fontPreset || "system").trim(),
+    remainingScoreSize: String(definition?.remainingScoreSize || "auto").trim(),
     applyTo: Object.freeze(
       Array.isArray(definition?.applyTo) && definition.applyTo.length
         ? definition.applyTo.map((value) => String(value || "").trim()).filter(Boolean)
@@ -346,6 +347,7 @@ export function createThemeGlobalTemplatePresetPatch(presetKey) {
         globalTypography: {
           enabled: true,
           fontPreset: preset.fontPreset,
+          remainingScoreSize: preset.remainingScoreSize,
           applyTo: [...preset.applyTo],
           accentColor: preset.accentColor,
           scoreColor: preset.scoreColor,

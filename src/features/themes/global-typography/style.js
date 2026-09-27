@@ -8,10 +8,19 @@ import {
   normalizeHexColor,
 } from "../../../shared/hex-color-utils.js";
 import {
+  MODERN_PLAYER_SCORE_SELECTOR,
+  MODERN_PLAYER_SURFACE_SELECTOR,
   MODERN_ACTIVE_PLAYER_SURFACE_SELECTORS as MODERN_X01_ACTIVE_PLAYER_SURFACE_SELECTORS,
 } from "../../shared/x01-match-surface.js";
 export const STYLE_ID = "ad-ext-theme-global-typography-style";
 export const TOOLS_SHADOW_STYLE_ID = "ad-ext-theme-global-typography-tools-style";
+export const REMAINING_SCORE_SIZE_VAR = "--ad-ext-theme-remaining-score-font-size";
+export const REMAINING_SCORE_SIZE_PROFILE_VALUES = Object.freeze({
+  small: "clamp(2rem, min(22cqi, 8dvh), 4.5rem)",
+  standard: "clamp(2.25rem, min(26cqi, 10dvh), 6rem)",
+  large: "clamp(2.5rem, min(30cqi, 12dvh), 7rem)",
+  "very-large": "clamp(2.75rem, min(34cqi, 14dvh), 8rem)",
+});
 export const THEME_GLOBAL_TYPOGRAPHY_SELECTOR_GROUPS = Object.freeze({
   scores: Object.freeze([
     ".ad-ext-player-score",
@@ -129,6 +138,26 @@ function appendColorRule(blocks, selectors, color) {
   blocks.push(`${selectors.join(",\n")} {\n  color: ${color} !important;\n}`);
 }
 
+function appendRemainingScoreSizeRules(blocks, profile) {
+  const sizeValue = REMAINING_SCORE_SIZE_PROFILE_VALUES[String(profile || "").trim()] || "";
+  if (!sizeValue) {
+    return;
+  }
+
+  blocks.push(
+    `:root {\n  ${REMAINING_SCORE_SIZE_VAR}: ${sizeValue};\n}`,
+    `${MODERN_PLAYER_SURFACE_SELECTOR} {\n  container-type: inline-size !important;\n}`,
+    `.ad-ext-player-score,\n${MODERN_PLAYER_SURFACE_SELECTOR} ${MODERN_PLAYER_SCORE_SELECTOR} {
+  box-sizing: border-box !important;
+  max-inline-size: 100% !important;
+  block-size: 1em !important;
+  overflow: visible !important;
+  font-size: var(${REMAINING_SCORE_SIZE_VAR}) !important;
+  line-height: 1 !important;
+}`
+  );
+}
+
 export function buildThemeGlobalTypographyStyleText(featureConfig = {}) {
   const preset = getThemeGlobalTypographyPreset(featureConfig.fontPreset);
   const selectors = getThemeGlobalTypographySelectors(featureConfig.applyTo);
@@ -156,6 +185,7 @@ export function buildThemeGlobalTypographyStyleText(featureConfig = {}) {
   appendColorRule(blocks, THEME_GLOBAL_TYPOGRAPHY_SELECTOR_GROUPS.scores, scoreColor);
   appendColorRule(blocks, THEME_GLOBAL_TYPOGRAPHY_SELECTOR_GROUPS.names, secondaryTextColor);
   appendColorRule(blocks, THEME_GLOBAL_TYPOGRAPHY_SELECTOR_GROUPS.throws, throwLabelColor);
+  appendRemainingScoreSizeRules(blocks, featureConfig.remainingScoreSize);
 
   if (accentColor) {
     blocks.push(

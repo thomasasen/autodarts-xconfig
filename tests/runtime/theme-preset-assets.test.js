@@ -95,6 +95,7 @@ test("theme preset values remain selectable in the global background and font se
   );
   const selectKeys = [
     "fontPreset",
+    "remainingScoreSize",
     "activePlayerTintIntensity",
     "backgroundDisplayMode",
     "backgroundOpacity",

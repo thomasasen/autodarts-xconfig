@@ -9,6 +9,7 @@ import { mountThemeGlobalBackground } from "../../src/features/themes/global-bac
 import { STYLE_ID as BACKGROUND_STYLE_ID } from "../../src/features/themes/global-background/style.js";
 import { mountThemeGlobalTypography } from "../../src/features/themes/global-typography/index.js";
 import {
+  REMAINING_SCORE_SIZE_VAR,
   STYLE_ID as TYPOGRAPHY_STYLE_ID,
   buildThemeGlobalTypographyStyleText,
 } from "../../src/features/themes/global-typography/style.js";
@@ -42,6 +43,7 @@ function mountContext(config, documentRef, windowRef) {
 test("global background, typography and turn darts build isolated CSS", () => {
   const typographyCss = buildThemeGlobalTypographyStyleText({
     fontPreset: "fragment-mono",
+    remainingScoreSize: "very-large",
     applyTo: ["scores", "names"],
     accentColor: "#9fdb58",
     scoreColor: "#f7f8fa",
@@ -66,6 +68,12 @@ test("global background, typography and turn darts build isolated CSS", () => {
   assert.match(typographyCss, /color: #AAB5C5 !important/);
   assert.match(typographyCss, /background-color: #9FDB58 !important/);
   assert.doesNotMatch(typographyCss, /img\[alt="Dart"\]/);
+  assert.match(typographyCss, new RegExp(`${REMAINING_SCORE_SIZE_VAR}: clamp\\(`));
+  assert.match(
+    typographyCss,
+    /main \.overflow-clip:has\(\.font-number\.overflow-hidden\) \.font-number\.overflow-hidden/
+  );
+  assert.doesNotMatch(typographyCss, /\.text-6xl/);
 
   const backgroundCss = buildThemeVisualSettingsCss({
     backgroundOpacity: 20,
@@ -110,6 +118,65 @@ test("global typography keeps modern match font scopes independent", () => {
   assert.match(namesCss, /main \.font-display/);
   assert.doesNotMatch(namesCss, /\.font-number/);
   assert.doesNotMatch(namesCss, /\.text-checkout-suggestion/);
+});
+
+test("remaining score size profiles are responsive, score-only and auto stays native", () => {
+  const autoCss = buildThemeGlobalTypographyStyleText({
+    fontPreset: "system",
+    applyTo: ["scores"],
+    remainingScoreSize: "auto",
+  });
+  assert.doesNotMatch(autoCss, new RegExp(REMAINING_SCORE_SIZE_VAR));
+  assert.doesNotMatch(autoCss, /container-type: inline-size/);
+
+  for (const profile of ["small", "standard", "large", "very-large"]) {
+    const css = buildThemeGlobalTypographyStyleText({
+      fontPreset: "system",
+      applyTo: ["names"],
+      remainingScoreSize: profile,
+    });
+    assert.match(css, /clamp\([^;]+cqi[^;]+dvh[^;]+\)/, profile);
+    assert.match(css, /\.ad-ext-player-score/, profile);
+    assert.match(css, /\.font-number\.overflow-hidden/, profile);
+    assert.doesNotMatch(css, /\.ad-ext-player-name[^}]+font-size/s, profile);
+    assert.doesNotMatch(css, /\.ad-ext-turn-points[^}]+font-size/s, profile);
+  }
+});
+
+test("global typography updates remaining score size at runtime and restores auto", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.io/matches/test",
+  });
+  const config = createRuntimeConfig({
+    featureToggles: { "themes.globalTypography": true },
+    features: {
+      themes: {
+        globalTypography: {
+          enabled: true,
+          fontPreset: "system",
+          remainingScoreSize: "very-large",
+        },
+      },
+    },
+  });
+  const cleanup = mountThemeGlobalTypography(mountContext(config, documentRef, windowRef));
+  const styleNode = documentRef.getElementById(TYPOGRAPHY_STYLE_ID);
+  assert.match(String(styleNode?.textContent || ""), /min\(34cqi, 14dvh\)/);
+
+  config.update({ features: { themes: { globalTypography: { remainingScoreSize: "small" } } } });
+  windowRef.dispatchEvent(new FakeEvent("resize", { bubbles: false, target: windowRef }));
+  assert.match(String(styleNode?.textContent || ""), /min\(22cqi, 8dvh\)/);
+
+  config.update({ features: { themes: { globalTypography: { remainingScoreSize: "auto" } } } });
+  windowRef.dispatchEvent(new FakeEvent("resize", { bubbles: false, target: windowRef }));
+  assert.doesNotMatch(String(styleNode?.textContent || ""), new RegExp(REMAINING_SCORE_SIZE_VAR));
+
+  config.setFeatureEnabled("themes.globalTypography", false);
+  windowRef.dispatchEvent(new FakeEvent("resize", { bubbles: false, target: windowRef }));
+  assert.equal(documentRef.getElementById(TYPOGRAPHY_STYLE_ID), null);
+  cleanup();
 });
 
 test("global modules mount independently on matches and clean up after a route change", () => {

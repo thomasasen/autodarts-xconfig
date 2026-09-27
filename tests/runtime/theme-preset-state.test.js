@@ -24,6 +24,7 @@ function buildFeatures(preset, { backgroundEnabled = true, typographyEnabled = t
       config: {
         enabled: typographyEnabled,
         fontPreset: preset.fontPreset,
+        remainingScoreSize: preset.remainingScoreSize,
         applyTo: [...preset.applyTo],
         accentColor: preset.accentColor,
         scoreColor: preset.scoreColor,
@@ -41,6 +42,10 @@ test("global preset state requires the complete enabled preset fingerprint", () 
   assert.equal(resolveThemeGlobalPresetState(features, preset), "active");
 
   features[1].config.scoreColor = "#FFFFFF";
+  assert.equal(resolveThemeGlobalPresetState(features, preset), "customized");
+
+  features[1].config.scoreColor = preset.scoreColor;
+  features[1].config.remainingScoreSize = "large";
   assert.equal(resolveThemeGlobalPresetState(features, preset), "customized");
 
   features[0].enabled = false;

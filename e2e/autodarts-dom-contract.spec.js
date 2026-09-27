@@ -29,6 +29,9 @@ test.beforeAll(async () => {
           createX01PlayerSurfaceObserverController,
           getX01PlayerSurfaceSnapshot,
         } from "./src/features/shared/x01-player-surface-adapter.js";
+        import {
+          buildThemeGlobalTypographyStyleText,
+        } from "./src/features/themes/global-typography/style.js";
         import { readModernCricketGrid } from "./src/features/cricket-surface/modern-grid.js";
         import {
           findBoardSvgGroup,
@@ -42,6 +45,7 @@ test.beforeAll(async () => {
           readModernThrows,
           createX01PlayerSurfaceObserverController,
           getX01PlayerSurfaceSnapshot,
+          buildThemeGlobalTypographyStyleText,
           readModernCricketGrid,
           findBoardSvgGroup,
           findBoardSvgRoot,
@@ -122,6 +126,125 @@ test("live-derived X01 fixture fails safe for ambiguous active players", async (
     hasSelectedCard: false,
     activeScoreIsNaN: true,
   });
+});
+
+test("remaining score profiles target every player card without scaling adjacent content", async ({ page }) => {
+  await openFixture(page, "x01-match-modern.html");
+  const result = await page.evaluate(() => {
+    const api = globalThis.__autodartsDomContract;
+    const main = document.querySelector("main");
+    const firstCard = main.querySelector(".overflow-clip");
+    const secondCard = firstCard.cloneNode(true);
+    secondCard.classList.remove("bg-raspberry-slush-diagonal");
+    secondCard.classList.add("bg-black-80");
+    secondCard.querySelector('[role="button"]')?.removeAttribute("role");
+    firstCard.after(secondCard);
+
+    const thirdCard = secondCard.cloneNode(true);
+    const fourthCard = secondCard.cloneNode(true);
+    secondCard.after(thirdCard, fourthCard);
+    const cards = Array.from(main.querySelectorAll(".overflow-clip"));
+    const scores = cards.map((card) => card.querySelector(".font-number.overflow-hidden"));
+    cards.forEach((card) => {
+      card.style.display = "block";
+      card.style.width = "180px";
+      card.style.height = "160px";
+    });
+    scores.forEach((score) => {
+      score.style.display = "block";
+      score.style.width = "100%";
+      score.style.fontSize = "72px";
+      score.style.lineHeight = "1";
+      score.style.textAlign = "center";
+    });
+    const name = firstCard.querySelector(".font-display");
+    const checkout = firstCard.querySelector(".text-checkout-suggestion");
+    const turnTotal = main.querySelector(".bg-surface-surface > .font-number");
+    name.style.fontSize = "18px";
+    checkout.style.fontSize = "20px";
+    turnTotal.style.fontSize = "40px";
+
+    const styleNode = document.createElement("style");
+    document.head.append(styleNode);
+    const applyProfile = (remainingScoreSize) => {
+      styleNode.textContent = api.buildThemeGlobalTypographyStyleText({
+        fontPreset: "system",
+        applyTo: ["scores"],
+        remainingScoreSize,
+      });
+    };
+    const fontSize = (node) => Number.parseFloat(getComputedStyle(node).fontSize);
+    const nativeSizes = {
+      score: fontSize(scores[0]),
+      name: fontSize(name),
+      checkout: fontSize(checkout),
+      turnTotal: fontSize(turnTotal),
+    };
+
+    applyProfile("standard");
+    const standardScoreSizes = scores.map(fontSize);
+    applyProfile("very-large");
+    const veryLargeScoreSizes = scores.map(fontSize);
+    const adjacentSizes = {
+      name: fontSize(name),
+      checkout: fontSize(checkout),
+      turnTotal: fontSize(turnTotal),
+    };
+
+    const scoreTokens = ["1", "40", "101", "170", "501"];
+    const fontFamilies = [
+      '"Segoe UI", sans-serif',
+      '"Aldrich", "Segoe UI", sans-serif',
+      '"Arial Black", Impact, sans-serif',
+    ];
+    const overflowCases = [];
+    for (const fontFamily of fontFamilies) {
+      for (const scoreToken of scoreTokens) {
+        scores[0].textContent = scoreToken;
+        scores[0].style.setProperty("font-family", fontFamily, "important");
+        overflowCases.push({
+          fontFamily,
+          scoreToken,
+          fits: scores[0].scrollWidth <= firstCard.clientWidth,
+        });
+      }
+    }
+
+    const beforeSwitch = api.readModernMatchSurface(document, window);
+    firstCard.classList.remove("bg-raspberry-slush-diagonal");
+    firstCard.classList.add("bg-black-80");
+    secondCard.classList.remove("bg-black-80");
+    secondCard.classList.add("bg-grey-slush-diagonal");
+    const afterSwitch = api.readModernMatchSurface(document, window);
+
+    applyProfile("auto");
+    const restoredScoreSize = fontSize(scores[1]);
+    return {
+      playerCount: beforeSwitch.players.length,
+      activeBefore: beforeSwitch.players.findIndex((player) => player.active),
+      activeAfter: afterSwitch.players.findIndex((player) => player.active),
+      standardScoreSizes,
+      veryLargeScoreSizes,
+      nativeSizes,
+      adjacentSizes,
+      allOverflowCasesFit: overflowCases.every((entry) => entry.fits),
+      restoredScoreSize,
+    };
+  });
+
+  expect(result.playerCount).toBe(4);
+  expect(result.activeBefore).toBe(0);
+  expect(result.activeAfter).toBe(1);
+  expect(new Set(result.standardScoreSizes).size).toBe(1);
+  expect(new Set(result.veryLargeScoreSizes).size).toBe(1);
+  expect(result.veryLargeScoreSizes[0]).toBeGreaterThan(result.standardScoreSizes[0]);
+  expect(result.adjacentSizes).toEqual({
+    name: result.nativeSizes.name,
+    checkout: result.nativeSizes.checkout,
+    turnTotal: result.nativeSizes.turnTotal,
+  });
+  expect(result.allOverflowCasesFit).toBe(true);
+  expect(result.restoredScoreSize).toBe(result.nativeSizes.score);
 });
 
 test("live-derived X01 fixture keeps BUST on the native turn-total surface", async ({ page }) => {
