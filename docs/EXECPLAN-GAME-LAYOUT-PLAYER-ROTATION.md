@@ -531,3 +531,72 @@ Vor oder während der Implementierung technisch verifizieren:
 - Wie das manuelle Overflow-Scrolling im Modus `active-first` am sinnvollsten mit dem gepinnten aktiven Spieler harmoniert.
 
 Bei fehlender positiver Evidenz nicht raten, sondern fail-safe auf bestehendes Verhalten zurückfallen.
+
+
+## Erweiterung 2026-09-27: FLIP-Animation der Spielerrotation
+
+### Technische Entscheidung
+
+Der Modus `active-first` erhält für echte Wechsel des eindeutig aktiven Spielers eine kleine projektinterne FLIP-Transition. Es wurde bewusst keine zusätzliche Runtime-Abhängigkeit wie GSAP, Motion oder Anime.js eingeführt.
+
+Ablauf:
+
+1. Vor dem neuen Layout werden Position und Größe der bestehenden Player-Items erfasst.
+2. Die bestehende Game-Layout-Logik setzt unverändert die neuen Werte für `--ad-game-layout-player-y` und `--ad-game-layout-card-height`.
+3. Der Transition-Controller erfasst das Ziel und berechnet `dx`, `dy`, `scaleX` und `scaleY`.
+4. Die Web Animations API animiert ausschließlich einen zusätzlichen visuellen `transform` von der invertierten Geometrie auf `translate3d(0,0,0) scale(1,1)`.
+5. Die eigentliche Layoutposition bleibt weiterhin vollständig Eigentum der bestehenden CSS-Variablen. Es gibt keine String-Manipulation vorhandener Transformwerte und keine DOM-Umsortierung.
+
+Dauer und Easing: 340 ms mit `cubic-bezier(0.22, 1, 0.36, 1)`. Während der Transition wird nur ein temporärer Marker für `z-index` und `will-change` gesetzt.
+
+### Laufende Updates und Fallbacks
+
+- Ein weiterer legitimer Aktivwechsel während einer laufenden Animation erfasst bevorzugt die aktuell gerenderte Geometrie, bricht die alte WAAPI-Animation kontrolliert ab und retargetet auf das neue Layout.
+- Normale Runtime-/Score-Updates mit unverändertem aktiven Spieler lassen eine laufende Transition weiterlaufen.
+- Resize und manuelles Overflow-Scrolling brechen die Transition ab und stellen anschließend direkt den korrekten Layoutzustand her.
+- Initial-Mount, `fixed`, kein oder mehr als ein aktiver Spieler, Card-Replacement sowie Änderungen der Sichtbarkeit werden nicht künstlich animiert.
+- Bei `prefers-reduced-motion: reduce` wird die FLIP-Animation vollständig übersprungen.
+- Fehlende/fehlschlagende Web-Animations-API oder unplausible Geometrie führen fail-safe zu einem direkten korrekten Endzustand.
+- Der START-Badge bleibt ausschließlich an `starterSeat` gebunden und ist vom Transition-Controller unabhängig.
+
+### Zwischen-QS
+
+Erster gezielter Lauf nach der Core-Implementierung: GitHub Actions Run `36332257889` – erfolgreich.
+
+Geprüft:
+
+- `node --test tests/runtime/theme-game-layout.test.js`
+- `npm run check:syntax`
+- gezieltes ESLint für die geänderten Game-Layout-Source-/Testdateien
+
+### Red-Team-Befunde und Korrekturen
+
+Die adversarielle Prüfung hat vier relevante Punkte ergeben:
+
+1. Overflow-Scrolling konnte während einer laufenden Transition einen zweiten Layoutwechsel erzeugen. Korrektur: laufende Player-Transition vor dem manuellen Scroll-Update kontrolliert abbrechen.
+2. `Element.animate()` kann bei einem zeitgleich von React abgelösten Host-Knoten ausnahmsweise fehlschlagen. Korrektur: WAAPI-Aufruf ist fail-safe abgesichert; bereits gestartete Teilanimationen werden bereinigt und das Ziel-Layout bleibt bestehen.
+3. Extrem unplausible Scale-Verhältnisse wurden zunächst geklemmt. Korrektur: solche Geometrie wird jetzt verworfen und direkt auf den korrekten Endzustand gewechselt.
+4. Die Fake-DOM-QS liefert während WAAPI keine transformierte Bounding Box. Dadurch wurde ein schneller A→B→C-Retarget-Lauf zunächst fälschlich als unplausible Geometrie abgebrochen. Korrektur: gerenderte Geometrie wird nur verwendet, wenn sie gegenüber dem bekannten Layout plausibel ist; ansonsten wird auf die deterministischen Layoutwerte zurückgefallen. Im realen Browser kann weiterhin die tatsächliche Zwischengeometrie für ein weiches Retargeting verwendet werden.
+
+Der erste Lauf nach diesen Härtungen (`36332440836`) hat Punkt 4 reproduzierbar aufgedeckt (25/26 Runtime-Tests grün). Nach der Korrektur war die wiederholte Zwischen-QS in Run `36332635346` vollständig erfolgreich, inklusive Runtime-Test, Syntaxprüfung und gezieltem ESLint.
+
+### Zusätzliche Regressionstests
+
+Die Runtime-Suite deckt nun zusätzlich ab:
+
+- kein Animationsstart beim Initial-Mount,
+- A→B→C mit Position und Resize in einer FLIP-Bewegung,
+- unveränderte DOM-Eltern / kein Reparenting,
+- schneller Aktivwechsel und Retargeting,
+- normale Runtime-Updates während laufender Animation,
+- `active-first` → `fixed`,
+- Feature-Deaktivierung und Cleanup,
+- Reduced Motion,
+- mehrdeutiger Aktivzustand,
+- React/Card-Replacement,
+- Overflow/viele Spieler,
+- WAAPI-Fehler mit sauberem direkten Fallback.
+
+### Finale QS
+
+Wird nach dieser Dokumentation auf dem vollständigen Feature-Branch ausgeführt und hier mit dem finalen Run-Ergebnis ergänzt.
