@@ -66,7 +66,7 @@ export function resolveLegStarterSeat(snapshot, playerCount, visiblePlayerNames 
       ? seat
       : null;
   });
-  if (seats.some((seat) => seat === null) || new Set(seats).size !== count) {
+  if (seats.includes(null) || new Set(seats).size !== count) {
     return null;
   }
 
