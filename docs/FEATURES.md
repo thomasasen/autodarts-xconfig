@@ -316,10 +316,16 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 - Gilt für: `X01`
 - Kurz: Zeigt die Wurfanzeige über kompakten horizontalen Spielerkarten links und vergrößert das native Board rechts.
-- Grafisch: Alle nativen Spielerkarten bleiben erhalten und werden in einer scrollbaren linken Leiste angeordnet. Das unverzerrte Dartboard füllt die freie Fläche; Eingabe, Undo und Next stehen in einem beschrifteten Dock rechts.
+- Grafisch: Alle nativen Spielerkarten bleiben erhalten und werden nur visuell angeordnet. Optional rotiert die Leiste zyklisch so, dass der aktuell werfende Spieler immer oben steht; ein kleiner START-Badge kann zusätzlich den Spieler markieren, der das aktuelle Leg begonnen hat.
 - Wann sinnvoll? Wenn das Board im Querformat möglichst groß sein und trotzdem jeder Spieler schnell erfassbar bleiben soll.
 - Aktiv ab 1180×650 Pixeln im Querformat; kleinere oder unklare Oberflächen bleiben im nativen Layout.
-- Bei vielen Spielern folgt die Leiste dem aktiven Spieler automatisch und kann in ganzen Karten weitergescrollt werden.
+- Die Reihenfolge kann fest bleiben oder zyklisch mit dem aktuell werfenden Spieler nach oben rotieren.
+- Der optionale START-Badge bleibt beim Leg-Starter und ist unabhängig davon, wer gerade wirft.
+- Bei vielen Spielern bleibt der aktive Spieler im Rotationsmodus oben sichtbar; die übrigen Spieler lassen sich weiter durchscrollen.
+- `Spielerreihenfolge`: Legt fest, ob die Reihenfolge statisch bleibt oder mit dem aktiven Spieler rotiert.
+  - `Fest`: Behält die feste Sitzreihenfolge der Spielerkarten bei.
+  - `Aktiver Spieler immer oben`: Rotiert zyklisch so, dass der aktive Spieler immer oben steht.
+- `Leg-Starter anzeigen`: Zeigt einen START-Badge beim Leg-Starter.
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ## Alle Modi
