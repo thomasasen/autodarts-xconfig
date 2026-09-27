@@ -212,6 +212,7 @@ function markSurface(state, surface, metrics, options = {}) {
   const players = Array.isArray(options.players) ? options.players : surface.players;
   const pinActiveAtStart = options.pinActiveAtStart === true && metrics.activeIndex === 0;
   const starterSeat = Number.isInteger(options.starterSeat) ? options.starterSeat : null;
+  const hasUniqueActivePlayer = options.hasUniqueActivePlayer === true;
   const inactiveVisibleCount = Math.max(0, metrics.visiblePlayerCount - 1);
   const inactiveWindowStart = metrics.firstVisibleIndex;
 
@@ -241,7 +242,7 @@ function markSurface(state, surface, metrics, options = {}) {
       )
       : index >= metrics.firstVisibleIndex &&
         index < metrics.firstVisibleIndex + metrics.visiblePlayerCount;
-    const isActive = surface.activeIndex < 0 || player.active;
+    const isActive = hasUniqueActivePlayer ? player.active : true;
     const cardHeight = isActive ? metrics.playerHeight : metrics.inactivePlayerHeight;
     const playerY = nextPlayerY;
     if (visible) nextPlayerY += cardHeight + GAME_LAYOUT_PLAYER_GAP;
@@ -355,7 +356,7 @@ export function mountThemeGameLayout(context = {}) {
       const hasUniqueActivePlayer = activePlayers.length === 1;
       const displayActiveIndex = hasUniqueActivePlayer
         ? displayPlayers.indexOf(activePlayers[0])
-        : surface.activeIndex;
+        : -1;
       const activeSeat = hasUniqueActivePlayer ? activePlayers[0].seatIndex : null;
       const pinActiveAtStart =
         playerOrder === "active-first" &&
@@ -369,8 +370,15 @@ export function mountThemeGameLayout(context = {}) {
         firstVisibleIndex = 0;
       }
 
+      const visiblePlayerNames = seatedPlayers.map((player) =>
+        String(player.nameNode?.textContent || "").replaceAll(/\s+/g, " ").trim()
+      );
       const starterSeat = featureConfig.showLegStarter === true
-        ? resolveLegStarterSeat(context.gameState?.getSnapshot?.(), seatedPlayers.length)
+        ? resolveLegStarterSeat(
+            context.gameState?.getSnapshot?.(),
+            seatedPlayers.length,
+            visiblePlayerNames
+          )
         : null;
       const layoutSize = readResponsiveLayoutSize(surface, windowRef);
       const metrics = calculateBoardFocusLayout({
@@ -400,6 +408,7 @@ export function mountThemeGameLayout(context = {}) {
         players: displayPlayers,
         pinActiveAtStart,
         starterSeat,
+        hasUniqueActivePlayer,
       });
       controlBar = surface.controlBar;
       if (controlsTimer !== null) setMarker(controlBar, "data-ad-ext-game-layout-controls-visible");
