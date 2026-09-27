@@ -483,6 +483,133 @@ test("board-focus geometry follows the active player and clamps manual scrolling
   assert.equal(moveBoardFocusWindow(0, -1, 24, metrics.visiblePlayerCount), 0);
 });
 
+test("board-focus keeps an active-first player pinned while scrolling inactive rows", () => {
+  const metrics = calculateBoardFocusLayout({
+    width: 1536,
+    height: 808,
+    playerCount: 24,
+    activeIndex: 0,
+    firstVisibleIndex: 3,
+    pinActiveAtStart: true,
+  });
+  assert.equal(metrics.overflow, true);
+  assert.equal(metrics.pinActiveAtStart, true);
+  assert.equal(metrics.firstVisibleIndex, 3);
+  assert.ok(metrics.visiblePlayerCount > 1);
+});
+
+test("game-layout rotates the active player to the top and keeps the leg starter badge attached to the seat", () => {
+  const fixture = createLayoutFixture({ playerCount: 3, activeIndex: 1 });
+  const originalParents = fixture.players.map((player) => player.item.parentElement);
+  const gameState = createGameStateHarness({
+    match: {
+      players: [
+        { index: 0, name: "PLAYER 1" },
+        { index: 1, name: "PLAYER 2" },
+        { index: 2, name: "PLAYER 3" },
+      ],
+    },
+  });
+  const config = createRuntimeConfig({
+    featureToggles: { "themes.gameLayout": true },
+    features: {
+      themes: {
+        gameLayout: {
+          enabled: true,
+          playerOrder: "active-first",
+          showLegStarter: true,
+        },
+      },
+    },
+  });
+  const cleanup = mountThemeGameLayout(mountContext(config, fixture, gameState));
+
+  assert.equal(fixture.players[1].item.style.getPropertyValue("--ad-game-layout-player-y"), "176px");
+  assert.equal(fixture.players[2].item.style.getPropertyValue("--ad-game-layout-player-y"), "346px");
+  assert.equal(fixture.players[0].item.style.getPropertyValue("--ad-game-layout-player-y"), "452px");
+  assert.equal(
+    fixture.players[0].nameRegion.getAttribute("data-ad-ext-game-layout-leg-starter"),
+    "true"
+  );
+  assert.equal(
+    fixture.players[1].nameRegion.getAttribute("data-ad-ext-game-layout-leg-starter"),
+    null
+  );
+  assert.deepEqual(fixture.players.map((player) => player.item.parentElement), originalParents);
+
+  setActivePlayer(fixture, 2);
+  fixture.windowRef.dispatchEvent(new FakeEvent("resize"));
+  assert.equal(fixture.players[2].item.style.getPropertyValue("--ad-game-layout-player-y"), "176px");
+  assert.equal(fixture.players[0].item.style.getPropertyValue("--ad-game-layout-player-y"), "346px");
+  assert.equal(fixture.players[1].item.style.getPropertyValue("--ad-game-layout-player-y"), "452px");
+  assert.equal(
+    fixture.players[0].nameRegion.getAttribute("data-ad-ext-game-layout-leg-starter"),
+    "true"
+  );
+
+  gameState.setSnapshot({
+    match: {
+      players: [
+        { index: 1, name: "PLAYER 2" },
+        { index: 2, name: "PLAYER 3" },
+        { index: 0, name: "PLAYER 1" },
+      ],
+    },
+  });
+  assert.equal(
+    fixture.players[0].nameRegion.getAttribute("data-ad-ext-game-layout-leg-starter"),
+    null
+  );
+  assert.equal(
+    fixture.players[1].nameRegion.getAttribute("data-ad-ext-game-layout-leg-starter"),
+    "true"
+  );
+
+  cleanup();
+  fixture.players.forEach((player) => {
+    assert.equal(
+      player.nameRegion.getAttribute("data-ad-ext-game-layout-leg-starter"),
+      null
+    );
+  });
+  assert.deepEqual(fixture.players.map((player) => player.item.parentElement), originalParents);
+});
+
+test("game-layout active-first overflow keeps the active player visible while inactive rows scroll", () => {
+  const fixture = createLayoutFixture({ playerCount: 8, activeIndex: 7 });
+  const config = createRuntimeConfig({
+    featureToggles: { "themes.gameLayout": true },
+    features: {
+      themes: {
+        gameLayout: {
+          enabled: true,
+          playerOrder: "active-first",
+          showLegStarter: false,
+        },
+      },
+    },
+  });
+  const cleanup = mountThemeGameLayout(mountContext(config, fixture));
+
+  assert.equal(fixture.players[7].item.getAttribute("data-ad-ext-game-layout-visible"), "true");
+  assert.equal(fixture.players[7].item.style.getPropertyValue("--ad-game-layout-player-y"), "176px");
+  assert.equal(fixture.players[0].item.getAttribute("data-ad-ext-game-layout-visible"), "true");
+
+  const wheel = new FakeEvent("wheel", { bubbles: false, cancelable: true });
+  wheel.deltaY = 120;
+  wheel.clientX = 100;
+  wheel.clientY = 300;
+  fixture.root.dispatchEvent(wheel);
+
+  assert.equal(wheel.defaultPrevented, true);
+  assert.equal(fixture.players[7].item.getAttribute("data-ad-ext-game-layout-visible"), "true");
+  assert.equal(fixture.players[7].item.style.getPropertyValue("--ad-game-layout-player-y"), "176px");
+  assert.equal(fixture.players[0].item.getAttribute("data-ad-ext-game-layout-visible"), "false");
+  assert.equal(fixture.players[1].item.getAttribute("data-ad-ext-game-layout-visible"), "true");
+
+  cleanup();
+});
+
 test("game-layout follows the visual viewport when the native height chain is stale", () => {
   const fixture = createLayoutFixture({ width: 1920, height: 804, playerCount: 1 });
   fixture.windowRef.innerHeight = 953;
