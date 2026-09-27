@@ -4171,17 +4171,14 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
   assert.match(styleText, /\.ad-xconfig-switch\{[^}]*width:114px[^}]*height:44px/);
   assert.match(styleText, /\.ad-xconfig-switch-track\{[^}]*width:48px[^}]*height:28px[^}]*border-radius:999px[^}]*background:#353b46/);
   assert.match(styleText, /\.ad-xconfig-switch-input:checked \+ \.ad-xconfig-switch-track\{[^}]*background:var\(--color-brand-blue-50,#4a89ff\)/);
-  assert.match(styleText, /\.ad-xconfig-game-layout-preview\{[^}]*position:relative[^}]*grid-template-columns:minmax\(9rem,38%\) minmax\(0,1fr\)/);
-  assert.match(styleText, /\.ad-xconfig-game-layout-preview-dock\{[^}]*position:absolute[^}]*right:\.35rem[^}]*bottom:\.35rem[^}]*display:flex[^}]*align-items:center/);
+  assert.match(styleText, /\[data-preview-kind="theme-game-layout"\] \.ad-xconfig-card-bg img\{[^}]*object-fit:contain[^}]*object-position:right center[^}]*filter:brightness\(\.9\)/);
   documentRef.querySelectorAll("[data-adxconfig-section='template'] .ad-xconfig-card").forEach((card) => {
     const featureKey = String(card.getAttribute("data-feature-key") || "");
     assert.ok(card.querySelector(".ad-xconfig-card-bg img"), `missing theme card image for ${featureKey}`);
     if (featureKey === "theme-game-layout") {
       assert.equal(card.querySelector(".ad-xconfig-card-global-badge"), null);
       assert.equal(card.querySelector(".ad-xconfig-variant")?.textContent, "Gilt für: X01");
-      assert.ok(card.querySelector(".ad-xconfig-game-layout-preview"));
-      assert.ok(card.querySelector(".ad-xconfig-game-layout-preview-darts"));
-      assert.ok(card.querySelector(".ad-xconfig-game-layout-preview-legs"));
+      assert.equal(card.querySelector(".ad-xconfig-game-layout-preview"), null);
     } else {
       assert.ok(card.querySelector(".ad-xconfig-card-global-badge"), `missing retained theme tag for ${featureKey}`);
     }
