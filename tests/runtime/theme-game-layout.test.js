@@ -811,3 +811,115 @@ test("game-layout falls back completely for small and ambiguous surfaces", () =>
   missingDartIcon.players[0].dartIcon.remove();
   assert.equal(resolveModernX01GameLayoutSurface(missingDartIcon.documentRef, missingDartIcon.windowRef), null);
 });
+
+
+test("leg starter rejects missing and internally inconsistent seat indices", () => {
+  assert.equal(
+    resolveLegStarterSeat({
+      match: {
+        players: [
+          { index: null, name: "A" },
+          { index: 1, name: "B" },
+        ],
+      },
+    }, 2),
+    null
+  );
+  assert.equal(
+    resolveLegStarterSeat({
+      match: {
+        players: [
+          { index: "", name: "A" },
+          { index: 1, name: "B" },
+        ],
+      },
+    }, 2),
+    null
+  );
+  assert.equal(
+    resolveLegStarterSeat({
+      match: {
+        players: [
+          { index: 0, name: "A" },
+          { index: 0, name: "B" },
+        ],
+      },
+    }, 2),
+    null
+  );
+});
+
+test("leg starter rejects a stale match snapshot that does not match visible player seats", () => {
+  const fixture = createLayoutFixture({ playerCount: 3, activeIndex: 0 });
+  const gameState = createGameStateHarness({
+    match: {
+      players: [
+        { index: 0, name: "OLD PLAYER A" },
+        { index: 1, name: "OLD PLAYER B" },
+        { index: 2, name: "OLD PLAYER C" },
+      ],
+    },
+  });
+  const config = createRuntimeConfig({
+    featureToggles: { "themes.gameLayout": true },
+    features: {
+      themes: {
+        gameLayout: {
+          enabled: true,
+          playerOrder: "active-first",
+          showLegStarter: true,
+        },
+      },
+    },
+  });
+
+  const cleanup = mountThemeGameLayout(mountContext(config, fixture, gameState));
+
+  fixture.players.forEach((player) => {
+    assert.equal(
+      player.nameRegion.getAttribute("data-ad-ext-game-layout-leg-starter"),
+      null
+    );
+  });
+
+  cleanup();
+});
+
+test("ambiguous active markers use neutral geometry without overflowing the player viewport", () => {
+  const fixture = createLayoutFixture({ playerCount: 8, activeIndex: 0 });
+  fixture.players[1].card.classList.remove("bg-black-80");
+  fixture.players[1].card.classList.add("bg-raspberry-slush-diagonal");
+
+  const config = createRuntimeConfig({
+    featureToggles: { "themes.gameLayout": true },
+    features: {
+      themes: {
+        gameLayout: {
+          enabled: true,
+          playerOrder: "active-first",
+          showLegStarter: false,
+        },
+      },
+    },
+  });
+  const cleanup = mountThemeGameLayout(mountContext(config, fixture));
+
+  const visible = fixture.players.filter(
+    (player) => player.item.getAttribute("data-ad-ext-game-layout-visible") === "true"
+  );
+  const maxBottom = Math.max(...visible.map((player) => {
+    const y = Number.parseFloat(player.item.style.getPropertyValue("--ad-game-layout-player-y"));
+    const height = Number.parseFloat(
+      player.item.style.getPropertyValue("--ad-game-layout-card-height")
+    );
+    return y + height;
+  }));
+  const playerViewportBottom = 16 + 144 + 16 + (808 - 32 - 144 - 16);
+
+  assert.ok(maxBottom <= playerViewportBottom + 0.001);
+  visible.forEach((player) => {
+    assert.equal(player.item.getAttribute("data-ad-ext-game-layout-active"), "true");
+  });
+
+  cleanup();
+});
