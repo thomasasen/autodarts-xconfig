@@ -88,14 +88,6 @@ function validateScale(value) {
   return value;
 }
 
-function hasReducedMotion(windowRef) {
-  try {
-    return windowRef?.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
-  } catch (_) {
-    return false;
-  }
-}
-
 function interpolate(value, progress) {
   return 1 + (value - 1) * progress;
 }
@@ -145,8 +137,6 @@ export function buildGameLayoutPlayerTransitionKeyframes(options = {}) {
 }
 
 export function createGameLayoutPlayerTransitionController(options = {}) {
-  const windowRef =
-    options.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const durationOverride = Number(options.duration);
   const easingOverride = String(options.easing || "").trim();
   const animations = new Map();
@@ -193,8 +183,7 @@ export function createGameLayoutPlayerTransitionController(options = {}) {
       !root ||
       !before ||
       !list.length ||
-      duration <= 0 ||
-      hasReducedMotion(windowRef)
+      duration <= 0
     ) {
       return false;
     }

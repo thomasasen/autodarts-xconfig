@@ -5115,7 +5115,7 @@ test("xConfig game-layout settings expose transition effects with an immediately
     styleText,
     /lane-flip[^}]*ad-xconfig-game-layout-transition-card\{left:calc\(\.55rem - var\(--ad-xconfig-game-layout-transition-lane-offset,-12px\)\);right:\.55rem/
   );
-  assert.match(
+  assert.doesNotMatch(
     styleText,
     /prefers-reduced-motion:reduce[^]*ad-xconfig-game-layout-transition-card[^]*animation:none!important/
   );

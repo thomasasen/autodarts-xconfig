@@ -1016,7 +1016,7 @@ test("a fast A to B to C change cancels the old FLIP and retargets without stack
   cleanup();
 });
 
-test("fixed mode, ambiguous active state and reduced motion do not run player FLIP animations", () => {
+test("fixed mode and ambiguous active state do not run player FLIP animations", () => {
   const fixedFixture = createLayoutFixture({ playerCount: 3, activeIndex: 0 });
   const fixedGameState = createGameStateHarness({});
   const fixedConfig = createRuntimeConfig({
@@ -1063,16 +1063,46 @@ test("fixed mode, ambiguous active state and reduced motion do not run player FL
   ambiguousFixture.players.forEach((player) => assert.equal(player.item.__animations.length, 0));
   ambiguousCleanup();
 
-  const reducedFixture = createLayoutFixture({ playerCount: 3, activeIndex: 0 });
-  reducedFixture.windowRef.matchMedia = () => ({ matches: true });
-  const reducedGameState = createGameStateHarness({});
-  const reducedCleanup = mountThemeGameLayout(
-    mountContext(activeConfig, reducedFixture, reducedGameState)
-  );
-  setActivePlayer(reducedFixture, 1);
-  reducedGameState.setSnapshot({ turn: 1 });
-  reducedFixture.players.forEach((player) => assert.equal(player.item.__animations.length, 0));
-  reducedCleanup();
+});
+
+test("all configured player transition effects run when reduced motion is preferred", () => {
+  const effects = [
+    ["flip-resize", 340],
+    ["smooth-flip", 460],
+    ["lane-flip", 380],
+  ];
+
+  effects.forEach(([effect, expectedDuration]) => {
+    const fixture = createLayoutFixture({ playerCount: 3, activeIndex: 0 });
+    fixture.windowRef.matchMedia = () => ({ matches: true });
+    const gameState = createGameStateHarness({});
+    const config = createRuntimeConfig({
+      featureToggles: { "themes.gameLayout": true },
+      features: {
+        themes: {
+          gameLayout: {
+            enabled: true,
+            playerOrder: "active-first",
+            playerTransitionEffect: effect,
+          },
+        },
+      },
+    });
+    const cleanup = mountThemeGameLayout(mountContext(config, fixture, gameState));
+
+    setActivePlayer(fixture, 1);
+    gameState.setSnapshot({ turn: 1 });
+
+    const animation = fixture.players[1].item.__lastAnimation;
+    assert.ok(animation, `${effect} must run after an explicit selection`);
+    assert.equal(animation.options.duration, expectedDuration);
+    assert.equal(
+      fixture.players[1].item.getAttribute("data-ad-ext-game-layout-transition-effect"),
+      effect
+    );
+
+    cleanup();
+  });
 });
 
 test("switching away from active-first or disabling the feature cancels an in-flight FLIP cleanly", () => {

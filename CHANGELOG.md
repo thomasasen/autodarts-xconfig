@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.1.9] - 2026-09-27
+
+### Fixed
+
+- Nutzerwirkung: Die unter `Spiel-Layout` bewusst ausgewählten Spielerwechsel-Effekte `FLIP + Resize`, `Smooth FLIP` und `Lane FLIP` laufen nun auch dann im Match und in der Einstellungsvorschau, wenn Windows oder der Browser reduzierte Bewegung meldet.
+  Technik: Die explizite Effektauswahl gilt als Opt-in für diese Animation. Die Laufzeit- und Vorschau-Sperren für `prefers-reduced-motion` wurden entfernt; fokussierte Regressionen sichern alle drei Profile ab.
+
 ## [3.1.8] - 2026-09-27
 
 ### Added
@@ -2171,6 +2178,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.1.9]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.8...v3.1.9
 [3.1.8]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.7...v3.1.8
 [3.1.7]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.6...v3.1.7
 [3.1.6]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.5...v3.1.6
