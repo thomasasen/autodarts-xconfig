@@ -425,14 +425,47 @@ test("retired game themes no longer expose config specs", () => {
   assert.equal(getFeatureConfigSpec("themes.bullOff"), null);
 });
 
-test("game layout defaults disabled and normalizes only boolean runtime flags", () => {
+test("game layout defaults and player-order settings normalize safely", () => {
   assert.deepEqual(getDefaultFeatureConfig("themes.gameLayout"), {
     enabled: false,
+    playerOrder: "fixed",
+    showLegStarter: false,
     debug: false,
   });
   const spec = getFeatureConfigSpec("themes.gameLayout");
-  assert.deepEqual(spec.normalizeConfig({ enabled: 1, debug: "yes", ignored: true }), {
-    enabled: true,
-    debug: true,
+  assert.deepEqual(
+    spec.normalizeConfig({
+      enabled: 1,
+      playerOrder: "active-first",
+      showLegStarter: "yes",
+      debug: "yes",
+      ignored: true,
+    }),
+    {
+      enabled: true,
+      playerOrder: "active-first",
+      showLegStarter: true,
+      debug: true,
+    }
+  );
+  assert.deepEqual(
+    spec.normalizeConfig({
+      enabled: false,
+      playerOrder: "unexpected",
+      showLegStarter: "no",
+      debug: false,
+    }),
+    {
+      enabled: false,
+      playerOrder: "fixed",
+      showLegStarter: false,
+      debug: false,
+    }
+  );
+  assert.deepEqual(spec.normalizeConfig({}), {
+    enabled: false,
+    playerOrder: "fixed",
+    showLegStarter: false,
+    debug: false,
   });
 });
