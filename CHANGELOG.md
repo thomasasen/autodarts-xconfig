@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.1.7] - 2026-09-27
+
+### Added
+
+- Nutzerwirkung: Die Größe des verbleibenden X01-Scores lässt sich unter `Design → Schrift & Farben` unabhängig von der übrigen Typografie auf `Automatisch`, `Klein`, `Standard`, `Groß` oder `Sehr groß` einstellen. `Automatisch` bewahrt das native Verhalten.
+  Technik: Die normalisierte Einstellung `themes.globalTypography.remainingScoreSize` steuert responsive, ausschließlich auf die modernen X01-Spielerkarten begrenzte CSS-Größenprofile. Laufzeit, Spiel-Layout, Vorschau, Import/Export, Presets, Dokumentation und Regressionstests verwenden denselben Vertrag.
+
 ## [3.1.6] - 2026-09-26
 
 ### Changed
@@ -2150,6 +2157,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.1.7]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.6...v3.1.7
 [3.1.6]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.5...v3.1.6
 [3.1.5]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.4...v3.1.5
 [3.1.4]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.3...v3.1.4
