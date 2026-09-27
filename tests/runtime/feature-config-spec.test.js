@@ -425,10 +425,11 @@ test("retired game themes no longer expose config specs", () => {
   assert.equal(getFeatureConfigSpec("themes.bullOff"), null);
 });
 
-test("game layout defaults and player-order settings normalize safely", () => {
+test("game layout defaults and player transition settings normalize safely", () => {
   assert.deepEqual(getDefaultFeatureConfig("themes.gameLayout"), {
     enabled: false,
     playerOrder: "fixed",
+    playerTransitionEffect: "flip-resize",
     showLegStarter: false,
     debug: false,
   });
@@ -437,6 +438,7 @@ test("game layout defaults and player-order settings normalize safely", () => {
     spec.normalizeConfig({
       enabled: 1,
       playerOrder: "active-first",
+      playerTransitionEffect: "lane-flip",
       showLegStarter: "yes",
       debug: "yes",
       ignored: true,
@@ -444,20 +446,27 @@ test("game layout defaults and player-order settings normalize safely", () => {
     {
       enabled: true,
       playerOrder: "active-first",
+      playerTransitionEffect: "lane-flip",
       showLegStarter: true,
       debug: true,
     }
+  );
+  assert.equal(
+    spec.normalizeConfig({ playerTransitionEffect: "smooth-flip" }).playerTransitionEffect,
+    "smooth-flip"
   );
   assert.deepEqual(
     spec.normalizeConfig({
       enabled: false,
       playerOrder: "unexpected",
+      playerTransitionEffect: "unexpected",
       showLegStarter: "no",
       debug: false,
     }),
     {
       enabled: false,
       playerOrder: "fixed",
+      playerTransitionEffect: "flip-resize",
       showLegStarter: false,
       debug: false,
     }
@@ -465,6 +474,7 @@ test("game layout defaults and player-order settings normalize safely", () => {
   assert.deepEqual(spec.normalizeConfig({}), {
     enabled: false,
     playerOrder: "fixed",
+    playerTransitionEffect: "flip-resize",
     showLegStarter: false,
     debug: false,
   });

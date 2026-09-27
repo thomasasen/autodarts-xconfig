@@ -308,6 +308,11 @@ export const xconfigFeatureCopy = deepFreeze({
         "Mit `Fest` bleibt die bisherige Sitzreihenfolge erhalten. `Aktiver Spieler immer oben` rotiert die Spielerkarten zyklisch ab dem aktuell werfenden Spieler, ohne die nativen DOM-Karten umzuhängen.",
         "Legt fest, ob die Reihenfolge statisch bleibt oder mit dem aktiven Spieler rotiert."
       ),
+      playerTransitionEffect: fieldCopy(
+        "Wählt die Bewegung beim Wechsel des aktiven Spielers.",
+        "Legt fest, wie die Karten im Modus `Aktiver Spieler immer oben` ihre Position und Größe wechseln. Die Live-Vorschau in den Einstellungen verwendet dasselbe Bewegungsprofil wie das Spiel.",
+        "Wählt das Bewegungsprofil für die Rotation der Spielerkarten."
+      ),
       showLegStarter: fieldCopy(
         "Kennzeichnet den Spieler, der das aktuelle Leg begonnen hat.",
         "Blendet an der Namenszeile des Leg-Starters einen kleinen START-Badge ein. Der Badge bleibt bei diesem Spieler, auch wenn die Karten wegen eines Spielerwechsels rotieren.",
@@ -2331,6 +2336,24 @@ const GAME_LAYOUT_PLAYER_ORDER_OPTION_COPY = deepFreeze({
   ),
 });
 
+const GAME_LAYOUT_PLAYER_TRANSITION_EFFECT_OPTION_COPY = deepFreeze({
+  "flip-resize": optionCopy(
+    "Bewegt Position und Kartengröße direkt als eine gemeinsame FLIP-Bewegung.",
+    "Die ausgewogene Standardvariante verbindet den Positionswechsel mit dem Wechsel zwischen großer aktiver und kompakter inaktiver Karte. Sie reagiert schnell und bleibt im Spiel klar nachvollziehbar.",
+    "Direkte FLIP-Bewegung mit gleichzeitigem Resize."
+  ),
+  "smooth-flip": optionCopy(
+    "Gleitet ruhiger und etwas länger in die neue Reihenfolge.",
+    "Verwendet dieselbe positions- und größenbasierte FLIP-Logik, aber mit längerer Dauer und symmetrischerem Easing. Der Wechsel wirkt weicher und weniger abrupt.",
+    "Ruhigere FLIP-Variante mit weichem Bewegungsverlauf."
+  ),
+  "lane-flip": optionCopy(
+    "Lässt die nach unten wandernde Karte kurz seitlich ausweichen.",
+    "Ergänzt die FLIP-Bewegung um eine kleine seitliche Spur für die nach unten rotierende Karte. Dadurch ist der zyklische Weg bei mehreren Spielern deutlicher zu verfolgen, ohne Karten auszublenden.",
+    "FLIP mit kleiner seitlicher Ausweichspur für die Rotation."
+  ),
+});
+
 const xconfigFieldOptionCopy = deepFreeze({
   "theme-global-background": {
     backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
@@ -2345,6 +2368,7 @@ const xconfigFieldOptionCopy = deepFreeze({
   },
   "theme-game-layout": {
     playerOrder: GAME_LAYOUT_PLAYER_ORDER_OPTION_COPY,
+    playerTransitionEffect: GAME_LAYOUT_PLAYER_TRANSITION_EFFECT_OPTION_COPY,
   },
   "turn-dart-display": {
     turnDartStyle: THEME_GLOBAL_TURN_DART_STYLE_OPTION_COPY,

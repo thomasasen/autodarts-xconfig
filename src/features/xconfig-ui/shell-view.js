@@ -22,6 +22,10 @@ import { resolveThemePresetAsset } from "#theme-preset-assets";
 import { normalizeHexColor } from "../../shared/hex-color-utils.js";
 import { getFeatureCatalogEntryByFeatureKey } from "../../shared/feature-catalog.js";
 import {
+  getGameLayoutPlayerTransitionProfile,
+  normalizeGameLayoutPlayerTransitionEffect,
+} from "../../shared/game-layout-transition-profiles.js";
+import {
   TURN_SCORE_PREVIEW_SCORE_ATTRIBUTE,
   TURN_SCORE_PREVIEW_SCORE_CLASS,
 } from "./turn-score-preview-contract.js";
@@ -93,6 +97,11 @@ const DART_MARKER_DARTS_DESIGN_SETTING_KEY = "design";
 const DARTBOARD_MARKER_HIGHLIGHT_FEATURE_KEY = "dartboard-marker-highlight";
 const CHECKOUT_SCORE_HIGHLIGHT_FEATURE_KEY = "checkout-score-highlight";
 const CHECKOUT_SCORE_HIGHLIGHT_PREVIEW_FIELD_KEYS = new Set(["effect"]);
+const THEME_GAME_LAYOUT_FEATURE_KEY = "theme-game-layout";
+const THEME_GAME_LAYOUT_LIVE_PREVIEW_FIELD_KEYS = new Set([
+  "playerTransitionEffect",
+  "playerOrder",
+]);
 const CHECKOUT_BOARD_TARGETS_FEATURE_KEY = "checkout-target-highlights";
 const CHECKOUT_BOARD_TARGETS_PREVIEW_FIELD_KEYS = new Set([
   "visualPreset",
@@ -744,6 +753,120 @@ function buildPreviewOptionLayout(documentRef, options = {}) {
   return layout;
 }
 
+function isThemeGameLayoutFeature(feature) {
+  return feature?.featureKey === THEME_GAME_LAYOUT_FEATURE_KEY;
+}
+
+function resolveThemeGameLayoutPreviewConfig(featureConfig = {}, overrides = {}) {
+  const previewConfig = {
+    ...featureConfig,
+    ...overrides,
+  };
+  return {
+    playerOrder: previewConfig.playerOrder === "active-first" ? "active-first" : "fixed",
+    playerTransitionEffect: normalizeGameLayoutPlayerTransitionEffect(
+      previewConfig.playerTransitionEffect
+    ),
+  };
+}
+
+function buildThemeGameLayoutTransitionDemo(
+  documentRef,
+  featureConfig = {},
+  overrides = {}
+) {
+  const previewConfig = resolveThemeGameLayoutPreviewConfig(featureConfig, overrides);
+  const profile = getGameLayoutPlayerTransitionProfile(
+    previewConfig.playerTransitionEffect
+  );
+  const demo = createElement(documentRef, "div", {
+    className: "ad-xconfig-game-layout-transition-demo",
+    attributes: {
+      "data-adxconfig-game-layout-transition-demo": "true",
+      "data-transition-effect": previewConfig.playerTransitionEffect,
+      "data-player-order": previewConfig.playerOrder,
+      role: "img",
+      "aria-label": `Vorschau ${profile.label}: drei Spielerkarten rotieren zyklisch`,
+    },
+  });
+  demo.style?.setProperty?.(
+    "--ad-xconfig-game-layout-transition-duration",
+    `${profile.durationMs}ms`
+  );
+  demo.style?.setProperty?.(
+    "--ad-xconfig-game-layout-transition-cycle-duration",
+    `${profile.durationMs * 6}ms`
+  );
+  demo.style?.setProperty?.(
+    "--ad-xconfig-game-layout-transition-easing",
+    profile.easing
+  );
+  demo.style?.setProperty?.(
+    "--ad-xconfig-game-layout-transition-lane-offset",
+    `${profile.laneOffsetPx}px`
+  );
+
+  [
+    ["a", "A", "501"],
+    ["b", "B", "421"],
+    ["c", "C", "364"],
+  ].forEach(([seat, name, score]) => {
+    const card = createElement(documentRef, "div", {
+      className: `ad-xconfig-game-layout-transition-card ad-xconfig-game-layout-transition-card--${seat}`,
+      attributes: {
+        "data-preview-seat": seat,
+      },
+    });
+    card.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-game-layout-transition-card-name",
+      text: name,
+    }));
+    card.appendChild(createElement(documentRef, "strong", {
+      className: "ad-xconfig-game-layout-transition-card-score",
+      text: score,
+    }));
+    card.appendChild(createElement(documentRef, "span", {
+      className: "ad-xconfig-game-layout-transition-card-state",
+      text: "AKTIV",
+    }));
+    demo.appendChild(card);
+  });
+
+  return demo;
+}
+
+function buildThemeGameLayoutPreviewSection(documentRef, feature) {
+  const previewConfig = resolveThemeGameLayoutPreviewConfig(feature?.config || {});
+  const profile = getGameLayoutPlayerTransitionProfile(
+    previewConfig.playerTransitionEffect
+  );
+  return buildSettingsPreviewSection(documentRef, {
+    previewAttribute: "data-adxconfig-game-layout-transition-preview",
+    rowClassName:
+      "ad-xconfig-setting-row ad-xconfig-setting-row--game-layout-transition-preview",
+    surfaceClassName: "ad-xconfig-game-layout-transition-preview-surface",
+    fillSurface: (surface) => {
+      const head = createElement(documentRef, "div", {
+        className: "ad-xconfig-game-layout-transition-preview-head",
+      });
+      head.appendChild(createElement(documentRef, "span", {
+        className: "ad-xconfig-game-layout-transition-preview-title",
+        text: profile.label,
+      }));
+      head.appendChild(createElement(documentRef, "span", {
+        className: "ad-xconfig-game-layout-transition-preview-hint",
+        text: previewConfig.playerOrder === "active-first"
+          ? "Aktiv bei Spielerwechsel"
+          : "Vorschau · wirkt bei „Aktiver Spieler immer oben“",
+      }));
+      surface.appendChild(head);
+      surface.appendChild(
+        buildThemeGameLayoutTransitionDemo(documentRef, previewConfig)
+      );
+    },
+  });
+}
+
 function buildCheckoutScoreHighlightPreviewSection(documentRef, feature) {
   return buildSettingsPreviewSection(documentRef, {
     previewAttribute: "data-adxconfig-checkout-score-highlight-preview",
@@ -1106,6 +1229,46 @@ function replaceElementFromSource(targetNode, sourceNode) {
 export function syncSettingsPreview(documentRef, features, featureKey, settingKey, settingValue) {
   const normalizedFeatureKey = String(featureKey || "").trim();
   const normalizedSettingKey = String(settingKey || "").trim();
+  if (
+    normalizedFeatureKey === THEME_GAME_LAYOUT_FEATURE_KEY &&
+    THEME_GAME_LAYOUT_LIVE_PREVIEW_FIELD_KEYS.has(normalizedSettingKey)
+  ) {
+    const previousPreview = documentRef.querySelector?.(
+      "[data-adxconfig-game-layout-transition-preview='true']"
+    ) || null;
+    const feature = Array.isArray(features)
+      ? features.find((entry) => entry?.featureKey === normalizedFeatureKey) || null
+      : null;
+    if (!previousPreview || !feature) {
+      return false;
+    }
+
+    const currentDemo = previousPreview.querySelector?.(
+      "[data-adxconfig-game-layout-transition-demo='true']"
+    ) || null;
+    const currentPreviewConfig = {
+      playerOrder:
+        currentDemo?.getAttribute?.("data-player-order") ||
+        feature.config?.playerOrder,
+      playerTransitionEffect:
+        currentDemo?.getAttribute?.("data-transition-effect") ||
+        feature.config?.playerTransitionEffect,
+    };
+    const previewFeature = {
+      ...feature,
+      config: {
+        ...(feature.config && typeof feature.config === "object"
+          ? feature.config
+          : {}),
+        ...currentPreviewConfig,
+        [normalizedSettingKey]: settingValue,
+      },
+    };
+    return replaceElementFromSource(
+      previousPreview,
+      buildThemeGameLayoutPreviewSection(documentRef, previewFeature)
+    );
+  }
   if (
     normalizedFeatureKey === SPECIAL_HIT_HIGHLIGHTS_FEATURE_KEY &&
     SPECIAL_HIT_HIGHLIGHTS_LIVE_PREVIEW_FIELD_KEYS.has(normalizedSettingKey)
@@ -1535,57 +1698,6 @@ function buildCheckoutSuggestionSample(documentRef, featureConfig = {}, override
   return card;
 }
 
-function buildThemeGameLayoutCardPreview(documentRef) {
-  const sample = createElement(documentRef, "div", {
-    className: "ad-xconfig-game-layout-preview",
-    attributes: { "aria-hidden": "true" },
-  });
-  const rail = createElement(documentRef, "div", {
-    className: "ad-xconfig-game-layout-preview-rail",
-  });
-  rail.appendChild(createElement(documentRef, "div", {
-    className: "ad-xconfig-game-layout-preview-turn",
-    text: "T20  25  D18",
-  }));
-  [
-    ["TORNADO TOM", "121", "Leg 61.2"],
-    ["GAST 1", "184", "Leg 54.8"],
-    ["GAST 2", "236", "Leg 48.5"],
-  ].forEach(([name, score, average], index) => {
-    const player = createElement(documentRef, "div", {
-      className: `ad-xconfig-game-layout-preview-player${index === 0 ? " is-active" : ""}`,
-    });
-    player.appendChild(createElement(documentRef, "span", { text: name }));
-    player.appendChild(createElement(documentRef, "strong", { text: score }));
-    player.appendChild(createElement(documentRef, "small", { text: average }));
-    player.appendChild(createElement(documentRef, "span", {
-      className: "ad-xconfig-game-layout-preview-darts",
-      text: "↗ 60",
-    }));
-    player.appendChild(createElement(documentRef, "span", {
-      className: "ad-xconfig-game-layout-preview-legs",
-      text: String(index === 0 ? 1 : 0),
-    }));
-    rail.appendChild(player);
-  });
-  const board = createElement(documentRef, "div", {
-    className: "ad-xconfig-game-layout-preview-board",
-  });
-  board.appendChild(createElement(documentRef, "div", {
-    className: "ad-xconfig-game-layout-preview-bull",
-  }));
-  const dock = createElement(documentRef, "div", {
-    className: "ad-xconfig-game-layout-preview-dock",
-  });
-  ["⌨", "↶", "Next"].forEach((label) => {
-    dock.appendChild(createElement(documentRef, "span", { text: label }));
-  });
-  sample.appendChild(rail);
-  sample.appendChild(board);
-  sample.appendChild(dock);
-  return sample;
-}
-
 const FEATURE_CARD_PREVIEW_FILLERS = Object.freeze({
   "checkout-suggestion-style": (documentRef, host, feature) => {
     host.replaceChildren(
@@ -1610,9 +1722,6 @@ const FEATURE_CARD_PREVIEW_FILLERS = Object.freeze({
         formatThemeGlobalPresetPreviewLabel(preview, preset)
       )
     );
-  },
-  "theme-game-layout": (documentRef, host) => {
-    host.replaceChildren(buildThemeGameLayoutCardPreview(documentRef));
   },
   "x01-bust-active-player-highlight": (documentRef, host) => {
     host.replaceChildren(
@@ -3418,6 +3527,9 @@ function buildSettingsModal(documentRef, state, features) {
       }));
     });
     body.appendChild(detailsRow);
+  }
+  if (isThemeGameLayoutFeature(feature)) {
+    body.appendChild(buildThemeGameLayoutPreviewSection(documentRef, feature));
   }
   if (isCheckoutScoreHighlightFeature(feature)) {
     body.appendChild(buildCheckoutScoreHighlightPreviewSection(documentRef, feature));
