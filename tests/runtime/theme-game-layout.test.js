@@ -15,6 +15,9 @@ import {
   resolveGameLayoutPlayerOrder,
   resolveLegStarterSeat,
 } from "../../src/features/themes/game-layout/logic.js";
+import {
+  GAME_LAYOUT_PLAYER_TRANSITION_DURATION_MS,
+} from "../../src/features/themes/game-layout/player-transition.js";
 import { resolveModernX01GameLayoutSurface } from "../../src/features/themes/game-layout/surface.js";
 import {
   STYLE_ID,
@@ -920,6 +923,213 @@ test("ambiguous active markers use neutral geometry without overflowing the play
   visible.forEach((player) => {
     assert.equal(player.item.getAttribute("data-ad-ext-game-layout-active"), "true");
   });
+
+  cleanup();
+});
+
+
+test("active-first player changes use one FLIP motion for position and resize without reparenting", () => {
+  const fixture = createLayoutFixture({ playerCount: 3, activeIndex: 0 });
+  const gameState = createGameStateHarness({});
+  const originalParents = fixture.players.map((player) => player.item.parentElement);
+  const config = createRuntimeConfig({
+    featureToggles: { "themes.gameLayout": true },
+    features: {
+      themes: {
+        gameLayout: {
+          enabled: true,
+          playerOrder: "active-first",
+          showLegStarter: false,
+        },
+      },
+    },
+  });
+  const cleanup = mountThemeGameLayout(mountContext(config, fixture, gameState));
+
+  fixture.players.forEach((player) => {
+    assert.equal(player.item.__animations.length, 0, "initial mount must not animate");
+  });
+
+  setActivePlayer(fixture, 1);
+  gameState.setSnapshot({ turn: 1 });
+
+  const incoming = fixture.players[1].item.__lastAnimation;
+  const outgoing = fixture.players[0].item.__lastAnimation;
+  const shifted = fixture.players[2].item.__lastAnimation;
+  assert.ok(incoming);
+  assert.ok(outgoing);
+  assert.ok(shifted);
+  assert.equal(incoming.options.duration, GAME_LAYOUT_PLAYER_TRANSITION_DURATION_MS);
+  assert.equal(incoming.options.easing, "cubic-bezier(0.22, 1, 0.36, 1)");
+  assert.match(incoming.keyframes[0].transform, /translate3d\(/);
+  assert.match(incoming.keyframes[0].transform, /scale\(/);
+  assert.notEqual(incoming.keyframes[0].transform, incoming.keyframes[1].transform);
+  assert.equal(incoming.keyframes[1].transform, "translate3d(0px, 0px, 0) scale(1, 1)");
+  assert.deepEqual(fixture.players.map((player) => player.item.parentElement), originalParents);
+  fixture.players.forEach((player) => {
+    assert.equal(player.item.getAttribute("data-ad-ext-game-layout-visible"), "true");
+  });
+
+  cleanup();
+  fixture.players.forEach((player) => {
+    assert.equal(player.item.getAttribute("data-ad-ext-game-layout-transitioning"), null);
+  });
+  assert.deepEqual(fixture.players.map((player) => player.item.parentElement), originalParents);
+});
+
+test("a fast A to B to C change cancels the old FLIP and retargets without stacking animations", () => {
+  const fixture = createLayoutFixture({ playerCount: 3, activeIndex: 0 });
+  const gameState = createGameStateHarness({});
+  const config = createRuntimeConfig({
+    featureToggles: { "themes.gameLayout": true },
+    features: {
+      themes: {
+        gameLayout: {
+          enabled: true,
+          playerOrder: "active-first",
+          showLegStarter: false,
+        },
+      },
+    },
+  });
+  const cleanup = mountThemeGameLayout(mountContext(config, fixture, gameState));
+
+  setActivePlayer(fixture, 1);
+  gameState.setSnapshot({ turn: 1 });
+  const firstAnimation = fixture.players[1].item.__lastAnimation;
+  assert.equal(firstAnimation.playState, "running");
+
+  setActivePlayer(fixture, 2);
+  gameState.setSnapshot({ turn: 2 });
+  const retargetedAnimation = fixture.players[2].item.__lastAnimation;
+
+  assert.equal(firstAnimation.playState, "idle");
+  assert.ok(retargetedAnimation);
+  assert.equal(retargetedAnimation.playState, "running");
+  assert.equal(fixture.players[2].item.style.getPropertyValue("--ad-game-layout-player-y"), "176px");
+
+  cleanup();
+});
+
+test("fixed mode, ambiguous active state and reduced motion do not run player FLIP animations", () => {
+  const fixedFixture = createLayoutFixture({ playerCount: 3, activeIndex: 0 });
+  const fixedGameState = createGameStateHarness({});
+  const fixedConfig = createRuntimeConfig({
+    featureToggles: { "themes.gameLayout": true },
+    features: { themes: { gameLayout: { enabled: true, playerOrder: "fixed" } } },
+  });
+  const fixedCleanup = mountThemeGameLayout(
+    mountContext(fixedConfig, fixedFixture, fixedGameState)
+  );
+  setActivePlayer(fixedFixture, 1);
+  fixedGameState.setSnapshot({ turn: 1 });
+  fixedFixture.players.forEach((player) => assert.equal(player.item.__animations.length, 0));
+  fixedCleanup();
+
+  const ambiguousFixture = createLayoutFixture({ playerCount: 3, activeIndex: 0 });
+  const ambiguousGameState = createGameStateHarness({});
+  const activeConfig = createRuntimeConfig({
+    featureToggles: { "themes.gameLayout": true },
+    features: {
+      themes: {
+        gameLayout: { enabled: true, playerOrder: "active-first" },
+      },
+    },
+  });
+  const ambiguousCleanup = mountThemeGameLayout(
+    mountContext(activeConfig, ambiguousFixture, ambiguousGameState)
+  );
+  setActivePlayer(ambiguousFixture, -1);
+  ambiguousGameState.setSnapshot({ turn: 1 });
+  setActivePlayer(ambiguousFixture, 1);
+  ambiguousGameState.setSnapshot({ turn: 2 });
+  ambiguousFixture.players.forEach((player) => assert.equal(player.item.__animations.length, 0));
+  ambiguousCleanup();
+
+  const reducedFixture = createLayoutFixture({ playerCount: 3, activeIndex: 0 });
+  reducedFixture.windowRef.matchMedia = () => ({ matches: true });
+  const reducedGameState = createGameStateHarness({});
+  const reducedCleanup = mountThemeGameLayout(
+    mountContext(activeConfig, reducedFixture, reducedGameState)
+  );
+  setActivePlayer(reducedFixture, 1);
+  reducedGameState.setSnapshot({ turn: 1 });
+  reducedFixture.players.forEach((player) => assert.equal(player.item.__animations.length, 0));
+  reducedCleanup();
+});
+
+test("switching away from active-first or disabling the feature cancels an in-flight FLIP cleanly", () => {
+  const fixture = createLayoutFixture({ playerCount: 3, activeIndex: 0 });
+  const gameState = createGameStateHarness({});
+  const config = createRuntimeConfig({
+    featureToggles: { "themes.gameLayout": true },
+    features: {
+      themes: {
+        gameLayout: { enabled: true, playerOrder: "active-first" },
+      },
+    },
+  });
+  const cleanup = mountThemeGameLayout(mountContext(config, fixture, gameState));
+
+  setActivePlayer(fixture, 1);
+  gameState.setSnapshot({ turn: 1 });
+  const running = fixture.players[1].item.__lastAnimation;
+  assert.equal(running.playState, "running");
+
+  config.update({ features: { themes: { gameLayout: { playerOrder: "fixed" } } } });
+  gameState.setSnapshot({ turn: 2 });
+  assert.equal(running.playState, "idle");
+  fixture.players.forEach((player, index) => {
+    const y = Number.parseFloat(player.item.style.getPropertyValue("--ad-game-layout-player-y"));
+    if (index > 0) {
+      const previousY = Number.parseFloat(
+        fixture.players[index - 1].item.style.getPropertyValue("--ad-game-layout-player-y")
+      );
+      assert.ok(y > previousY);
+    }
+  });
+
+  config.update({ features: { themes: { gameLayout: { enabled: false } } } });
+  gameState.setSnapshot({ turn: 3 });
+  assert.equal(fixture.documentRef.getElementById(STYLE_ID), null);
+  fixture.players.forEach((player) => {
+    assert.equal(player.item.getAttribute("data-ad-ext-game-layout-transitioning"), null);
+  });
+
+  cleanup();
+});
+
+test("replaced player cards and overflow visibility changes fall back to a direct safe layout update", () => {
+  const fixture = createLayoutFixture({ playerCount: 8, activeIndex: 0 });
+  const gameState = createGameStateHarness({});
+  const config = createRuntimeConfig({
+    featureToggles: { "themes.gameLayout": true },
+    features: {
+      themes: {
+        gameLayout: { enabled: true, playerOrder: "active-first" },
+      },
+    },
+  });
+  const cleanup = mountThemeGameLayout(mountContext(config, fixture, gameState));
+
+  const replaced = fixture.players[1];
+  const replacementParent = replaced.item.parentElement;
+  replaced.item.remove();
+  const replacement = createPlayerCard(fixture, replacementParent, 1, false);
+  fixture.players[1] = replacement;
+  setActivePlayer(fixture, 1);
+  gameState.setSnapshot({ turn: 1 });
+
+  assert.equal(replacement.item.__animations.length, 0);
+  assert.equal(replacement.item.style.getPropertyValue("--ad-game-layout-player-y"), "176px");
+
+  setActivePlayer(fixture, 7);
+  gameState.setSnapshot({ turn: 2 });
+  const visiblePlayers = fixture.players.filter(
+    (player) => player.item.getAttribute("data-ad-ext-game-layout-visible") === "true"
+  );
+  assert.ok(visiblePlayers.length < fixture.players.length);
+  assert.equal(fixture.players[7].item.style.getPropertyValue("--ad-game-layout-player-y"), "176px");
 
   cleanup();
 });
