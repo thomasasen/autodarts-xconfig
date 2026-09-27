@@ -13,6 +13,7 @@ import {
   resolveGameLayoutPlayerOrder,
   resolveLegStarterSeat,
 } from "./logic.js";
+import { createGameLayoutPlayerTransitionController } from "./player-transition.js";
 import { resolveModernX01GameLayoutSurface } from "./surface.js";
 import { STYLE_ID, buildThemeGameLayoutStyleText } from "./style.js";
 
@@ -293,10 +294,12 @@ export function mountThemeGameLayout(context = {}) {
   const domGuards = context.domGuards || null;
   const config = context.config || null;
   const appliedState = createAppliedState();
+  const playerTransition = createGameLayoutPlayerTransitionController({ windowRef });
   let firstVisibleIndex = 0;
   let lastMetrics = null;
   let lastPlayerOrder = "fixed";
   let lastActiveSeat = null;
+  let lastPlayerItems = [];
   let controlBar = null;
   let controlsTimer = null;
   const timerHost = windowRef?.setTimeout ? windowRef : globalThis;
@@ -310,6 +313,8 @@ export function mountThemeGameLayout(context = {}) {
     lastMetrics = null;
     lastPlayerOrder = "fixed";
     lastActiveSeat = null;
+    lastPlayerItems = [];
+    playerTransition.cancel();
   };
   const revealControls = () => {
     if (!controlBar) return;
@@ -397,10 +402,29 @@ export function mountThemeGameLayout(context = {}) {
         return;
       }
 
-      firstVisibleIndex = metrics.firstVisibleIndex;
-      lastMetrics = metrics;
-      lastPlayerOrder = playerOrder;
-      lastActiveSeat = activeSeat;
+      const samePlayerItems =
+        lastPlayerItems.length === seatedPlayers.length &&
+        seatedPlayers.every((player, index) => player.item === lastPlayerItems[index]);
+      const shouldAnimatePlayerChange =
+        playerOrder === "active-first" &&
+        lastPlayerOrder === "active-first" &&
+        hasUniqueActivePlayer &&
+        Number.isInteger(lastActiveSeat) &&
+        activeSeat !== lastActiveSeat &&
+        samePlayerItems;
+      const preserveRunningTransition =
+        playerTransition.isRunning() &&
+        playerOrder === "active-first" &&
+        lastPlayerOrder === "active-first" &&
+        activeSeat === lastActiveSeat &&
+        samePlayerItems;
+      const transitionSnapshot = shouldAnimatePlayerChange
+        ? playerTransition.capture(surface.root, seatedPlayers)
+        : null;
+      if (!shouldAnimatePlayerChange && !preserveRunningTransition) {
+        playerTransition.cancel();
+      }
+
       // Preserve opacity markers so frequent updates do not restart the fade.
       clearAppliedState(appliedState, surface.controlBar);
       domGuards.ensureStyle(STYLE_ID, buildThemeGameLayoutStyleText());
@@ -413,6 +437,18 @@ export function mountThemeGameLayout(context = {}) {
       controlBar = surface.controlBar;
       if (controlsTimer !== null) setMarker(controlBar, "data-ad-ext-game-layout-controls-visible");
       selfCorrectSurface(surface, metrics, documentRef, windowRef);
+      if (transitionSnapshot) {
+        playerTransition.animate({
+          root: surface.root,
+          players: seatedPlayers,
+          before: transitionSnapshot,
+        });
+      }
+      firstVisibleIndex = metrics.firstVisibleIndex;
+      lastMetrics = metrics;
+      lastPlayerOrder = playerOrder;
+      lastActiveSeat = activeSeat;
+      lastPlayerItems = seatedPlayers.map((player) => player.item);
       appliedState.root = surface.root;
       appliedState.wheelHandler = (event) => {
         if (!lastMetrics?.overflow || !Number(event?.deltaY)) return;
@@ -462,8 +498,8 @@ export function mountThemeGameLayout(context = {}) {
   });
   harness.registerListeners([
     { key: `${FEATURE_KEY}:mousemove`, target: documentRef, type: "mousemove", handler: revealControls },
-    { key: `${FEATURE_KEY}:resize`, target: windowRef, type: "resize", handler: () => harness.schedule() },
-    { key: `${FEATURE_KEY}:visual-viewport-resize`, target: windowRef?.visualViewport, type: "resize", handler: () => harness.schedule() },
+    { key: `${FEATURE_KEY}:resize`, target: windowRef, type: "resize", handler: () => { playerTransition.cancel(); harness.schedule(); } },
+    { key: `${FEATURE_KEY}:visual-viewport-resize`, target: windowRef?.visualViewport, type: "resize", handler: () => { playerTransition.cancel(); harness.schedule(); } },
     { key: `${FEATURE_KEY}:fonts-loaded`, target: documentRef.fonts, type: "loadingdone", handler: () => harness.schedule() },
     { key: `${FEATURE_KEY}:popstate`, target: windowRef, type: "popstate", handler: () => harness.schedule() },
     { key: `${FEATURE_KEY}:hashchange`, target: windowRef, type: "hashchange", handler: () => harness.schedule() },
