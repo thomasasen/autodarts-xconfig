@@ -12,6 +12,7 @@ import { normalizeHexColor } from "../shared/hex-color-utils.js";
 import { DART_DESIGN_KEYS } from "../shared/feature-assets.manifest.js";
 import { TURN_DART_ASSET_KEYS } from "../shared/turn-dart-assets.manifest.js";
 import { BOARD_STYLE_DESIGN_KEYS } from "../shared/board-style-assets.manifest.js";
+import { normalizeGameLayoutPlayerTransitionEffect } from "../shared/game-layout-transition-profiles.js";
 
 const CHECKOUT_EFFECT_ALIASES = Object.freeze({
   "": "grow-only",
@@ -398,6 +399,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   "themes.gameLayout": {
     enabled: false,
     playerOrder: "fixed",
+    playerTransitionEffect: "flip-resize",
     showLegStarter: false,
     debug: false,
   },
@@ -732,6 +734,9 @@ const FEATURE_NORMALIZERS = Object.freeze({
         rawConfig.playerOrder,
         "fixed",
         THEME_GAME_LAYOUT_PLAYER_ORDERS
+      ),
+      playerTransitionEffect: normalizeGameLayoutPlayerTransitionEffect(
+        rawConfig.playerTransitionEffect
       ),
       showLegStarter: normalizeBoolean(rawConfig.showLegStarter, false),
       debug: normalizeBoolean(rawConfig.debug, false),

@@ -1,4 +1,5 @@
 import { createFeatureMountHarness } from "../../shared/feature-mount-harness.js";
+import { normalizeGameLayoutPlayerTransitionEffect } from "../../../shared/game-layout-transition-profiles.js";
 import { isThemeGameContextActive } from "../shared/theme-utils.js";
 import {
   GAME_LAYOUT_PADDING,
@@ -299,6 +300,7 @@ export function mountThemeGameLayout(context = {}) {
   let lastMetrics = null;
   let lastPlayerOrder = "fixed";
   let lastActiveSeat = null;
+  let lastTransitionEffect = "flip-resize";
   let lastPlayerItems = [];
   let controlBar = null;
   let controlsTimer = null;
@@ -313,6 +315,7 @@ export function mountThemeGameLayout(context = {}) {
     lastMetrics = null;
     lastPlayerOrder = "fixed";
     lastActiveSeat = null;
+    lastTransitionEffect = "flip-resize";
     lastPlayerItems = [];
     playerTransition.cancel();
   };
@@ -352,6 +355,9 @@ export function mountThemeGameLayout(context = {}) {
       const playerOrder = featureConfig.playerOrder === "active-first"
         ? "active-first"
         : "fixed";
+      const transitionEffect = normalizeGameLayoutPlayerTransitionEffect(
+        featureConfig.playerTransitionEffect
+      );
       const seatedPlayers = surface.players.map((player, seatIndex) => ({
         ...player,
         seatIndex,
@@ -416,6 +422,7 @@ export function mountThemeGameLayout(context = {}) {
         playerTransition.isRunning() &&
         playerOrder === "active-first" &&
         lastPlayerOrder === "active-first" &&
+        transitionEffect === lastTransitionEffect &&
         activeSeat === lastActiveSeat &&
         samePlayerItems;
       const transitionSnapshot = shouldAnimatePlayerChange
@@ -442,12 +449,14 @@ export function mountThemeGameLayout(context = {}) {
           root: surface.root,
           players: seatedPlayers,
           before: transitionSnapshot,
+          effect: transitionEffect,
         });
       }
       firstVisibleIndex = metrics.firstVisibleIndex;
       lastMetrics = metrics;
       lastPlayerOrder = playerOrder;
       lastActiveSeat = activeSeat;
+      lastTransitionEffect = transitionEffect;
       lastPlayerItems = seatedPlayers.map((player) => player.item);
       appliedState.root = surface.root;
       appliedState.wheelHandler = (event) => {
@@ -480,6 +489,7 @@ export function mountThemeGameLayout(context = {}) {
         visiblePlayers: metrics.visiblePlayerCount,
         boardSize: Math.round(metrics.boardSize),
         playerOrder,
+        playerTransitionEffect: transitionEffect,
         starterSeat,
       });
     },

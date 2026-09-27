@@ -615,3 +615,95 @@ Grün waren:
 Für das Game-Layout existiert keine dedizierte Playwright-Fixture. Die DOM-Verträge werden deshalb durch die vorhandene Runtime-/Fake-DOM-Suite abgedeckt. Ein vollständiger Browser-Sweep wurde für diese lokalisierte Änderung nicht erzwungen.
 
 Der finale Branch enthält weder Release-/Versionsänderungen noch Änderungen unter `dist/**`.
+
+
+## Erweiterung 2026-09-27: auswählbare Wechsel-Effekte und Live-Vorschau
+
+### Effektprofile
+
+Die Spielerrotation im Modus `active-first` kann jetzt über `playerTransitionEffect` konfiguriert werden. Die erlaubten Werte liegen zentral in `src/shared/game-layout-transition-profiles.js`, damit Config, Runtime und xConfig dieselben Profile verwenden.
+
+Verfügbare Profile:
+
+- `flip-resize` – **FLIP + Resize**: Standard, 340 ms, `cubic-bezier(0.22, 1, 0.36, 1)`. Position und aktive/inaktive Kartengröße wechseln als direkte zusammenhängende Bewegung.
+- `smooth-flip` – **Smooth FLIP**: 460 ms, `cubic-bezier(0.4, 0, 0.2, 1)`. Gleiche FLIP-Geometrie, aber ruhigerer und längerer Bewegungsverlauf.
+- `lane-flip` – **Lane FLIP**: 380 ms, `cubic-bezier(0.22, 1, 0.36, 1)`. Die nach unten rotierende Karte erhält zusätzlich eine kleine linke Ausweichspur von 12 px.
+
+Ungültige oder alte Config-Werte fallen auf `flip-resize` zurück. Bestehende Installationen ohne das neue Feld erhalten dadurch deterministisch den bisherigen FLIP-Standard.
+
+### Laufzeitverhalten
+
+Der Transition-Controller erhält das normalisierte Profil bei jedem legitimen Aktivwechsel. Ein Effektwechsel während einer laufenden Animation lässt den alten Effekt nicht weiterlaufen: Die bestehende WAAPI-Animation wird kontrolliert beendet; der aktuelle Layoutzustand bleibt korrekt und der nächste Spielerwechsel verwendet das neue Profil.
+
+Für `lane-flip` wird die Ausweichspur nur auf Karten angewendet, die tatsächlich nach unten rotieren. Die Spur läuft nach links, weil die Player-Rail links mindestens 16 px Abstand besitzt. Mit 12 px Versatz bleibt die Karte vollständig sichtbar und bewegt sich nicht in Richtung des rechts angrenzenden Board-Bereichs.
+
+Bei Kartenkreuzungen erhält die neue aktive Karte während der Transition einen höheren Layer (`z-index: 22`), damit die gerade relevante Spielerkarte nicht von einer inaktiven Karte verdeckt wird.
+
+Die bestehenden Sicherheitsregeln bleiben unverändert:
+
+- kein DOM-Reparenting,
+- kein Fade oder Entfernen von Player-Cards,
+- Initial-Mount ohne künstliche Animation,
+- `fixed` ohne Spieler-Transition,
+- unklarer Aktivzustand ohne geratenen Übergang,
+- Reduced Motion ohne FLIP,
+- Resize, Overflow-Scroll und DOM-Rebuild brechen laufende Animationen fail-safe ab,
+- bei Overflow mit wechselnden sichtbaren Karten wird direkt auf den korrekten Endzustand gewechselt, statt versteckte Karten künstlich zu animieren.
+
+### xConfig-Live-Vorschau
+
+Unter **Spiel-Layout → Spieler → Wechsel-Effekt** stehen die drei Profile als normale Select-Optionen mit erklärender Copy bereit.
+
+Zusätzlich wird im Einstellungsdialog eine Live-Vorschau mit drei Spielerkarten A, B und C gerendert. Sie demonstriert zyklisch:
+
+`A aktiv → B aktiv → C aktiv → A aktiv`.
+
+Die Vorschau übernimmt Dauer, Easing und Lane-Versatz aus denselben zentralen Profilen wie die Runtime. Der vollständige Vorschauzyklus umfasst sechs gleich lange Phasen; dadurch dauert jede sichtbare A→B-, B→C- oder C→A-Bewegung exakt so lange wie der entsprechende Runtime-Effekt. Zwischen den Bewegungen liegt jeweils eine gleich lange Ruhephase, damit der Effekt nachvollziehbar bleibt.
+
+Wenn der Nutzer im Dialog einen Effekt auswählt, wird die Vorschau sofort ersetzt und zeigt das gewählte Profil, bevor die Änderung im Spiel benötigt wird. Mehrere sehr schnelle Änderungen werden aus dem aktuell sichtbaren Vorschauzustand zusammengeführt, sodass eine noch nicht persistierte Effektauswahl nicht durch die unmittelbar folgende Einstellung zurückgesetzt wird.
+
+Bei `playerOrder = fixed` bleibt die Vorschau absichtlich sichtbar, weist aber darauf hin, dass der Effekt im Spiel erst mit `Aktiver Spieler immer oben` verwendet wird.
+
+Die Vorschau respektiert `prefers-reduced-motion: reduce` und bleibt dann statisch. Alle drei Karten bleiben auch in der animierten Vorschau sichtbar.
+
+### Red-Team – zusätzliche Befunde
+
+Die zweite adversarielle Prüfung hat folgende Probleme frühzeitig gefunden:
+
+1. **Falscher Importpfad:** Der erste Shared-Profile-Import aus `game-layout/index.js` zeigte eine Ebene zu kurz auf `src/features/shared`. Der erste Zwischen-QS-Lauf hat dies sofort mit `ERR_MODULE_NOT_FOUND` gestoppt. Der Import wurde auf `src/shared` korrigiert.
+2. **Schnelle Einstellungsfolge:** Zwei unmittelbar aufeinanderfolgende Änderungen im Einstellungsdialog konnten theoretisch die zweite Vorschau aus einem noch nicht aktualisierten Feature-Snapshot bauen und damit die erste sichtbare Auswahl zurücksetzen. Die Vorschau verwendet deshalb ihren aktuellen DOM-Zustand als Merge-Basis.
+3. **Lane-Richtung:** Ein positiver X-Versatz hätte die Player-Card in Richtung Board bewegt. Der Lane-Versatz wurde auf 12 px nach links geändert; bei der Runtime-Position von 16 px bleibt die Karte damit im sichtbaren Bereich.
+4. **Vorschau-Timing:** Der erste Preview-Zyklus verwendete `4 × Profildauer`, obwohl der A→B→C-Zyklus sechs gleich lange Bewegungs-/Ruhephasen besitzt. Das hätte die sichtbare Bewegung auf zwei Drittel der Runtime-Dauer verkürzt. Der Zyklus verwendet jetzt `6 × Profildauer`.
+5. **Kartenkreuzung:** Bei direktem FLIP können sich Karten während des Wegs kurz schneiden. Die eingehende aktive Karte erhält deshalb während der Transition den höchsten Player-Layer, sodass die relevante Karte lesbar bleibt. Es wird weiterhin keine Karte ausgeblendet.
+6. **Runtime-Wechsel:** Effektwechsel, Resize und React-Card-Replacement während einer laufenden Animation wurden als eigene Regressionen ergänzt. Alle drei Fälle beenden stale Animationen und hinterlassen keine Transition-Marker.
+
+### Zwischen-QS der Effektauswahl
+
+Nach Korrektur des Importpfads war die vollständige gezielte Suite in Run `36334087236` grün:
+
+- `tests/runtime/theme-game-layout.test.js`
+- `tests/runtime/feature-config-spec.test.js`
+- `tests/runtime/xconfig-shell.test.js`
+- `tests/runtime/xconfig-structure-consistency.test.js`
+- `npm run check:syntax`
+- gezieltes ESLint aller geänderten Source-/Testdateien
+
+Nach den zusätzlichen Red-Team-Härtungen für Vorschau-Timing, Lane-Geometrie, Layering, Resize und React-Rebuild wurde die gleiche Suite erneut ausgeführt. Run `36334478590` war vollständig erfolgreich.
+
+### Finale QS der Erweiterung
+
+Die finale QS wurde nach der Doku-Synchronisierung in GitHub Actions Run `36334593391` vollständig erfolgreich ausgeführt.
+
+Geprüft und grün:
+
+- `tests/runtime/theme-game-layout.test.js`
+- `tests/runtime/feature-config-spec.test.js`
+- `tests/runtime/xconfig-shell.test.js`
+- `tests/runtime/xconfig-structure-consistency.test.js`
+- `tests/runtime/readme-docs.test.js`
+- `tests/runtime/reduced-motion-style.test.js`
+- `npm run check:syntax`
+- gezieltes ESLint aller geänderten Source-/Testdateien
+- `npm run sync:xconfig-docs` vor den Tests; README und `docs/FEATURES.md` wurden aus der Source-of-Truth synchronisiert
+
+Damit sind Runtime, Konfiguration, Vorschau, schnelle Einstellungswechsel, Reduced Motion, Dokumentationskonsistenz sowie die Red-Team-Sonderfälle gemeinsam validiert.

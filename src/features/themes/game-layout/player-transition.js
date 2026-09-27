@@ -1,5 +1,14 @@
-const DEFAULT_DURATION_MS = 340;
-const DEFAULT_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
+import {
+  DEFAULT_GAME_LAYOUT_PLAYER_TRANSITION_EFFECT,
+  getGameLayoutPlayerTransitionProfile,
+  normalizeGameLayoutPlayerTransitionEffect,
+} from "../../../shared/game-layout-transition-profiles.js";
+
+const DEFAULT_PROFILE = getGameLayoutPlayerTransitionProfile(
+  DEFAULT_GAME_LAYOUT_PLAYER_TRANSITION_EFFECT
+);
+const DEFAULT_DURATION_MS = DEFAULT_PROFILE.durationMs;
+const DEFAULT_EASING = DEFAULT_PROFILE.easing;
 const MIN_SCALE = 0.35;
 const MAX_SCALE = 2.85;
 
@@ -87,15 +96,59 @@ function hasReducedMotion(windowRef) {
   }
 }
 
+function interpolate(value, progress) {
+  return 1 + (value - 1) * progress;
+}
+
+export function buildGameLayoutPlayerTransitionKeyframes(options = {}) {
+  const dx = Number(options.dx) || 0;
+  const dy = Number(options.dy) || 0;
+  const scaleX = Number(options.scaleX) || 1;
+  const scaleY = Number(options.scaleY) || 1;
+  const effect = normalizeGameLayoutPlayerTransitionEffect(options.effect);
+  const profile = getGameLayoutPlayerTransitionProfile(effect);
+  const base = [
+    {
+      transformOrigin: "top left",
+      transform: `translate3d(${dx}px, ${dy}px, 0) scale(${scaleX}, ${scaleY})`,
+    },
+    {
+      transformOrigin: "top left",
+      transform: "translate3d(0px, 0px, 0) scale(1, 1)",
+    },
+  ];
+
+  if (
+    effect !== "lane-flip" ||
+    options.movingDown !== true ||
+    !Number.isFinite(profile.laneOffsetPx) ||
+    profile.laneOffsetPx === 0
+  ) {
+    return base;
+  }
+
+  const progress = 0.56;
+  return [
+    base[0],
+    {
+      offset: progress,
+      transformOrigin: "top left",
+      transform: `translate3d(${profile.laneOffsetPx}px, ${dy * (1 - progress)}px, 0) scale(${interpolate(scaleX, 1 - progress)}, ${interpolate(scaleY, 1 - progress)})`,
+    },
+    base[1],
+  ];
+}
+
 export function createGameLayoutPlayerTransitionController(options = {}) {
   const windowRef =
     options.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
-  const duration = Math.max(0, Number(options.duration) || DEFAULT_DURATION_MS);
-  const easing = String(options.easing || DEFAULT_EASING);
+  const durationOverride = Number(options.duration);
+  const easingOverride = String(options.easing || "").trim();
   const animations = new Map();
 
   function removeMarker(item) {
     item?.removeAttribute?.("data-ad-ext-game-layout-transitioning");
+    item?.removeAttribute?.("data-ad-ext-game-layout-transition-effect");
   }
 
   function cancel() {
@@ -118,8 +171,23 @@ export function createGameLayoutPlayerTransitionController(options = {}) {
     return snapshot;
   }
 
-  function animate({ root, players, before, enabled = true } = {}) {
+  function animate({
+    root,
+    players,
+    before,
+    enabled = true,
+    effect = DEFAULT_GAME_LAYOUT_PLAYER_TRANSITION_EFFECT,
+  } = {}) {
     const list = Array.isArray(players) ? players : [];
+    const normalizedEffect = normalizeGameLayoutPlayerTransitionEffect(effect);
+    const profile = getGameLayoutPlayerTransitionProfile(normalizedEffect);
+    const duration = Math.max(
+      0,
+      Number.isFinite(durationOverride) && durationOverride > 0
+        ? durationOverride
+        : profile.durationMs
+    );
+    const easing = easingOverride || profile.easing;
     if (
       enabled !== true ||
       !root ||
@@ -168,26 +236,32 @@ export function createGameLayoutPlayerTransitionController(options = {}) {
         continue;
       }
 
-      transitions.push({ item, dx, dy, scaleX, scaleY });
+      transitions.push({
+        item,
+        dx,
+        dy,
+        scaleX,
+        scaleY,
+        movingDown: next.rect.top > previous.rect.top + 0.5,
+      });
     }
 
     if (!transitions.length) return false;
 
-    for (const { item, dx, dy, scaleX, scaleY } of transitions) {
+    for (const { item, dx, dy, scaleX, scaleY, movingDown } of transitions) {
       item.setAttribute?.("data-ad-ext-game-layout-transitioning", "true");
+      item.setAttribute?.("data-ad-ext-game-layout-transition-effect", normalizedEffect);
       let animation = null;
       try {
         animation = item.animate(
-          [
-            {
-              transformOrigin: "top left",
-              transform: `translate3d(${dx}px, ${dy}px, 0) scale(${scaleX}, ${scaleY})`,
-            },
-            {
-              transformOrigin: "top left",
-              transform: "translate3d(0px, 0px, 0) scale(1, 1)",
-            },
-          ],
+          buildGameLayoutPlayerTransitionKeyframes({
+            dx,
+            dy,
+            scaleX,
+            scaleY,
+            effect: normalizedEffect,
+            movingDown,
+          }),
           {
             duration,
             easing,

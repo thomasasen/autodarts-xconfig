@@ -325,6 +325,10 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Spielerreihenfolge`: Legt fest, ob die Reihenfolge statisch bleibt oder mit dem aktiven Spieler rotiert.
   - `Fest`: Behält die feste Sitzreihenfolge der Spielerkarten bei.
   - `Aktiver Spieler immer oben`: Rotiert zyklisch so, dass der aktive Spieler immer oben steht.
+- `Wechsel-Effekt`: Wählt das Bewegungsprofil für die Rotation der Spielerkarten.
+  - `FLIP + Resize`: Direkte FLIP-Bewegung mit gleichzeitigem Resize.
+  - `Smooth FLIP`: Ruhigere FLIP-Variante mit weichem Bewegungsverlauf.
+  - `Lane FLIP`: FLIP mit kleiner seitlicher Ausweichspur für die Rotation.
 - `Leg-Starter anzeigen`: Zeigt einen START-Badge beim Leg-Starter.
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 

@@ -241,6 +241,9 @@ export function buildThemeGameLayoutStyleText() {
   z-index:20!important;
   will-change:transform!important;
 }
+[data-ad-ext-game-layout-player-item="true"][data-ad-ext-game-layout-transitioning="true"][data-ad-ext-game-layout-active="true"]{
+  z-index:22!important;
+}
 [data-ad-ext-game-layout-player-item="true"][data-ad-ext-game-layout-visible="false"]{
   visibility:hidden!important;
   pointer-events:none!important;

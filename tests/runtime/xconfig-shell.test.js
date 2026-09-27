@@ -4976,3 +4976,149 @@ test("xConfig switches save once per change and preserve the checked setting aft
   );
   runtime.stop();
 });
+
+
+test("xConfig game-layout settings expose transition effects with an immediately updating preview", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForMenuButton(documentRef);
+
+  documentRef.getElementById("ad-xconfig-menu-item").click();
+  await waitForShellOpen(windowRef, documentRef);
+  const openSettings = documentRef.querySelector(
+    "[data-adxconfig-action='open-settings'][data-feature-key='theme-game-layout']"
+  );
+  assert.ok(openSettings);
+  openSettings.click();
+  await waitForSettingsModal(documentRef);
+
+  const effectOptions = documentRef.querySelectorAll(
+    "[data-adxconfig-action='set-setting-select-option'][data-feature-key='theme-game-layout'][data-setting-key='playerTransitionEffect']"
+  );
+  assert.deepEqual(
+    effectOptions.map((node) =>
+      String(node.querySelector(".ad-xconfig-option-label")?.textContent || "").trim()
+    ),
+    ["FLIP + Resize", "Smooth FLIP", "Lane FLIP"]
+  );
+  assert.equal(
+    effectOptions.filter((node) => node.getAttribute("data-active") === "true").length,
+    1
+  );
+  assert.equal(
+    effectOptions.find((node) => node.getAttribute("data-active") === "true")
+      ?.getAttribute("data-setting-value"),
+    "flip-resize"
+  );
+
+  let preview = documentRef.querySelector(
+    "[data-adxconfig-game-layout-transition-preview='true']"
+  );
+  assert.ok(preview);
+  let demo = preview.querySelector(
+    "[data-adxconfig-game-layout-transition-demo='true']"
+  );
+  assert.equal(demo?.getAttribute("data-transition-effect"), "flip-resize");
+  assert.equal(
+    demo?.style.getPropertyValue("--ad-xconfig-game-layout-transition-cycle-duration"),
+    "2040ms"
+  );
+  assert.equal(
+    demo?.style.getPropertyValue("--ad-xconfig-game-layout-transition-lane-offset"),
+    "0px"
+  );
+  assert.equal(demo?.querySelectorAll("[data-preview-seat]").length, 3);
+
+  clickSelectSettingOption(
+    documentRef,
+    "theme-game-layout",
+    "playerTransitionEffect",
+    "smooth-flip"
+  );
+  preview = documentRef.querySelector(
+    "[data-adxconfig-game-layout-transition-preview='true']"
+  );
+  demo = preview?.querySelector(
+    "[data-adxconfig-game-layout-transition-demo='true']"
+  );
+  assert.equal(demo?.getAttribute("data-transition-effect"), "smooth-flip");
+  assert.equal(
+    demo?.style.getPropertyValue("--ad-xconfig-game-layout-transition-cycle-duration"),
+    "2760ms"
+  );
+  assert.equal(
+    demo?.style.getPropertyValue("--ad-xconfig-game-layout-transition-easing"),
+    "cubic-bezier(0.4, 0, 0.2, 1)"
+  );
+  clickSelectSettingOption(
+    documentRef,
+    "theme-game-layout",
+    "playerOrder",
+    "active-first"
+  );
+  preview = documentRef.querySelector(
+    "[data-adxconfig-game-layout-transition-preview='true']"
+  );
+  demo = preview?.querySelector(
+    "[data-adxconfig-game-layout-transition-demo='true']"
+  );
+  assert.equal(
+    demo?.getAttribute("data-transition-effect"),
+    "smooth-flip",
+    "a second immediate setting change must not revert the unsaved preview effect"
+  );
+  assert.equal(demo?.getAttribute("data-player-order"), "active-first");
+  assert.equal(
+    preview?.querySelector(".ad-xconfig-game-layout-transition-preview-hint")?.textContent,
+    "Aktiv bei Spielerwechsel"
+  );
+  await waitForStoredConfig(
+    localStorage,
+    (config) =>
+      config.features.themes.gameLayout.playerTransitionEffect === "smooth-flip" &&
+      config.features.themes.gameLayout.playerOrder === "active-first"
+  );
+
+  clickSelectSettingOption(
+    documentRef,
+    "theme-game-layout",
+    "playerTransitionEffect",
+    "lane-flip"
+  );
+  preview = documentRef.querySelector(
+    "[data-adxconfig-game-layout-transition-preview='true']"
+  );
+  demo = preview?.querySelector(
+    "[data-adxconfig-game-layout-transition-demo='true']"
+  );
+  assert.equal(demo?.getAttribute("data-transition-effect"), "lane-flip");
+  assert.equal(
+    demo?.style.getPropertyValue("--ad-xconfig-game-layout-transition-cycle-duration"),
+    "2280ms"
+  );
+  assert.equal(
+    demo?.style.getPropertyValue("--ad-xconfig-game-layout-transition-lane-offset"),
+    "-12px"
+  );
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.themes.gameLayout.playerTransitionEffect === "lane-flip"
+  );
+
+  const styleText = String(
+    documentRef.getElementById("ad-xconfig-shell-style")?.textContent || ""
+  );
+  assert.match(styleText, /ad-xconfig-game-layout-preview-lane-a/);
+  assert.match(
+    styleText,
+    /lane-flip[^}]*ad-xconfig-game-layout-transition-card\{left:calc\(\.55rem - var\(--ad-xconfig-game-layout-transition-lane-offset,-12px\)\);right:\.55rem/
+  );
+  assert.match(
+    styleText,
+    /prefers-reduced-motion:reduce[^]*ad-xconfig-game-layout-transition-card[^]*animation:none!important/
+  );
+
+  runtime.stop();
+});

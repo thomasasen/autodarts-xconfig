@@ -9,6 +9,7 @@ import { THEME_GLOBAL_TEMPLATE_PRESETS } from "../../shared/theme-global-templat
 import { BOARD_STYLE_DESIGN_OPTIONS } from "../../shared/board-style-assets.manifest.js";
 import { DART_DESIGN_OPTIONS } from "../../shared/feature-assets.manifest.js";
 import { TURN_DART_ASSET_OPTIONS } from "../../shared/turn-dart-assets.manifest.js";
+import { GAME_LAYOUT_PLAYER_TRANSITION_EFFECT_OPTIONS } from "../../shared/game-layout-transition-profiles.js";
 
 const X01_REMAINING_SCORE_BAR_COLOR_CYCLE_PREVIEW_EFFECT =
   "x01-remaining-score-bar-color-cycle";
@@ -362,6 +363,12 @@ export const xconfigDescriptors = Object.freeze([
         "playerOrder",
         "Spielerreihenfolge",
         GAME_LAYOUT_PLAYER_ORDER_OPTIONS,
+        { section: "Spieler" }
+      ),
+      selectField(
+        "playerTransitionEffect",
+        "Wechsel-Effekt",
+        GAME_LAYOUT_PLAYER_TRANSITION_EFFECT_OPTIONS,
         { section: "Spieler" }
       ),
       checkboxField("showLegStarter", "Leg-Starter anzeigen", { section: "Spieler" }),
