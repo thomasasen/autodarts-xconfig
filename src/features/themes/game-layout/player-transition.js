@@ -68,9 +68,11 @@ function capturePlayers(root, players, preferRenderedGeometry = false) {
   return snapshot;
 }
 
-function clampScale(value) {
-  if (!Number.isFinite(value)) return null;
-  return Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
+function validateScale(value) {
+  if (!Number.isFinite(value) || value < MIN_SCALE || value > MAX_SCALE) {
+    return null;
+  }
+  return value;
 }
 
 function hasReducedMotion(windowRef) {
@@ -145,12 +147,12 @@ export function createGameLayoutPlayerTransitionController(options = {}) {
         return false;
       }
       if (!next.visible) continue;
-      if (typeof item.animate !== "function") return false;
+      if (item.isConnected === false || typeof item.animate !== "function") return false;
 
       const dx = previous.rect.left - next.rect.left;
       const dy = previous.rect.top - next.rect.top;
-      const scaleX = clampScale(previous.rect.width / next.rect.width);
-      const scaleY = clampScale(previous.rect.height / next.rect.height);
+      const scaleX = validateScale(previous.rect.width / next.rect.width);
+      const scaleY = validateScale(previous.rect.height / next.rect.height);
       if (scaleX === null || scaleY === null) return false;
 
       if (
@@ -167,27 +169,34 @@ export function createGameLayoutPlayerTransitionController(options = {}) {
 
     if (!transitions.length) return false;
 
-    transitions.forEach(({ item, dx, dy, scaleX, scaleY }) => {
+    for (const { item, dx, dy, scaleX, scaleY } of transitions) {
       item.setAttribute?.("data-ad-ext-game-layout-transitioning", "true");
-      const animation = item.animate(
-        [
+      let animation = null;
+      try {
+        animation = item.animate(
+          [
+            {
+              transformOrigin: "top left",
+              transform: `translate3d(${dx}px, ${dy}px, 0) scale(${scaleX}, ${scaleY})`,
+            },
+            {
+              transformOrigin: "top left",
+              transform: "translate3d(0px, 0px, 0) scale(1, 1)",
+            },
+          ],
           {
-            transformOrigin: "top left",
-            transform: `translate3d(${dx}px, ${dy}px, 0) scale(${scaleX}, ${scaleY})`,
-          },
-          {
-            transformOrigin: "top left",
-            transform: "translate3d(0px, 0px, 0) scale(1, 1)",
-          },
-        ],
-        {
-          duration,
-          easing,
-          fill: "none",
-        }
-      );
-      animations.set(item, animation);
+            duration,
+            easing,
+            fill: "none",
+          }
+        );
+      } catch (_) {
+        removeMarker(item);
+        cancel();
+        return false;
+      }
 
+      animations.set(item, animation);
       const finish = () => {
         if (animations.get(item) !== animation) return;
         animations.delete(item);
@@ -195,7 +204,7 @@ export function createGameLayoutPlayerTransitionController(options = {}) {
       };
       animation.onfinish = finish;
       animation.oncancel = finish;
-    });
+    }
 
     return true;
   }
