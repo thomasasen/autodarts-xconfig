@@ -323,6 +323,8 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - Der optionale START-Badge bleibt beim Leg-Starter und ist unabhängig davon, wer gerade wirft.
 - Bei vielen Spielern bleibt der aktive Spieler im Rotationsmodus oben sichtbar; die übrigen Spieler lassen sich weiter durchscrollen.
 - `Spielerreihenfolge`: Legt fest, ob die Reihenfolge statisch bleibt oder mit dem aktiven Spieler rotiert.
+  - `Fest`: Behält die feste Sitzreihenfolge der Spielerkarten bei.
+  - `Aktiver Spieler immer oben`: Rotiert zyklisch so, dass der aktive Spieler immer oben steht.
 - `Leg-Starter anzeigen`: Zeigt einen START-Badge beim Leg-Starter.
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
