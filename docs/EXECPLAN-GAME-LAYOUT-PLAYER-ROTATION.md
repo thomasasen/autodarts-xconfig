@@ -6,8 +6,30 @@
 - Basis: `main` @ `b044b98ca661963a9e3072f914dc6c26bff16e40`
 - Zielbereich: `theme-game-layout`
 - Spielmodus: X01
-- Implementierung: noch nicht begonnen
-- Planstatus: bereit zur Umsetzung
+- Implementierung: Core, Config, UI, START-Badge, Tests und generierte Doku umgesetzt
+- Zwischen-QS: erfolgreich (gezielte Runtime-/Config-Tests, Syntax und ESLint)
+- Finale QS: ausstehend
+- Planstatus: Implementierung abgeschlossen, finale Validierung läuft
+
+## Umsetzungsstand
+
+Die Umsetzung folgt dem Plan mit zwei bewusst getrennten Informationsachsen:
+
+- Die **Display-Reihenfolge** wird ausschließlich aus den sichtbaren Player-Cards und ihrem aktiven Zustand abgeleitet. Im Modus `active-first` wird zyklisch rotiert, ohne native DOM-Knoten umzuhängen.
+- Der **Leg-Starter** wird fail-safe aus `match.players[0].index` abgeleitet, nur wenn die Payload vollständig und die Sitzposition plausibel ist. Bei fehlender positiver Evidenz wird kein Badge angezeigt.
+- Bei Overflow bleibt der aktive Spieler im Rotationsmodus oben sichtbar; das Scrollfenster bewegt nur die nachfolgenden inaktiven Spieler.
+- Die Defaults bleiben `playerOrder: "fixed"` und `showLegStarter: false`, damit bestehende Installationen unverändert aussehen.
+
+### Zwischen-QS – Ergebnis
+
+Erfolgreich auf dem integrierten Core-Stand ausgeführt:
+
+- `node --test tests/runtime/theme-game-layout.test.js`
+- `node --test tests/runtime/feature-config-spec.test.js`
+- `npm run check:syntax`
+- gezieltes ESLint für die geänderten Runtime-, Config-, UI- und Testdateien
+
+Alle Checks waren grün. Die Tests decken insbesondere zyklische Rotation, mehrdeutige Aktivzustände, Starter-Fallbacks, Leg-Wechsel, unveränderte DOM-Eltern, Cleanup sowie Overflow mit gepinntem aktiven Spieler ab.
 
 ## Ziel
 
