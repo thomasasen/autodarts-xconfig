@@ -267,6 +267,8 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#theme-game-layout)
 
+![X01-Spiel-Layout](docs/screenshots/theme-game-layout.webp)
+
 ## Alle Modi
 
 <a id="bot-board-style"></a>
@@ -339,7 +341,7 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-dart-marker-replacer)
 
-![Treffermarkierungen durch Darts ersetzen](docs/screenshots/animation-dart-marker-darts.png)
+![Treffermarkierungen durch Darts ersetzen](docs/screenshots/dart-marker-replacer.webp)
 
 <a id="animation-autodarts-animate-take-out-darts-alert"></a>
 <a id="animation-autodarts-animate-remove-darts-notification"></a>
@@ -453,6 +455,8 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 - Wann sinnvoll? Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-x01-bust-active-player-highlight)
+
+![Überworfen (BUST) hervorheben](docs/screenshots/x01-bust-active-player-highlight.webp)
 
 ## Cricket / Tactics
 

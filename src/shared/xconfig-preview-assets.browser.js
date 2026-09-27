@@ -1,4 +1,6 @@
 import themeGlobalTypographyWebp from "../assets/xconfig-previews/theme-global-typography.webp";
+import themeGameLayoutWebp from "../assets/xconfig-previews/theme-game-layout.webp";
+import turnDartDisplayWebp from "../assets/xconfig-previews/turn-dart-display.webp";
 import checkoutScoreHighlightWebp from "../assets/xconfig-previews/checkout-score-highlight.webp";
 import x01RemainingScoreBarWebp from "../assets/xconfig-previews/x01-remaining-score-bar.webp";
 import x01BustActivePlayerHighlightWebp from "../assets/xconfig-previews/x01-bust-active-player-highlight.webp";
@@ -19,8 +21,8 @@ export const XCONFIG_PREVIEW_ASSETS = Object.freeze({
   "theme-global-background": themeGlobalTypographyWebp,
   "theme-global-typography": themeGlobalTypographyWebp,
   "theme-global-presets": themeGlobalTypographyWebp,
-  "theme-game-layout": themeGlobalTypographyWebp,
-  "turn-dart-display": dartMarkerReplacerWebp,
+  "theme-game-layout": themeGameLayoutWebp,
+  "turn-dart-display": turnDartDisplayWebp,
   "checkout-score-highlight": checkoutScoreHighlightWebp,
   "x01-remaining-score-bar": x01RemainingScoreBarWebp,
   "x01-bust-active-player-highlight": x01BustActivePlayerHighlightWebp,

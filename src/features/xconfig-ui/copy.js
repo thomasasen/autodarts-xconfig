@@ -301,6 +301,7 @@ export const xconfigFeatureCopy = deepFreeze({
       "Der optionale START-Badge bleibt beim Leg-Starter und ist unabhängig davon, wer gerade wirft.",
       "Bei vielen Spielern bleibt der aktive Spieler im Rotationsmodus oben sichtbar; die übrigen Spieler lassen sich weiter durchscrollen.",
     ],
+    images: [image("X01-Spiel-Layout", "theme-game-layout.webp")],
     fields: {
       playerOrder: fieldCopy(
         "Wählt zwischen fester Reihenfolge und aktiver Spielerkarte oben.",
@@ -413,7 +414,7 @@ export const xconfigFeatureCopy = deepFreeze({
       "Beim Eintritt in BUST färbt sich die aktive Spielerkarte dunkelrot, erhält einen klaren roten Rahmen und zeigt die konfigurierten Glasrisse an zufälligen Stellen. Optional startet gleichzeitig der Glasbruch-Sound. Die Markierung bleibt ruhig und sichtbar, bis `BUST` verschwindet; danach wird der native Zustand vollständig wiederhergestellt.",
     usefulWhen:
       "Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.",
-    images: [],
+    images: [image("Überworfen (BUST) hervorheben", "x01-bust-active-player-highlight.webp")],
     fields: {
       preview: fieldCopy(
         "Startet eine sofortige BUST-Vorschau auf der Beispielkarte.",
@@ -869,7 +870,7 @@ export const xconfigFeatureCopy = deepFreeze({
       "Auf dem virtuellen Board bleibt das Modul aktiv. Im Live-Modus pausiert es automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.",
       "Leistungsintensive Effekte können auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.",
     ],
-    images: [image("Treffermarkierungen durch Darts ersetzen", "animation-dart-marker-darts.png")],
+    images: [image("Treffermarkierungen durch Darts ersetzen", "dart-marker-replacer.webp")],
     fields: {
       "run-feature-action": fieldCopy(
         "Wirft das aktuell konfigurierte Dart-Design auf einen virtuellen Marker.",

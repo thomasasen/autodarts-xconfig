@@ -328,6 +328,8 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Leg-Starter anzeigen`: Zeigt einen START-Badge beim Leg-Starter.
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
+![X01-Spiel-Layout](screenshots/theme-game-layout.webp)
+
 ## Alle Modi
 
 <a id="bot-board-style"></a>
@@ -559,7 +561,7 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Filmisch`: Diese Stufe verlängert die Fluganimation merklich und macht den Anflug des Darts selbst zum kleinen Effektmoment. Dadurch wirkt das Setzen des Markers cineastischer, aber weniger direkt.
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Treffermarkierungen durch Darts ersetzen](screenshots/animation-dart-marker-darts.png)
+![Treffermarkierungen durch Darts ersetzen](screenshots/dart-marker-replacer.webp)
 
 <a id="animation-autodarts-animate-take-out-darts-alert"></a>
 <a id="animation-autodarts-animate-remove-darts-notification"></a>
@@ -809,6 +811,8 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `3`: Zeigt drei Einschlagzentren und damit die dichteste Darstellung.
 - `Glasbruch-Sound`: Schaltet den Glasbruch-Sound für Effekt und Vorschau ein.
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+
+![Überworfen (BUST) hervorheben](screenshots/x01-bust-active-player-highlight.webp)
 
 ## Cricket / Tactics
 
