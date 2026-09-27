@@ -291,15 +291,29 @@ export const xconfigFeatureCopy = deepFreeze({
     },
   }),
   "theme-game-layout": featureCopy({
-    cardDescription: "Ordnet alle X01-Spieler links an und nutzt den rechten Bereich für ein größeres Dartboard.",
+    cardDescription: "Ordnet alle X01-Spieler links an und kann den aktuell werfenden Spieler immer nach oben rotieren.",
     visibleDescription: "Zeigt die Wurfanzeige über kompakten horizontalen Spielerkarten links und vergrößert das native Board rechts.",
-    visualDescription: "Alle nativen Spielerkarten bleiben erhalten und werden in einer scrollbaren linken Leiste angeordnet. Das unverzerrte Dartboard füllt die freie Fläche; Eingabe, Undo und Next stehen in einem beschrifteten Dock rechts.",
+    visualDescription: "Alle nativen Spielerkarten bleiben erhalten und werden nur visuell angeordnet. Optional rotiert die Leiste zyklisch so, dass der aktuell werfende Spieler immer oben steht; ein kleiner START-Badge kann zusätzlich den Spieler markieren, der das aktuelle Leg begonnen hat.",
     usefulWhen: "Wenn das Board im Querformat möglichst groß sein und trotzdem jeder Spieler schnell erfassbar bleiben soll.",
     featuresDetails: [
       "Aktiv ab 1180×650 Pixeln im Querformat; kleinere oder unklare Oberflächen bleiben im nativen Layout.",
-      "Bei vielen Spielern folgt die Leiste dem aktiven Spieler automatisch und kann in ganzen Karten weitergescrollt werden.",
+      "Die Reihenfolge kann fest bleiben oder zyklisch mit dem aktuell werfenden Spieler nach oben rotieren.",
+      "Der optionale START-Badge bleibt beim Leg-Starter und ist unabhängig davon, wer gerade wirft.",
+      "Bei vielen Spielern bleibt der aktive Spieler im Rotationsmodus oben sichtbar; die übrigen Spieler lassen sich weiter durchscrollen.",
     ],
-    fields: { debug: DEBUG_FIELD },
+    fields: {
+      playerOrder: fieldCopy(
+        "Wählt zwischen fester Reihenfolge und aktiver Spielerkarte oben.",
+        "Mit `Fest` bleibt die bisherige Sitzreihenfolge erhalten. `Aktiver Spieler immer oben` rotiert die Spielerkarten zyklisch ab dem aktuell werfenden Spieler, ohne die nativen DOM-Karten umzuhängen.",
+        "Legt fest, ob die Reihenfolge statisch bleibt oder mit dem aktiven Spieler rotiert."
+      ),
+      showLegStarter: fieldCopy(
+        "Kennzeichnet den Spieler, der das aktuelle Leg begonnen hat.",
+        "Blendet an der Namenszeile des Leg-Starters einen kleinen START-Badge ein. Der Badge bleibt bei diesem Spieler, auch wenn die Karten wegen eines Spielerwechsels rotieren.",
+        "Zeigt einen START-Badge beim Leg-Starter."
+      ),
+      debug: DEBUG_FIELD,
+    },
   }),
   "theme-global-presets": featureCopy({
     cardDescription: "Fertige Vorlagen für globalen Hintergrund und globale Schrift.",
