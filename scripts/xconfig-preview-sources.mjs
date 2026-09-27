@@ -1,3 +1,4 @@
+// Prefer dedicated source screenshots when sharing one image would obscure a feature's purpose.
 export const XCONFIG_PREVIEW_SOURCE_FILES = Object.freeze({
   "theme-global-background": "template-theme-global-typography-xConfig.png",
   "theme-global-typography": "template-theme-global-typography-xConfig.png",
