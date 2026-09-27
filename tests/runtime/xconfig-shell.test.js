@@ -3,11 +3,9 @@ import assert from "node:assert/strict";
 
 import { CONFIG_STORAGE_KEY } from "../../src/config/config-store.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
-import {
-  resolveBoardStyleDesignAsset,
-  resolveDartDesignAsset,
-} from "../../src/shared/feature-assets.node.js";
+import { resolveBoardStyleDesignAsset } from "../../src/shared/feature-assets.node.js";
 import { DART_DESIGN_KEYS } from "../../src/shared/feature-assets.manifest.js";
+import { resolveXConfigPreviewAsset } from "../../src/shared/xconfig-preview-assets.node.js";
 import {
   THEME_GLOBAL_TEMPLATE_PRESETS,
   getThemeGlobalTemplatePreset,
@@ -4273,7 +4271,7 @@ test("Bot Board Style card uses and updates the selected board as its background
   runtime.stop();
 });
 
-test("Dart Marker Replacer card features and updates the selected dart", async () => {
+test("Dart Marker Replacer card keeps its board-state preview while design changes persist", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -4285,13 +4283,14 @@ test("Dart Marker Replacer card features and updates the selected dart", async (
 
   const cardSelector = ".ad-xconfig-card[data-feature-key='dart-marker-replacer']";
   const previewSelector = `${cardSelector} .ad-xconfig-card-bg img`;
+  const previewUrl = resolveXConfigPreviewAsset("dart-marker-replacer");
   assert.equal(
     documentRef.querySelector(cardSelector)?.getAttribute("data-preview-kind"),
     "dart-marker"
   );
   assert.equal(
     documentRef.querySelector(previewSelector)?.getAttribute("src"),
-    resolveDartDesignAsset("germangiant")
+    previewUrl
   );
 
   documentRef.querySelector(
@@ -4302,14 +4301,14 @@ test("Dart Marker Replacer card features and updates the selected dart", async (
 
   assert.equal(
     await waitFor(() => (
-      documentRef.querySelector(previewSelector)?.getAttribute("src") ===
-      resolveDartDesignAsset("red")
+      JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features.dartMarkerReplacer.design ===
+      "red"
     )),
     true
   );
   assert.equal(
-    JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features.dartMarkerReplacer.design,
-    "red"
+    documentRef.querySelector(previewSelector)?.getAttribute("src"),
+    previewUrl
   );
 
   runtime.stop();
