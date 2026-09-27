@@ -239,7 +239,7 @@ export function buildThemeGameLayoutStyleText() {
 }
 [data-ad-ext-game-layout-player-item="true"][data-ad-ext-game-layout-transitioning="true"]{
   z-index:20!important;
-  will-change:transform;
+  will-change:transform!important;
 }
 [data-ad-ext-game-layout-player-item="true"][data-ad-ext-game-layout-visible="false"]{
   visibility:hidden!important;
