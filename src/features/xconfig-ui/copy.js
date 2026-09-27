@@ -2317,6 +2317,19 @@ const BOT_BOARD_STYLE_SCOPE_OPTION_COPY = deepFreeze({
   ),
 });
 
+const GAME_LAYOUT_PLAYER_ORDER_OPTION_COPY = deepFreeze({
+  fixed: optionCopy(
+    "Belässt die Spielerkarten in ihrer festen Sitzreihenfolge.",
+    "Die Spielerkarten bleiben in der vom unterstützten Autodarts-Desktoplayout gelieferten Sitzreihenfolge. Nur Aktivstatus und Kartengröße wechseln mit dem Zug.",
+    "Behält die feste Sitzreihenfolge der Spielerkarten bei."
+  ),
+  "active-first": optionCopy(
+    "Rotiert den aktuell werfenden Spieler immer an die erste sichtbare Position.",
+    "Ordnet die sichtbaren Karten zyklisch ab dem aktiven Spieler, ohne native DOM-Knoten umzuhängen. Die nachfolgenden Spieler behalten dabei ihre relative Sitzreihenfolge.",
+    "Rotiert zyklisch so, dass der aktive Spieler immer oben steht."
+  ),
+});
+
 const xconfigFieldOptionCopy = deepFreeze({
   "theme-global-background": {
     backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
@@ -2328,6 +2341,9 @@ const xconfigFieldOptionCopy = deepFreeze({
     remainingScoreSize: THEME_GLOBAL_TYPOGRAPHY_REMAINING_SCORE_SIZE_OPTION_COPY,
     applyTo: THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTION_COPY,
     activePlayerTintIntensity: THEME_ACTIVE_PLAYER_TINT_INTENSITY_OPTION_COPY,
+  },
+  "theme-game-layout": {
+    playerOrder: GAME_LAYOUT_PLAYER_ORDER_OPTION_COPY,
   },
   "turn-dart-display": {
     turnDartStyle: THEME_GLOBAL_TURN_DART_STYLE_OPTION_COPY,
