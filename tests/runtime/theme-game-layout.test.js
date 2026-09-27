@@ -12,6 +12,8 @@ import {
   calculateClearRailRange,
   calculateFittedFontSize,
   moveBoardFocusWindow,
+  resolveGameLayoutPlayerOrder,
+  resolveLegStarterSeat,
 } from "../../src/features/themes/game-layout/logic.js";
 import { resolveModernX01GameLayoutSurface } from "../../src/features/themes/game-layout/surface.js";
 import {
@@ -114,13 +116,38 @@ function createLayoutFixture(options = {}) {
   };
 }
 
-function mountContext(config, fixture) {
+function createGameStateHarness(initialSnapshot = null) {
+  let snapshot = initialSnapshot;
+  const listeners = new Set();
+  return {
+    getSnapshot() {
+      return snapshot;
+    },
+    setSnapshot(nextSnapshot) {
+      snapshot = nextSnapshot;
+      listeners.forEach((listener) => listener(snapshot));
+    },
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+  };
+}
+
+function setActivePlayer(fixture, activeIndex) {
+  fixture.players.forEach((player, index) => {
+    player.card.classList.remove("bg-raspberry-slush-diagonal", "bg-grey-slush-diagonal", "bg-black-80");
+    player.card.classList.add(index === activeIndex ? "bg-raspberry-slush-diagonal" : "bg-black-80");
+  });
+}
+
+function mountContext(config, fixture, gameState = createGameStateHarness()) {
   return {
     config,
     documentRef: fixture.documentRef,
     windowRef: fixture.windowRef,
     domGuards: createDomGuards({ documentRef: fixture.documentRef }),
-    gameState: { subscribe() { return () => {}; } },
+    gameState,
     registries: {
       observers: createObserverRegistry(),
       listeners: createListenerRegistry(),
@@ -128,6 +155,72 @@ function mountContext(config, fixture) {
     helpers: { createRafScheduler: createImmediateSchedulerFactory() },
   };
 }
+
+test("active-first player order rotates cyclically only for one unambiguous active player", () => {
+  const players = [
+    { id: "A", active: false },
+    { id: "B", active: true },
+    { id: "C", active: false },
+  ];
+  assert.deepEqual(
+    resolveGameLayoutPlayerOrder(players, "active-first").map((player) => player.id),
+    ["B", "C", "A"]
+  );
+  assert.deepEqual(
+    resolveGameLayoutPlayerOrder(players, "fixed").map((player) => player.id),
+    ["A", "B", "C"]
+  );
+  assert.deepEqual(
+    resolveGameLayoutPlayerOrder(
+      [
+        { id: "A", active: true },
+        { id: "B", active: true },
+        { id: "C", active: false },
+      ],
+      "active-first"
+    ).map((player) => player.id),
+    ["A", "B", "C"]
+  );
+  assert.deepEqual(
+    resolveGameLayoutPlayerOrder(
+      [
+        { id: "A", active: false },
+        { id: "B", active: false },
+      ],
+      "active-first"
+    ).map((player) => player.id),
+    ["A", "B"]
+  );
+});
+
+test("leg starter seat resolves only from a complete plausible match snapshot", () => {
+  assert.equal(
+    resolveLegStarterSeat({
+      match: {
+        players: [
+          { index: 2, name: "C" },
+          { index: 0, name: "A" },
+          { index: 1, name: "B" },
+        ],
+      },
+    }, 3),
+    2
+  );
+  assert.equal(resolveLegStarterSeat({ match: { players: [{ index: 0 }] } }, 3), null);
+  assert.equal(
+    resolveLegStarterSeat({
+      match: {
+        players: [
+          { index: 4 },
+          { index: 0 },
+          { index: 1 },
+        ],
+      },
+    }, 3),
+    null
+  );
+  assert.equal(resolveLegStarterSeat(null, 3), null);
+});
 
 test("board-focus geometry maximizes the board and keeps readable player rows", () => {
   assert.match(buildThemeGameLayoutStyleText(), /--ad-game-layout-turn-height:144px/);
@@ -168,6 +261,10 @@ test("board-focus geometry maximizes the board and keeps readable player rows", 
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-active="false"[^}]*filter:grayscale\(1\)!important[^}]*opacity:\.55!important/);
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-active="false"[^}]*grid-template-columns:minmax\(0,1fr\) minmax\(110px,\.35fr\) 34px!important[^}]*transform:none!important/);
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-name-region="true"[^}]*zoom:\.84/);
+  assert.match(
+    buildThemeGameLayoutStyleText(),
+    /data-ad-ext-game-layout-leg-starter="true"[^}]*content:"START"[^}]*border-radius:999px!important/
+  );
   assert.doesNotMatch(buildThemeGameLayoutStyleText(), /player-content="true"[^}]*transform:scale/);
   const threePlayers = calculateBoardFocusLayout({
     width: 1536,
