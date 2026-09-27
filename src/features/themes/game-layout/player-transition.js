@@ -25,12 +25,16 @@ function readLayoutRect(root, item, preferRenderedGeometry = false) {
     width: Number(itemRect.width),
     height: Number(itemRect.height),
   };
+  const renderedScaleX = railWidth ? validateScale(rendered.width / railWidth) : 1;
+  const renderedScaleY = cardHeight ? validateScale(rendered.height / cardHeight) : 1;
   if (
     preferRenderedGeometry &&
     Number.isFinite(rendered.left) &&
     Number.isFinite(rendered.top) &&
     rendered.width > 0 &&
-    rendered.height > 0
+    rendered.height > 0 &&
+    renderedScaleX !== null &&
+    renderedScaleY !== null
   ) {
     return rendered;
   }
