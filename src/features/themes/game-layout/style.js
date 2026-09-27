@@ -237,6 +237,10 @@ export function buildThemeGameLayoutStyleText() {
   min-height:0!important;
   border:0!important;
 }
+[data-ad-ext-game-layout-player-item="true"][data-ad-ext-game-layout-transitioning="true"]{
+  z-index:20!important;
+  will-change:transform;
+}
 [data-ad-ext-game-layout-player-item="true"][data-ad-ext-game-layout-visible="false"]{
   visibility:hidden!important;
   pointer-events:none!important;
