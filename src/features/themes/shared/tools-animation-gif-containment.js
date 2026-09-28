@@ -1,6 +1,20 @@
 const TOOLS_ANIMATION_HOST_SELECTOR = "autodarts-tools-animations";
 const BOARD_VIEWPORT_SELECTOR = ".ad-ext-theme-board-viewport";
 const GIF_MEDIA_SELECTOR = "#gif-animation, img, video";
+const MANAGED_STYLE_PROPERTIES = Object.freeze([
+  ["position", "position"],
+  ["inset", "inset"],
+  ["top", "top"],
+  ["right", "right"],
+  ["bottom", "bottom"],
+  ["left", "left"],
+  ["width", "width"],
+  ["height", "height"],
+  ["max-width", "maxWidth"],
+  ["max-height", "maxHeight"],
+  ["overflow", "overflow"],
+  ["object-fit", "objectFit"],
+]);
 
 function queryAll(root, selector) {
   if (!root || typeof root.querySelectorAll !== "function") {
@@ -14,17 +28,25 @@ function queryAll(root, selector) {
   }
 }
 
-function setStyle(node, property, value) {
+function setStyle(node, property, value, snapshot = null) {
   if (!node?.style) {
     return;
   }
 
   if (typeof node.style.setProperty === "function") {
     node.style.setProperty(property, value, "important");
-    return;
+  } else {
+    node.style[property] = value;
   }
 
-  node.style[property] = value;
+  if (snapshot) {
+    snapshot.appliedStyles[property] = {
+      value: String(value || ""),
+      priority: typeof node.style.getPropertyPriority === "function"
+        ? String(node.style.getPropertyPriority(property) || "")
+        : "",
+    };
+  }
 }
 
 function readInlineStyle(node, property) {
@@ -40,36 +62,38 @@ function readInlineStyle(node, property) {
   return String(node.style[camelName] || node.style.getPropertyValue?.(property) || "");
 }
 
+function readInlineStylePriority(node, property) {
+  if (!node?.style || typeof node.style.getPropertyPriority !== "function") {
+    return "";
+  }
+  return String(node.style.getPropertyPriority(property) || "");
+}
+
 export function snapshotToolsAnimationGifNodeStyle(node) {
   if (!node?.style) {
     return null;
   }
 
-  return {
+  const snapshot = {
     node,
-    position: readInlineStyle(node, "position"),
-    inset: readInlineStyle(node, "inset"),
-    top: readInlineStyle(node, "top"),
-    right: readInlineStyle(node, "right"),
-    bottom: readInlineStyle(node, "bottom"),
-    left: readInlineStyle(node, "left"),
-    width: readInlineStyle(node, "width"),
-    height: readInlineStyle(node, "height"),
-    maxWidth: readInlineStyle(node, "max-width"),
-    maxHeight: readInlineStyle(node, "max-height"),
-    overflow: readInlineStyle(node, "overflow"),
-    objectFit: readInlineStyle(node, "object-fit"),
+    priorities: {},
+    appliedStyles: {},
   };
+  MANAGED_STYLE_PROPERTIES.forEach(([property, snapshotKey]) => {
+    snapshot[snapshotKey] = readInlineStyle(node, property);
+    snapshot.priorities[property] = readInlineStylePriority(node, property);
+  });
+  return snapshot;
 }
 
-function restoreStyleValue(node, property, value) {
+function restoreStyleValue(node, property, value, priority = "") {
   const restoredValue = String(value || "");
   if (typeof node.style.removeProperty === "function" && !restoredValue) {
     node.style.removeProperty(property);
     return;
   }
   if (typeof node.style.setProperty === "function") {
-    node.style.setProperty(property, restoredValue);
+    node.style.setProperty(property, restoredValue, String(priority || ""));
     return;
   }
   node.style[property] = restoredValue;
@@ -81,20 +105,26 @@ export function restoreToolsAnimationGifNodeStyle(snapshot) {
     return;
   }
 
-  [
-    ["position", snapshot.position],
-    ["inset", snapshot.inset],
-    ["top", snapshot.top],
-    ["right", snapshot.right],
-    ["bottom", snapshot.bottom],
-    ["left", snapshot.left],
-    ["width", snapshot.width],
-    ["height", snapshot.height],
-    ["max-width", snapshot.maxWidth],
-    ["max-height", snapshot.maxHeight],
-    ["overflow", snapshot.overflow],
-    ["object-fit", snapshot.objectFit],
-  ].forEach(([property, value]) => restoreStyleValue(node, property, value));
+  MANAGED_STYLE_PROPERTIES.forEach(([property, snapshotKey]) => {
+    const appliedStyle = snapshot.appliedStyles?.[property] || null;
+    if (appliedStyle) {
+      const currentValue = readInlineStyle(node, property);
+      const currentPriority = readInlineStylePriority(node, property);
+      if (
+        currentValue !== String(appliedStyle.value || "") ||
+        currentPriority !== String(appliedStyle.priority || "")
+      ) {
+        return;
+      }
+    }
+
+    restoreStyleValue(
+      node,
+      property,
+      snapshot[snapshotKey],
+      snapshot.priorities?.[property] || ""
+    );
+  });
 }
 
 function ensureContainmentState(themeState) {
@@ -108,14 +138,18 @@ function ensureContainmentState(themeState) {
 }
 
 export function rememberToolsAnimationGifStyleSnapshot(state, node) {
-  if (!node?.style || state.snapshots.has(node)) {
-    return;
+  if (!node?.style) {
+    return null;
+  }
+  if (state.snapshots.has(node)) {
+    return state.snapshots.get(node);
   }
 
   const snapshot = snapshotToolsAnimationGifNodeStyle(node);
   if (snapshot) {
     state.snapshots.set(node, snapshot);
   }
+  return snapshot;
 }
 
 function resolveBoardViewportRect(documentRef) {
@@ -168,36 +202,36 @@ export function applyToolsAnimationGifContainmentStyles(options = {}) {
     return;
   }
 
-  rememberSnapshot(state, containerNode);
-  rememberSnapshot(state, frameNode);
-  rememberSnapshot(state, mediaNode);
+  const containerSnapshot = rememberSnapshot(state, containerNode);
+  const frameSnapshot = rememberSnapshot(state, frameNode);
+  const mediaSnapshot = rememberSnapshot(state, mediaNode);
 
-  setStyle(containerNode, "position", "fixed");
-  setStyle(containerNode, "top", `${viewportRect.top.toFixed(2)}px`);
-  setStyle(containerNode, "left", `${viewportRect.left.toFixed(2)}px`);
-  setStyle(containerNode, "right", "auto");
-  setStyle(containerNode, "bottom", "auto");
-  setStyle(containerNode, "width", `${viewportRect.width.toFixed(2)}px`);
-  setStyle(containerNode, "height", `${viewportRect.height.toFixed(2)}px`);
-  setStyle(containerNode, "max-width", "none");
-  setStyle(containerNode, "max-height", "none");
-  setStyle(containerNode, "overflow", "hidden");
+  setStyle(containerNode, "position", "fixed", containerSnapshot);
+  setStyle(containerNode, "top", `${viewportRect.top.toFixed(2)}px`, containerSnapshot);
+  setStyle(containerNode, "left", `${viewportRect.left.toFixed(2)}px`, containerSnapshot);
+  setStyle(containerNode, "right", "auto", containerSnapshot);
+  setStyle(containerNode, "bottom", "auto", containerSnapshot);
+  setStyle(containerNode, "width", `${viewportRect.width.toFixed(2)}px`, containerSnapshot);
+  setStyle(containerNode, "height", `${viewportRect.height.toFixed(2)}px`, containerSnapshot);
+  setStyle(containerNode, "max-width", "none", containerSnapshot);
+  setStyle(containerNode, "max-height", "none", containerSnapshot);
+  setStyle(containerNode, "overflow", "hidden", containerSnapshot);
 
   if (frameNode?.style && frameNode !== containerNode) {
-    setStyle(frameNode, "position", "absolute");
-    setStyle(frameNode, "inset", "0");
-    setStyle(frameNode, "width", "100%");
-    setStyle(frameNode, "height", "100%");
-    setStyle(frameNode, "max-width", "none");
-    setStyle(frameNode, "max-height", "none");
-    setStyle(frameNode, "overflow", "hidden");
+    setStyle(frameNode, "position", "absolute", frameSnapshot);
+    setStyle(frameNode, "inset", "0", frameSnapshot);
+    setStyle(frameNode, "width", "100%", frameSnapshot);
+    setStyle(frameNode, "height", "100%", frameSnapshot);
+    setStyle(frameNode, "max-width", "none", frameSnapshot);
+    setStyle(frameNode, "max-height", "none", frameSnapshot);
+    setStyle(frameNode, "overflow", "hidden", frameSnapshot);
   }
 
-  setStyle(mediaNode, "width", "100%");
-  setStyle(mediaNode, "height", "100%");
-  setStyle(mediaNode, "max-width", "none");
-  setStyle(mediaNode, "max-height", "none");
-  setStyle(mediaNode, "object-fit", "contain");
+  setStyle(mediaNode, "width", "100%", mediaSnapshot);
+  setStyle(mediaNode, "height", "100%", mediaSnapshot);
+  setStyle(mediaNode, "max-width", "none", mediaSnapshot);
+  setStyle(mediaNode, "max-height", "none", mediaSnapshot);
+  setStyle(mediaNode, "object-fit", "contain", mediaSnapshot);
 }
 
 function applyMediaContainment(state, mediaNode, viewportRect) {

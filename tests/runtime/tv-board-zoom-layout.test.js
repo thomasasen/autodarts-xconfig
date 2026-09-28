@@ -389,6 +389,68 @@ test("tv-board-zoom keeps fail-soft parent fallback when no zoom-target selector
   assert.equal(resolveZoomTarget(null), null);
 });
 
+test("tv-board-zoom rejects an ambiguous fallback wrapper with unrelated controls", () => {
+  const documentRef = new FakeDocument();
+  const parent = documentRef.createElement("div");
+  const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const unrelatedButton = documentRef.createElement("button");
+  parent.__rect = { left: 0, top: 0, width: 900, height: 700 };
+  boardSvg.__rect = { left: 100, top: 100, width: 500, height: 500 };
+  unrelatedButton.__rect = { left: 650, top: 20, width: 200, height: 50 };
+  parent.appendChild(boardSvg);
+  parent.appendChild(unrelatedButton);
+  documentRef.main.appendChild(parent);
+
+  assert.equal(resolveZoomTarget(boardSvg) === null, true);
+});
+
+test("tv-board-zoom keeps nested board layers together in the fallback wrapper", () => {
+  const documentRef = new FakeDocument();
+  const parent = documentRef.createElement("div");
+  const artwork = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const markers = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const highlights = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  parent.__rect = { left: 0, top: 0, width: 500, height: 500 };
+  artwork.__rect = { left: 0, top: 0, width: 500, height: 500 };
+  markers.__rect = { left: 0, top: 0, width: 500, height: 500 };
+  highlights.__rect = { left: 0, top: 0, width: 500, height: 500 };
+  parent.appendChild(artwork);
+  parent.appendChild(markers);
+  parent.appendChild(highlights);
+  documentRef.main.appendChild(parent);
+
+  assert.equal(resolveZoomTarget(artwork), parent);
+  assert.equal(parent.contains(markers), true);
+  assert.equal(parent.contains(highlights), true);
+});
+
+test("tv-board-zoom fails soft when the fallback parent has no measurable size", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const parent = documentRef.createElement("div");
+  const boardSvg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  parent.__rect = { left: 0, top: 0, width: 0, height: 0 };
+  boardSvg.__rect = { left: 0, top: 0, width: 0, height: 0 };
+  parent.appendChild(boardSvg);
+  documentRef.main.appendChild(parent);
+  const state = createZoomState();
+
+  const targetNode = resolveZoomTarget(boardSvg);
+  const zoomData = applyZoom(
+    { targetNode, hostNode: parent, boardSvg },
+    2.75,
+    { zoomInMs: 1, zoomOutMs: 1, easingIn: "ease-in", easingOut: "ease-out" },
+    { reason: "checkout", segment: "D20" },
+    state,
+    { x01Rules, windowRef, documentRef }
+  );
+
+  assert.equal(targetNode, parent);
+  assert.equal(zoomData, null);
+  assert.equal(parent.classList.contains(ZOOM_CLASS), false);
+  assert.equal(parent.style.transform, "");
+});
+
 test("tv-board-zoom builds a clamped transform that stays within the board viewport", () => {
   const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomFixture();
   const zoomLevel = 2.75;
@@ -865,6 +927,125 @@ test("tv-board-zoom restores gif overlay styles on cleanup", () => {
   assert.equal(gifOverlay.style.maxWidth, "none");
   assert.equal(gifOverlay.style.maxHeight, "none");
   assert.equal(gifOverlay.style.objectFit, "fill");
+});
+
+test("tv-board-zoom preserves externally changed gif styles through reapply and cleanup", () => {
+  const { documentRef, windowRef, hostNode, targetNode, boardSvg, gifOverlay } = createZoomIsolationFixture();
+  const state = createZoomState();
+  const speedConfig = {
+    zoomInMs: 180,
+    zoomOutMs: 220,
+    easingIn: "ease-in",
+    easingOut: "ease-out",
+  };
+  const zoomNodes = { targetNode, hostNode, boardSvg };
+  const intent = { reason: "smart-setup", segment: "T20" };
+  const options = { x01Rules, windowRef, documentRef };
+
+  gifOverlay.style.width = "640px";
+  gifOverlay.style.setProperty("position", "absolute");
+  gifOverlay.style.objectFit = "fill";
+  applyZoom(zoomNodes, 2.75, speedConfig, intent, state, options);
+
+  gifOverlay.style.setProperty("width", "77vw", "important");
+  gifOverlay.style.setProperty("position", "sticky", "important");
+  gifOverlay.style.setProperty("object-fit", "cover", "important");
+
+  applyZoom(zoomNodes, 2.75, speedConfig, intent, state, options);
+  assert.equal(gifOverlay.style.width, "100%");
+  assert.equal(gifOverlay.style.getPropertyValue("position"), "fixed");
+  assert.equal(gifOverlay.style.objectFit, "contain");
+
+  resetZoom(speedConfig, state, true);
+  assert.equal(gifOverlay.style.width, "77vw");
+  assert.equal(gifOverlay.style.getPropertyValue("position"), "sticky");
+  assert.equal(gifOverlay.style.objectFit, "cover");
+  assert.equal(gifOverlay.style.getPropertyPriority("width"), "important");
+  assert.equal(gifOverlay.style.getPropertyPriority("position"), "important");
+  assert.equal(gifOverlay.style.getPropertyPriority("object-fit"), "important");
+});
+
+test("tv-board-zoom leaves document gifs outside the board and tools-animation scope untouched", () => {
+  const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomIsolationFixture();
+  const unrelatedGif = documentRef.createElement("img");
+  unrelatedGif.setAttribute("src", "https://example.test/profile.gif");
+  unrelatedGif.style.width = "48px";
+  unrelatedGif.style.height = "48px";
+  unrelatedGif.style.objectFit = "cover";
+  hostNode.appendChild(unrelatedGif);
+  const state = createZoomState();
+  const speedConfig = {
+    zoomInMs: 180,
+    zoomOutMs: 220,
+    easingIn: "ease-in",
+    easingOut: "ease-out",
+  };
+
+  applyZoom(
+    { targetNode, hostNode, boardSvg },
+    2.75,
+    speedConfig,
+    { reason: "checkout", segment: "D20" },
+    state,
+    { x01Rules, windowRef, documentRef }
+  );
+
+  assert.equal(unrelatedGif.style.width, "48px");
+  assert.equal(unrelatedGif.style.height, "48px");
+  assert.equal(unrelatedGif.style.objectFit, "cover");
+});
+
+test("tv-board-zoom delayed reset preserves external gif style changes", async () => {
+  const { documentRef, windowRef, hostNode, targetNode, boardSvg, gifOverlay } = createZoomIsolationFixture();
+  const state = createZoomState();
+  const speedConfig = {
+    zoomInMs: 1,
+    zoomOutMs: 1,
+    easingIn: "ease-in",
+    easingOut: "ease-out",
+  };
+
+  applyZoom(
+    { targetNode, hostNode, boardSvg },
+    2.75,
+    speedConfig,
+    { reason: "checkout", segment: "D20" },
+    state,
+    { x01Rules, windowRef, documentRef }
+  );
+  resetZoom(speedConfig, state);
+  gifOverlay.style.setProperty("width", "72vw", "important");
+  gifOverlay.style.setProperty("object-fit", "cover", "important");
+  await new Promise((resolve) => setTimeout(resolve, 80));
+
+  assert.equal(gifOverlay.style.width, "72vw");
+  assert.equal(gifOverlay.style.objectFit, "cover");
+});
+
+test("tv-board-zoom remount snapshots the latest external gif baseline", () => {
+  const { documentRef, windowRef, hostNode, targetNode, boardSvg, gifOverlay } = createZoomIsolationFixture();
+  const speedConfig = {
+    zoomInMs: 1,
+    zoomOutMs: 1,
+    easingIn: "ease-in",
+    easingOut: "ease-out",
+  };
+  const zoomNodes = { targetNode, hostNode, boardSvg };
+  const intent = { reason: "checkout", segment: "D20" };
+  const options = { x01Rules, windowRef, documentRef };
+
+  const firstState = createZoomState();
+  applyZoom(zoomNodes, 2.75, speedConfig, intent, firstState, options);
+  resetZoom(speedConfig, firstState, true);
+
+  gifOverlay.style.setProperty("width", "66vw", "important");
+  gifOverlay.style.setProperty("object-fit", "cover", "important");
+  const remountedState = createZoomState();
+  applyZoom(zoomNodes, 2.75, speedConfig, intent, remountedState, options);
+  resetZoom(speedConfig, remountedState, true);
+
+  assert.equal(gifOverlay.style.width, "66vw");
+  assert.equal(gifOverlay.style.objectFit, "cover");
 });
 
 test("tv-board-zoom applies gif containment even when overlay size is unresolved initially", () => {

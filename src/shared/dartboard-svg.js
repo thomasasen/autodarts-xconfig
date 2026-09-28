@@ -806,6 +806,15 @@ function isValidZoomTargetCandidate(candidateNode, boardSvg) {
   return rectContainsRect(candidateRect, boardRect, tolerancePx);
 }
 
+function hasInteractiveContentOutsideBoard(candidateNode, boardSvg) {
+  return getElementChildren(candidateNode).some((childNode) => {
+    if (elementContains(childNode, boardSvg)) {
+      return false;
+    }
+    return isInteractiveControlNode(childNode) || countInteractiveControls(childNode) > 0;
+  });
+}
+
 function isValidZoomHostCandidate(candidateNode, zoomTarget) {
   if (!candidateNode || !zoomTarget) {
     return false;
@@ -914,6 +923,7 @@ export function resolveBoardZoomTargetNode(boardSvg) {
   const stableBoardCanvas = boardSvg.closest(".ad-ext-theme-board-canvas");
   const showAnimations = boardSvg.closest(".showAnimations");
   const directParent = boardSvg.parentElement || null;
+  const directParentHasExternalControls = hasInteractiveContentOutsideBoard(directParent, boardSvg);
   const candidateOrder = [];
 
   if (
@@ -940,11 +950,20 @@ export function resolveBoardZoomTargetNode(boardSvg) {
       continue;
     }
     seen.add(candidateNode);
+    if (
+      hasInteractiveContentOutsideBoard(candidateNode, boardSvg) ||
+      (candidateNode === boardSvg && directParentHasExternalControls)
+    ) {
+      continue;
+    }
     if (isValidZoomTargetCandidate(candidateNode, boardSvg)) {
       return candidateNode;
     }
   }
 
+  if (directParentHasExternalControls) {
+    return null;
+  }
   return directParent || stableBoardCanvas || showAnimations || boardSvg;
 }
 

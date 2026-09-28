@@ -1955,3 +1955,263 @@ test("tv-board-zoom resumes checkout focus after single-player miss visit resets
   assert.deepEqual(nextVisitIntent, { reason: "checkout", segment: "D7" });
   assert.equal(state.manualPause, false);
 });
+
+for (const bustDartCount of [1, 2]) {
+  test(`tv-board-zoom treats a dart-${bustDartCount} Bust as a completed visit`, () => {
+    const documentRef = new FakeDocument();
+    documentRef.suggestionElement.textContent = "";
+    documentRef.activeScoreElement.textContent = "14";
+    const bustNode = documentRef.createElement("div");
+    bustNode.classList.add("ad-ext-turn-points");
+    documentRef.main.appendChild(bustNode);
+    const windowRef = createFakeWindow({ documentRef });
+    const state = createZoomState();
+    const buildFallbackTurn = (throws) => ({
+      playerId: "player-1",
+      throws,
+    });
+    const bustThrows = Array.from({ length: bustDartCount }, () => ({
+      segment: { name: "D20" },
+    }));
+
+    const initialIntent = computeZoomIntent({
+      gameState: createX01GameState({
+        activeScore: 14,
+        outMode: "Double Out",
+        activeThrows: [],
+        activeTurn: buildFallbackTurn([]),
+      }),
+      x01Rules,
+      state,
+      documentRef,
+      windowRef,
+      featureConfig: {
+        checkoutZoomEnabled: true,
+        checkoutZoomTarget: "finish-only",
+      },
+      nowTs: 16000,
+    });
+
+    bustNode.textContent = "BUST";
+    const bustIntent = computeZoomIntent({
+      gameState: createX01GameState({
+        activeScore: 14,
+        outMode: "Double Out",
+        activeThrows: bustThrows,
+        activeTurn: buildFallbackTurn(bustThrows),
+      }),
+      x01Rules,
+      state,
+      documentRef,
+      windowRef,
+      featureConfig: {
+        checkoutZoomEnabled: true,
+        checkoutZoomTarget: "finish-only",
+      },
+      nowTs: 16100,
+    });
+
+    bustNode.textContent = "";
+    const nextVisitIntent = computeZoomIntent({
+      gameState: createX01GameState({
+        activeScore: 14,
+        outMode: "Double Out",
+        activeThrows: [],
+        activeTurn: buildFallbackTurn([]),
+      }),
+      x01Rules,
+      state,
+      documentRef,
+      windowRef,
+      featureConfig: {
+        checkoutZoomEnabled: true,
+        checkoutZoomTarget: "finish-only",
+      },
+      nowTs: 16200,
+    });
+
+    assert.deepEqual(initialIntent, { reason: "checkout", segment: "D7" });
+    assert.equal(bustIntent, null);
+    assert.deepEqual(nextVisitIntent, { reason: "checkout", segment: "D7" });
+    assert.equal(state.manualPause, false);
+    assert.equal(state.stickyUntilTurnChange, false);
+  });
+}
+
+test("tv-board-zoom keeps a full-visit correction paused when 3 throws are removed", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "";
+  const windowRef = createFakeWindow({ documentRef });
+  const state = createZoomState();
+  const throws = ["S20", "S20", "S20"].map((name) => ({ segment: { name } }));
+  const buildTurn = (activeThrows) => ({
+    playerId: "player-1",
+    throws: activeThrows,
+  });
+
+  computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 40,
+      outMode: "Double Out",
+      activeThrows: throws,
+      activeTurn: buildTurn(throws),
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: { checkoutZoomEnabled: true },
+    nowTs: 16300,
+  });
+
+  const correctionIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 100,
+      outMode: "Double Out",
+      activeThrows: [],
+      activeTurn: buildTurn([]),
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: { checkoutZoomEnabled: true },
+    nowTs: 16400,
+  });
+
+  assert.equal(correctionIntent, null);
+  assert.equal(state.manualPause, true);
+  assert.equal(state.manualPauseThrowCount, 0);
+});
+
+test("tv-board-zoom treats a 1-to-0 throw rollback as a correction without a Bust boundary", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "";
+  const windowRef = createFakeWindow({ documentRef });
+  const state = createZoomState();
+  const buildTurn = (throws) => ({ playerId: "player-1", throws });
+  const firstThrow = [{ segment: { name: "S20" } }];
+
+  computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 60,
+      outMode: "Double Out",
+      activeThrows: [],
+      activeTurn: buildTurn([]),
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: { checkoutZoomEnabled: true },
+    nowTs: 16410,
+  });
+  computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 40,
+      outMode: "Double Out",
+      activeThrows: firstThrow,
+      activeTurn: buildTurn(firstThrow),
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: { checkoutZoomEnabled: true },
+    nowTs: 16420,
+  });
+
+  const correctionIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 60,
+      outMode: "Double Out",
+      activeThrows: [],
+      activeTurn: buildTurn([]),
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: { checkoutZoomEnabled: true },
+    nowTs: 16430,
+  });
+
+  assert.equal(correctionIntent, null);
+  assert.equal(state.manualPause, true);
+  assert.equal(state.manualPauseThrowCount, 0);
+});
+
+test("tv-board-zoom clears checkout sticky state at a reliable leg boundary before score hydration", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "";
+  documentRef.activeScoreElement.textContent = "40";
+  const windowRef = createFakeWindow({ documentRef });
+  const state = createZoomState();
+
+  const checkoutSetupIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 40,
+      outMode: "Double Out",
+      activeThrows: [],
+      activeTurn: {
+        id: "turn-leg-a",
+        playerId: "player-1",
+        throws: [],
+      },
+      snapshot: { match: { id: "match-a", currentLegId: "leg-a" } },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: { checkoutZoomEnabled: true },
+    nowTs: 16500,
+  });
+
+  documentRef.activeScoreElement.textContent = "0";
+  const checkoutStickyIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 0,
+      outMode: "Double Out",
+      activeThrows: [{ segment: { name: "D20" } }],
+      activeTurn: {
+        id: "turn-leg-a",
+        playerId: "player-1",
+        throws: [{ segment: { name: "D20" } }],
+      },
+      snapshot: { match: { id: "match-a", currentLegId: "leg-a" } },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: { checkoutZoomEnabled: true },
+    nowTs: 16550,
+  });
+
+  const hydrationGapIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 0,
+      outMode: "Double Out",
+      activeThrows: [],
+      activeTurn: {
+        id: "turn-leg-b",
+        playerId: "player-1",
+        throws: [],
+      },
+      snapshot: { match: { id: "match-a", currentLegId: "leg-b" } },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: { checkoutZoomEnabled: true },
+    nowTs: 16600,
+  });
+
+  assert.deepEqual(checkoutSetupIntent, { reason: "checkout", segment: "D20" });
+  assert.deepEqual(checkoutStickyIntent, { reason: "checkout", segment: "D20" });
+  assert.equal(hydrationGapIntent, null);
+  assert.equal(state.stickyUntilLegEnd, false);
+  assert.equal(state.pendingLifecycleResetReason, "game-boundary");
+});

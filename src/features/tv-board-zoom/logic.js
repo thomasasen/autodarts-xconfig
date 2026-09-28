@@ -731,15 +731,10 @@ function collectGifOverlayEntries(targetNode, hostNode) {
   const roots = [];
   const showAnimationsRoot = targetNode?.closest?.(".showAnimations") || null;
   const ownerDocument = targetNode?.ownerDocument || hostNode?.ownerDocument || null;
-  if (ownerDocument) {
-    roots.push(ownerDocument);
-  } else {
-    if (showAnimationsRoot) {
-      roots.push(showAnimationsRoot);
-    }
-    if (hostNode && !roots.includes(hostNode)) {
-      roots.push(hostNode);
-    }
+  if (showAnimationsRoot) {
+    roots.push(showAnimationsRoot);
+  } else if (hostNode) {
+    roots.push(hostNode);
   }
 
   const seen = new Set();
@@ -780,6 +775,11 @@ function collectGifOverlayEntries(targetNode, hostNode) {
   };
 
   roots.forEach(scanRoot);
+  queryAll(ownerDocument, "autodarts-tools-animations").forEach((host) => {
+    if (host?.shadowRoot) {
+      scanRoot(host.shadowRoot);
+    }
+  });
 
   return overlays;
 }
@@ -823,21 +823,25 @@ export function syncGifOverlayContainment(state, targetNode, hostNode) {
     height: hostHeight,
   };
   const snapshots = [];
-  const snapshottedNodes = new Set();
+  const snapshottedNodes = new Map();
 
   const addSnapshot = (node) => {
-    if (!node?.style || snapshottedNodes.has(node)) {
-      return;
+    if (!node?.style) {
+      return null;
+    }
+    if (snapshottedNodes.has(node)) {
+      return snapshottedNodes.get(node);
     }
 
     const snapshot = snapshotToolsAnimationGifNodeStyle(node);
     if (!snapshot) {
-      return;
+      return null;
     }
 
-    snapshottedNodes.add(node);
+    snapshottedNodes.set(node, snapshot);
     state.gifManagedNodes?.add?.(node);
     snapshots.push(snapshot);
+    return snapshot;
   };
 
   overlays.forEach(({ mediaNode, frameNode, containerNode }) => {
@@ -1315,6 +1319,8 @@ function resetZoomIntentForBust(state) {
   state.stickyUntilLegEnd = false;
   state.manualPause = false;
   state.manualPauseThrowCount = -1;
+  state.lastThrowCount = -1;
+  state.lastActiveScore = Number.NaN;
   state.pendingLifecycleResetReason = "bust";
 }
 

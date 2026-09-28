@@ -402,6 +402,32 @@ test("native Bust before the third dart and leaving the match immediately remove
   }
 });
 
+for (const bustThrows of [["D20"], ["S1", "D20"]]) {
+  test(`native dart-${bustThrows.length} Bust allows checkout zoom in the next visit`, () => {
+    const f = startModernZoom({ score: 14, throws: [], route: ["D7"] });
+    try {
+      f.timers.advance(25);
+      assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+
+      f.score.textContent = "14";
+      f.setVisit(bustThrows, []);
+      f.total.textContent = "BUST";
+      f.tick();
+      assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+
+      f.total.textContent = "0";
+      f.score.textContent = "14";
+      f.setVisit([], ["D7"]);
+      f.tick();
+
+      assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+      assert.equal(f.events.filter((event) => event.status === "apply").at(-1)?.segment, "D7");
+    } finally {
+      f.stop();
+    }
+  });
+}
+
 test("native new player and new leg release a finished-checkout hold", () => {
   const f = startModernZoom();
   try {
@@ -1179,9 +1205,9 @@ test("tv-board-zoom scans gif media only when containment becomes dirty", () => 
   const gameState = createMutableX01GameState({ activeScore: 40, throws: [] });
   const fixture = createModernX01Fixture();
   fixture.node(fixture.board, "img", "", "");
-  const originalQuerySelectorAll = fixture.documentRef.querySelectorAll.bind(fixture.documentRef);
+  const originalQuerySelectorAll = fixture.host.querySelectorAll.bind(fixture.host);
   let mediaScans = 0;
-  fixture.documentRef.querySelectorAll = (selector) => {
+  fixture.host.querySelectorAll = (selector) => {
     if (selector === "img,video") {
       mediaScans += 1;
     }
@@ -1205,11 +1231,11 @@ test("tv-board-zoom scans gif media only when containment becomes dirty", () => 
     timers.advance(25);
     assert.equal(mediaScans, 0);
 
-    const gif = fixture.node(fixture.documentRef.body, "img", "gif-animation", "");
+    const gif = fixture.node(fixture.host, "img", "gif-animation", "");
     gif.setAttribute("src", "winner.gif");
     fixture.documentRef.flushMutations([{
       type: "childList",
-      target: fixture.documentRef.body,
+      target: fixture.host,
       addedNodes: [gif],
       removedNodes: [],
     }]);
