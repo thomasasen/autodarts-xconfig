@@ -7,7 +7,7 @@ export const USERSCRIPT_ASSET_LOADERS = Object.freeze({
   ".mp3": "dataurl",
 });
 
-export const USERSCRIPT_BROWSER_TARGETS = Object.freeze(["chrome100", "firefox100"]);
+export const USERSCRIPT_BROWSER_TARGETS = Object.freeze(["chrome111", "firefox121"]);
 
 export const USERSCRIPT_UPDATE_URL =
   "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js";
@@ -44,10 +44,7 @@ export function buildUserscriptHeader(packageVersion) {
 // @description  Modular, side-effect resistant Tampermonkey runtime for Autodarts enhancements.
 // @author       Thomas Asen
 // @license      MIT
-// @match        https://play.autodarts.io/*
 // @match        https://play.autodarts.com/*
-// @exclude      https://play.autodarts.io/boards
-// @exclude      https://play.autodarts.io/boards/*
 // @exclude      https://play.autodarts.com/boards
 // @exclude      https://play.autodarts.com/boards/*
 // @run-at       document-start

@@ -1174,3 +1174,49 @@ test("tv-board-zoom does not reapply the zoom after unrelated board-svg attribut
     timers.restoreGlobals();
   }
 });
+
+test("tv-board-zoom scans gif media only when containment becomes dirty", () => {
+  const gameState = createMutableX01GameState({ activeScore: 40, throws: [] });
+  const fixture = createModernX01Fixture();
+  fixture.node(fixture.board, "img", "", "");
+  const originalQuerySelectorAll = fixture.documentRef.querySelectorAll.bind(fixture.documentRef);
+  let mediaScans = 0;
+  fixture.documentRef.querySelectorAll = (selector) => {
+    if (selector === "img,video") {
+      mediaScans += 1;
+    }
+    return originalQuerySelectorAll(selector);
+  };
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(fixture.windowRef);
+  timers.installGlobals();
+  const cleanup = startTvBoardZoom({
+    ...fixture,
+    gameState: gameState.api,
+    featureConfig: { checkoutZoomTarget: "finish-only" },
+  });
+
+  try {
+    timers.advance(25);
+    assert.equal(mediaScans, 1);
+    mediaScans = 0;
+
+    gameState.notify();
+    timers.advance(25);
+    assert.equal(mediaScans, 0);
+
+    const gif = fixture.node(fixture.documentRef.body, "img", "gif-animation", "");
+    gif.setAttribute("src", "winner.gif");
+    fixture.documentRef.flushMutations([{
+      type: "childList",
+      target: fixture.documentRef.body,
+      addedNodes: [gif],
+      removedNodes: [],
+    }]);
+    timers.advance(25);
+    assert.equal(mediaScans, 1);
+  } finally {
+    cleanup();
+    timers.restoreGlobals();
+  }
+});

@@ -458,12 +458,12 @@ test("extractMatchRouteId normalizes duplicate slashes and strips query/hash fra
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io//matches/Test-Match/?tab=board#preview",
+    href: "https://play.autodarts.com//matches/Test-Match/?tab=board#preview",
   });
   const otherDocumentRef = new FakeDocument();
   const otherWindowRef = createFakeWindow({
     documentRef: otherDocumentRef,
-    href: "https://play.autodarts.io/lobbies",
+    href: "https://play.autodarts.com/lobbies",
   });
 
   assert.equal(extractMatchRouteId(windowRef, documentRef), "test-match");

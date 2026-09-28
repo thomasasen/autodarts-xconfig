@@ -484,7 +484,9 @@ test("turn-score-counter mounts idempotently and keeps managed observer state", 
   await wait(5);
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-turn-score-counter-style")), true);
-  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.observers.size(), 2);
+  assert.ok(runtime.context.registries.observers.get("turn-score-counter:dom-observer:lifecycle"));
+  assert.ok(runtime.context.registries.observers.get("turn-score-counter:dom-observer:surface"));
   assert.equal(runtime.context.registries.listeners.size(), 1);
 
   runtime.stop();
@@ -496,7 +498,7 @@ test("turn-score-counter mounts idempotently and keeps managed observer state", 
 test("x01-remaining-score-bar mounts idempotently and removes style on cleanup", async () => {
   const documentRef = new FakeDocument();
   documentRef.variantElement.textContent = "501";
-  const windowRef = createFakeWindow({ documentRef, href: "https://play.autodarts.io/matches/test" });
+  const windowRef = createFakeWindow({ documentRef, href: "https://play.autodarts.com/matches/test" });
   const runtime = createBootstrap({
     windowRef,
     documentRef,

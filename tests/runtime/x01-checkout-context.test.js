@@ -219,7 +219,7 @@ test("x01 checkout context ignores stale game-state from another match route", (
   documentRef.activeScoreElement.textContent = "121";
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/current-match",
+    href: "https://play.autodarts.com/matches/current-match",
   });
 
   const resolved = resolveX01ActiveScoreState({

@@ -347,3 +347,115 @@ test("features enabled after startup mount immediately even when marked deferred
 
   runtime.stop();
 });
+
+test("bootstrap isolates feature mount failures and retries missing enabled features", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const calls = [];
+  const errors = [];
+  let failingAttempts = 0;
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    logger: { error: (message) => errors.push(message) },
+    config: {
+      featureToggles: { first: true, failing: true, last: true },
+      features: {
+        first: { enabled: true },
+        failing: { enabled: true },
+        last: { enabled: true },
+      },
+    },
+    featureDefinitions: [
+      { featureKey: "first", configKey: "first", startupTiming: "immediate", mount: () => calls.push("first") },
+      {
+        featureKey: "failing",
+        configKey: "failing",
+        startupTiming: "immediate",
+        mount: () => {
+          failingAttempts += 1;
+          calls.push(`failing-${failingAttempts}`);
+          if (failingAttempts === 1) {
+            throw new Error("broken mount");
+          }
+          return () => {};
+        },
+      },
+      { featureKey: "last", configKey: "last", startupTiming: "immediate", mount: () => calls.push("last") },
+    ],
+  });
+
+  runtime.start();
+
+  assert.deepEqual(calls, ["first", "failing-1", "last"]);
+  assert.deepEqual(runtime.getSnapshot().features.failing.failure, {
+    phase: "mount",
+    message: "broken mount",
+  });
+  assert.equal(runtime.getSnapshot().features.failing.status, "mount-error");
+  assert.equal(runtime.getSnapshot().features.last.status, "mounted");
+  assert.equal(errors.length, 1);
+
+  runtime.start();
+
+  assert.deepEqual(calls, ["first", "failing-1", "last", "failing-2"]);
+  assert.equal(runtime.getSnapshot().features.failing.status, "mounted");
+  assert.equal(runtime.getSnapshot().features.failing.failure, null);
+  runtime.stop();
+});
+
+test("bootstrap continues deferred mounts and teardown after feature failures", () => {
+  const timerHarness = createFakeTimerHarness();
+  const documentRef = new FakeDocument();
+  const windowRef = timerHarness.installOnWindow(createFakeWindow({ documentRef }));
+  const calls = [];
+  const runtime = createBootstrap({
+    windowRef,
+    documentRef,
+    logger: { error: () => {} },
+    config: {
+      featureToggles: { brokenDeferred: true, healthyDeferred: true },
+      features: {
+        brokenDeferred: { enabled: true },
+        healthyDeferred: { enabled: true },
+      },
+    },
+    featureDefinitions: [
+      {
+        featureKey: "broken-deferred",
+        configKey: "brokenDeferred",
+        startupTiming: "deferred",
+        mount: () => {
+          calls.push("broken-mount");
+          throw new Error("deferred failure");
+        },
+      },
+      {
+        featureKey: "healthy-deferred",
+        configKey: "healthyDeferred",
+        startupTiming: "deferred",
+        mount: () => {
+          calls.push("healthy-mount");
+          return () => {
+            calls.push("healthy-cleanup");
+            throw new Error("cleanup failure");
+          };
+        },
+      },
+    ],
+  });
+
+  runtime.start();
+  assert.equal(runtime.getSnapshot().features["broken-deferred"].status, "scheduled");
+  timerHarness.runAll();
+
+  assert.deepEqual(calls, ["broken-mount", "healthy-mount"]);
+  assert.equal(runtime.getSnapshot().features["broken-deferred"].status, "mount-error");
+  assert.equal(runtime.getSnapshot().features["healthy-deferred"].status, "mounted");
+
+  runtime.stop();
+
+  assert.deepEqual(calls, ["broken-mount", "healthy-mount", "healthy-cleanup"]);
+  assert.equal(runtime.getSnapshot().started, false);
+  assert.equal(runtime.getSnapshot().features["healthy-deferred"].status, "cleanup-error");
+});

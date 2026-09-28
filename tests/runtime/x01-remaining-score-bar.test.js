@@ -299,7 +299,7 @@ test("resolveStartScore falls back to selected DOM controls on match routes", ()
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "X01";
 
@@ -331,7 +331,7 @@ test("resolveStartScore resolves from variant strip sibling text on match routes
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "X01";
 
@@ -362,7 +362,7 @@ test("resolveStartScore accepts 170 from the snapshot variant when it is the act
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "X01";
 
@@ -389,7 +389,7 @@ test("resolveStartScore accepts 121 from an active base control on match routes"
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "X01";
 
@@ -421,7 +421,7 @@ test("resolveStartScore ignores checkout-like texts even when they contain valid
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "X01";
 
@@ -457,7 +457,7 @@ test("syncScoreProgress renders active and inactive bars from the X01 start scor
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -536,7 +536,7 @@ test("syncScoreProgress clears stale bars outside X01 match contexts", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -607,7 +607,7 @@ test("syncScoreProgress exposes debug reason when start score cannot be resolved
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "X01";
 
@@ -643,7 +643,7 @@ test("syncScoreProgress includes sampled card diagnostics in debug mode", () => 
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -693,7 +693,7 @@ test("syncScoreProgress skips debug-only layout measurements when debug is disab
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -758,7 +758,7 @@ test("syncScoreProgress keeps debug host measurement payloads when debug is enab
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -833,7 +833,7 @@ test("syncScoreProgress avoids unchanged host style writes but updates changed v
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -917,7 +917,7 @@ test("mountX01RemainingScoreBar emits detailed debug warning payloads", async ()
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/debug-case",
+    href: "https://play.autodarts.com/matches/debug-case",
   });
   documentRef.variantElement.textContent = "X01";
 
@@ -972,7 +972,7 @@ test("mountX01RemainingScoreBar ignores self-managed bar churn but reacts to pla
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -1061,7 +1061,7 @@ test("mountX01RemainingScoreBar scopes generic mutation targets to X01 areas", (
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -1221,7 +1221,7 @@ test("syncScoreProgress keeps inactive styling untouched by active-only settings
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -1274,7 +1274,7 @@ test("syncScoreProgress keeps same-name online players in separate score identit
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -1326,7 +1326,7 @@ test("syncScoreProgress inserts host after nested online score wrapper", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "301";
 
@@ -1382,7 +1382,7 @@ test("syncScoreProgress removes active-only size and effects when a card becomes
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -1469,7 +1469,7 @@ test("syncScoreProgress falls back to gameState active player index when active 
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -1520,7 +1520,7 @@ test("syncScoreProgress triggers score-change animation when score updates", () 
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -1588,7 +1588,7 @@ test("syncScoreProgress uses a stronger bar-pulse score-change animation", () =>
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -1646,7 +1646,7 @@ test("syncScoreProgress maps retired electric-surge effect values to fast-signal
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -1705,7 +1705,7 @@ test("syncScoreProgress animates the ghost trail on active score changes only", 
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -1786,7 +1786,7 @@ test("syncScoreProgress keeps running previous-score-trail animation on passive 
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -1843,7 +1843,7 @@ test("syncScoreProgress ignores stale previous-score-trail cancel callbacks afte
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 
@@ -1914,7 +1914,7 @@ test("syncScoreProgress keeps intact progress nodes stable on passive re-sync an
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/demo",
+    href: "https://play.autodarts.com/matches/demo",
   });
   documentRef.variantElement.textContent = "501";
 

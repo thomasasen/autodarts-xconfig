@@ -12,6 +12,22 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.1.11] - 2026-09-28
+
+### Changed
+
+- Nutzerwirkung: xConfig unterstützt ausschließlich `https://play.autodarts.com` und setzt Chrome/Chromium 111 beziehungsweise Firefox 121 oder neuer voraus.
+  Technik: Loader, Build-Metadaten, Dokumentation und aktive Test-URLs verwenden nur noch die `.com`-Domain. Die Build-Ziele wurden auf `chrome111` und `firefox121` angehoben; historische Changelog-Einträge und archivierte `.io`-Fixtures bleiben unverändert.
+
+### Fixed
+
+- Nutzerwirkung: Ein fehlerhaftes Modul blockiert weder den Start noch das Beenden anderer xConfig-Funktionen. Nach einem Stop werden keine veralteten Match-, Spieler-, Turn- oder Score-Daten wiederverwendet.
+  Technik: Mounts und Cleanups sind pro Feature isoliert, fehlgeschlagene aktivierte Features werden erneut versucht und der Laufzeit-Snapshot meldet Status sowie Fehlerphase. Aktive Spieler werden strikt validiert; Browser-Patches werden nur bei eigener Ownership restauriert und zurückgelassene Wrapper bleiben dauerhaft inaktiv.
+- Nutzerwirkung: Einstellungen bleiben auch bei parallelen Änderungen aus mehreren Autodarts-Tabs konsistent. Fehler im verbindlichen Speicher werden gemeldet, ohne eine ältere lokale Kopie als erfolgreich gespeichert auszugeben.
+  Technik: GM-Storage ist bei vollständigem API-Paar das kanonische Backend und `localStorage` nur der best-effort Spiegel. Sämtliche schreibenden und Read-Modify-Write-Abläufe einschließlich Initialisierung, Migration, Reset und Import laufen über eine lokale Queue und einen exklusiven Web Lock.
+- Nutzerwirkung: Der Turn-Score-Counter bleibt nach vollständigen Seitenbereichswechseln aktiv. TV Board Zoom bewahrt zwischenzeitliche Host-Styles und reagiert bei unverändertem Spielzustand ohne wiederholte vollständige Mediensuche.
+  Technik: Ein langlebiger Lifecycle-Observer bindet den Surface-Observer nach DOM-Root-Austausch neu. Zoom-Styles werden mit Ursprungswert, letztem xConfig-Wert und CSS-Priorität eigentumsbewusst verwaltet; GIF-Containment verwendet Dirty-State, Bindings und Layout-Signaturen.
+
 ## [3.1.10] - 2026-09-28
 
 ### Added
@@ -2192,6 +2208,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.1.11]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.10...v3.1.11
 [3.1.10]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.9...v3.1.10
 [3.1.9]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.8...v3.1.9
 [3.1.8]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.7...v3.1.8

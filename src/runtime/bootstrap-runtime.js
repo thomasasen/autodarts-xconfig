@@ -3,13 +3,17 @@ import {
   ConfigPersistenceError,
   createConfigStore,
 } from "../config/config-store.js";
+import { readStorageValue, resolveLocalStorage } from "../config/storage-access.js";
 import {
   analyzeSettingsImport,
   createSettingsExport as createSettingsExportPayload,
 } from "../config/config-transfer.js";
 import { setNestedValue, splitFeaturePath } from "../config/feature-path-utils.js";
 import { API_VERSION, createBootstrap } from "../core/bootstrap.js";
-import { createRecommendedRuntimeConfig } from "../config/runtime-config.js";
+import {
+  createRecommendedRuntimeConfig,
+  normalizeRuntimeConfig,
+} from "../config/runtime-config.js";
 import { createFeatureRegistry } from "../features/feature-registry.js";
 import { ensureXConfigUi } from "../features/xconfig-ui/index.js";
 import { xconfigDescriptors } from "../features/xconfig-ui/descriptors.js";
@@ -51,6 +55,17 @@ function getGlobalNamespace(windowRef) {
     : null;
 }
 
+function resolveLockManager(options, windowRef) {
+  if (options.lockManager !== undefined) {
+    return options.lockManager;
+  }
+  try {
+    return windowRef?.navigator?.locks || null;
+  } catch (_) {
+    return null;
+  }
+}
+
 export async function initializeTampermonkeyRuntime(options = {}) {
   const windowRef =
     options.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
@@ -72,10 +87,10 @@ export async function initializeTampermonkeyRuntime(options = {}) {
   }
 
   const runtimePromise = (async function initializeRuntimeInternal() {
-    const localStorageRef =
-      options.localStorageRef ||
-      windowRef?.localStorage ||
-      (typeof localStorage !== "undefined" ? localStorage : null);
+    const localStorageRef = resolveLocalStorage({
+      localStorageRef: options.localStorageRef,
+      windowRef,
+    });
     const configStore = createConfigStore({
       windowRef,
       localStorageRef,
@@ -85,20 +100,21 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       gmSetValue:
         options.gmSetValue ||
         (typeof GM_setValue === "function" ? GM_setValue : null),
+      lockManager: resolveLockManager(options, windowRef),
     });
 
-    let initialConfig = await configStore.load();
+    let initialConfig = null;
     try {
+      initialConfig = await configStore.load();
       const importResult = await configStore.importLegacyConfigIfAvailable({
         createInitialConfig: () => createRecommendedRuntimeConfig(),
       });
       initialConfig = importResult?.config || initialConfig;
-      await configStore.save(initialConfig);
     } catch (error) {
       if (!(error instanceof ConfigPersistenceError)) {
         throw error;
       }
-      initialConfig = await configStore.load();
+      initialConfig = initialConfig || normalizeRuntimeConfig();
       console.warn(
         "[autodarts-xconfig] config storage unavailable, running with non-persistent defaults",
         error
@@ -115,26 +131,25 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       config: initialConfig,
       featureDefinitions: featureRegistry.getDefinitions(),
     });
-    let lastConfigStorageValue =
-      localStorageRef && typeof localStorageRef.getItem === "function"
-        ? localStorageRef.getItem(CONFIG_STORAGE_KEY)
-        : null;
+    let lastConfigStorageValue = readStorageValue(localStorageRef, CONFIG_STORAGE_KEY).value;
     let storageSyncAttached = false;
 
     function rememberStoredConfigSnapshot() {
-      if (!localStorageRef || typeof localStorageRef.getItem !== "function") {
+      const storedValue = readStorageValue(localStorageRef, CONFIG_STORAGE_KEY);
+      if (!storedValue.ok) {
         lastConfigStorageValue = null;
         return;
       }
-      lastConfigStorageValue = localStorageRef.getItem(CONFIG_STORAGE_KEY);
+      lastConfigStorageValue = storedValue.value;
     }
 
     async function syncRuntimeFromStoredConfig() {
-      if (!localStorageRef || typeof localStorageRef.getItem !== "function") {
+      const storedValue = readStorageValue(localStorageRef, CONFIG_STORAGE_KEY);
+      if (!storedValue.ok) {
         return runtime.getSnapshot();
       }
 
-      const nextStoredValue = localStorageRef.getItem(CONFIG_STORAGE_KEY);
+      const nextStoredValue = storedValue.value;
       if (nextStoredValue === lastConfigStorageValue) {
         return runtime.getSnapshot();
       }
@@ -227,9 +242,10 @@ export async function initializeTampermonkeyRuntime(options = {}) {
     }
 
     async function applyRecommendedDefaults() {
-      const currentConfig = await configStore.load();
-      const nextConfig = createRecommendedRuntimeConfig(currentConfig);
-      await configStore.save(nextConfig);
+      const transaction = await configStore.transact((currentConfig) => ({
+        config: createRecommendedRuntimeConfig(currentConfig),
+      }));
+      const nextConfig = transaction.config;
       rememberStoredConfigSnapshot();
       runtime.updateConfig(nextConfig);
       return runtime.getSnapshot();

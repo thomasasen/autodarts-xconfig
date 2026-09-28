@@ -215,3 +215,152 @@ test("game state store invalidates cached derived state when websocket or DOM va
 
   store.stop();
 });
+
+test("game state store fails safe for invalid active players and never borrows another player's turn", () => {
+  const store = createGameStateStore({ documentRef: new FakeDocument() });
+  const baseMatch = {
+    variant: "X01",
+    players: [{ id: "player-1" }, { id: "player-2" }],
+    gameScores: [301, 181],
+    turns: [
+      { playerId: "player-1", round: 1, turn: 1, score: 301, throws: [] },
+      { playerId: "player-2", round: 1, turn: 2, score: 181, throws: [{ score: 60 }] },
+    ],
+  };
+
+  for (const player of [-1, 1.5, 2, 99]) {
+    store.applyMatch({ ...baseMatch, player });
+    const snapshot = store.getSnapshot();
+    assert.equal(snapshot.activePlayerIndex, null);
+    assert.equal(store.getActiveTurn(), null);
+    assert.equal(snapshot.activeScore, null);
+    assert.deepEqual(store.getActiveThrows(), []);
+  }
+
+  store.applyMatch({
+    ...baseMatch,
+    player: 0,
+    turns: [baseMatch.turns[1]],
+  });
+  assert.equal(store.getActiveTurn(), null);
+  assert.equal(store.getSnapshot().activeScore, 301);
+
+  store.applyMatch({
+    ...baseMatch,
+    player: 0,
+    players: { 0: { id: "player-1" }, length: 2 },
+  });
+  assert.equal(store.getSnapshot().activePlayerIndex, null);
+  assert.equal(store.getActiveTurn(), null);
+  assert.equal(store.getSnapshot().activeScore, null);
+
+  store.applyMatch({
+    ...baseMatch,
+    player: 0,
+    players: [{ id: 0 }, { id: "player-2" }],
+    turns: [{ playerId: 0, round: 1, turn: 1, score: 301, throws: [{ score: 20 }] }],
+  });
+  assert.equal(store.getSnapshot().activePlayerIndex, 0);
+  assert.equal(store.getActiveTurn()?.playerId, 0);
+  assert.deepEqual(store.getActiveThrows(), [{ score: 20 }]);
+});
+
+test("game state store stop clears match metadata and derived state", () => {
+  const store = createGameStateStore({ documentRef: new FakeDocument() });
+  store.start();
+  store.applyMatch({
+    variant: "X01",
+    player: 0,
+    players: [{ id: "player-1" }],
+    gameScores: [301],
+    turns: [{ playerId: "player-1", score: 301, throws: [{ score: 60 }] }],
+  }, "test-source", { topic: "match-1.state", payloadKind: "match-state" });
+
+  store.stop();
+  const snapshot = store.getSnapshot();
+
+  assert.equal(snapshot.match, null);
+  assert.equal(snapshot.updatedAt, 0);
+  assert.equal(snapshot.source, "none");
+  assert.equal(snapshot.topic, "");
+  assert.equal(snapshot.payloadKind, "");
+  assert.equal(snapshot.activePlayerIndex, null);
+  assert.equal(store.getActiveTurn(), null);
+  assert.equal(snapshot.activeScore, null);
+});
+
+test("game state store stop also clears state when interception is not running", () => {
+  const store = createGameStateStore({ documentRef: new FakeDocument() });
+  store.applyMatch({
+    variant: "X01",
+    player: 0,
+    players: [{ id: "player-1" }],
+    gameScores: [101],
+    turns: [],
+  }, "manual-source", { topic: "manual.state", payloadKind: "match-state" });
+
+  assert.equal(store.getSnapshot().activeScore, 101);
+  store.stop();
+
+  const snapshot = store.getSnapshot();
+  assert.equal(snapshot.match, null);
+  assert.equal(snapshot.updatedAt, 0);
+  assert.equal(snapshot.source, "none");
+  assert.equal(snapshot.topic, "");
+  assert.equal(snapshot.payloadKind, "");
+  assert.equal(snapshot.activeScore, null);
+});
+
+test("game state store preserves a later MessageEvent patch and leaves its old wrapper inert", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const store = createGameStateStore({ windowRef, documentRef });
+  store.start();
+
+  const xconfigDescriptor = Object.getOwnPropertyDescriptor(windowRef.MessageEvent.prototype, "data");
+  const thirdPartyGetter = function thirdPartyGetter() {
+    return xconfigDescriptor.get.call(this);
+  };
+  Object.defineProperty(windowRef.MessageEvent.prototype, "data", {
+    ...xconfigDescriptor,
+    get: thirdPartyGetter,
+  });
+
+  store.stop();
+  assert.equal(
+    Object.getOwnPropertyDescriptor(windowRef.MessageEvent.prototype, "data").get,
+    thirdPartyGetter
+  );
+
+  void new FakeMessageEvent(JSON.stringify({
+    channel: "autodarts.matches",
+    topic: "match-after-stop.state",
+    data: {
+      variant: "X01",
+      player: 0,
+      players: [{ id: "player-1" }],
+      gameScores: [101],
+      turns: [],
+    },
+  }), new FakeWebSocket()).data;
+  assert.equal(store.getSnapshot().match, null);
+
+  store.start();
+  const retainedEvent = new FakeMessageEvent(JSON.stringify({
+    channel: "autodarts.matches",
+    topic: "match-old-wrapper.state",
+    data: {
+      variant: "X01",
+      player: 0,
+      players: [{ id: "player-1" }],
+      gameScores: [81],
+      turns: [],
+    },
+  }), new FakeWebSocket());
+  void xconfigDescriptor.get.call(retainedEvent);
+  assert.equal(store.getSnapshot().match, null);
+
+  void retainedEvent.data;
+  assert.equal(store.getSnapshot().activeScore, 81);
+  store.stop();
+});

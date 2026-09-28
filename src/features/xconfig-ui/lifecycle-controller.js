@@ -38,29 +38,42 @@ function patchHistoryController(controller) {
     return;
   }
 
-  const originalPushState = controller.windowRef.history.pushState?.bind(controller.windowRef.history);
-  const originalReplaceState =
-    controller.windowRef.history.replaceState?.bind(controller.windowRef.history);
+  const historyRef = controller.windowRef.history;
+  const originalPushState = historyRef.pushState;
+  const originalReplaceState = historyRef.replaceState;
 
   if (typeof originalPushState !== "function" || typeof originalReplaceState !== "function") {
     return;
   }
 
-  controller.windowRef.history.pushState = function patchedPushState(...args) {
-    const result = originalPushState(...args);
-    controller.queueSync();
+  let active = true;
+  function patchedPushState(...args) {
+    const result = Reflect.apply(originalPushState, historyRef, args);
+    if (active) {
+      controller.queueSync();
+    }
     return result;
-  };
+  }
 
-  controller.windowRef.history.replaceState = function patchedReplaceState(...args) {
-    const result = originalReplaceState(...args);
-    controller.queueSync();
+  function patchedReplaceState(...args) {
+    const result = Reflect.apply(originalReplaceState, historyRef, args);
+    if (active) {
+      controller.queueSync();
+    }
     return result;
-  };
+  }
+
+  historyRef.pushState = patchedPushState;
+  historyRef.replaceState = patchedReplaceState;
 
   controller.state.historyRestore = () => {
-    controller.windowRef.history.pushState = originalPushState;
-    controller.windowRef.history.replaceState = originalReplaceState;
+    active = false;
+    if (historyRef.pushState === patchedPushState) {
+      historyRef.pushState = originalPushState;
+    }
+    if (historyRef.replaceState === patchedReplaceState) {
+      historyRef.replaceState = originalReplaceState;
+    }
     controller.state.historyRestore = null;
   };
 }

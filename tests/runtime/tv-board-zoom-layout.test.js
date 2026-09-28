@@ -668,6 +668,37 @@ test("tv-board-zoom applies host clipping and restores it on immediate cleanup",
   assert.equal(targetNode.style.getPropertyPriority("transform-origin"), "important");
 });
 
+test("tv-board-zoom immediate cleanup preserves host styles changed after zoom", () => {
+  const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomFixture();
+  const state = createZoomState();
+  const speedConfig = {
+    zoomInMs: 180,
+    zoomOutMs: 220,
+    easingIn: "ease-in",
+    easingOut: "ease-out",
+  };
+
+  applyZoom(
+    { targetNode, hostNode, boardSvg },
+    2.75,
+    speedConfig,
+    { reason: "checkout", segment: "D20" },
+    state,
+    { x01Rules, windowRef, documentRef }
+  );
+  hostNode.style.setProperty("overflow", "clip", "important");
+  targetNode.style.setProperty("transform", "rotate(2deg)", "important");
+
+  resetZoom(speedConfig, state, true);
+
+  assert.equal(hostNode.style.getPropertyValue("overflow"), "clip");
+  assert.equal(hostNode.style.getPropertyPriority("overflow"), "important");
+  assert.equal(targetNode.style.getPropertyValue("transform"), "rotate(2deg)");
+  assert.equal(targetNode.style.getPropertyPriority("transform"), "important");
+  assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), false);
+  assert.equal(targetNode.classList.contains(ZOOM_CLASS), false);
+});
+
 test("tv-board-zoom scales only inner board layer and contains gif siblings proportionally", () => {
   const {
     documentRef,
@@ -1179,4 +1210,33 @@ test("tv-board-zoom delayed reset clears zoom classes and restores host overflow
   assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), false);
   assert.equal(targetNode.classList.contains(ZOOM_CLASS), false);
   assert.equal(hostNode.style.getPropertyValue("overflow"), "visible");
+});
+
+test("tv-board-zoom delayed reset preserves host styles changed during release", async () => {
+  const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomFixture();
+  const state = createZoomState();
+  const speedConfig = {
+    zoomInMs: 120,
+    zoomOutMs: 1,
+    easingIn: "ease-in",
+    easingOut: "ease-out",
+  };
+
+  applyZoom(
+    { targetNode, hostNode, boardSvg },
+    2.75,
+    speedConfig,
+    { reason: "checkout", segment: "D20" },
+    state,
+    { x01Rules, windowRef, documentRef }
+  );
+  resetZoom(speedConfig, state);
+  hostNode.style.setProperty("overflow", "auto");
+  targetNode.style.setProperty("transform", "translateX(4px)");
+  await new Promise((resolve) => setTimeout(resolve, 80));
+
+  assert.equal(hostNode.style.getPropertyValue("overflow"), "auto");
+  assert.equal(targetNode.style.getPropertyValue("transform"), "translateX(4px)");
+  assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), false);
+  assert.equal(targetNode.classList.contains(ZOOM_CLASS), false);
 });

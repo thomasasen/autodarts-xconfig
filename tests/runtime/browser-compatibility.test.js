@@ -25,8 +25,8 @@ function collectJavaScriptFiles(directory) {
   });
 }
 
-test("runtime source avoids array methods unavailable in Chrome and Firefox 100", () => {
-  assert.deepEqual(USERSCRIPT_BROWSER_TARGETS, ["chrome100", "firefox100"]);
+test("runtime source avoids array methods unavailable in Chrome 111 and Firefox 121", () => {
+  assert.deepEqual(USERSCRIPT_BROWSER_TARGETS, ["chrome111", "firefox121"]);
   const violations = [];
   runtimeRoots.flatMap(collectJavaScriptFiles).forEach((filePath) => {
     const source = readFileSync(filePath, "utf8");

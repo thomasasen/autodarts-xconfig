@@ -855,6 +855,28 @@ test("xConfig shell stays idempotent across repeated init and DOM mutation sync"
   first.stop();
 });
 
+test("xConfig shell preserves later history patches during teardown", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const originalPushState = windowRef.history.pushState;
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  await waitForRuntimeToSettle(runtime);
+
+  const xconfigPushState = windowRef.history.pushState;
+  assert.notEqual(xconfigPushState, originalPushState);
+  function thirdPartyPushState(...args) {
+    return Reflect.apply(xconfigPushState, windowRef.history, args);
+  }
+  windowRef.history.pushState = thirdPartyPushState;
+
+  runtime.stop();
+
+  assert.equal(windowRef.history.pushState, thirdPartyPushState);
+  windowRef.history.pushState({}, "", "/after-stop");
+  assert.equal(windowRef.location.pathname, "/after-stop");
+});
+
 test("xConfig shell keeps listener and observer counts stable across open/close cycles", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

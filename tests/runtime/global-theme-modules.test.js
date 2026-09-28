@@ -220,7 +220,7 @@ test("global typography updates remaining score size at runtime and restores aut
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/test",
+    href: "https://play.autodarts.com/matches/test",
   });
   const config = createRuntimeConfig({
     featureToggles: { "themes.globalTypography": true },
@@ -256,7 +256,7 @@ test("global modules mount independently on matches and clean up after a route c
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/test",
+    href: "https://play.autodarts.com/matches/test",
   });
   const config = createRuntimeConfig({
     featureToggles: {

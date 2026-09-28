@@ -132,7 +132,7 @@ test("browser resolver bundles every theme preset wallpaper without writing dist
     bundle: true,
     format: "iife",
     platform: "browser",
-    target: ["chrome100", "firefox100"],
+    target: ["chrome111", "firefox121"],
     charset: "utf8",
     legalComments: "none",
     loader: USERSCRIPT_ASSET_LOADERS,

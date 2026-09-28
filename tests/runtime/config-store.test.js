@@ -192,6 +192,7 @@ test("config store saves, updates, and resets persisted config", async () => {
 test("config store serializes overlapping updates without losing patches", async () => {
   const localStorage = new FakeStorage();
   const loadGate = createDeferred();
+  const gmState = new Map();
   let loadCalls = 0;
   const store = createConfigStore({
     localStorageRef: localStorage,
@@ -200,7 +201,10 @@ test("config store serializes overlapping updates without losing patches", async
         loadCalls += 1;
       }
       await loadGate.promise;
-      return fallbackValue;
+      return gmState.has(key) ? gmState.get(key) : fallbackValue;
+    },
+    gmSetValue: async (key, value) => {
+      gmState.set(key, value);
     },
   });
 
@@ -461,6 +465,115 @@ test("config store prefers GM storage when available and falls back safely", asy
 
   assert.equal(gmState.get(CONFIG_STORAGE_KEY).featureToggles.checkoutScoreHighlight, false);
   assert.equal(JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).featureToggles.checkoutScoreHighlight, false);
+});
+
+test("config store rejects a failed canonical GM write without changing the local mirror", async () => {
+  const previousLocalValue = JSON.stringify({ marker: "old-local" });
+  const localStorage = new FakeStorage({ [CONFIG_STORAGE_KEY]: previousLocalValue });
+  const store = createConfigStore({
+    localStorageRef: localStorage,
+    gmGetValue: async (_key, fallbackValue) => fallbackValue,
+    gmSetValue: async () => {
+      throw new Error("GM write denied");
+    },
+  });
+
+  await assert.rejects(
+    () => store.save({ featureToggles: { checkoutScoreHighlight: true } }),
+    /GM storage/
+  );
+  assert.equal(localStorage.getItem(CONFIG_STORAGE_KEY), previousLocalValue);
+});
+
+test("config store never reads a stale local mirror while GM storage is canonical", async () => {
+  const localStorage = new FakeStorage({
+    [CONFIG_STORAGE_KEY]: JSON.stringify({
+      features: { checkoutScoreHighlight: { effect: "glow-only" } },
+    }),
+  });
+  const store = createConfigStore({
+    localStorageRef: localStorage,
+    gmGetValue: async (_key, fallbackValue) => fallbackValue,
+    gmSetValue: async () => {},
+  });
+
+  const config = await store.load();
+
+  assert.equal(config.features.checkoutScoreHighlight.effect, "grow-only");
+});
+
+test("config store rejects canonical GM read failures instead of using the local mirror", async () => {
+  const localStorage = new FakeStorage({
+    [CONFIG_STORAGE_KEY]: JSON.stringify({
+      features: { checkoutScoreHighlight: { effect: "glow-only" } },
+    }),
+  });
+  const store = createConfigStore({
+    localStorageRef: localStorage,
+    gmGetValue: async () => {
+      throw new Error("GM read denied");
+    },
+    gmSetValue: async () => {},
+  });
+
+  await assert.rejects(() => store.load(), /read from GM storage/);
+});
+
+test("config store accepts a canonical GM write when the local mirror is unavailable", async () => {
+  const gmState = new Map();
+  const store = createConfigStore({
+    localStorageRef: {
+      getItem() {
+        throw new Error("SecurityError");
+      },
+      setItem() {
+        throw new Error("SecurityError");
+      },
+    },
+    gmGetValue: async (key, fallbackValue) => gmState.get(key) ?? fallbackValue,
+    gmSetValue: async (key, value) => gmState.set(key, value),
+  });
+
+  const saved = await store.save({ featureToggles: { checkoutScoreHighlight: true } });
+  assert.equal(saved.featureToggles.checkoutScoreHighlight, true);
+  assert.equal(gmState.get(CONFIG_STORAGE_KEY).featureToggles.checkoutScoreHighlight, true);
+});
+
+test("config store serializes updates from separate instances through one Web Lock manager", async () => {
+  const localStorage = new FakeStorage();
+  let lockQueue = Promise.resolve();
+  const lockManager = {
+    request(_name, options, callback) {
+      assert.deepEqual(options, { mode: "exclusive" });
+      const result = lockQueue.then(callback, callback);
+      lockQueue = result.then(() => undefined, () => undefined);
+      return result;
+    },
+  };
+  const firstStore = createConfigStore({ localStorageRef: localStorage, lockManager });
+  const secondStore = createConfigStore({ localStorageRef: localStorage, lockManager });
+
+  await Promise.all([
+    firstStore.update({ features: { checkoutScoreHighlight: { effect: "blink" } } }),
+    secondStore.update({ features: { tvBoardZoom: { zoomLevel: 3.15 } } }),
+  ]);
+
+  const stored = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+  assert.equal(stored.features.checkoutScoreHighlight.effect, "fade-blink");
+  assert.equal(stored.features.tvBoardZoom.zoomLevel, 3.15);
+});
+
+test("config store propagates Web Lock request failures", async () => {
+  const store = createConfigStore({
+    localStorageRef: new FakeStorage(),
+    lockManager: {
+      request() {
+        return Promise.reject(new Error("lock unavailable"));
+      },
+    },
+  });
+
+  await assert.rejects(() => store.reset(), /lock unavailable/);
 });
 
 test("config store fails loudly when no storage backend can persist writes", async () => {

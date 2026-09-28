@@ -264,7 +264,7 @@ test("buildCricketRenderState upgrades persistent degraded match host from missi
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/test-match",
+    href: "https://play.autodarts.com/matches/test-match",
   });
   const timerHarness = createFakeTimerHarness({ now: 1_000 });
   timerHarness.installGlobals();
@@ -310,7 +310,7 @@ test("buildCricketRenderState still detects degraded match hosts when a smaller 
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/with-banner",
+    href: "https://play.autodarts.com/matches/with-banner",
   });
   const timerHarness = createFakeTimerHarness({ now: 1_500 });
   timerHarness.installGlobals();
@@ -358,7 +358,7 @@ test("buildCricketRenderState keeps healthy direct board loads ready", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/direct-load",
+    href: "https://play.autodarts.com/matches/direct-load",
   });
   documentRef.variantElement.textContent = "Cricket";
 
@@ -382,7 +382,7 @@ test("buildCricketRenderState does not misclassify plain missing-board or lobby 
   const matchDocumentRef = new FakeDocument();
   const matchWindowRef = createFakeWindow({
     documentRef: matchDocumentRef,
-    href: "https://play.autodarts.io/matches/no-board",
+    href: "https://play.autodarts.com/matches/no-board",
   });
   matchDocumentRef.variantElement.textContent = "Cricket";
   createNumericCricketGrid(matchDocumentRef);
@@ -402,7 +402,7 @@ test("buildCricketRenderState does not misclassify plain missing-board or lobby 
   const lobbyDocumentRef = new FakeDocument();
   const lobbyWindowRef = createFakeWindow({
     documentRef: lobbyDocumentRef,
-    href: "https://play.autodarts.io/lobbies",
+    href: "https://play.autodarts.com/lobbies",
   });
   lobbyDocumentRef.variantElement.textContent = "Cricket";
   createDegradedMatchHostFixture(lobbyDocumentRef);
@@ -425,7 +425,7 @@ test("cricket highlighter and grid fx reload degraded match hosts once and stay 
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/recover-once",
+    href: "https://play.autodarts.com/matches/recover-once",
   });
   documentRef.variantElement.textContent = "Cricket";
   createDegradedMatchHostFixture(documentRef);
@@ -497,7 +497,7 @@ test("cricket highlighter and grid fx recheck pending degraded hosts after grace
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/recover-after-grace",
+    href: "https://play.autodarts.com/matches/recover-after-grace",
   });
   const timerHarness = createFakeTimerHarness({ now: 2_000 });
   timerHarness.installGlobals();
@@ -562,7 +562,7 @@ test("cricket highlighter and grid fx watch last healthy surface nodes when degr
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/watch-surface-nodes",
+    href: "https://play.autodarts.com/matches/watch-surface-nodes",
   });
   const timerHarness = createFakeTimerHarness({ now: 3_000 });
   timerHarness.installGlobals();
@@ -642,7 +642,7 @@ test("shared cricket runtime marks ready-to-missing-board gaps as boardGapDeferr
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/board-gap-deferred",
+    href: "https://play.autodarts.com/matches/board-gap-deferred",
   });
   documentRef.variantElement.textContent = "Cricket";
 
@@ -695,7 +695,7 @@ test("shared cricket runtime keeps cached grid snapshot for player-state mutatio
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/preserve-grid-player-state",
+    href: "https://play.autodarts.com/matches/preserve-grid-player-state",
   });
   documentRef.variantElement.textContent = "Cricket";
 
@@ -752,7 +752,7 @@ test("shared cricket runtime rediscovers grid snapshot for grid mark mutations",
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/rediscover-grid-mark",
+    href: "https://play.autodarts.com/matches/rediscover-grid-mark",
   });
   documentRef.variantElement.textContent = "Cricket";
 
@@ -806,7 +806,7 @@ test("cricket highlighter and grid fx audit the surface after throw transitions 
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/post-throw-audit",
+    href: "https://play.autodarts.com/matches/post-throw-audit",
   });
   const timerHarness = createFakeTimerHarness({ now: 4_000 });
   timerHarness.installGlobals();
@@ -898,7 +898,7 @@ test("cricket highlighter and grid fx re-arm degraded-host recovery after a stab
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/rearm-after-ready",
+    href: "https://play.autodarts.com/matches/rearm-after-ready",
   });
   const timerHarness = createFakeTimerHarness({ now: 5_000 });
   timerHarness.installGlobals();
@@ -997,7 +997,7 @@ test("missing-board match gaps use the fallback grace delay even before degraded
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
-    href: "https://play.autodarts.io/matches/fallback-gap",
+    href: "https://play.autodarts.com/matches/fallback-gap",
   });
   documentRef.variantElement.textContent = "Cricket";
   const fixture = createHealthyMatchHostFixture(documentRef);

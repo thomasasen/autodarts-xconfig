@@ -593,6 +593,38 @@ function restoreStyleWithPriority(styleDecl, propertyName, snapshot) {
   }
 }
 
+function createOwnedStyleSnapshot(styleDecl, propertyName, valueOverride = null) {
+  return {
+    original: {
+      value: valueOverride === null ? getStyleValue(styleDecl, propertyName) : valueOverride,
+      priority: valueOverride === null ? getStylePriority(styleDecl, propertyName) : "",
+    },
+    applied: null,
+  };
+}
+
+function setOwnedStyle(snapshot, styleDecl, propertyName, value, priority = "") {
+  setStyleWithPriority(styleDecl, propertyName, value, priority);
+  if (snapshot) {
+    snapshot.applied = { value: String(value || ""), priority: String(priority || "") };
+  }
+}
+
+function restoreOwnedStyle(styleDecl, propertyName, snapshot) {
+  if (!snapshot?.applied) {
+    return;
+  }
+  const currentValue = getStyleValue(styleDecl, propertyName);
+  const currentPriority = getStylePriority(styleDecl, propertyName);
+  if (
+    currentValue !== String(snapshot.applied.value || "") ||
+    currentPriority !== String(snapshot.applied.priority || "")
+  ) {
+    return;
+  }
+  restoreStyleWithPriority(styleDecl, propertyName, snapshot.original);
+}
+
 function cacheHostStyle(state, hostNode) {
   if (!hostNode?.style || state.hostStyleSnapshot?.node === hostNode) {
     return;
@@ -600,18 +632,9 @@ function cacheHostStyle(state, hostNode) {
 
   state.hostStyleSnapshot = {
     node: hostNode,
-    overflow: {
-      value: getStyleValue(hostNode.style, "overflow"),
-      priority: getStylePriority(hostNode.style, "overflow"),
-    },
-    overflowX: {
-      value: getStyleValue(hostNode.style, "overflow-x"),
-      priority: getStylePriority(hostNode.style, "overflow-x"),
-    },
-    overflowY: {
-      value: getStyleValue(hostNode.style, "overflow-y"),
-      priority: getStylePriority(hostNode.style, "overflow-y"),
-    },
+    overflow: createOwnedStyleSnapshot(hostNode.style, "overflow"),
+    overflowX: createOwnedStyleSnapshot(hostNode.style, "overflow-x"),
+    overflowY: createOwnedStyleSnapshot(hostNode.style, "overflow-y"),
   };
 }
 
@@ -622,13 +645,9 @@ function restoreHostStyle(state, hostNode) {
 
   const snapshot = state.hostStyleSnapshot;
   if (snapshot?.node === hostNode) {
-    restoreStyleWithPriority(hostNode.style, "overflow", snapshot.overflow);
-    restoreStyleWithPriority(hostNode.style, "overflow-x", snapshot.overflowX);
-    restoreStyleWithPriority(hostNode.style, "overflow-y", snapshot.overflowY);
-  } else {
-    hostNode.style.removeProperty("overflow");
-    hostNode.style.removeProperty("overflow-x");
-    hostNode.style.removeProperty("overflow-y");
+    restoreOwnedStyle(hostNode.style, "overflow", snapshot.overflow);
+    restoreOwnedStyle(hostNode.style, "overflow-x", snapshot.overflowX);
+    restoreOwnedStyle(hostNode.style, "overflow-y", snapshot.overflowY);
   }
   hostNode.classList?.remove?.(ZOOM_HOST_CLASS);
 }
@@ -645,22 +664,26 @@ function cacheTargetStyle(state, targetNode) {
 
   state.targetStyleSnapshot = {
     node: targetNode,
-    transform: {
-      value: hasAppliedZoomTransform ? stripAppliedZoomTransform(currentTransform) : currentTransform,
-      priority: hasAppliedZoomTransform ? "" : getStylePriority(targetNode.style, "transform"),
-    },
-    transition: {
-      value: hasAppliedZoomTransform ? "" : String(targetNode.style.transition || ""),
-      priority: hasAppliedZoomTransform ? "" : getStylePriority(targetNode.style, "transition"),
-    },
-    transformOrigin: {
-      value: hasAppliedZoomTransform ? "" : String(targetNode.style.transformOrigin || ""),
-      priority: hasAppliedZoomTransform ? "" : getStylePriority(targetNode.style, "transform-origin"),
-    },
-    willChange: {
-      value: hasAppliedZoomTransform ? "" : String(targetNode.style.willChange || ""),
-      priority: hasAppliedZoomTransform ? "" : getStylePriority(targetNode.style, "will-change"),
-    },
+    transform: createOwnedStyleSnapshot(
+      targetNode.style,
+      "transform",
+      hasAppliedZoomTransform ? stripAppliedZoomTransform(currentTransform) : null
+    ),
+    transition: createOwnedStyleSnapshot(
+      targetNode.style,
+      "transition",
+      hasAppliedZoomTransform ? "" : null
+    ),
+    transformOrigin: createOwnedStyleSnapshot(
+      targetNode.style,
+      "transform-origin",
+      hasAppliedZoomTransform ? "" : null
+    ),
+    willChange: createOwnedStyleSnapshot(
+      targetNode.style,
+      "will-change",
+      hasAppliedZoomTransform ? "" : null
+    ),
   };
 }
 
@@ -671,15 +694,10 @@ function restoreTargetStyle(state, targetNode) {
 
   const snapshot = state.targetStyleSnapshot;
   if (snapshot?.node === targetNode) {
-    restoreStyleWithPriority(targetNode.style, "transform", snapshot.transform);
-    restoreStyleWithPriority(targetNode.style, "transition", snapshot.transition);
-    restoreStyleWithPriority(targetNode.style, "transform-origin", snapshot.transformOrigin);
-    restoreStyleWithPriority(targetNode.style, "will-change", snapshot.willChange);
-  } else {
-    targetNode.style.removeProperty("transform");
-    targetNode.style.removeProperty("transition");
-    targetNode.style.removeProperty("transform-origin");
-    targetNode.style.removeProperty("will-change");
+    restoreOwnedStyle(targetNode.style, "transform", snapshot.transform);
+    restoreOwnedStyle(targetNode.style, "transition", snapshot.transition);
+    restoreOwnedStyle(targetNode.style, "transform-origin", snapshot.transformOrigin);
+    restoreOwnedStyle(targetNode.style, "will-change", snapshot.willChange);
   }
 
   targetNode.classList?.remove?.(ZOOM_CLASS);
@@ -713,14 +731,15 @@ function collectGifOverlayEntries(targetNode, hostNode) {
   const roots = [];
   const showAnimationsRoot = targetNode?.closest?.(".showAnimations") || null;
   const ownerDocument = targetNode?.ownerDocument || hostNode?.ownerDocument || null;
-  if (showAnimationsRoot) {
-    roots.push(showAnimationsRoot);
-  }
-  if (hostNode && !roots.includes(hostNode)) {
-    roots.push(hostNode);
-  }
-  if (ownerDocument && !roots.includes(ownerDocument)) {
+  if (ownerDocument) {
     roots.push(ownerDocument);
+  } else {
+    if (showAnimationsRoot) {
+      roots.push(showAnimationsRoot);
+    }
+    if (hostNode && !roots.includes(hostNode)) {
+      roots.push(hostNode);
+    }
   }
 
   const seen = new Set();
@@ -817,6 +836,7 @@ export function syncGifOverlayContainment(state, targetNode, hostNode) {
     }
 
     snapshottedNodes.add(node);
+    state.gifManagedNodes?.add?.(node);
     snapshots.push(snapshot);
   };
 
@@ -1854,7 +1874,7 @@ function buildApplyZoomData(targetNode, hostNode, boardSvg, zoomLevel, intent, s
     documentRef: options?.documentRef || (typeof document !== "undefined" ? document : null),
     baseTransform:
       state.targetStyleSnapshot?.node === targetNode
-        ? String(state.targetStyleSnapshot.transform?.value || "")
+        ? String(state.targetStyleSnapshot.transform?.original?.value || "")
         : "",
     activeTargetZoomTransform:
       state.zoomedElement === targetNode && state.lastAppliedZoomTransform?.targetNode === targetNode
@@ -1891,13 +1911,13 @@ function applyZoomHostState(state, hostNode) {
     hostNode.classList.add(ZOOM_HOST_CLASS);
   }
   if (getStyleValue(hostNode.style, "overflow") !== "hidden") {
-    setStyleWithPriority(hostNode.style, "overflow", "hidden", "important");
+    setOwnedStyle(state.hostStyleSnapshot?.overflow, hostNode.style, "overflow", "hidden", "important");
   }
   if (getStyleValue(hostNode.style, "overflow-x") !== "hidden") {
-    setStyleWithPriority(hostNode.style, "overflow-x", "hidden", "important");
+    setOwnedStyle(state.hostStyleSnapshot?.overflowX, hostNode.style, "overflow-x", "hidden", "important");
   }
   if (getStyleValue(hostNode.style, "overflow-y") !== "hidden") {
-    setStyleWithPriority(hostNode.style, "overflow-y", "hidden", "important");
+    setOwnedStyle(state.hostStyleSnapshot?.overflowY, hostNode.style, "overflow-y", "hidden", "important");
   }
 }
 
@@ -1927,7 +1947,9 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
   const hasAppliedTransform =
     targetNode.classList.contains(ZOOM_CLASS) &&
     Boolean(String(getStyleValue(targetNode.style, "transform") || "").trim());
-  syncGifOverlayContainment(state, targetNode, hostNode || targetNode);
+  if (options.syncGifOverlayContainment !== false) {
+    syncGifOverlayContainment(state, targetNode, hostNode || targetNode);
+  }
   if (
     state.zoomedElement === targetNode &&
     state.zoomHost === normalizedHostNode &&
@@ -1942,12 +1964,27 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
   if (!targetNode.classList.contains(ZOOM_CLASS)) {
     targetNode.classList.add(ZOOM_CLASS);
   }
-  setStyleWithPriority(targetNode.style, "transform-origin", "0 0", "important");
-  targetNode.style.willChange = "transform";
-  targetNode.style.transition = isSameVisualIntent
-    ? "none"
-    : `transform ${speedConfig.zoomInMs}ms ${speedConfig.easingIn}`;
-  setStyleWithPriority(targetNode.style, "transform", composedTransform, "important");
+  setOwnedStyle(
+    state.targetStyleSnapshot?.transformOrigin,
+    targetNode.style,
+    "transform-origin",
+    "0 0",
+    "important"
+  );
+  setOwnedStyle(state.targetStyleSnapshot?.willChange, targetNode.style, "will-change", "transform");
+  setOwnedStyle(
+    state.targetStyleSnapshot?.transition,
+    targetNode.style,
+    "transition",
+    isSameVisualIntent ? "none" : `transform ${speedConfig.zoomInMs}ms ${speedConfig.easingIn}`
+  );
+  setOwnedStyle(
+    state.targetStyleSnapshot?.transform,
+    targetNode.style,
+    "transform",
+    composedTransform,
+    "important"
+  );
 
   state.zoomedElement = targetNode;
   state.zoomHost = normalizedHostNode;
@@ -1977,7 +2014,9 @@ export function resetZoom(speedConfig, state, immediate = false, options = {}) {
   const hostNode = state.zoomHost;
   const targetSnapshot = state.targetStyleSnapshot;
   const snapshotTransform =
-    targetSnapshot?.node === targetNode ? String(targetSnapshot.transform?.value || "") : "";
+    targetSnapshot?.node === targetNode
+      ? String(targetSnapshot.transform?.original?.value || "")
+      : "";
 
   if (!targetNode) {
     if (!preserveGifContainment) {
@@ -2013,8 +2052,13 @@ export function resetZoom(speedConfig, state, immediate = false, options = {}) {
     return;
   }
 
-  targetNode.style.transition = `transform ${speedConfig.zoomOutMs}ms ${speedConfig.easingOut}`;
-  targetNode.style.transform = snapshotTransform;
+  setOwnedStyle(
+    targetSnapshot?.transition,
+    targetNode.style,
+    "transition",
+    `transform ${speedConfig.zoomOutMs}ms ${speedConfig.easingOut}`
+  );
+  setOwnedStyle(targetSnapshot?.transform, targetNode.style, "transform", snapshotTransform);
 
   const expectedTarget = targetNode;
   const expectedHost = hostNode;

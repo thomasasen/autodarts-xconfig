@@ -1,14 +1,11 @@
 // ==UserScript==
 // @name         autodarts-xconfig
 // @namespace    https://github.com/thomasasen/autodarts-xconfig
-// @version      3.1.10
+// @version      3.1.11
 // @description  Modular, side-effect resistant Tampermonkey runtime for Autodarts enhancements.
 // @author       Thomas Asen
 // @license      MIT
-// @match        https://play.autodarts.io/*
 // @match        https://play.autodarts.com/*
-// @exclude      https://play.autodarts.io/boards
-// @exclude      https://play.autodarts.io/boards/*
 // @exclude      https://play.autodarts.com/boards
 // @exclude      https://play.autodarts.com/boards/*
 // @run-at       document-start

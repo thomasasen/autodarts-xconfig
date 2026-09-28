@@ -51,6 +51,23 @@ test("initializeTampermonkeyRuntime is idempotent and reuses the namespace", asy
   first.stop();
 });
 
+test("initializeTampermonkeyRuntime starts with defaults when localStorage access is blocked", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  Object.defineProperty(windowRef, "localStorage", {
+    configurable: true,
+    get() {
+      throw new Error("SecurityError");
+    },
+  });
+
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+
+  assert.equal(runtime.getSnapshot().started, true);
+  assert.equal(runtime.getSnapshot().features["checkout-score-highlight"].enabled, false);
+  runtime.stop();
+});
+
 test("parallel runtime initialization shares one startup promise and one namespace", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
@@ -86,6 +103,32 @@ test("fresh runtime initialization persists the recommended profile", async () =
     assert.equal(storedConfig.featureToggles[definition.configKey], false, definition.configKey);
   });
 
+  runtime.stop();
+});
+
+test("runtime initialization and recommended defaults each use one atomic Web Lock section", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  let lockRequests = 0;
+  const lockManager = {
+    request(_name, options, callback) {
+      lockRequests += 1;
+      assert.deepEqual(options, { mode: "exclusive" });
+      return callback();
+    },
+  };
+
+  const runtime = await initializeTampermonkeyRuntime({
+    windowRef,
+    documentRef,
+    lockManager,
+  });
+  assert.equal(lockRequests, 1);
+
+  lockRequests = 0;
+  await runtime.applyRecommendedDefaults();
+  assert.equal(lockRequests, 1);
   runtime.stop();
 });
 

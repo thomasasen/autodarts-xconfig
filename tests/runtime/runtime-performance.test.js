@@ -1746,7 +1746,7 @@ test("checkout-target-highlights ignores a direct finish from a stale previous m
     documentRef,
     windowRef: createFakeWindow({
       documentRef,
-      href: "https://play.autodarts.io/matches/current-match",
+      href: "https://play.autodarts.com/matches/current-match",
     }),
     domGuards: createDomGuards({ documentRef }),
     registries: {

@@ -149,6 +149,7 @@ export function createGameStateStore(options = {}) {
   let started = false;
   let interceptionInstalled = false;
   let originalDataDescriptor = null;
+  let installedDataGetter = null;
   let stateRevision = 0;
   let stateDerivedCache = null;
   let variantDerivedCache = null;
@@ -203,22 +204,30 @@ export function createGameStateStore(options = {}) {
 
   function resolveActivePlayerIndex() {
     const activeIndex = state.match?.player;
-    return Number.isFinite(activeIndex) ? activeIndex : null;
+    const players = state.match?.players;
+    return Array.isArray(players) &&
+      Number.isInteger(activeIndex) &&
+      activeIndex >= 0 &&
+      activeIndex < players.length
+      ? activeIndex
+      : null;
   }
 
   function resolveActivePlayerId(activeIndex) {
     const players = state.match?.players;
-    if (!Array.isArray(players) || !Number.isFinite(activeIndex)) {
+    if (!Array.isArray(players) || !Number.isInteger(activeIndex)) {
       return null;
     }
 
     const playerId = players[activeIndex]?.id;
-    return playerId ? String(playerId) : null;
+    return playerId === null || playerId === undefined || String(playerId) === ""
+      ? null
+      : String(playerId);
   }
 
   function resolveActiveTurn(activePlayerId) {
     const turns = state.match?.turns;
-    if (!Array.isArray(turns) || !turns.length) {
+    if (!activePlayerId || !Array.isArray(turns) || !turns.length) {
       return null;
     }
 
@@ -229,28 +238,25 @@ export function createGameStateStore(options = {}) {
       return !String(turn.finishedAt || "").trim();
     });
 
-    const unfinishedForActivePlayer = activePlayerId
-      ? unfinishedTurns.filter((turn) => String(turn.playerId || "") === activePlayerId)
-      : [];
-
-    const unfinishedPick =
-      selectNewestTurn(unfinishedForActivePlayer) || selectNewestTurn(unfinishedTurns);
+    const unfinishedForActivePlayer = unfinishedTurns.filter(
+      (turn) => String(turn.playerId ?? "") === activePlayerId
+    );
+    const unfinishedPick = selectNewestTurn(unfinishedForActivePlayer);
 
     if (unfinishedPick) {
       return unfinishedPick;
     }
 
-    const activeTurns = activePlayerId
-      ? turns.filter((turn) => String(turn?.playerId || "") === activePlayerId)
-      : [];
-
-    return selectNewestTurn(activeTurns) || selectNewestTurn(turns) || turns[0] || null;
+    const activeTurns = turns.filter(
+      (turn) => String(turn?.playerId ?? "") === activePlayerId
+    );
+    return selectNewestTurn(activeTurns);
   }
 
   function resolveActiveScore(activeIndex, activeTurn) {
     const gameScores = state.match?.gameScores;
 
-    if (Array.isArray(gameScores) && Number.isFinite(activeIndex)) {
+    if (Array.isArray(gameScores) && Number.isInteger(activeIndex)) {
       const gameScore = gameScores[activeIndex];
       if (Number.isFinite(gameScore)) {
         return gameScore;
@@ -572,27 +578,33 @@ export function createGameStateStore(options = {}) {
     originalDataDescriptor = descriptor;
     const originalGetter = descriptor.get;
 
+    const interceptionGetter = function getInterceptedMessageData() {
+      const value = originalGetter.call(this);
+
+      if (!started || installedDataGetter !== interceptionGetter) {
+        return value;
+      }
+
+      try {
+        const websocketClass = windowRef.WebSocket;
+        const currentTarget = this.currentTarget;
+        const isWebSocketMessage = websocketClass
+          ? currentTarget instanceof websocketClass
+          : Boolean(currentTarget);
+
+        if (isWebSocketMessage) {
+          processMessageData(value);
+        }
+      } catch (_) {
+        // Keep getter behavior untouched for host scripts.
+      }
+
+      return value;
+    };
+    installedDataGetter = interceptionGetter;
     const wrappedDescriptor = {
       ...descriptor,
-      get() {
-        const value = originalGetter.call(this);
-
-        try {
-          const websocketClass = windowRef.WebSocket;
-          const currentTarget = this.currentTarget;
-          const isWebSocketMessage = websocketClass
-            ? currentTarget instanceof websocketClass
-            : Boolean(currentTarget);
-
-          if (isWebSocketMessage) {
-            processMessageData(value);
-          }
-        } catch (_) {
-          // Keep getter behavior untouched for host scripts.
-        }
-
-        return value;
-      },
+      get: installedDataGetter,
     };
 
     try {
@@ -610,13 +622,20 @@ export function createGameStateStore(options = {}) {
     }
 
     try {
-      Object.defineProperty(windowRef.MessageEvent.prototype, "data", originalDataDescriptor);
+      const currentDescriptor = Object.getOwnPropertyDescriptor(
+        windowRef.MessageEvent.prototype,
+        "data"
+      );
+      if (currentDescriptor?.get === installedDataGetter) {
+        Object.defineProperty(windowRef.MessageEvent.prototype, "data", originalDataDescriptor);
+      }
     } catch (_) {
       // Fail-soft if runtime no longer allows restoring descriptor.
     }
 
     interceptionInstalled = false;
     originalDataDescriptor = null;
+    installedDataGetter = null;
   }
 
   function subscribe(listener) {
@@ -648,18 +667,20 @@ export function createGameStateStore(options = {}) {
   }
 
   function stop() {
-    if (!started) {
-      return api;
-    }
-
+    const wasStarted = started;
     started = false;
+    state.match = null;
+    state.updatedAt = 0;
+    state.source = "none";
+    state.topic = "";
+    state.payloadKind = "";
     state.lastMessageRawData = "";
     state.lastMessageTopic = "";
     state.lastMessageSignature = "";
     uninstallWebSocketInterception();
     invalidateDerivedCache();
 
-    if (eventBus && typeof eventBus.emit === "function") {
+    if (wasStarted && eventBus && typeof eventBus.emit === "function") {
       eventBus.emit("game-state:stopped", getSnapshot());
     }
 

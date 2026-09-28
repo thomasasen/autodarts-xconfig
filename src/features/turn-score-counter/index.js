@@ -26,7 +26,10 @@ import {
 } from "../shared/x01-match-surface.js";
 
 const FEATURE_KEY = "turn-score-counter";
-const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
+const OBSERVER_KEYS = Object.freeze({
+  lifecycle: `${FEATURE_KEY}:dom-observer:lifecycle`,
+  surface: `${FEATURE_KEY}:dom-observer:surface`,
+});
 const LISTENER_KEYS = Object.freeze({
   visibility: `${FEATURE_KEY}:document-visibility`,
 });
@@ -74,6 +77,9 @@ export function initializeTurnScoreCounter(context = {}) {
   let disposed = false;
   let electricDefsRetained = false;
   let observedModernTurn = null;
+  let currentObserverRoot = null;
+  let observerUsesScoreContainer = false;
+  let observerUsesModernRoot = false;
   let lastDebugSignature = "";
 
   if (domGuards && typeof domGuards.ensureStyle === "function") {
@@ -83,7 +89,7 @@ export function initializeTurnScoreCounter(context = {}) {
   }
 
   function update() {
-    observedModernTurn = findModernTurnSurface(documentRef, windowRef)?.turnContainer || null;
+    bindSurfaceObserver();
     updateTurnScore({
       documentRef,
       state,
@@ -118,28 +124,36 @@ export function initializeTurnScoreCounter(context = {}) {
   }
 
   const scheduler = schedulerFactory(update, { windowRef });
-  observedModernTurn = findModernTurnSurface(documentRef, windowRef)?.turnContainer || null;
-  const initialScoreNode = collectScoreNodes(documentRef, state, { windowRef })[0] || null;
-  const scoreContainer = initialScoreNode?.closest?.("#ad-ext-turn")
-    ? initialScoreNode.parentElement || null
-    : null;
-  const rootNode =
-    scoreContainer ||
-    observedModernTurn?.closest?.("main") ||
-    findTurnContainer(documentRef) ||
-    documentRef.documentElement ||
-    documentRef.body ||
-    documentRef;
-  const observerUsesScoreContainer = Boolean(scoreContainer && rootNode === scoreContainer);
-  const observerUsesModernRoot = Boolean(observedModernTurn && !scoreContainer);
+
+  function resolveObserverSurface() {
+    const modernTurn = findModernTurnSurface(documentRef, windowRef)?.turnContainer || null;
+    const initialScoreNode = collectScoreNodes(documentRef, state, { windowRef })[0] || null;
+    const scoreContainer = initialScoreNode?.closest?.("#ad-ext-turn")
+      ? initialScoreNode.parentElement || null
+      : null;
+    const rootNode =
+      scoreContainer ||
+      modernTurn?.closest?.("main") ||
+      findTurnContainer(documentRef) ||
+      documentRef.documentElement ||
+      documentRef.body ||
+      documentRef;
+    return {
+      modernTurn,
+      rootNode,
+      usesModernRoot: Boolean(modernTurn && !scoreContainer),
+      usesScoreContainer: Boolean(scoreContainer && rootNode === scoreContainer),
+    };
+  }
+
   const isWithinObserverRoot = (node) => {
     if (!node) {
       return false;
     }
-    if (node === rootNode) {
+    if (node === currentObserverRoot) {
       return true;
     }
-    return typeof rootNode.contains === "function" && rootNode.contains(node);
+    return typeof currentObserverRoot?.contains === "function" && currentObserverRoot.contains(node);
   };
   const isRelevantObservedNode = (node) => {
     if (!node) {
@@ -174,56 +188,93 @@ export function initializeTurnScoreCounter(context = {}) {
     return isNodeWithinActiveScoreAnimation(node, state);
   };
 
-  if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
+  function handleSurfaceMutations(mutations = []) {
+    const hasRelevantTurnMutation =
+      !Array.isArray(mutations) ||
+      mutations.length === 0 ||
+      mutations.some((mutation) => {
+        if (mutation?.type === "characterData") {
+          const targetNode = mutation?.target?.parentNode || null;
+          return isRelevantObservedNode(targetNode);
+        }
+
+        if (mutation?.type === "attributes") {
+          const attributeName = String(mutation?.attributeName || "").trim().toLowerCase();
+          if (
+            attributeName === "class" &&
+            (mutation?.target?.classList?.contains?.("ad-ext-turn-score-counter--flash") ||
+              mutation?.target?.classList?.contains?.("ad-ext-turn-score-counter--frame"))
+          ) {
+            return false;
+          }
+          return isRelevantObservedNode(mutation?.target || null);
+        }
+
+        return [
+          mutation?.target || null,
+          ...Array.from(mutation?.addedNodes || []),
+          ...Array.from(mutation?.removedNodes || []),
+        ].some((node) => isRelevantObservedNode(node));
+      });
+    if (
+      Array.isArray(mutations) &&
+      mutations.length &&
+      mutations.every((mutation) => {
+        return mutation?.type === "characterData" && isAnimatingScoreNode(mutation?.target || null);
+      })
+    ) {
+      return;
+    }
+    if (hasRelevantTurnMutation) {
+      scheduler.schedule();
+    }
+  }
+
+  function bindSurfaceObserver() {
+    const nextSurface = resolveObserverSurface();
+    observedModernTurn = nextSurface.modernTurn;
+    observerUsesScoreContainer = nextSurface.usesScoreContainer;
+    observerUsesModernRoot = nextSurface.usesModernRoot;
+    if (currentObserverRoot === nextSurface.rootNode) {
+      return false;
+    }
+
+    if (currentObserverRoot && typeof observerRegistry?.disconnect === "function") {
+      observerRegistry.disconnect(OBSERVER_KEYS.surface);
+    }
+    currentObserverRoot = nextSurface.rootNode;
+    if (!currentObserverRoot || typeof observerRegistry?.registerMutationObserver !== "function") {
+      return true;
+    }
     observerRegistry.registerMutationObserver({
-      key: OBSERVER_KEY,
-      target: rootNode,
-      callback: (mutations = []) => {
-        const hasRelevantTurnMutation =
-          !Array.isArray(mutations) ||
-          mutations.length === 0 ||
-          mutations.some((mutation) => {
-            if (mutation?.type === "characterData") {
-              const targetNode = mutation?.target?.parentNode || null;
-              return isRelevantObservedNode(targetNode);
-            }
-
-            if (mutation?.type === "attributes") {
-              const attributeName = String(mutation?.attributeName || "").trim().toLowerCase();
-              if (
-                attributeName === "class" &&
-                (mutation?.target?.classList?.contains?.("ad-ext-turn-score-counter--flash") ||
-                  mutation?.target?.classList?.contains?.("ad-ext-turn-score-counter--frame"))
-              ) {
-                return false;
-              }
-              return isRelevantObservedNode(mutation?.target || null);
-            }
-
-            return [
-              mutation?.target || null,
-              ...Array.from(mutation?.addedNodes || []),
-              ...Array.from(mutation?.removedNodes || []),
-            ].some((node) => isRelevantObservedNode(node));
-          });
-        if (
-          Array.isArray(mutations) &&
-          mutations.length &&
-          mutations.every((mutation) => {
-            return mutation?.type === "characterData" && isAnimatingScoreNode(mutation?.target || null);
-          })
-        ) {
-          return;
-        }
-        if (!hasRelevantTurnMutation) {
-          return;
-        }
-        scheduler.schedule();
-      },
+      key: OBSERVER_KEYS.surface,
+      target: currentObserverRoot,
+      callback: handleSurfaceMutations,
       observeOptions: createTurnSurfaceObserveOptions(),
       MutationObserverRef: windowRef?.MutationObserver,
     });
+    return true;
   }
+
+  if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
+    const lifecycleRoot = documentRef.documentElement || documentRef.body || documentRef;
+    observerRegistry.registerMutationObserver({
+      key: OBSERVER_KEYS.lifecycle,
+      target: lifecycleRoot,
+      callback: (mutations = []) => {
+        const hasChildListMutation =
+          !Array.isArray(mutations) ||
+          mutations.length === 0 ||
+          mutations.some((mutation) => mutation?.type === "childList");
+        if (hasChildListMutation && bindSurfaceObserver()) {
+          scheduler.schedule();
+        }
+      },
+      observeOptions: { childList: true, subtree: true },
+      MutationObserverRef: windowRef?.MutationObserver,
+    });
+  }
+  bindSurfaceObserver();
 
   if (listenerRegistry && typeof listenerRegistry.register === "function") {
     listenerRegistry.register({
@@ -275,7 +326,8 @@ export function initializeTurnScoreCounter(context = {}) {
     }
 
     if (observerRegistry && typeof observerRegistry.disconnect === "function") {
-      observerRegistry.disconnect(OBSERVER_KEY);
+      observerRegistry.disconnect(OBSERVER_KEYS.lifecycle);
+      observerRegistry.disconnect(OBSERVER_KEYS.surface);
     }
     if (listenerRegistry && typeof listenerRegistry.remove === "function") {
       Object.values(LISTENER_KEYS).forEach((key) => listenerRegistry.remove(key));

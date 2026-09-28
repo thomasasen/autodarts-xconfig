@@ -462,6 +462,11 @@ export function initializeTvBoardZoom(context = {}) {
     targetStyleSnapshot: null,
     hostStyleSnapshot: null,
     gifStyleSnapshots: [],
+    gifManagedNodes: new WeakSet(),
+    gifContainmentDirty: true,
+    gifContainmentTarget: null,
+    gifContainmentHost: null,
+    gifContainmentRectSignature: "",
     stickyUntilTurnChange: false,
     stickyUntilLegEnd: false,
     manualPause: false,
@@ -480,6 +485,36 @@ export function initializeTvBoardZoom(context = {}) {
 
   function invalidateBoardCache() {
     boardCache.surface = null;
+    zoomState.gifContainmentDirty = true;
+  }
+
+  function markGifContainmentDirty() {
+    zoomState.gifContainmentDirty = true;
+  }
+
+  function syncGifContainmentIfNeeded(targetNode, hostNode) {
+    const containmentHost = hostNode || targetNode;
+    const rect = containmentHost?.getBoundingClientRect?.();
+    const rectSignature = [
+      Number(rect?.left) || 0,
+      Number(rect?.top) || 0,
+      Number(rect?.width) || Number(containmentHost?.clientWidth || containmentHost?.offsetWidth || 0),
+      Number(rect?.height) || Number(containmentHost?.clientHeight || containmentHost?.offsetHeight || 0),
+    ].join(":");
+    const bindingsChanged =
+      zoomState.gifContainmentTarget !== targetNode ||
+      zoomState.gifContainmentHost !== containmentHost ||
+      zoomState.gifContainmentRectSignature !== rectSignature;
+    if (!zoomState.gifContainmentDirty && !bindingsChanged) {
+      return false;
+    }
+
+    syncGifOverlayContainment(zoomState, targetNode, containmentHost);
+    zoomState.gifContainmentDirty = false;
+    zoomState.gifContainmentTarget = targetNode;
+    zoomState.gifContainmentHost = containmentHost;
+    zoomState.gifContainmentRectSignature = rectSignature;
+    return true;
   }
 
   function getBoardSurface() {
@@ -592,7 +627,10 @@ export function initializeTvBoardZoom(context = {}) {
     observerRegistry.registerMutationObserver({
       key: GIF_OBSERVER_KEY,
       target: nextShadowRoot,
-      callback: () => scheduler?.schedule?.(),
+      callback: () => {
+        markGifContainmentDirty();
+        scheduler?.schedule?.();
+      },
       observeOptions: {
         childList: true,
         subtree: true,
@@ -635,7 +673,7 @@ export function initializeTvBoardZoom(context = {}) {
     }
 
     const hostNode = boardSurface?.zoomHost || resolveZoomHost(targetNode);
-    syncGifOverlayContainment(zoomState, targetNode, hostNode || targetNode);
+    syncGifContainmentIfNeeded(targetNode, hostNode);
 
     const intent = computeZoomIntent({
       gameState,
@@ -694,6 +732,7 @@ export function initializeTvBoardZoom(context = {}) {
         x01Rules,
         windowRef,
         documentRef,
+        syncGifOverlayContainment: false,
       }
     );
     emitDebugEvent(debugState, "log", {
@@ -715,6 +754,7 @@ export function initializeTvBoardZoom(context = {}) {
     predicates: [
       (node) => node === zoomState.zoomedElement,
       (node) => node === zoomState.zoomHost,
+      (node) => Boolean(node && zoomState.gifManagedNodes?.has?.(node)),
     ],
   });
 
@@ -744,6 +784,7 @@ export function initializeTvBoardZoom(context = {}) {
         if (mutationReaction.shouldInvalidateBoardCache) {
           invalidateBoardCache();
         }
+        markGifContainmentDirty();
         scheduler.schedule();
       },
       observeOptions: {
@@ -776,6 +817,7 @@ export function initializeTvBoardZoom(context = {}) {
       target: windowRef,
       type: "resize",
       handler: () => {
+        markGifContainmentDirty();
         scheduler.schedule();
       },
       options: { passive: true },
@@ -785,6 +827,7 @@ export function initializeTvBoardZoom(context = {}) {
       target: windowRef,
       type: "orientationchange",
       handler: () => {
+        markGifContainmentDirty();
         scheduler.schedule();
       },
       options: { passive: true },
@@ -814,6 +857,7 @@ export function initializeTvBoardZoom(context = {}) {
       target: documentRef,
       type: "visibilitychange",
       handler: () => {
+        markGifContainmentDirty();
         scheduler.schedule();
       },
     });

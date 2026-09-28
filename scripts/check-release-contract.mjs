@@ -98,7 +98,15 @@ function validateVersionContract(errors, context) {
 }
 
 function validateMetadataContract(errors, context) {
-  const { packageVersion, expectedDownloadUrl, expectedHeader, loader, meta, bundle } = context;
+  const {
+    packageVersion,
+    expectedDownloadUrl,
+    expectedHeader,
+    loader,
+    meta,
+    bundle,
+    allowArtifactHeaderDrift,
+  } = context;
   for (const [label, contents] of [
     ["loader", loader],
     ["meta", meta],
@@ -116,7 +124,10 @@ function validateMetadataContract(errors, context) {
       new RegExp(String.raw`@downloadURL\s+${escapeRegExp(expectedDownloadUrl)}`),
       `${label} does not use the expected payload endpoint for ${packageVersion}`
     );
-    if (extractHeader(contents) !== expectedHeader) {
+    if (
+      extractHeader(contents) !== expectedHeader &&
+      !(allowArtifactHeaderDrift && (label === "meta" || label === "bundle"))
+    ) {
       errors.push(`${label} header differs from the central userscript build header`);
     }
   }
@@ -228,6 +239,7 @@ export function validateReleaseContract(options = {}) {
     tag,
     expectedDownloadUrl,
     expectedHeader,
+    allowArtifactHeaderDrift: options.allowArtifactHeaderDrift === true,
   };
   validateVersionContract(errors, context);
   validateMetadataContract(errors, context);

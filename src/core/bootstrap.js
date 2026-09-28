@@ -13,7 +13,7 @@ import { createListenerRegistry } from "./listener-registry.js";
 import { createObserverRegistry } from "./observer-registry.js";
 
 const GLOBAL_NAMESPACE_KEY = "__adXConfig";
-export const API_VERSION = "3.1.10";
+export const API_VERSION = "3.1.11";
 const STARTUP_DEFER_INTERVAL_MS = 16;
 
 function getWindowTimerApi(windowRef) {
@@ -187,10 +187,12 @@ export function createBootstrap(options = {}) {
   });
 
   const featureCleanups = new Map();
+  const featureFailures = new Map();
   const deferredFeatureMounts = new Map();
   const extraPublicApi = {};
   let started = false;
   const timerApi = getWindowTimerApi(windowRef);
+  const logger = options.logger || windowRef?.console || globalThis.console || null;
 
   const context = {
     eventBus,
@@ -208,6 +210,14 @@ export function createBootstrap(options = {}) {
     windowRef,
     documentRef,
   };
+
+  function reportFeatureFailure(definition, phase, error) {
+    const message = String(error?.message || error || "Unknown feature error");
+    featureFailures.set(definition.featureKey, { phase, message });
+    if (typeof logger?.error === "function") {
+      logger.error(`[autodarts-xconfig] ${definition.featureKey} ${phase} failed: ${message}`);
+    }
+  }
 
   function syncGlobalNamespace() {
     if (!windowRef) {
@@ -237,11 +247,16 @@ export function createBootstrap(options = {}) {
       return;
     }
 
-    const cleanup = definition.mount(context);
-    featureCleanups.set(
-      definition.featureKey,
-      typeof cleanup === "function" ? cleanup : () => {}
-    );
+    try {
+      const cleanup = definition.mount(context);
+      featureCleanups.set(
+        definition.featureKey,
+        typeof cleanup === "function" ? cleanup : () => {}
+      );
+      featureFailures.delete(definition.featureKey);
+    } catch (error) {
+      reportFeatureFailure(definition, "mount", error);
+    }
   }
 
   function cancelDeferredMount(featureKey) {
@@ -293,8 +308,14 @@ export function createBootstrap(options = {}) {
 
     try {
       cleanup();
-    } catch (_) {
-      // Keep teardown robust even if a feature cleanup fails.
+      if (featureFailures.get(featureKey)?.phase === "cleanup") {
+        featureFailures.delete(featureKey);
+      }
+    } catch (error) {
+      const definition = featureDefinitionIndex.byFeatureKey.get(featureKey) || {
+        featureKey,
+      };
+      reportFeatureFailure(definition, "cleanup", error);
     }
 
     featureCleanups.delete(featureKey);
@@ -354,10 +375,25 @@ export function createBootstrap(options = {}) {
       started,
       gameState: gameState.getSnapshot(),
       features: featureDefinitions.reduce((result, definition) => {
+        const enabled = config.isFeatureEnabled(definition.configKey);
+        const mounted = featureCleanups.has(definition.featureKey);
+        const failure = featureFailures.get(definition.featureKey) || null;
+        let status = "idle";
+        if (failure) {
+          status = `${failure.phase}-error`;
+        } else if (!enabled) {
+          status = "disabled";
+        } else if (mounted) {
+          status = "mounted";
+        } else if (deferredFeatureMounts.has(definition.featureKey)) {
+          status = "scheduled";
+        }
         result[definition.featureKey] = {
           configKey: definition.configKey,
-          enabled: config.isFeatureEnabled(definition.configKey),
-          mounted: featureCleanups.has(definition.featureKey),
+          enabled,
+          mounted,
+          status,
+          failure: failure ? { ...failure } : null,
           config: config.getFeatureConfig(definition.configKey),
         };
         return result;
@@ -375,6 +411,7 @@ export function createBootstrap(options = {}) {
 
   function start() {
     if (started) {
+      refreshFeatures();
       syncGlobalNamespace();
       return api;
     }

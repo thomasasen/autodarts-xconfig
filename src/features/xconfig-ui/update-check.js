@@ -1,5 +1,7 @@
 ﻿const USERSCRIPT_DOWNLOAD_URL =
   "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.user.js";
+import { resolveLocalStorage } from "../../config/storage-access.js";
+
 const USERSCRIPT_UPDATE_URL =
   "https://raw.githubusercontent.com/thomasasen/autodarts-xconfig/main/dist/autodarts-xconfig.meta.js";
 const USERSCRIPT_UPDATE_FALLBACK_URL =
@@ -146,7 +148,7 @@ function safeParseJson(value) {
 }
 
 function getStorageRef(windowRef) {
-  const storageRef = windowRef?.localStorage || null;
+  const storageRef = resolveLocalStorage({ windowRef });
   if (!storageRef || typeof storageRef.getItem !== "function" || typeof storageRef.setItem !== "function") {
     return null;
   }

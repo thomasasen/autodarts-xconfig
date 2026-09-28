@@ -108,6 +108,7 @@ function createCountUpClassStub() {
 function createObserverRegistryProbe() {
   const state = {
     registration: null,
+    registrations: new Map(),
     disconnects: [],
   };
 
@@ -115,11 +116,15 @@ function createObserverRegistryProbe() {
     state,
     registry: {
       registerMutationObserver(options = {}) {
-        state.registration = options;
+        state.registrations.set(options.key, options);
+        if (String(options.key || "").endsWith(":surface")) {
+          state.registration = options;
+        }
         return {};
       },
       disconnect(key) {
         state.disconnects.push(String(key || ""));
+        state.registrations.delete(key);
         return true;
       },
     },
@@ -1228,13 +1233,56 @@ test("turn-score-counter cleanup disconnects observer and stops active animation
 
   harness.cleanup();
 
-  assert.deepEqual(harness.observerProbe.state.disconnects, ["turn-score-counter:dom-observer"]);
+  assert.deepEqual(harness.observerProbe.state.disconnects, [
+    "turn-score-counter:dom-observer:lifecycle",
+    "turn-score-counter:dom-observer:surface",
+  ]);
   assert.equal(harness.listenerProbe.state.removals.includes("turn-score-counter:document-visibility"), true);
   assert.equal(harness.unsubscribeCount, 1);
   assert.equal(harness.scheduleCounter.cancelled, true);
   assert.equal(harness.animeRef.instances[0]?.paused, true);
   assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), false);
   assert.equal(frameNode.classList.contains(SCORE_FRAME_CLASS), false);
+});
+
+test("turn-score-counter rebinds its surface observer after the complete main surface is replaced", () => {
+  const fixture = createModernX01Fixture();
+  appendModernTurnScoreText(fixture, "85");
+  const harness = createMountHarness({
+    documentRef: fixture.documentRef,
+    windowRef: fixture.windowRef,
+  });
+  const lifecycle = harness.observerProbe.state.registrations.get(
+    "turn-score-counter:dom-observer:lifecycle"
+  );
+  const oldMain = fixture.documentRef.main;
+  const replacementMain = fixture.documentRef.createElement("main");
+  fixture.documentRef.layoutShell.removeChild(oldMain);
+  fixture.documentRef.layoutShell.appendChild(replacementMain);
+  fixture.documentRef.main = replacementMain;
+  const turn = fixture.node(replacementMain, "div", "flex bg-surface-surface");
+  const slots = fixture.node(turn, "div", "flex items-stretch justify-evenly");
+  Array.from({ length: 3 }, () => fixture.node(slots, "div", "font-number"));
+  const total = fixture.node(turn, "div", "font-number", "0");
+  const scoreNode = fixture.node(total, "span", "text-[min(2.5rem,40cqw)]", "0");
+
+  lifecycle.callback([{
+    type: "childList",
+    target: fixture.documentRef.layoutShell,
+    addedNodes: [replacementMain],
+    removedNodes: [oldMain],
+  }]);
+
+  const rebound = harness.observerProbe.state.registration;
+  assert.equal(rebound.target, replacementMain);
+  assert.equal(
+    harness.observerProbe.state.disconnects.includes("turn-score-counter:dom-observer:surface"),
+    true
+  );
+  scoreNode.textContent = "60";
+  rebound.callback([{ type: "characterData", target: { nodeType: 3, parentNode: scoreNode } }]);
+  assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
+  harness.cleanup();
 });
 
 test("turn-score-counter style exports the scoped flash animation contract", () => {

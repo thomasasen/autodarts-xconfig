@@ -32,10 +32,7 @@ const packageJsonPath = path.resolve(process.cwd(), "package.json");
 const bootstrapPath = path.resolve(process.cwd(), "src", "core", "bootstrap.js");
 const loaderPath = path.resolve(process.cwd(), "loader", "autodarts-xconfig.user.js");
 const SOURCE_BUNDLE_BYTE_BUDGET = 25 * 1024 * 1024;
-const SUPPORTED_AUTODARTS_ORIGINS = Object.freeze([
-  "https://play.autodarts.io",
-  "https://play.autodarts.com",
-]);
+const SUPPORTED_AUTODARTS_ORIGINS = Object.freeze(["https://play.autodarts.com"]);
 let sourceBundlePromise = null;
 
 function buildSourceBundle() {
@@ -108,9 +105,10 @@ test("checked-in userscript bundle contains metadata header and runtime bootstra
 
   assert.match(text, /\/\/ ==UserScript==/);
   assert.match(text, new RegExp(String.raw`@version\s+${escapeRegExp(packageVersion)}`));
-  assert.match(text, /@match\s+https:\/\/play\.autodarts\.io\/\*/);
-  assert.match(text, /@exclude\s+https:\/\/play\.autodarts\.io\/boards/);
-  assert.match(text, /@exclude\s+https:\/\/play\.autodarts\.io\/boards\/\*/);
+  assert.match(text, /@match\s+https:\/\/play\.autodarts\.com\/\*/);
+  assert.match(text, /@exclude\s+https:\/\/play\.autodarts\.com\/boards/);
+  assert.match(text, /@exclude\s+https:\/\/play\.autodarts\.com\/boards\/\*/);
+  assert.doesNotMatch(text, /play\.autodarts\.io/);
   assert.match(text, /@grant\s+GM_getValue/);
   assert.match(text, /@grant\s+GM_setValue/);
   assert.match(
@@ -147,8 +145,10 @@ test("checked-in userscript metadata file stays lightweight and version-aligned"
 
   assert.match(text, /\/\/ ==UserScript==/);
   assert.match(text, new RegExp(String.raw`@version\s+${escapeRegExp(packageVersion)}`));
-  assert.match(text, /@exclude\s+https:\/\/play\.autodarts\.io\/boards/);
-  assert.match(text, /@exclude\s+https:\/\/play\.autodarts\.io\/boards\/\*/);
+  assert.match(text, /@match\s+https:\/\/play\.autodarts\.com\/\*/);
+  assert.match(text, /@exclude\s+https:\/\/play\.autodarts\.com\/boards/);
+  assert.match(text, /@exclude\s+https:\/\/play\.autodarts\.com\/boards\/\*/);
+  assert.doesNotMatch(text, /play\.autodarts\.io/);
   assert.match(
     text,
     new RegExp(String.raw`@downloadURL\s+${escapeRegExp(resolveUserscriptDownloadUrl(packageVersion))}`)
@@ -160,7 +160,7 @@ test("checked-in userscript metadata file stays lightweight and version-aligned"
   assert.doesNotMatch(text, /initializeTampermonkeyRuntime/);
 });
 
-test("source userscript metadata supports old and new Autodarts domains", () => {
+test("source userscript metadata supports only the current Autodarts domain", () => {
   const packageVersion = JSON.parse(readFileSync(packageJsonPath, "utf8")).version;
   const generatedHeader = buildUserscriptHeader(packageVersion);
   const loader = readFileSync(loaderPath, "utf8");
@@ -172,6 +172,9 @@ test("source userscript metadata supports old and new Autodarts domains", () => 
       assert.match(metadata, new RegExp(String.raw`@exclude\s+${escapedOrigin}/boards(?:\s|$)`));
       assert.match(metadata, new RegExp(String.raw`@exclude\s+${escapedOrigin}/boards/\*`));
     }
+  }
+  for (const metadata of [generatedHeader, loader]) {
+    assert.doesNotMatch(metadata, /play\.autodarts\.io/);
   }
 });
 

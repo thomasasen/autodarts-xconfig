@@ -23,14 +23,14 @@ Bei einer frischen Installation und beim Anwenden von `Empfohlene Standards` ble
 
 ## Installieren
 
-1. Installiere [Tampermonkey](https://www.tampermonkey.net/) in einem aktuellen Desktop-Browser.
+1. Installiere [Tampermonkey](https://www.tampermonkey.net/) in Chrome/Chromium 111 oder neuer beziehungsweise Firefox 121 oder neuer.
 2. Öffne die Erweiterungsdetails von Tampermonkey und aktiviere `Nutzerscripts zulassen` sowie `Zugriff auf Datei-URLs zulassen`.
 3. Klicke auf den Installationsbutton:
 
    [![Installieren](https://img.shields.io/badge/Installieren-autodarts--xconfig.user.js-1f6feb?style=for-the-badge)](https://github.com/thomasasen/autodarts-xconfig/releases/latest/download/autodarts-xconfig.user.js)
 
 4. Öffne die heruntergeladene Datei `autodarts-xconfig.user.js` und bestätige die Installation in Tampermonkey.
-5. Lade `https://play.autodarts.com/` beziehungsweise die noch verwendete `.io`-Adresse neu. Öffne rechts oben über dein Profilbild das Benutzermenü und wähle dort direkt unter `Legal` den Eintrag **xConfig**.
+5. Lade `https://play.autodarts.com/` neu. Öffne rechts oben über dein Profilbild das Benutzermenü und wähle dort direkt unter `Legal` den Eintrag **xConfig**.
 
 **Installiere immer nur die Datei `autodarts-xconfig.user.js`.** Der Button lädt automatisch die neueste stabile Version herunter.
 

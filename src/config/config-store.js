@@ -7,10 +7,16 @@ import {
   listFeatureConfigSpecs,
 } from "./feature-config-spec.js";
 import { setNestedValue, splitFeaturePath } from "./feature-path-utils.js";
+import {
+  readStorageValue,
+  resolveLocalStorage,
+  writeStorageValue,
+} from "./storage-access.js";
 
 export const CONFIG_STORAGE_KEY = "autodarts-xconfig:config:v1";
 export const LEGACY_CONFIG_STORAGE_KEY = "ad-xconfig:config";
 export const LEGACY_IMPORT_FLAG_KEY = "autodarts-xconfig:legacy-imported:v2";
+export const CONFIG_WRITE_LOCK_NAME = "autodarts-xconfig:config-write:v1";
 
 export class ConfigPersistenceError extends Error {
   constructor(message, details = {}) {
@@ -53,83 +59,58 @@ function toErrorMessage(error) {
 function createStorageAdapter(options = {}) {
   const gmGetValue = options.gmGetValue;
   const gmSetValue = options.gmSetValue;
-  const localStorageRef =
-    options.localStorageRef ||
-    options.windowRef?.localStorage ||
-    (typeof localStorage !== "undefined" ? localStorage : null);
+  const localStorageRef = resolveLocalStorage(options);
+  const useGmStorage =
+    typeof gmGetValue === "function" && typeof gmSetValue === "function";
 
   async function getValue(key, fallbackValue = null) {
-    try {
-      if (typeof gmGetValue === "function") {
+    if (useGmStorage) {
+      try {
         const gmValue = await toPromise(gmGetValue(key, fallbackValue));
-        if (gmValue !== undefined && gmValue !== null) {
-          return gmValue;
-        }
+        return gmValue === undefined || gmValue === null ? fallbackValue : gmValue;
+      } catch (error) {
+        throw new ConfigPersistenceError("Config could not be read from GM storage.", {
+          key: String(key || ""),
+          failures: [{ provider: "gm-storage", reason: toErrorMessage(error) }],
+        });
       }
-    } catch (_) {
-      // Fall through to localStorage.
     }
 
-    try {
-      const rawValue = localStorageRef?.getItem?.(key);
-      if (typeof rawValue === "string") {
-        const parsed = safeParseJson(rawValue);
-        return parsed === null ? rawValue : parsed;
-      }
-    } catch (_) {
-      // Ignore local storage failures.
+    const { ok, value: rawValue } = readStorageValue(localStorageRef, key);
+    if (!ok) {
+      return fallbackValue;
+    }
+    if (typeof rawValue === "string") {
+      const parsed = safeParseJson(rawValue);
+      return parsed === null ? rawValue : parsed;
     }
 
     return fallbackValue;
   }
 
   async function setValue(key, value) {
-    let wroteValue = false;
-    const failures = [];
-
-    try {
-      if (typeof gmSetValue === "function") {
+    if (useGmStorage) {
+      try {
         await toPromise(gmSetValue(key, value));
-        wroteValue = true;
-      } else {
-        failures.push({
-          provider: "gm-storage",
-          reason: "unavailable",
+      } catch (error) {
+        throw new ConfigPersistenceError("Config could not be persisted to GM storage.", {
+          key: String(key || ""),
+          failures: [{ provider: "gm-storage", reason: toErrorMessage(error) }],
         });
       }
-    } catch (error) {
-      failures.push({
-        provider: "gm-storage",
-        reason: toErrorMessage(error),
-      });
+      writeStorageValue(localStorageRef, key, JSON.stringify(value));
+      return true;
     }
 
-    try {
-      const setItem = localStorageRef?.setItem;
-      if (typeof setItem === "function") {
-        setItem.call(localStorageRef, key, JSON.stringify(value));
-        wroteValue = true;
-      } else {
-        failures.push({
-          provider: "localStorage",
-          reason: "unavailable",
-        });
-      }
-    } catch (error) {
-      failures.push({
-        provider: "localStorage",
-        reason: toErrorMessage(error),
-      });
-    }
-
-    if (!wroteValue) {
+    const localWrite = writeStorageValue(localStorageRef, key, JSON.stringify(value));
+    if (!localWrite.ok) {
       throw new ConfigPersistenceError("Config could not be persisted to any storage backend.", {
         key: String(key || ""),
-        failures,
+        failures: [{ provider: "localStorage", reason: localWrite.reason }],
       });
     }
 
-    return wroteValue;
+    return true;
   }
 
   return {
@@ -185,10 +166,21 @@ function isDefaultRuntimeConfig(rawConfig) {
 
 export function createConfigStore(options = {}) {
   const storage = createStorageAdapter(options);
+  const lockManager = options.lockManager || null;
   let writeQueue = Promise.resolve();
 
+  function runWithLock(operation) {
+    if (!lockManager || typeof lockManager.request !== "function") {
+      return operation();
+    }
+    return lockManager.request(CONFIG_WRITE_LOCK_NAME, { mode: "exclusive" }, operation);
+  }
+
   function enqueueWrite(operation) {
-    const nextWrite = writeQueue.then(() => operation(), () => operation());
+    const nextWrite = writeQueue.then(
+      () => runWithLock(operation),
+      () => runWithLock(operation)
+    );
     writeQueue = nextWrite.then(
       () => undefined,
       () => undefined
@@ -276,11 +268,13 @@ export function createConfigStore(options = {}) {
       }
 
       if (hasStoredCurrentConfig && !isDefaultRuntimeConfig(currentStoredConfig)) {
+        const normalizedCurrentConfig = normalizeRuntimeConfig(currentStoredConfig);
+        await storage.setValue(CONFIG_STORAGE_KEY, normalizedCurrentConfig);
         await storage.setValue(LEGACY_IMPORT_FLAG_KEY, true);
         return {
           imported: false,
           reason: "existing-current-config",
-          config: normalizeRuntimeConfig(currentStoredConfig),
+          config: normalizedCurrentConfig,
         };
       }
 
@@ -302,9 +296,14 @@ export function createConfigStore(options = {}) {
       const legacyValue = await storage.getValue(LEGACY_CONFIG_STORAGE_KEY, null);
       const mappedConfig = mapLegacyConfig(legacyValue);
 
-      await storage.setValue(LEGACY_IMPORT_FLAG_KEY, true);
-
       if (!mappedConfig) {
+        const normalizedCurrentConfig = hasStoredCurrentConfig
+          ? normalizeRuntimeConfig(currentStoredConfig)
+          : null;
+        if (normalizedCurrentConfig) {
+          await storage.setValue(CONFIG_STORAGE_KEY, normalizedCurrentConfig);
+        }
+        await storage.setValue(LEGACY_IMPORT_FLAG_KEY, true);
         const initialConfig = await initializeMissingConfig();
         return {
           imported: false,
@@ -312,13 +311,13 @@ export function createConfigStore(options = {}) {
           reason: initialConfig ? "initial-config-created" : "no-compatible-legacy-config",
           config:
             initialConfig ||
-            (hasStoredCurrentConfig
-              ? normalizeRuntimeConfig(currentStoredConfig)
-              : await load()),
+            normalizedCurrentConfig ||
+            await load(),
         };
       }
 
       await storage.setValue(CONFIG_STORAGE_KEY, mappedConfig);
+      await storage.setValue(LEGACY_IMPORT_FLAG_KEY, true);
 
       return {
         imported: true,

@@ -1513,7 +1513,7 @@ function matchesSelector(node, selector) {
   return true;
 }
 
-function createLocation(initialHref = "https://play.autodarts.io/lobbies") {
+function createLocation(initialHref = "https://play.autodarts.com/lobbies") {
   const parsed = new URL(initialHref);
   return {
     origin: parsed.origin,
@@ -1540,7 +1540,7 @@ function updateLocation(locationRef, url) {
     return;
   }
 
-  const parsed = new URL(String(url), locationRef.origin || "https://play.autodarts.io");
+  const parsed = new URL(String(url), locationRef.origin || "https://play.autodarts.com");
   locationRef.pathname = parsed.pathname;
   locationRef.search = parsed.search;
   locationRef.hash = parsed.hash;
@@ -1549,7 +1549,7 @@ function updateLocation(locationRef, url) {
 function createFakeWindow(options = {}) {
   const documentRef = options.documentRef || new FakeDocument();
   const eventTarget = new FakeEventTarget();
-  const location = createLocation(options.href || "https://play.autodarts.io/lobbies");
+  const location = createLocation(options.href || "https://play.autodarts.com/lobbies");
 
   const history = {
     pushState(_state, _title, url) {

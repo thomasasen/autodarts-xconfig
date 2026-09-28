@@ -27,7 +27,7 @@ const SIDEBAR_ROUTE_HINTS = new Set([
   "/settings",
 ]);
 
-test("xconfig layout utils normalize routes on old and new Autodarts domains", () => {
+test("xconfig layout utils normalize routes on the current Autodarts domain", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({
     documentRef,
@@ -38,7 +38,7 @@ test("xconfig layout utils normalize routes on old and new Autodarts domains", (
   assert.equal(normalizeRoutePath("boards?tab=all"), "/boards");
   assert.equal(toRoutePathname(windowRef, "/matches?state=open"), "/matches");
   assert.equal(
-    toRoutePathname(windowRef, "https://play.autodarts.io/matches/legacy?tab=board"),
+    toRoutePathname(windowRef, "https://play.autodarts.com/matches/legacy?tab=board"),
     "/matches/legacy"
   );
   assert.equal(currentRoute(windowRef), "/boards?tab=all#section");
