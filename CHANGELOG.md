@@ -12,6 +12,20 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.1.10] - 2026-09-28
+
+### Added
+
+- Nutzerwirkung: `Überworfen (BUST) hervorheben` kann den Glasbruch jetzt wahlweise auf der aktiven Spielerkachel, dem Board, der gesamten Spielfläche oder direkt am Einschlagspunkt des BUST-Darts zeigen. Board- und Vollbild-Effekte lassen sich für den aktuellen BUST wegklicken.
+  Technik: Die normalisierte Einstellung `effectTarget` verbindet Konfiguration, xConfig-Vorschau und Laufzeit. Der Einschlagmodus bevorzugt den letzten gerenderten Dartmarker, fällt auf Wurfkoordinaten oder die Boardmitte zurück und hält Dartgrafik, Glasrisse, Sound, Zoomübergänge und Cleanup in einem gemeinsamen Effektvertrag synchron.
+
+### Fixed
+
+- Nutzerwirkung: Der automatische Board-Zoom verändert im virtuellen Eingabemodus nicht mehr die klickbaren Segmente. Beim Live-Board bleiben eingeblendete Board-Grafiken auch nach dem Zurückfahren des Zooms sauber auf die Board-Fläche begrenzt.
+  Technik: Die Laufzeit beobachtet die semantischen Board-Modus-Schalter und erkennt virtuelle SVG-Boards zusätzlich strukturell. Beim Wechsel in den virtuellen Modus wird ein aktiver Zoom sofort zurückgesetzt; die GIF-Begrenzung ist vom Zoomzustand entkoppelt.
+- Nutzerwirkung: Triple-, Double- und Bull-Hervorhebungen behalten ihren äußeren Leuchteffekt auch in Spiel-Layout- und Checkout-Zeilen vollständig sichtbar.
+  Technik: Die betroffenen Wurfzeilen erlauben den benötigten Überlauf; ein eigener Außenradius und eine klare Kante stabilisieren die Effektkontur.
+
 ## [3.1.9] - 2026-09-27
 
 ### Fixed
@@ -2178,6 +2192,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.1.10]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.9...v3.1.10
 [3.1.9]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.8...v3.1.9
 [3.1.8]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.7...v3.1.8
 [3.1.7]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.6...v3.1.7

@@ -218,8 +218,8 @@ function resolveRenderedMarkerImpactOrigin(documentRef, boardSurface, targetRect
 
 function readDartTipPivot(flightNode) {
   const rotateTransform = queryOne(flightNode, DART_ROTATE_SELECTOR)?.getAttribute?.("transform");
-  const match = String(rotateTransform || "").match(
-    /rotate\(\s*[-+0-9.eE]+[\s,]+([-+0-9.eE]+)[\s,]+([-+0-9.eE]+)\s*\)/
+  const match = /rotate\(\s*[-+0-9.eE]+[\s,]+([-+0-9.eE]+)[\s,]+([-+0-9.eE]+)\s*\)/.exec(
+    String(rotateTransform || "")
   );
   const x = Number(match?.[1]);
   const y = Number(match?.[2]);
@@ -236,7 +236,7 @@ function resolveRenderedDartTipImpactOrigin(documentRef, targetRect) {
     return null;
   }
 
-  let screenPoint = null;
+  let screenPoint;
   try {
     const point = overlay.createSVGPoint();
     point.x = localTip.x;
@@ -738,9 +738,7 @@ function clearNodeState(node, state = null) {
   if (!node?.classList) {
     return;
   }
-  node.classList.remove(BUST_ACTIVE_CLASS);
-  node.classList.remove(BUST_SURFACE_CLASS);
-  node.classList.remove(BUST_IMPACT_SURFACE_CLASS);
+  node.classList.remove(BUST_ACTIVE_CLASS, BUST_SURFACE_CLASS, BUST_IMPACT_SURFACE_CLASS);
   removeBustCracks(node);
   clearBustCardVisuals(node);
   findNativeBustEffectLayers(node).forEach((nativeEffectNode) => {
