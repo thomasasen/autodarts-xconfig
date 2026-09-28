@@ -134,8 +134,42 @@ function startTvBoardZoom({ documentRef, windowRef, gameState, featureConfig = {
   });
 }
 
+function installBoardInputModeControls(fixture, activeMode = "live") {
+  const createControl = (mode, label) => {
+    const control = fixture.node(fixture.documentRef.main, "button", "", label);
+    control.setAttribute("aria-pressed", String(mode === activeMode));
+    return control;
+  };
+  const controls = {
+    live: createControl("live", "Live Mode"),
+    virtual: createControl("virtual", "Virtual Board"),
+  };
+
+  return {
+    controls,
+    setMode(mode) {
+      Object.entries(controls).forEach(([controlMode, control]) => {
+        control.setAttribute("aria-pressed", String(controlMode === mode));
+      });
+      fixture.documentRef.flushMutations(Object.values(controls).map((control) => ({
+        type: "attributes",
+        target: control,
+        attributeName: "aria-pressed",
+        addedNodes: [],
+        removedNodes: [],
+      })));
+    },
+  };
+}
+
 function startModernZoom(options = {}) {
   const fixture = createModernX01Fixture(options);
+  const boardMode = options.boardInputMode === null
+    ? null
+    : installBoardInputModeControls(fixture, options.boardInputMode || "live");
+  if (options.hasBoardMedia) {
+    fixture.node(fixture.board, "img", "", "");
+  }
   const timers = createFakeTimerHarness();
   timers.installOnWindow(fixture.windowRef);
   timers.installGlobals();
@@ -148,7 +182,19 @@ function startModernZoom(options = {}) {
     fixture.documentRef.flushMutations([{ type: "childList", target: node, addedNodes: [], removedNodes: [] }]);
     timers.advance(25);
   };
-  return { ...fixture, timers, events, tick, stop() { cleanup(); timers.restoreGlobals(); } };
+  const setBoardInputMode = (mode) => {
+    boardMode?.setMode(mode);
+    timers.advance(25);
+  };
+  return {
+    ...fixture,
+    boardModeControls: boardMode?.controls || null,
+    timers,
+    events,
+    tick,
+    setBoardInputMode,
+    stop() { cleanup(); timers.restoreGlobals(); },
+  };
 }
 
 test("native D18 zoom moves all four board layers together and restores clipping on cleanup", () => {
@@ -173,6 +219,52 @@ test("native D18 zoom moves all four board layers together and restores clipping
   assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
   assert.equal(f.board.style.transform || "", "");
   assert.equal(f.host.style.overflow || "", "");
+});
+
+test("virtual board input stays unzoomed so visible segments keep native click coordinates", () => {
+  const f = startModernZoom({ boardInputMode: "virtual" });
+  try {
+    f.timers.advance(25);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    assert.equal(f.host.classList.contains(ZOOM_HOST_CLASS), false);
+    assert.equal(f.board.style.transform || "", "");
+    assert.equal(
+      f.events.some((event) => event.status === "reset" && event.reason === "virtual-board-input"),
+      true
+    );
+  } finally { f.stop(); }
+});
+
+test("dense native vector board without mode controls defaults to click-safe unzoomed input", () => {
+  const f = startModernZoom({ boardInputMode: null });
+  try {
+    f.timers.advance(25);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    assert.equal(f.board.style.transform || "", "");
+  } finally { f.stop(); }
+});
+
+test("native media-backed board without mode controls remains zoomable", () => {
+  const f = startModernZoom({ boardInputMode: null, hasBoardMedia: true });
+  try {
+    f.timers.advance(25);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+    assert.match(f.board.style.transform, /scale\(2\.750*\)/);
+  } finally { f.stop(); }
+});
+
+test("switching from live to virtual board immediately releases the active zoom", () => {
+  const f = startModernZoom();
+  try {
+    f.timers.advance(25);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+
+    f.setBoardInputMode("virtual");
+
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    assert.equal(f.host.classList.contains(ZOOM_HOST_CLASS), false);
+    assert.equal(f.board.style.transform || "", "");
+  } finally { f.stop(); }
 });
 
 test("tv-board-zoom keeps a late tools gif contained across zoom reset", () => {

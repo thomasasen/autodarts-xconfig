@@ -17,6 +17,11 @@ import {
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 import { NATIVE_BOARD_SELECTOR, resolveBoardRenderSurface } from "../../shared/dartboard-svg.js";
 import {
+  BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
+  BOARD_INPUT_MODE_CONTROL_SELECTOR,
+  getActiveBoardInputMode,
+} from "../../shared/board-input-mode.js";
+import {
   MODERN_MATCH_SEMANTIC_SELECTORS,
   findModernTurnSurface,
   readModernMatchSurface,
@@ -34,6 +39,8 @@ const LISTENER_KEYS = Object.freeze({
   beforeUnload: `${FEATURE_KEY}:window-beforeunload`,
 });
 const TRANSIENT_RESET_GRACE_MS = 120;
+const VIRTUAL_BOARD_MIN_PATH_COUNT = 40;
+const BOARD_MEDIA_SELECTOR = "img, video, canvas, image";
 const THROW_HISTORY_CLICK_SELECTORS = Object.freeze([
   "#ad-ext-turn .ad-ext-turn-throw",
   ".ad-ext-turn-throw",
@@ -49,12 +56,32 @@ const ZOOM_STRUCTURE_TARGET_SELECTORS = Object.freeze([
 ]);
 const ZOOM_SEMANTIC_CONTAINER_SELECTORS = Object.freeze([
   ...MODERN_MATCH_SEMANTIC_SELECTORS,
+  BOARD_INPUT_MODE_CONTROL_SELECTOR,
   ".text-checkout-suggestion",
   ".suggestion",
   ".ad-ext-player-score",
   "#ad-ext-turn",
   ".ad-ext-turn-throw",
 ]);
+
+function isVirtualBoardInputSurface(documentRef, boardSurface) {
+  const activeMode = getActiveBoardInputMode(documentRef);
+  if (activeMode) {
+    return activeMode !== "live";
+  }
+
+  const zoomTarget = boardSurface?.zoomTarget || null;
+  if (!zoomTarget?.matches?.(NATIVE_BOARD_SELECTOR)) {
+    return false;
+  }
+  if (zoomTarget.querySelector?.(BOARD_MEDIA_SELECTOR)) {
+    return false;
+  }
+
+  return Array.from(zoomTarget.querySelectorAll?.("svg") || []).some(
+    (svgNode) => svgNode.querySelectorAll?.("path")?.length >= VIRTUAL_BOARD_MIN_PATH_COUNT
+  );
+}
 const ZOOM_STRUCTURE_CHILDLIST_SELECTORS = Object.freeze([
   ...ZOOM_STRUCTURE_TARGET_SELECTORS,
   ".ad-ext-tv-board-zoom-host",
@@ -628,6 +655,15 @@ export function initializeTvBoardZoom(context = {}) {
     const lifecycleResetReason = String(zoomState.pendingLifecycleResetReason || "");
     zoomState.pendingLifecycleResetReason = "";
 
+    if (isVirtualBoardInputSurface(documentRef, boardSurface)) {
+      requestZoomReset("virtual-board-input", {
+        force: true,
+        immediate: true,
+        preserveGifContainment: true,
+      });
+      return;
+    }
+
     if (!intent) {
       requestZoomReset(lifecycleResetReason || "intent-missing", {
         force: Boolean(lifecycleResetReason),
@@ -715,7 +751,15 @@ export function initializeTvBoardZoom(context = {}) {
         subtree: true,
         characterData: true,
         attributes: true,
-        attributeFilter: ["class", "style", "hidden", "aria-hidden"],
+        attributeFilter: [
+          ...new Set([
+            "class",
+            "style",
+            "hidden",
+            "aria-hidden",
+            ...BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
+          ]),
+        ],
       },
       MutationObserverRef: windowRef?.MutationObserver,
     });
