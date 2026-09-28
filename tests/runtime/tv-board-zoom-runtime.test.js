@@ -175,7 +175,7 @@ test("native D18 zoom moves all four board layers together and restores clipping
   assert.equal(f.host.style.overflow || "", "");
 });
 
-test("tv-board-zoom contains a gif inserted into the tools shadow root after zoom starts", () => {
+test("tv-board-zoom keeps a late tools gif contained across zoom reset", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const timers = createFakeTimerHarness();
@@ -194,6 +194,9 @@ test("tv-board-zoom contains a gif inserted into the tools shadow root after zoo
     documentRef,
     windowRef,
     gameState: gameState.api,
+    featureConfig: {
+      t20SetupZoomEnabled: false,
+    },
   });
 
   try {
@@ -228,6 +231,18 @@ test("tv-board-zoom contains a gif inserted into the tools shadow root after zoo
     assert.equal(fixedWrapper.style.overflow, "hidden");
     assert.equal(innerFrame.style.width, "100%");
     assert.equal(innerFrame.style.height, "100%");
+    assert.equal(gifNode.style.width, "100%");
+    assert.equal(gifNode.style.height, "100%");
+    assert.equal(gifNode.style.objectFit, "contain");
+
+    gameState.state.activeScore = 200;
+    gameState.notify();
+    timers.advance(500);
+
+    assert.equal(targetNode.classList.contains(ZOOM_CLASS), false);
+    assert.equal(fixedWrapper.style.width, `${hostNode.__rect.width.toFixed(2)}px`);
+    assert.equal(fixedWrapper.style.height, `${hostNode.__rect.height.toFixed(2)}px`);
+    assert.equal(fixedWrapper.style.overflow, "hidden");
     assert.equal(gifNode.style.width, "100%");
     assert.equal(gifNode.style.height, "100%");
     assert.equal(gifNode.style.objectFit, "contain");

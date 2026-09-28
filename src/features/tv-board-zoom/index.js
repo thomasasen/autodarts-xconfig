@@ -5,6 +5,7 @@ import {
   resetZoom,
   resolveZoomHost,
   resolveZoomTarget,
+  syncGifOverlayContainment,
 } from "./logic.js";
 import {
   STYLE_ID,
@@ -515,7 +516,9 @@ export function initializeTvBoardZoom(context = {}) {
     const hasActiveZoom = Boolean(zoomState.zoomedElement);
     if (forceReset || !hasActiveZoom) {
       clearTransientResetState();
-      resetZoom(speedConfig, zoomState, Boolean(options.immediate));
+      resetZoom(speedConfig, zoomState, Boolean(options.immediate), {
+        preserveGifContainment: Boolean(options.preserveGifContainment),
+      });
       emitDebugEvent(debugState, reason === "board-missing" || reason === "target-missing" ? "warn" : "log", {
         status: "reset",
         reason,
@@ -537,7 +540,9 @@ export function initializeTvBoardZoom(context = {}) {
     }
 
     clearTransientResetState();
-    resetZoom(speedConfig, zoomState);
+    resetZoom(speedConfig, zoomState, false, {
+      preserveGifContainment: Boolean(options.preserveGifContainment),
+    });
     emitDebugEvent(debugState, reason === "board-missing" || reason === "target-missing" ? "warn" : "log", {
       status: "reset",
       reason,
@@ -602,6 +607,9 @@ export function initializeTvBoardZoom(context = {}) {
       return;
     }
 
+    const hostNode = boardSurface?.zoomHost || resolveZoomHost(targetNode);
+    syncGifOverlayContainment(zoomState, targetNode, hostNode || targetNode);
+
     const intent = computeZoomIntent({
       gameState,
       x01Rules,
@@ -624,20 +632,22 @@ export function initializeTvBoardZoom(context = {}) {
       requestZoomReset(lifecycleResetReason || "intent-missing", {
         force: Boolean(lifecycleResetReason),
         immediate: Boolean(lifecycleResetReason),
+        preserveGifContainment: true,
       });
       return;
     }
 
     clearTransientResetState();
     if (lifecycleResetReason) {
-      resetZoom(speedConfig, zoomState, true);
+      resetZoom(speedConfig, zoomState, true, {
+        preserveGifContainment: true,
+      });
       emitDebugEvent(debugState, "log", {
         status: "reset",
         reason: lifecycleResetReason,
       });
     }
 
-    const hostNode = boardSurface?.zoomHost || resolveZoomHost(targetNode);
     const zoomData = applyZoom(
       { targetNode, hostNode, boardSvg },
       zoomLevel,
@@ -749,7 +759,9 @@ export function initializeTvBoardZoom(context = {}) {
         markManualZoomPause(zoomState);
         clearHoldTimer();
         clearTransientResetState();
-        resetZoom(speedConfig, zoomState);
+        resetZoom(speedConfig, zoomState, false, {
+          preserveGifContainment: true,
+        });
       },
       options: { passive: true, capture: true },
     });

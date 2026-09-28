@@ -774,7 +774,7 @@ function restoreGifOverlayStyles(state) {
   }
 }
 
-function applyGifOverlayContainment(state, targetNode, hostNode) {
+export function syncGifOverlayContainment(state, targetNode, hostNode) {
   restoreGifOverlayStyles(state);
 
   if (!hostNode) {
@@ -1927,7 +1927,7 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
   const hasAppliedTransform =
     targetNode.classList.contains(ZOOM_CLASS) &&
     Boolean(String(getStyleValue(targetNode.style, "transform") || "").trim());
-  applyGifOverlayContainment(state, targetNode, hostNode || targetNode);
+  syncGifOverlayContainment(state, targetNode, hostNode || targetNode);
   if (
     state.zoomedElement === targetNode &&
     state.zoomHost === normalizedHostNode &&
@@ -1968,8 +1968,10 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
   return zoomData;
 }
 
-export function resetZoom(speedConfig, state, immediate = false) {
+export function resetZoom(speedConfig, state, immediate = false, options = {}) {
   clearPendingRelease(state);
+
+  const preserveGifContainment = Boolean(options.preserveGifContainment);
 
   const targetNode = state.zoomedElement;
   const hostNode = state.zoomHost;
@@ -1978,7 +1980,9 @@ export function resetZoom(speedConfig, state, immediate = false) {
     targetSnapshot?.node === targetNode ? String(targetSnapshot.transform?.value || "") : "";
 
   if (!targetNode) {
-    restoreGifOverlayStyles(state);
+    if (!preserveGifContainment) {
+      restoreGifOverlayStyles(state);
+    }
     if (hostNode) {
       restoreHostStyle(state, hostNode);
     }
@@ -1992,7 +1996,9 @@ export function resetZoom(speedConfig, state, immediate = false) {
 
   if (immediate) {
     restoreTargetStyle(state, targetNode);
-    restoreGifOverlayStyles(state);
+    if (!preserveGifContainment) {
+      restoreGifOverlayStyles(state);
+    }
     if (hostNode) {
       restoreHostStyle(state, hostNode);
     }
@@ -2015,7 +2021,9 @@ export function resetZoom(speedConfig, state, immediate = false) {
   const releaseDelay = Math.max(0, Number(speedConfig?.zoomOutMs || 0)) + RELEASE_PADDING_MS;
   state.releaseTimeoutId = setTimeout(() => {
     state.releaseTimeoutId = 0;
-    restoreGifOverlayStyles(state);
+    if (!preserveGifContainment) {
+      restoreGifOverlayStyles(state);
+    }
 
     if (state.zoomedElement === expectedTarget) {
       restoreTargetStyle(state, expectedTarget);
