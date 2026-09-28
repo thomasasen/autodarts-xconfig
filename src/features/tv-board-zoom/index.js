@@ -19,6 +19,7 @@ import { NATIVE_BOARD_SELECTOR, resolveBoardRenderSurface } from "../../shared/d
 import {
   BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
   BOARD_INPUT_MODE_CONTROL_SELECTOR,
+  collectBoardInputModeControls,
   getActiveBoardInputMode,
 } from "../../shared/board-input-mode.js";
 import {
@@ -39,8 +40,6 @@ const LISTENER_KEYS = Object.freeze({
   beforeUnload: `${FEATURE_KEY}:window-beforeunload`,
 });
 const TRANSIENT_RESET_GRACE_MS = 120;
-const VIRTUAL_BOARD_MIN_PATH_COUNT = 40;
-const BOARD_MEDIA_SELECTOR = "img, video, canvas, image";
 const THROW_HISTORY_CLICK_SELECTORS = Object.freeze([
   "#ad-ext-turn .ad-ext-turn-throw",
   ".ad-ext-turn-throw",
@@ -64,23 +63,13 @@ const ZOOM_SEMANTIC_CONTAINER_SELECTORS = Object.freeze([
   ".ad-ext-turn-throw",
 ]);
 
-function isVirtualBoardInputSurface(documentRef, boardSurface) {
+function isNonLiveBoardInputModeActive(documentRef) {
   const activeMode = getActiveBoardInputMode(documentRef);
   if (activeMode) {
     return activeMode !== "live";
   }
 
-  const zoomTarget = boardSurface?.zoomTarget || null;
-  if (!zoomTarget?.matches?.(NATIVE_BOARD_SELECTOR)) {
-    return false;
-  }
-  if (zoomTarget.querySelector?.(BOARD_MEDIA_SELECTOR)) {
-    return false;
-  }
-
-  return Array.from(zoomTarget.querySelectorAll?.("svg") || []).some(
-    (svgNode) => svgNode.querySelectorAll?.("path")?.length >= VIRTUAL_BOARD_MIN_PATH_COUNT
-  );
+  return collectBoardInputModeControls(documentRef, { availableOnly: true }).length > 0;
 }
 const ZOOM_STRUCTURE_CHILDLIST_SELECTORS = Object.freeze([
   ...ZOOM_STRUCTURE_TARGET_SELECTORS,
@@ -693,7 +682,7 @@ export function initializeTvBoardZoom(context = {}) {
     const lifecycleResetReason = String(zoomState.pendingLifecycleResetReason || "");
     zoomState.pendingLifecycleResetReason = "";
 
-    if (isVirtualBoardInputSurface(documentRef, boardSurface)) {
+    if (isNonLiveBoardInputModeActive(documentRef)) {
       requestZoomReset("virtual-board-input", {
         force: true,
         immediate: true,

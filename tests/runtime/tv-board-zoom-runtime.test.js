@@ -143,6 +143,8 @@ function installBoardInputModeControls(fixture, activeMode = "live") {
   const controls = {
     live: createControl("live", "Live Mode"),
     virtual: createControl("virtual", "Virtual Board"),
+    segments: createControl("segments", "Segment Mode"),
+    coords: createControl("coords", "Coordinate Mode"),
   };
 
   return {
@@ -221,26 +223,42 @@ test("native D18 zoom moves all four board layers together and restores clipping
   assert.equal(f.host.style.overflow || "", "");
 });
 
-test("virtual board input stays unzoomed so visible segments keep native click coordinates", () => {
-  const f = startModernZoom({ boardInputMode: "virtual" });
-  try {
-    f.timers.advance(25);
-    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
-    assert.equal(f.host.classList.contains(ZOOM_HOST_CLASS), false);
-    assert.equal(f.board.style.transform || "", "");
-    assert.equal(
-      f.events.some((event) => event.status === "reset" && event.reason === "virtual-board-input"),
-      true
-    );
-  } finally { f.stop(); }
-});
+for (const boardInputMode of ["virtual", "segments", "coords"]) {
+  test(`${boardInputMode} board input stays unzoomed so visible segments keep native click coordinates`, () => {
+    const f = startModernZoom({ boardInputMode });
+    try {
+      f.timers.advance(25);
+      assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+      assert.equal(f.host.classList.contains(ZOOM_HOST_CLASS), false);
+      assert.equal(f.board.style.transform || "", "");
+      assert.equal(
+        f.events.some((event) => event.status === "reset" && event.reason === "virtual-board-input"),
+        true
+      );
+    } finally { f.stop(); }
+  });
+}
 
-test("dense native vector board without mode controls defaults to click-safe unzoomed input", () => {
+test("native four-layer vector board without mode controls remains zoomable", () => {
   const f = startModernZoom({ boardInputMode: null });
   try {
     f.timers.advance(25);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+    assert.match(f.board.style.transform, /scale\(2\.750*\)/);
+  } finally { f.stop(); }
+});
+
+test("board input controls without an active choice stay unzoomed until live mode hydrates", () => {
+  const f = startModernZoom({ boardInputMode: "pending" });
+  try {
+    f.timers.advance(25);
     assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
     assert.equal(f.board.style.transform || "", "");
+
+    f.setBoardInputMode("live");
+
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+    assert.match(f.board.style.transform, /scale\(2\.750*\)/);
   } finally { f.stop(); }
 });
 
