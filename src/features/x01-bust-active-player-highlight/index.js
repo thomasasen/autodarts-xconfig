@@ -1,7 +1,10 @@
 import {
   clearBustActivePlayerHighlightState,
   createBustActivePlayerHighlightState,
+  dismissBustSurfaceHighlightForEvent,
   ensureBustGlassCrackAudio,
+  normalizeBustEffectTarget,
+  refreshBustImpactOrigin,
   runBustActivePlayerHighlightPreview,
   syncBustActivePlayerHighlight,
   tryUnlockBustGlassCrackAudio,
@@ -12,15 +15,38 @@ import { createX01PlayerSurfaceObserverController } from "../shared/x01-player-s
 
 const FEATURE_KEY = "x01-bust-active-player-highlight";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
+const TARGET_OBSERVER_KEY = `${FEATURE_KEY}:target-observer`;
 const XCONFIG_PANEL_SELECTOR = "#ad-xconfig-panel-host";
+const IMPACT_ORIGIN_TRACKING_FRAMES = 60;
+const ZOOM_CLASS = "ad-ext-tv-board-zoom";
+const ZOOM_HOST_CLASS = "ad-ext-tv-board-zoom-host";
 const LISTENER_KEYS = Object.freeze({
   unlockPointer: `${FEATURE_KEY}:unlock-pointerdown`,
   unlockKey: `${FEATURE_KEY}:unlock-keydown`,
+  dismissClick: `${FEATURE_KEY}:dismiss-click`,
+  transitionRun: `${FEATURE_KEY}:zoom-transition-run`,
+  transitionEnd: `${FEATURE_KEY}:zoom-transition-end`,
+  transitionCancel: `${FEATURE_KEY}:zoom-transition-cancel`,
 });
+const previewCleanupByRoot = new WeakMap();
 
 function isXConfigPanelEvent(event) {
   const target = event?.target || null;
   return Boolean(target && typeof target.closest === "function" && target.closest(XCONFIG_PANEL_SELECTOR));
+}
+
+function isZoomTransformTransition(event) {
+  if (String(event?.propertyName || "") !== "transform") {
+    return false;
+  }
+  const target = event?.target || null;
+  if (
+    target?.classList?.contains?.(ZOOM_CLASS) ||
+    target?.classList?.contains?.(ZOOM_HOST_CLASS)
+  ) {
+    return true;
+  }
+  return Boolean(target?.closest?.(`.${ZOOM_CLASS}, .${ZOOM_HOST_CLASS}`));
 }
 
 export function mountX01BustActivePlayerHighlight(context = {}) {
@@ -30,7 +56,8 @@ export function mountX01BustActivePlayerHighlight(context = {}) {
   const featureConfig =
     context.config && typeof context.config.getFeatureConfig === "function"
       ? context.config.getFeatureConfig("x01BustActivePlayerHighlight")
-      : { crackCount: 2, soundEnabled: false };
+      : { effectTarget: "player-card", crackCount: 2, soundEnabled: false };
+  const effectTarget = normalizeBustEffectTarget(featureConfig.effectTarget);
 
   if (!documentRef || !domGuards) {
     return () => {};
@@ -42,17 +69,65 @@ export function mountX01BustActivePlayerHighlight(context = {}) {
   if (featureConfig.soundEnabled === true) {
     ensureBustGlassCrackAudio(state, windowRef);
   }
+  const syncContext = {
+    ...context,
+    documentRef,
+    windowRef,
+    effectTarget,
+    crackCount: featureConfig.crackCount,
+    soundEnabled: featureConfig.soundEnabled === true,
+  };
+  let impactTrackingFrameId = 0;
+  let impactTrackingFramesRemaining = 0;
+  let impactZoomTransitionActive = false;
+  const stopImpactOriginTracking = () => {
+    if (impactTrackingFrameId && typeof windowRef?.cancelAnimationFrame === "function") {
+      windowRef.cancelAnimationFrame(impactTrackingFrameId);
+    }
+    impactTrackingFrameId = 0;
+    impactTrackingFramesRemaining = 0;
+    impactZoomTransitionActive = false;
+  };
+  const trackImpactOrigin = () => {
+    impactTrackingFrameId = 0;
+    if (
+      (!impactZoomTransitionActive && impactTrackingFramesRemaining <= 0) ||
+      effectTarget !== "impact" ||
+      !state.activeNode ||
+      state.dismissedForCurrentBust
+    ) {
+      impactTrackingFramesRemaining = 0;
+      return;
+    }
+    refreshBustImpactOrigin(syncContext, state);
+    impactTrackingFramesRemaining -= 1;
+    if (
+      (impactZoomTransitionActive || impactTrackingFramesRemaining > 0) &&
+      typeof windowRef?.requestAnimationFrame === "function"
+    ) {
+      impactTrackingFrameId = windowRef.requestAnimationFrame(trackImpactOrigin);
+    }
+  };
+  const startImpactOriginTracking = () => {
+    if (
+      effectTarget !== "impact" ||
+      !state.activeNode ||
+      typeof windowRef?.requestAnimationFrame !== "function"
+    ) {
+      return;
+    }
+    impactTrackingFramesRemaining = IMPACT_ORIGIN_TRACKING_FRAMES;
+    if (!impactTrackingFrameId) {
+      impactTrackingFrameId = windowRef.requestAnimationFrame(trackImpactOrigin);
+    }
+  };
   const update = () => {
-    syncBustActivePlayerHighlight(
-      {
-        ...context,
-        documentRef,
-        windowRef,
-        crackCount: featureConfig.crackCount,
-        soundEnabled: featureConfig.soundEnabled === true,
-      },
-      state
-    );
+    const result = syncBustActivePlayerHighlight(syncContext, state);
+    if (result.isBust && result.activeNode && effectTarget === "impact") {
+      startImpactOriginTracking();
+    } else {
+      stopImpactOriginTracking();
+    }
   };
 
   const harness = createFeatureMountHarness(context, {
@@ -74,6 +149,69 @@ export function mountX01BustActivePlayerHighlight(context = {}) {
     onSurfaceMutation: () => harness.schedule(),
     onSurfaceChange: () => harness.schedule(),
   }));
+  if (effectTarget !== "player-card") {
+    harness.registerObserver({
+      key: TARGET_OBSERVER_KEY,
+      observeOptions: { childList: true, subtree: true },
+    });
+    if (windowRef) {
+      const surfaceListeners = [
+        {
+          key: LISTENER_KEYS.dismissClick,
+          target: windowRef,
+          type: "click",
+          handler: (event) => {
+            if (dismissBustSurfaceHighlightForEvent(state, event)) {
+              stopImpactOriginTracking();
+            }
+          },
+          options: { capture: true },
+        },
+      ];
+      if (effectTarget === "impact") {
+        const startZoomTransitionTracking = (event) => {
+          if (!isZoomTransformTransition(event) || !state.activeNode) {
+            return;
+          }
+          impactZoomTransitionActive = true;
+          startImpactOriginTracking();
+        };
+        const stopZoomTransitionTracking = (event) => {
+          if (!isZoomTransformTransition(event)) {
+            return;
+          }
+          impactZoomTransitionActive = false;
+          impactTrackingFramesRemaining = 0;
+          if (impactTrackingFrameId) {
+            windowRef.cancelAnimationFrame?.(impactTrackingFrameId);
+            impactTrackingFrameId = 0;
+          }
+          refreshBustImpactOrigin(syncContext, state);
+        };
+        surfaceListeners.push(
+          {
+            key: LISTENER_KEYS.transitionRun,
+            target: documentRef,
+            type: "transitionrun",
+            handler: startZoomTransitionTracking,
+          },
+          {
+            key: LISTENER_KEYS.transitionEnd,
+            target: documentRef,
+            type: "transitionend",
+            handler: stopZoomTransitionTracking,
+          },
+          {
+            key: LISTENER_KEYS.transitionCancel,
+            target: documentRef,
+            type: "transitioncancel",
+            handler: stopZoomTransitionTracking,
+          }
+        );
+      }
+      harness.registerListeners(surfaceListeners);
+    }
+  }
   harness.subscribeToGameState();
   if (featureConfig.soundEnabled === true && windowRef) {
     harness.registerListeners([
@@ -105,6 +243,7 @@ export function mountX01BustActivePlayerHighlight(context = {}) {
   harness.schedule();
 
   return harness.createCleanup(() => {
+    stopImpactOriginTracking();
     clearBustActivePlayerHighlightState(state);
     domGuards.removeNodeById(STYLE_ID);
   });
@@ -139,18 +278,30 @@ export async function runX01BustActivePlayerHighlightAction(actionContext = {}) 
   const documentRef = actionContext.context?.documentRef || null;
   const windowRef = actionContext.context?.windowRef || null;
   const targetRoot = actionContext.actionTarget || null;
-  const targetNode =
-    targetRoot?.querySelector?.("[data-adxconfig-x01-bust-active-player-preview-card='true']") ||
-    targetRoot;
+  const effectTarget = normalizeBustEffectTarget(actionContext.featureConfig?.effectTarget);
+  const targetSelectors = {
+    "player-card": "[data-adxconfig-x01-bust-active-player-preview-card='true']",
+    board: "[data-adxconfig-x01-bust-preview-board='true']",
+    screen: "[data-adxconfig-x01-bust-preview-screen='true']",
+    impact: "[data-adxconfig-x01-bust-preview-screen='true']",
+  };
+  const targetNode = targetRoot?.querySelector?.(targetSelectors[effectTarget]) || targetRoot;
 
   ensureBustPreviewStyle(documentRef, actionContext.context?.domGuards || null);
-  runBustActivePlayerHighlightPreview({
+  if (targetRoot && typeof targetRoot === "object") {
+    previewCleanupByRoot.get(targetRoot)?.();
+  }
+  const cleanup = runBustActivePlayerHighlightPreview({
     documentRef,
     windowRef,
     targetNode,
+    effectTarget,
     crackCount: actionContext.featureConfig?.crackCount,
     soundEnabled: actionContext.featureConfig?.soundEnabled === true,
   });
+  if (targetRoot && typeof targetRoot === "object" && typeof cleanup === "function") {
+    previewCleanupByRoot.set(targetRoot, cleanup);
+  }
 }
 
 export const initializeX01BustActivePlayerHighlight = mountX01BustActivePlayerHighlight;

@@ -126,6 +126,8 @@ export function buildStyleText() {
 
 .${LAYOUT_CLASS}:has(.${MODERN_CLASS}:not(.${NO_LABEL_CLASS})),
 .${LAYOUT_CLASS}:has(.${MODERN_CLASS}:not(.${NO_LABEL_CLASS})) > :first-child,
+.${LAYOUT_CLASS}:has(> :first-child > [data-ad-ext-hit-kind]),
+.${LAYOUT_CLASS}:has(> :first-child > [data-ad-ext-hit-kind]) > :first-child,
 .${MODERN_CLASS}:not(.${NO_LABEL_CLASS}) {
   overflow: visible;
 }

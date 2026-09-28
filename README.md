@@ -202,7 +202,7 @@ Wähle den Spielmodus oder den gewünschten sichtbaren Effekt und öffne anschli
 | [Checkout-Ziele hervorheben](#animation-autodarts-animate-checkout-target-highlights) | Funktion | `X01` | Markiert Checkout-Ziele direkt am Board, statt sie nur im Text zu zeigen. |
 | [Automatischer Board-Zoom](#animation-autodarts-animate-tv-board-zoom) | Funktion | `X01` | Zoomt in X01 bei Checkout- und sinnvollen Setup-Zielen TV-artig auf das Board. |
 | [Checkout-Vorschlag gestalten](#animation-autodarts-checkout-suggestion-styles) | Funktion | `X01` | Vergrößert die Turn-Felder sofort und hebt Checkout-Hinweise theme-kompatibel hervor. |
-| [Überworfen (BUST) hervorheben](#animation-autodarts-x01-bust-active-player-highlight) | Funktion | `X01` | Ersetzt den nativen Karteneffekt bei BUST durch eine rote Glasbruch-Markierung. |
+| [Überworfen (BUST) hervorheben](#animation-autodarts-x01-bust-active-player-highlight) | Funktion | `X01` | Ersetzt den nativen BUST-Effekt durch eine rote Glasbruch-Markierung auf dem gewählten Bereich oder am Darts-Einschlag. |
 | [AVG-Trend anzeigen](#animation-autodarts-animate-avg-trend-arrow) | Funktion | `alle Modi` | Zeigt die AVG-Richtung mit einem kurzen Pfeil direkt an der Anzeige. |
 | [Triple, Double & Bull hervorheben](#animation-autodarts-animate-special-hit-highlights) | Funktion | `alle Modi` | Hebt Triple-, Double- und Bull-Treffer mit Farben, Licht und kurzen Bewegungen hervor. |
 | [Cricket-Ziele hervorheben](#animation-autodarts-animate-cricket-target-highlighter) | Funktion | `Cricket`, `Tactics` | Zeigt Cricket- und Tactics-Zustände direkt auf dem Board statt nur in der Matrix. |
@@ -451,8 +451,8 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 ### Überworfen (BUST) hervorheben
 
 - Gilt für: `X01`
-- Was macht es sichtbar? Bei sichtbarem `BUST` wird nur der native Animationseffekt in der aktiven X01-Spielerkarte ausgeblendet und durch die xConfig-Markierung ersetzt. BUST-Anzeige und roter Rahmen des Zugbereichs bleiben erhalten.
-- Wann sinnvoll? Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.
+- Was macht es sichtbar? Bei sichtbarem `BUST` wird der native Animationseffekt in der aktiven X01-Spielerkarte ausgeblendet und durch die xConfig-Markierung auf der Spielerkachel, dem Board oder der gesamten Spielfläche ersetzt. Die Option `Bildschirm – Darts-Einschlag` verwendet zuerst die tatsächlich gerenderte Position des letzten Darts und zeigt dort Einschlagloch und Glasrisse; fehlt der Marker, dienen übermittelte Koordinaten und zuletzt die Boardmitte als Fallback. Board- und Vollbild-Overlay lassen sich mit einem Klick für den aktuellen BUST ausblenden. BUST-Anzeige und roter Rahmen des Zugbereichs bleiben erhalten.
+- Wann sinnvoll? Wenn ein Überwurf je nach Bildschirmaufbau lokal oder besonders großflächig auffallen soll.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-x01-bust-active-player-highlight)
 

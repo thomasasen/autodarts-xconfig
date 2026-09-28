@@ -1,14 +1,18 @@
 import {
   BUST_ACTIVE_CLASS,
   BUST_CARD_STYLE_PROPERTIES,
+  BUST_IMPACT_SURFACE_CLASS,
+  BUST_SURFACE_CLASS,
   FALLBACK_BUST_CARD_VISUALS,
   NATIVE_BUST_EFFECT_HIDDEN_CLASS,
 } from "./style.js";
 import { X01_BUST_GLASS_CRACK_SOUND_ASSET } from "#feature-assets";
 import { getX01PlayerSurfaceSnapshot } from "../shared/x01-player-surface-adapter.js";
 import { readModernMatchSurface } from "../shared/x01-match-surface.js";
+import { resolveBoardRenderSurface } from "../../shared/dartboard-svg.js";
+import { collectBoardMarkers } from "../../shared/dartboard-markers.js";
 import { isX01VariantText } from "../../domain/variant-rules.js";
-import { removeBustCracks, renderBustCracks } from "./cracks.js";
+import { removeBustCracks, renderBustCracks, updateBustCrackOrigin } from "./cracks.js";
 
 export const TURN_POINTS_SELECTOR = ".ad-ext-turn-points";
 export const ACTIVE_PLAYER_SELECTOR =
@@ -16,6 +20,18 @@ export const ACTIVE_PLAYER_SELECTOR =
 const BUST_SOUND_VOLUME = 0.9;
 const BUST_AUDIO_FALLBACK_SOURCE = "html-audio";
 const BUST_AUDIO_WEB_SOURCE = "web-audio";
+const DART_IMAGE_OVERLAY_SELECTOR = "#ad-ext-dart-image-overlay";
+const DART_FLIGHT_SELECTOR = ".ad-ext-dart-flight-group";
+const DART_ROTATE_SELECTOR = ".ad-ext-dart-rotate-group";
+const DART_POSE_SELECTOR = ".ad-ext-dart-pose-group";
+export const BUST_EFFECT_TARGETS = Object.freeze({
+  PLAYER_CARD: "player-card",
+  BOARD: "board",
+  SCREEN: "screen",
+  IMPACT: "impact",
+});
+// Autodarts coordinates use the 170 mm scoring radius inside the 225 mm board radius.
+const BUST_IMPACT_SCORING_RADIUS_RATIO = 17 / 45;
 const BUST_INLINE_STYLE_PROPERTIES = Object.freeze([
   "background",
   "background-color",
@@ -113,6 +129,191 @@ export function findActiveX01PlayerCard(documentRef, windowRef = documentRef?.de
   }
 
   return queryOne(documentRef, ACTIVE_PLAYER_SELECTOR);
+}
+
+export function normalizeBustEffectTarget(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return Object.values(BUST_EFFECT_TARGETS).includes(normalized)
+    ? normalized
+    : BUST_EFFECT_TARGETS.PLAYER_CARD;
+}
+
+function findDirectChildContaining(parentNode, descendantNode) {
+  if (!parentNode || !descendantNode || parentNode === descendantNode) {
+    return null;
+  }
+  let current = descendantNode;
+  while (current?.parentElement && current.parentElement !== parentNode) {
+    current = current.parentElement;
+  }
+  return current?.parentElement === parentNode ? current : null;
+}
+
+function resolveBustBoardTarget(context = {}) {
+  const boardSurface = context.boardSurface || resolveBoardRenderSurface(context.documentRef);
+  return [boardSurface?.zoomTarget, boardSurface?.zoomHost, boardSurface?.svg?.parentElement]
+    .find((node) => String(node?.tagName || "").toLowerCase() !== "svg" && node?.classList) || null;
+}
+
+function resolveBustScreenTarget(context, activePlayerNode) {
+  const documentRef = context.documentRef;
+  const mainNode = activePlayerNode?.closest?.("main") || queryOne(documentRef, "main");
+  const playerBranch = findDirectChildContaining(mainNode, activePlayerNode);
+  const boardBranch = findDirectChildContaining(mainNode, resolveBustBoardTarget(context));
+  if (playerBranch && playerBranch === boardBranch) {
+    return playerBranch;
+  }
+  if (!boardBranch && playerBranch) {
+    return playerBranch;
+  }
+  return mainNode || playerBranch || null;
+}
+
+export function resolveBustEffectTargetNode(context = {}, activePlayerNode = null) {
+  switch (normalizeBustEffectTarget(context.effectTarget)) {
+    case BUST_EFFECT_TARGETS.BOARD:
+      return resolveBustBoardTarget(context);
+    case BUST_EFFECT_TARGETS.IMPACT:
+    case BUST_EFFECT_TARGETS.SCREEN:
+      return resolveBustScreenTarget(context, activePlayerNode);
+    default:
+      return activePlayerNode;
+  }
+}
+
+function readLastBustThrowCoordinates(gameState) {
+  const activeThrows = gameState?.getActiveThrows?.();
+  const throws = Array.isArray(activeThrows) ? activeThrows : [];
+  const coords = throws.at(-1)?.coords;
+  const x = Number(coords?.x);
+  const y = Number(coords?.y);
+  return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null;
+}
+
+function readNodeRect(node) {
+  const rect = node?.getBoundingClientRect?.();
+  if (!(Number(rect?.width) > 0) || !(Number(rect?.height) > 0)) {
+    return null;
+  }
+  return {
+    left: Number(rect.left) || 0,
+    top: Number(rect.top) || 0,
+    width: Number(rect.width),
+    height: Number(rect.height),
+  };
+}
+
+function resolveRenderedMarkerImpactOrigin(documentRef, boardSurface, targetRect) {
+  const markers = collectBoardMarkers(documentRef, { board: boardSurface });
+  const markerRect = readNodeRect(markers.at(-1));
+  if (!markerRect) {
+    return null;
+  }
+  return {
+    x: markerRect.left - targetRect.left + markerRect.width / 2,
+    y: markerRect.top - targetRect.top + markerRect.height / 2,
+    source: "board-marker",
+  };
+}
+
+function readDartTipPivot(flightNode) {
+  const rotateTransform = queryOne(flightNode, DART_ROTATE_SELECTOR)?.getAttribute?.("transform");
+  const match = String(rotateTransform || "").match(
+    /rotate\(\s*[-+0-9.eE]+[\s,]+([-+0-9.eE]+)[\s,]+([-+0-9.eE]+)\s*\)/
+  );
+  const x = Number(match?.[1]);
+  const y = Number(match?.[2]);
+  return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null;
+}
+
+function resolveRenderedDartTipImpactOrigin(documentRef, targetRect) {
+  const overlay = queryOne(documentRef, DART_IMAGE_OVERLAY_SELECTOR);
+  const flightNode = queryAll(overlay, DART_FLIGHT_SELECTOR).at(-1) || null;
+  const poseNode = queryOne(flightNode, DART_POSE_SELECTOR);
+  const localTip = readDartTipPivot(flightNode);
+  const matrix = poseNode?.getScreenCTM?.();
+  if (!overlay?.createSVGPoint || !localTip || !matrix) {
+    return null;
+  }
+
+  let screenPoint = null;
+  try {
+    const point = overlay.createSVGPoint();
+    point.x = localTip.x;
+    point.y = localTip.y;
+    screenPoint = point.matrixTransform?.(matrix) || null;
+  } catch (_) {
+    return null;
+  }
+  if (!Number.isFinite(screenPoint?.x) || !Number.isFinite(screenPoint?.y)) {
+    return null;
+  }
+  return {
+    x: Number(screenPoint.x) - targetRect.left,
+    y: Number(screenPoint.y) - targetRect.top,
+    source: "rendered-dart-tip",
+  };
+}
+
+function resolveBustImpactOrigin(context = {}, targetNode = null) {
+  const targetRect = readNodeRect(targetNode);
+  const boardSurface = context.boardSurface || resolveBoardRenderSurface(context.documentRef);
+  const boardNode = resolveBustBoardTarget({ ...context, boardSurface });
+  const boardRect = readNodeRect(boardNode);
+  if (!targetRect) {
+    return null;
+  }
+
+  const renderedDartTipOrigin = resolveRenderedDartTipImpactOrigin(
+    context.documentRef,
+    targetRect
+  );
+  if (renderedDartTipOrigin) {
+    return renderedDartTipOrigin;
+  }
+  if (!boardRect) {
+    return null;
+  }
+
+  const renderedMarkerOrigin = resolveRenderedMarkerImpactOrigin(
+    context.documentRef,
+    boardSurface,
+    targetRect
+  );
+  if (renderedMarkerOrigin) {
+    return renderedMarkerOrigin;
+  }
+
+  const coords = readLastBustThrowCoordinates(context.gameState);
+  const normalizedX = coords?.x ?? 0;
+  const normalizedY = coords?.y ?? 0;
+  return {
+    x:
+      boardRect.left - targetRect.left +
+      boardRect.width * (0.5 + normalizedX * BUST_IMPACT_SCORING_RADIUS_RATIO),
+    y:
+      boardRect.top - targetRect.top +
+      boardRect.height * (0.5 - normalizedY * BUST_IMPACT_SCORING_RADIUS_RATIO),
+    source: coords ? "throw-coords" : "board-center",
+  };
+}
+
+export function refreshBustImpactOrigin(
+  context = {},
+  state = createBustActivePlayerHighlightState()
+) {
+  if (
+    state.effectTarget !== BUST_EFFECT_TARGETS.IMPACT ||
+    !state.activeNode?.classList ||
+    state.dismissedForCurrentBust
+  ) {
+    return false;
+  }
+
+  const impactOrigin = resolveBustImpactOrigin(context, state.activeNode);
+  return impactOrigin
+    ? updateBustCrackOrigin(state.activeNode, impactOrigin)
+    : false;
 }
 
 function isNativeBustEffectLayer(node) {
@@ -538,6 +739,8 @@ function clearNodeState(node, state = null) {
     return;
   }
   node.classList.remove(BUST_ACTIVE_CLASS);
+  node.classList.remove(BUST_SURFACE_CLASS);
+  node.classList.remove(BUST_IMPACT_SURFACE_CLASS);
   removeBustCracks(node);
   clearBustCardVisuals(node);
   findNativeBustEffectLayers(node).forEach((nativeEffectNode) => {
@@ -546,10 +749,25 @@ function clearNodeState(node, state = null) {
   });
 }
 
+function applyBustEffectVisuals(node, effectTarget, visuals = {}, options = {}) {
+  if (effectTarget === BUST_EFFECT_TARGETS.PLAYER_CARD) {
+    node.classList.add(BUST_ACTIVE_CLASS);
+    applyBustCardVisuals(node, visuals);
+    return;
+  }
+  node.classList.add(BUST_SURFACE_CLASS);
+  node.classList.toggle(
+    BUST_IMPACT_SURFACE_CLASS,
+    effectTarget === BUST_EFFECT_TARGETS.IMPACT && options.raiseDartOverlay === true
+  );
+}
+
 export function createBustActivePlayerHighlightState() {
   return {
     wasBust: false,
     activeNode: null,
+    effectTarget: BUST_EFFECT_TARGETS.PLAYER_CARD,
+    dismissedForCurrentBust: false,
     audioState: null,
     audioUnlocked: false,
     nativeEffectNodes: new Set(),
@@ -567,6 +785,37 @@ export function clearBustActivePlayerHighlightState(state) {
   restoreNativeBustEffectLayers(state);
   state.wasBust = false;
   state.activeNode = null;
+  state.effectTarget = BUST_EFFECT_TARGETS.PLAYER_CARD;
+  state.dismissedForCurrentBust = false;
+}
+
+function eventHitsNode(event, node) {
+  if (!event || !node) {
+    return false;
+  }
+  const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+  if (Array.isArray(path) && path.includes(node)) {
+    return true;
+  }
+  const target = event.target || null;
+  return target === node || Boolean(target && node.contains?.(target));
+}
+
+export function dismissBustSurfaceHighlightForEvent(state, event) {
+  if (
+    !state?.activeNode ||
+    state.effectTarget === BUST_EFFECT_TARGETS.PLAYER_CARD ||
+    !eventHitsNode(event, state.activeNode)
+  ) {
+    return false;
+  }
+
+  event.preventDefault?.();
+  event.stopPropagation?.();
+  clearNodeState(state.activeNode, state);
+  state.activeNode = null;
+  state.dismissedForCurrentBust = true;
+  return true;
 }
 
 export function runBustActivePlayerHighlightPreview(options = {}) {
@@ -580,13 +829,23 @@ export function runBustActivePlayerHighlightPreview(options = {}) {
   const state = createBustActivePlayerHighlightState();
 
   clearNodeState(targetNode);
-  targetNode.classList.add(BUST_ACTIVE_CLASS);
-  applyBustCardVisuals(targetNode, FALLBACK_BUST_CARD_VISUALS);
+  const effectTarget = normalizeBustEffectTarget(options.effectTarget);
+  state.effectTarget = effectTarget;
+  applyBustEffectVisuals(targetNode, effectTarget, FALLBACK_BUST_CARD_VISUALS);
   state.activeNode = targetNode;
   state.wasBust = true;
+  const targetRect = readNodeRect(targetNode);
+  const previewImpactOrigin = effectTarget === BUST_EFFECT_TARGETS.IMPACT && targetRect
+    ? {
+        x: targetRect.width * 0.72,
+        y: targetRect.height * 0.34,
+        source: "preview-impact",
+      }
+    : null;
   renderBustCracks(targetNode, options.crackCount, {
     documentRef,
     random: options.random,
+    origin: previewImpactOrigin,
   });
   const soundResult = playBustGlassCrackSound({
     windowRef,
@@ -595,7 +854,19 @@ export function runBustActivePlayerHighlightPreview(options = {}) {
   });
   state.audioState = soundResult.audioState || null;
 
-  return () => clearBustActivePlayerHighlightState(state);
+  const dismissListenerOptions = { capture: true };
+  const dismissClick = (event) => dismissBustSurfaceHighlightForEvent(state, event);
+  if (
+    effectTarget !== BUST_EFFECT_TARGETS.PLAYER_CARD &&
+    typeof targetNode.addEventListener === "function"
+  ) {
+    targetNode.addEventListener("click", dismissClick, dismissListenerOptions);
+  }
+
+  return () => {
+    targetNode.removeEventListener?.("click", dismissClick, dismissListenerOptions);
+    clearBustActivePlayerHighlightState(state);
+  };
 }
 
 export function syncBustActivePlayerHighlight(context = {}, state = createBustActivePlayerHighlightState()) {
@@ -613,8 +884,28 @@ export function syncBustActivePlayerHighlight(context = {}, state = createBustAc
     };
   }
 
-  const activeNode = findActiveX01PlayerCard(documentRef, windowRef);
-  if (!activeNode?.classList) {
+  const activePlayerNode = findActiveX01PlayerCard(documentRef, windowRef);
+  const effectTarget = normalizeBustEffectTarget(context.effectTarget);
+  state.effectTarget = effectTarget;
+  if (activePlayerNode?.classList && state.dismissedForCurrentBust) {
+    if (state.activeNode) {
+      clearNodeState(state.activeNode, state);
+      state.activeNode = null;
+    }
+    state.wasBust = true;
+    return {
+      isBust: true,
+      activeNode: null,
+      enteredBust: false,
+      dismissed: true,
+      suppressedNativeEffects: suppressNativeBustEffectLayers(activePlayerNode, state),
+    };
+  }
+  const activeNode = resolveBustEffectTargetNode(
+    { ...context, documentRef, effectTarget },
+    activePlayerNode
+  );
+  if (!activePlayerNode?.classList || !activeNode?.classList) {
     clearBustActivePlayerHighlightState(state);
     state.wasBust = true;
     return {
@@ -624,23 +915,31 @@ export function syncBustActivePlayerHighlight(context = {}, state = createBustAc
     };
   }
 
-  if (state.activeNode && state.activeNode !== activeNode) {
+  const targetChanged = state.activeNode !== activeNode;
+  if (targetChanged) {
     clearNodeState(state.activeNode, state);
   }
 
   const enteredBust = state.wasBust !== true;
   const visuals = resolveBustCardVisuals();
-  activeNode.classList.add(BUST_ACTIVE_CLASS);
-  applyBustCardVisuals(activeNode, visuals);
+  applyBustEffectVisuals(activeNode, effectTarget, visuals, { raiseDartOverlay: true });
   state.activeNode = activeNode;
   state.wasBust = true;
-  const suppressedNativeEffects = suppressNativeBustEffectLayers(activeNode, state);
+  const suppressedNativeEffects = suppressNativeBustEffectLayers(activePlayerNode, state);
 
-  if (enteredBust) {
+  if (enteredBust || targetChanged) {
+    const impactOrigin = effectTarget === BUST_EFFECT_TARGETS.IMPACT
+      ? resolveBustImpactOrigin(context, activeNode)
+      : null;
     renderBustCracks(activeNode, context.crackCount, {
       documentRef,
       random: context.random,
+      origin: impactOrigin,
     });
+  } else if (effectTarget === BUST_EFFECT_TARGETS.IMPACT) {
+    refreshBustImpactOrigin(context, state);
+  }
+  if (enteredBust) {
     const soundResult = playBustGlassCrackSound({
       windowRef,
       soundEnabled: context.soundEnabled === true,
@@ -655,5 +954,6 @@ export function syncBustActivePlayerHighlight(context = {}, state = createBustAc
     activeNode,
     enteredBust,
     suppressedNativeEffects,
+    dismissed: false,
   };
 }

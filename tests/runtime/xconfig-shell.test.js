@@ -1663,6 +1663,8 @@ test("xConfig Bust settings use the modern player-card preview", async () => {
     "[data-adxconfig-x01-bust-active-player-preview-card='true']"
   );
   assert.ok(previewCard);
+  assert.ok(documentRef.querySelector("[data-adxconfig-x01-bust-preview-board='true']"));
+  assert.ok(documentRef.querySelector("[data-adxconfig-x01-bust-preview-screen='true']"));
   assert.equal(previewCard.classList.contains("ad-ext-player"), false);
   assert.equal(previewCard.querySelector(".chakra-stack"), null);
   assert.equal(previewCard.querySelector(".ad-xconfig-x01-bust-preview-route")?.textContent, "D2");

@@ -157,12 +157,14 @@ test("x01 bust active player highlight defaults and normalization stay stable", 
   assert.ok(spec);
   assert.deepEqual(spec.createDefaultConfig(), {
     enabled: false,
+    effectTarget: "player-card",
     crackCount: 2,
     soundEnabled: true,
     debug: false,
   });
   assert.deepEqual(createRecommendedFeatureConfig("x01BustActivePlayerHighlight"), {
     enabled: false,
+    effectTarget: "player-card",
     crackCount: 2,
     soundEnabled: true,
     debug: false,
@@ -170,6 +172,7 @@ test("x01 bust active player highlight defaults and normalization stay stable", 
   assert.deepEqual(
     spec.normalizeConfig({
       enabled: "aktiv",
+      effectTarget: "board",
       crackCount: 2,
       shakeEnabled: "false",
       soundEnabled: "true",
@@ -177,6 +180,7 @@ test("x01 bust active player highlight defaults and normalization stay stable", 
     }),
     {
       enabled: true,
+      effectTarget: "board",
       crackCount: 2,
       soundEnabled: true,
       debug: true,
@@ -189,11 +193,17 @@ test("x01 bust active player highlight defaults and normalization stay stable", 
     }),
     {
       enabled: false,
+      effectTarget: "player-card",
       crackCount: 2,
       soundEnabled: true,
       debug: false,
     }
   );
+  assert.equal(
+    spec.normalizeConfig({ effectTarget: "unsupported" }).effectTarget,
+    "player-card"
+  );
+  assert.equal(spec.normalizeConfig({ effectTarget: "impact" }).effectTarget, "impact");
 });
 
 test("createRecommendedFeatureConfig returns the documented recommended defaults", () => {

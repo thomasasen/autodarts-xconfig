@@ -528,7 +528,7 @@ export const xconfigDescriptors = Object.freeze([
   animationDescriptorEntry({
     featureKey: "x01-bust-active-player-highlight",
     readmeAnchor: "animation-autodarts-x01-bust-active-player-highlight",
-    description: "Ersetzt den nativen Karteneffekt bei BUST durch einen abgestimmten roten Glasbruch.",
+    description: "Ersetzt den nativen BUST-Effekt durch einen roten Glasbruch auf dem gewählten Bereich.",
     fields: [
       actionField("run-feature-action", "Vorschau", {
         key: "preview",
@@ -536,12 +536,18 @@ export const xconfigDescriptors = Object.freeze([
         buttonLabel: "BUST auslösen",
         section: "Vorschau",
         description:
-          "Zeigt den roten Karteneffekt mit der aktuell gewählten Anzahl Glasrisse.",
+          "Zeigt den roten BUST-Effekt auf dem gewählten Bereich mit der aktuellen Anzahl Glasrisse.",
         successMessage: "",
         errorMessage: "Vorschau konnte nicht gestartet werden.",
         prominent: true,
         previewTarget: "x01-bust-active-player-highlight",
       }),
+      selectField("effectTarget", "Wirkbereich", [
+        { value: "player-card", label: "Spielerkachel" },
+        { value: "board", label: "Board" },
+        { value: "screen", label: "Ganzer Bildschirm" },
+        { value: "impact", label: "Bildschirm – Darts-Einschlag" },
+      ]),
       selectField(
         "crackCount",
         "Glasrisse",

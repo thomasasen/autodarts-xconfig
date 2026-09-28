@@ -412,24 +412,29 @@ export const xconfigFeatureCopy = deepFreeze({
   }),
   "x01-bust-active-player-highlight": featureCopy({
     cardDescription:
-      "Ersetzt den nativen Karteneffekt bei BUST durch eine rote Glasbruch-Markierung.",
+      "Ersetzt den nativen BUST-Effekt durch eine rote Glasbruch-Markierung auf dem gewählten Bereich oder am Darts-Einschlag.",
     visibleDescription:
-      "Bei sichtbarem `BUST` wird nur der native Animationseffekt in der aktiven X01-Spielerkarte ausgeblendet und durch die xConfig-Markierung ersetzt. BUST-Anzeige und roter Rahmen des Zugbereichs bleiben erhalten.",
+      "Bei sichtbarem `BUST` wird der native Animationseffekt in der aktiven X01-Spielerkarte ausgeblendet und durch die xConfig-Markierung auf der Spielerkachel, dem Board oder der gesamten Spielfläche ersetzt. Die Option `Bildschirm – Darts-Einschlag` verwendet zuerst die tatsächlich gerenderte Position des letzten Darts und zeigt dort Einschlagloch und Glasrisse; fehlt der Marker, dienen übermittelte Koordinaten und zuletzt die Boardmitte als Fallback. Board- und Vollbild-Overlay lassen sich mit einem Klick für den aktuellen BUST ausblenden. BUST-Anzeige und roter Rahmen des Zugbereichs bleiben erhalten.",
     visualDescription:
-      "Beim Eintritt in BUST färbt sich die aktive Spielerkarte dunkelrot, erhält einen klaren roten Rahmen und zeigt die konfigurierten Glasrisse an zufälligen Stellen. Optional startet gleichzeitig der Glasbruch-Sound. Die Markierung bleibt ruhig und sichtbar, bis `BUST` verschwindet; danach wird der native Zustand vollständig wiederhergestellt.",
+      "Beim Eintritt in BUST erhält der gewählte Wirkbereich eine ruhige rote Markierung mit klarem Rand. Die normalen Ziele verteilen die konfigurierten Glasrisse zufällig; `Bildschirm – Darts-Einschlag` projiziert den letzten sichtbaren Dart-Treffer vom Board auf die gesamte Spielfläche und lässt Einschlagloch und alle Risse dort beginnen. Eine vorhandene Dart-Grafik bleibt dabei vor dem gesprungenen Glas sichtbar. Auf der Spielerkachel wird deren Hintergrund dunkelrot; auf Board und gesamter Spielfläche liegt die Markierung als transparenter roter Effekt über dem Inhalt. Ein Klick auf das Board- oder Vollbild-Overlay blendet es für den aktuellen BUST aus, ohne die darunterliegende Aktion auszulösen. Optional startet gleichzeitig der Glasbruch-Sound. Ohne Klick bleibt die Markierung sichtbar, bis `BUST` verschwindet; danach wird der native Zustand vollständig wiederhergestellt.",
     usefulWhen:
-      "Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.",
+      "Wenn ein Überwurf je nach Bildschirmaufbau lokal oder besonders großflächig auffallen soll.",
     images: [image("Überworfen (BUST) hervorheben", "x01-bust-active-player-highlight.webp")],
     fields: {
       preview: fieldCopy(
-        "Startet eine sofortige BUST-Vorschau auf der Beispielkarte.",
-        "Löst die BUST-Vorschau mit roter aktiver Spielerkarte, aktueller Glasriss-Anzahl und optionalem Sound direkt im Einstellungsdialog aus.",
+        "Startet eine sofortige BUST-Vorschau auf dem gewählten Wirkbereich.",
+        "Löst die BUST-Vorschau auf der Spielerkachel, dem Board oder der gesamten Beispiel-Spielfläche mit aktueller Glasriss-Anzahl und optionalem Sound direkt im Einstellungsdialog aus. Beim Darts-Einschlag startet sie an einer beispielhaften Boardposition.",
         "Startet die BUST-Vorschau im Einstellungsdialog."
+      ),
+      effectTarget: fieldCopy(
+        "Legt den BUST-Wirkbereich fest oder richtet den Vollbild-Glasbruch am Darts-Einschlag aus. Board und Vollbild lassen sich per Klick ausblenden.",
+        "Wählt genau einen Wirkbereich für rote Markierung und Glasrisse. Die Spielerkachel erhält den bisherigen dunklen Karteneffekt; Board und gesamte Spielfläche werden transparent rot überlagert. `Bildschirm – Darts-Einschlag` nutzt vorrangig den letzten tatsächlich gerenderten Board-Marker, danach die übermittelte Dart-Koordinate und fällt andernfalls auf die Boardmitte zurück.",
+        "Bestimmt den sichtbaren Wirkbereich des BUST-Effekts."
       ),
       crackCount: fieldCopy(
         "Legt fest, wie viele Glasrisse beim BUST erscheinen; `Aus` deaktiviert nur die Glasrisse.",
-        "Erzeugt beim Eintritt in BUST die gewählte Anzahl Glasrisse an zufälligen Positionen innerhalb der aktiven Spielerkarte. `Aus` lässt die ruhige rote Kartenmarkierung aktiv.",
-        "Bestimmt die Anzahl zufällig platzierter Glasrisse."
+        "Erzeugt beim Eintritt in BUST die gewählte Anzahl Glasrisse. Normalerweise werden sie zufällig verteilt; beim Darts-Einschlag beginnen sie gemeinsam an der erkannten Trefferposition. `Aus` lässt die ruhige rote Markierung aktiv.",
+        "Bestimmt die Anzahl der dargestellten Glasrisse."
       ),
       soundEnabled: fieldCopy(
         "Spielt beim Eintritt in BUST und in der Vorschau einen Glasbruch-Sound ab.",
@@ -2276,24 +2281,47 @@ const DART_IMPACT_STYLE_OPTION_COPY = deepFreeze({
 
 const X01_BUST_CRACK_COUNT_OPTION_COPY = deepFreeze({
   "0": optionCopy(
-    "Blendet die Glasrisse aus; die rote Kartenmarkierung bleibt aktiv.",
-    "Deaktiviert nur die Glasriss-Overlays. Die ruhige rote BUST-Markierung der aktiven Spielerkarte bleibt unverändert aktiv.",
-    "Keine Glasrisse; die rote Kartenmarkierung bleibt aktiv."
+    "Blendet die Glasrisse aus; die rote Markierung bleibt aktiv.",
+    "Deaktiviert nur die Glasriss-Overlays. Die ruhige rote BUST-Markierung des gewählten Wirkbereichs bleibt unverändert aktiv.",
+    "Keine Glasrisse; die rote Markierung bleibt aktiv."
   ),
   "1": optionCopy(
-    "Zeigt einen zufällig platzierten Glasriss.",
-    "Erzeugt beim Eintritt in BUST ein einzelnes zufällig platziertes Einschlagzentrum mit Glasrissstruktur auf der aktiven Spielerkarte.",
-    "Zeigt ein zufällig platziertes Einschlagzentrum."
+    "Zeigt einen Glasriss.",
+    "Erzeugt beim Eintritt in BUST ein einzelnes Einschlagzentrum mit Glasrissstruktur. Beim Darts-Einschlag liegt es an der erkannten Trefferposition, sonst zufällig im gewählten Wirkbereich.",
+    "Zeigt ein einzelnes Einschlagzentrum."
   ),
   "2": optionCopy(
-    "Zeigt zwei unabhängig platzierte Glasrisse.",
-    "Erzeugt beim Eintritt in BUST zwei voneinander unabhängige Einschlagzentren und verteilt sie zufällig auf der aktiven Spielerkarte.",
-    "Zeigt zwei zufällig und unabhängig platzierte Einschlagzentren."
+    "Zeigt zwei Glasrisse.",
+    "Erzeugt beim Eintritt in BUST zwei Glasrissstrukturen. Beim Darts-Einschlag beginnen beide an der erkannten Trefferposition, sonst werden sie unabhängig im gewählten Wirkbereich verteilt.",
+    "Zeigt zwei Glasrissstrukturen."
   ),
   "3": optionCopy(
     "Zeigt drei Glasrisse für die dichteste Darstellung.",
-    "Erzeugt beim Eintritt in BUST drei zufällig verteilte Einschlagzentren. Diese Stufe füllt die aktive Spielerkarte am stärksten mit Glasrissstrukturen.",
-    "Zeigt drei Einschlagzentren und damit die dichteste Darstellung."
+    "Erzeugt beim Eintritt in BUST drei Glasrissstrukturen. Beim Darts-Einschlag beginnen alle an der erkannten Trefferposition, sonst werden sie zufällig verteilt.",
+    "Zeigt drei Glasrissstrukturen und damit die dichteste Darstellung."
+  ),
+});
+
+const X01_BUST_EFFECT_TARGET_OPTION_COPY = deepFreeze({
+  "player-card": optionCopy(
+    "Markiert nur die aktive Spielerkachel.",
+    "Behält den bisherigen kompakten Effekt bei: Die aktive Spielerkarte wird dunkelrot, umrandet und mit den gewählten Glasrissen versehen.",
+    "Beschränkt den BUST-Effekt auf die aktive Spielerkachel."
+  ),
+  board: optionCopy(
+    "Markiert nur das sichtbare Dartboard; ein Klick blendet den Effekt aus.",
+    "Legt die transparente rote Markierung und die gewählten Glasrisse über die semantisch erkannte Board-Fläche. Ein Klick blendet das Overlay für den aktuellen BUST aus und wird nicht an das Board weitergereicht; Spieler- und Zugbereiche bleiben unverändert.",
+    "Beschränkt den BUST-Effekt auf das Board und macht ihn wegklickbar."
+  ),
+  screen: optionCopy(
+    "Markiert die gesamte Spielfläche; ein Klick blendet den Effekt aus.",
+    "Legt die transparente rote Markierung und die gewählten Glasrisse über die komplette Match-Fläche, ohne den xConfig-Dialog einzubeziehen. Der erste Klick blendet nur das Overlay für den aktuellen BUST aus und wird nicht an darunterliegende Bedienelemente weitergereicht.",
+    "Zeigt den BUST-Effekt wegklickbar über die gesamte Spielfläche."
+  ),
+  impact: optionCopy(
+    "Lässt den Vollbild-Glasbruch am Einschlagspunkt des BUST-Darts beginnen.",
+    "Projiziert den letzten tatsächlich gerenderten Dart-Marker in die gesamte Match-Fläche und bündelt Einschlagloch und alle Glasrisse an diesem Punkt. Die vorhandene Dart-Grafik wird über dem gesprungenen Glas sichtbar gehalten. Fehlt der Marker, werden übermittelte Koordinaten oder bei einem manuellen BUST die Boardmitte verwendet. Der erste Klick blendet das Overlay aus und wird nicht weitergereicht.",
+    "Zeigt den wegklickbaren Vollbild-Glasbruch am Darts-Einschlag."
   ),
 });
 
@@ -2382,6 +2410,7 @@ const xconfigFieldOptionCopy = deepFreeze({
     triggerSource: CHECKOUT_SCORE_TRIGGER_OPTION_COPY,
   },
   "x01-bust-active-player-highlight": {
+    effectTarget: X01_BUST_EFFECT_TARGET_OPTION_COPY,
     crackCount: X01_BUST_CRACK_COUNT_OPTION_COPY,
   },
   "x01-remaining-score-bar": {
@@ -2603,7 +2632,10 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
       recommendedSection("Restscore-Balken", "x01-remaining-score-bar", [
         ["colorTheme", "Farben"], ["barSize", "Balkengröße"], ["effect", "Animation"],
       ]),
-      recommendedSection("Überworfen (BUST) hervorheben", "x01-bust-active-player-highlight"),
+      recommendedSection("Überworfen (BUST) hervorheben", "x01-bust-active-player-highlight", [
+        ["effectTarget", "Wirkbereich"], ["crackCount", "Glasrisse"],
+        ["soundEnabled", "Glasbruch-Sound"],
+      ]),
       recommendedSection("Checkout-Ziele hervorheben", "checkout-target-highlights", [
         ["visualPreset", "Animation"], ["segmentStyle", "Art der Hervorhebung"],
         ["targetSelectionMode", "Zielauswahl"], ["colorTheme", "Farbe"],

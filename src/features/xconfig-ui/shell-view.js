@@ -2498,6 +2498,9 @@ function buildX01BustActivePlayerHighlightPreview(documentRef, options = {}) {
       "ad-xconfig-x01-bust-preview",
       options.catalog ? "ad-xconfig-x01-bust-preview--catalog" : "",
     ].filter(Boolean).join(" "),
+    attributes: {
+      "data-adxconfig-x01-bust-preview-screen": "true",
+    },
   });
   const card = createElement(documentRef, "div", {
     className: [
@@ -2541,6 +2544,15 @@ function buildX01BustActivePlayerHighlightPreview(documentRef, options = {}) {
   }));
   card.appendChild(stack);
   preview.appendChild(card);
+  if (!options.catalog) {
+    preview.appendChild(createElement(documentRef, "div", {
+      className: "ad-xconfig-x01-bust-preview-board",
+      attributes: {
+        "aria-hidden": "true",
+        "data-adxconfig-x01-bust-preview-board": "true",
+      },
+    }));
+  }
   return preview;
 }
 

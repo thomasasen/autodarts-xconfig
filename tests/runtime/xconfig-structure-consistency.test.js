@@ -104,7 +104,7 @@ test("turn dart display is an independent global animation module", () => {
   assert.equal(descriptor.fields.some((field) => field.action === "uploadTurnDartImage"), true);
 });
 
-test("x01 bust active player highlight descriptor exposes the configurable crack count", () => {
+test("x01 bust active player highlight descriptor exposes target and crack controls", () => {
   const descriptor = xconfigDescriptors.find(
     (entry) => entry.featureKey === "x01-bust-active-player-highlight"
   );
@@ -113,11 +113,16 @@ test("x01 bust active player highlight descriptor exposes the configurable crack
   assert.equal(descriptor.readmeAnchor, "animation-autodarts-x01-bust-active-player-highlight");
   assert.deepEqual(
     descriptor.fields.map((field) => field.key),
-    ["preview", "crackCount", "soundEnabled", "debug"]
+    ["preview", "effectTarget", "crackCount", "soundEnabled", "debug"]
   );
   const previewField = descriptor.fields.find((field) => field.key === "preview");
   assert.equal(previewField.control, "action");
   assert.equal(previewField.previewTarget, "x01-bust-active-player-highlight");
+  const effectTargetField = descriptor.fields.find((field) => field.key === "effectTarget");
+  assert.deepEqual(
+    effectTargetField.options.map((option) => option.value),
+    ["player-card", "board", "screen", "impact"]
+  );
   const crackCountField = descriptor.fields.find((field) => field.key === "crackCount");
   assert.deepEqual(
     crackCountField.options.map((option) => option.value),

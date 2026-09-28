@@ -1,6 +1,7 @@
 import {
   BUST_CRACK_CLASS,
   BUST_CRACK_OVERLAY_CLASS,
+  BUST_IMPACT_HOLE_CLASS,
   DEMO_CRACK_SETTINGS,
 } from "./style.js";
 
@@ -124,9 +125,24 @@ function isPointInsideSurface(point, centerX, centerY, width, height) {
   return x > 0 && x < width && y > 0 && y < height;
 }
 
-function createCrackGroup(documentRef, random, index, surface) {
-  const centerX = randomBetween(random, surface.width * 0.12, surface.width * 0.88);
-  const centerY = randomBetween(random, surface.height * 0.14, surface.height * 0.86);
+function normalizeCrackOrigin(origin, surface) {
+  const x = Number(origin?.x);
+  const y = Number(origin?.y);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    return null;
+  }
+  return {
+    x: Math.max(0, Math.min(surface.width, x)),
+    y: Math.max(0, Math.min(surface.height, y)),
+  };
+}
+
+function createCrackGroup(documentRef, random, index, surface, origin = null) {
+  const normalizedOrigin = normalizeCrackOrigin(origin, surface);
+  const centerX =
+    normalizedOrigin?.x ?? randomBetween(random, surface.width * 0.12, surface.width * 0.88);
+  const centerY =
+    normalizedOrigin?.y ?? randomBetween(random, surface.height * 0.14, surface.height * 0.86);
   const group = createSvgNode(documentRef, "g", {
     class: BUST_CRACK_CLASS,
     "data-crack-index": index,
@@ -134,6 +150,9 @@ function createCrackGroup(documentRef, random, index, surface) {
     "data-crack-y": centerY.toFixed(2),
     transform: `translate(${centerX.toFixed(2)} ${centerY.toFixed(2)})`,
   });
+  if (origin?.source) {
+    group.setAttribute("data-crack-origin-source", String(origin.source));
+  }
 
   const levels = [];
   const radialSegments = [];
@@ -233,6 +252,77 @@ export function removeBustCracks(node) {
   node?.querySelector?.(`.${BUST_CRACK_OVERLAY_CLASS}`)?.remove?.();
 }
 
+function setAttributeIfChanged(node, name, value) {
+  const normalizedValue = String(value);
+  if (node?.getAttribute?.(name) !== normalizedValue) {
+    node?.setAttribute?.(name, normalizedValue);
+  }
+}
+
+export function updateBustCrackOrigin(node, origin) {
+  const overlay = node?.querySelector?.(`.${BUST_CRACK_OVERLAY_CLASS}`) || null;
+  const documentRef = overlay?.ownerDocument || node?.ownerDocument || null;
+  if (!overlay || !documentRef) {
+    return false;
+  }
+
+  const bounds = node.getBoundingClientRect?.() || {};
+  const surface = {
+    width: Math.max(1, Number(bounds.width) || 320),
+    height: Math.max(1, Number(bounds.height) || 120),
+  };
+  const impactOrigin = normalizeCrackOrigin(origin, surface);
+  if (!impactOrigin) {
+    return false;
+  }
+
+  const x = impactOrigin.x.toFixed(2);
+  const y = impactOrigin.y.toFixed(2);
+  const source = String(origin?.source || "fixed-origin");
+  let changed = false;
+  const viewBox = `0 0 ${surface.width} ${surface.height}`;
+  if (overlay.getAttribute?.("viewBox") !== viewBox) {
+    setAttributeIfChanged(overlay, "viewBox", viewBox);
+    changed = true;
+  }
+  overlay.querySelectorAll?.(`.${BUST_CRACK_CLASS}`)?.forEach?.((crack) => {
+    const nextTransform = `translate(${x} ${y})`;
+    if (
+      crack.getAttribute?.("data-crack-x") !== x ||
+      crack.getAttribute?.("data-crack-y") !== y ||
+      crack.getAttribute?.("transform") !== nextTransform ||
+      crack.getAttribute?.("data-crack-origin-source") !== source
+    ) {
+      changed = true;
+    }
+    setAttributeIfChanged(crack, "data-crack-x", x);
+    setAttributeIfChanged(crack, "data-crack-y", y);
+    setAttributeIfChanged(crack, "transform", nextTransform);
+    setAttributeIfChanged(crack, "data-crack-origin-source", source);
+  });
+
+  let impactHole = overlay.querySelector?.(`.${BUST_IMPACT_HOLE_CLASS}`) || null;
+  if (!impactHole) {
+    impactHole = createSvgNode(documentRef, "circle", {
+      class: BUST_IMPACT_HOLE_CLASS,
+      r: 7,
+    });
+    overlay.appendChild(impactHole);
+    changed = true;
+  }
+  if (
+    impactHole.getAttribute?.("cx") !== x ||
+    impactHole.getAttribute?.("cy") !== y ||
+    impactHole.getAttribute?.("data-impact-origin-source") !== source
+  ) {
+    changed = true;
+  }
+  setAttributeIfChanged(impactHole, "cx", x);
+  setAttributeIfChanged(impactHole, "cy", y);
+  setAttributeIfChanged(impactHole, "data-impact-origin-source", source);
+  return changed;
+}
+
 export function renderBustCracks(node, crackCount, options = {}) {
   removeBustCracks(node);
   const documentRef = options.documentRef || node?.ownerDocument || null;
@@ -254,7 +344,17 @@ export function renderBustCracks(node, crackCount, options = {}) {
     "aria-hidden": "true",
   });
   for (let crackIndex = 0; crackIndex < count; crackIndex += 1) {
-    overlay.appendChild(createCrackGroup(documentRef, random, crackIndex, surface));
+    overlay.appendChild(createCrackGroup(documentRef, random, crackIndex, surface, options.origin));
+  }
+  const impactOrigin = normalizeCrackOrigin(options.origin, surface);
+  if (impactOrigin) {
+    overlay.appendChild(createSvgNode(documentRef, "circle", {
+      class: BUST_IMPACT_HOLE_CLASS,
+      cx: impactOrigin.x.toFixed(2),
+      cy: impactOrigin.y.toFixed(2),
+      r: 7,
+      "data-impact-origin-source": options.origin?.source || "fixed-origin",
+    }));
   }
   node.appendChild(overlay);
   return overlay;

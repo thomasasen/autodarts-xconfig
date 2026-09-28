@@ -64,6 +64,7 @@ ${HIT_SURFACE_SELECTOR} {
   --ad-ext-hit-gradient-opacity: 0.88;
   --ad-ext-hit-border-opacity: 0.92;
   --ad-ext-hit-shadow-size: 34px;
+  --ad-ext-hit-outer-shadow-size: 15px;
   --ad-ext-hit-delay-ms: 0ms;
   --ad-ext-hit-img-opacity: 0.15;
   --ad-ext-hit-img-filter: grayscale(1) brightness(0.24) contrast(1.56);
@@ -79,6 +80,8 @@ ${HIT_SURFACE_SELECTOR} {
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.04),
     inset 0 -8px 18px rgba(0, 0, 0, 0.28),
+    0 0 0 1px var(--ad-ext-hit-edge),
+    0 0 var(--ad-ext-hit-outer-shadow-size) var(--ad-ext-hit-soft-glow),
     0 10px 18px rgba(0, 0, 0, 0.34),
     0 0 0 1px rgba(0, 0, 0, 0.28);
   transform-origin: center center;
@@ -433,6 +436,7 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
   --ad-ext-hit-gradient-opacity: 0.22;
   --ad-ext-hit-border-opacity: 1;
   --ad-ext-hit-shadow-size: 42px;
+  --ad-ext-hit-outer-shadow-size: 19px;
   overflow: visible;
   z-index: 2;
   animation-name: ad-ext-hit-row-electric-jolt;

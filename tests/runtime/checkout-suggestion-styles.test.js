@@ -111,6 +111,15 @@ test("checkout layout shares value sizing between every throw slot and the turn 
   assert.doesNotMatch(css, /nth-child\(3\)/);
 });
 
+test("checkout layout keeps completed modern hit borders visible after bust", () => {
+  const css = buildStyleText();
+
+  assert.match(
+    css,
+    /\.ad-ext-checkout-suggestion-layout:has\(> :first-child > \[data-ad-ext-hit-kind\]\),\s*\.ad-ext-checkout-suggestion-layout:has\(> :first-child > \[data-ad-ext-hit-kind\]\) > :first-child,[\s\S]*overflow: visible;/
+  );
+});
+
 test("checkout-suggestion-styles targets only the native modern turn route", () => {
   const fixture = createModernX01Fixture({
     throws: [],

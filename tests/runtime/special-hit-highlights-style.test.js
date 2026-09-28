@@ -169,3 +169,16 @@ test("modern highlight layers preserve the enhanced scoring display pseudo eleme
   assert.equal(css.includes("font-size: clamp(1.2rem, 20cqw, 1.4rem) !important"), true);
   assert.equal(css.includes("opacity: 1 !important"), true);
 });
+
+test("hit surface owns the outer colored outline so overflow cannot clip it", () => {
+  const css = buildStyleText();
+
+  assert.match(
+    css,
+    new RegExp(
+      String.raw`${HIT_SURFACE_SELECTOR_PATTERN}\s*\{[^}]*--ad-ext-hit-outer-shadow-size: 15px;[^}]*0 0 0 1px var\(--ad-ext-hit-edge\),[^}]*0 0 var\(--ad-ext-hit-outer-shadow-size\) var\(--ad-ext-hit-soft-glow\),`,
+      "s"
+    )
+  );
+  assert.match(css, /--ad-ext-hit-outer-shadow-size: 19px;/);
+});

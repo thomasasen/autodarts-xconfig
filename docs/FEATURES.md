@@ -119,6 +119,9 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Animation`: Vorherigen Stand anzeigen
 
 **Überworfen (BUST) hervorheben**
+- `Wirkbereich`: Spielerkachel
+- `Glasrisse`: 2
+- `Glasbruch-Sound`: An
 
 **Checkout-Ziele hervorheben**
 - `Animation`: Schnell blinken
@@ -804,15 +807,20 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 ### Überworfen (BUST) hervorheben
 
 - Gilt für: `X01`
-- Kurz: Bei sichtbarem `BUST` wird nur der native Animationseffekt in der aktiven X01-Spielerkarte ausgeblendet und durch die xConfig-Markierung ersetzt. BUST-Anzeige und roter Rahmen des Zugbereichs bleiben erhalten.
-- Grafisch: Beim Eintritt in BUST färbt sich die aktive Spielerkarte dunkelrot, erhält einen klaren roten Rahmen und zeigt die konfigurierten Glasrisse an zufälligen Stellen. Optional startet gleichzeitig der Glasbruch-Sound. Die Markierung bleibt ruhig und sichtbar, bis `BUST` verschwindet; danach wird der native Zustand vollständig wiederhergestellt.
-- Wann sinnvoll? Wenn ein Überwurf sofort am aktiven Spieler auffallen soll.
+- Kurz: Bei sichtbarem `BUST` wird der native Animationseffekt in der aktiven X01-Spielerkarte ausgeblendet und durch die xConfig-Markierung auf der Spielerkachel, dem Board oder der gesamten Spielfläche ersetzt. Die Option `Bildschirm – Darts-Einschlag` verwendet zuerst die tatsächlich gerenderte Position des letzten Darts und zeigt dort Einschlagloch und Glasrisse; fehlt der Marker, dienen übermittelte Koordinaten und zuletzt die Boardmitte als Fallback. Board- und Vollbild-Overlay lassen sich mit einem Klick für den aktuellen BUST ausblenden. BUST-Anzeige und roter Rahmen des Zugbereichs bleiben erhalten.
+- Grafisch: Beim Eintritt in BUST erhält der gewählte Wirkbereich eine ruhige rote Markierung mit klarem Rand. Die normalen Ziele verteilen die konfigurierten Glasrisse zufällig; `Bildschirm – Darts-Einschlag` projiziert den letzten sichtbaren Dart-Treffer vom Board auf die gesamte Spielfläche und lässt Einschlagloch und alle Risse dort beginnen. Eine vorhandene Dart-Grafik bleibt dabei vor dem gesprungenen Glas sichtbar. Auf der Spielerkachel wird deren Hintergrund dunkelrot; auf Board und gesamter Spielfläche liegt die Markierung als transparenter roter Effekt über dem Inhalt. Ein Klick auf das Board- oder Vollbild-Overlay blendet es für den aktuellen BUST aus, ohne die darunterliegende Aktion auszulösen. Optional startet gleichzeitig der Glasbruch-Sound. Ohne Klick bleibt die Markierung sichtbar, bis `BUST` verschwindet; danach wird der native Zustand vollständig wiederhergestellt.
+- Wann sinnvoll? Wenn ein Überwurf je nach Bildschirmaufbau lokal oder besonders großflächig auffallen soll.
 - `Vorschau`: Startet die BUST-Vorschau im Einstellungsdialog.
-- `Glasrisse`: Bestimmt die Anzahl zufällig platzierter Glasrisse.
-  - `Aus`: Keine Glasrisse; die rote Kartenmarkierung bleibt aktiv.
-  - `1`: Zeigt ein zufällig platziertes Einschlagzentrum.
-  - `2`: Zeigt zwei zufällig und unabhängig platzierte Einschlagzentren.
-  - `3`: Zeigt drei Einschlagzentren und damit die dichteste Darstellung.
+- `Wirkbereich`: Bestimmt den sichtbaren Wirkbereich des BUST-Effekts.
+  - `Spielerkachel`: Beschränkt den BUST-Effekt auf die aktive Spielerkachel.
+  - `Board`: Beschränkt den BUST-Effekt auf das Board und macht ihn wegklickbar.
+  - `Ganzer Bildschirm`: Zeigt den BUST-Effekt wegklickbar über die gesamte Spielfläche.
+  - `Bildschirm – Darts-Einschlag`: Zeigt den wegklickbaren Vollbild-Glasbruch am Darts-Einschlag.
+- `Glasrisse`: Bestimmt die Anzahl der dargestellten Glasrisse.
+  - `Aus`: Keine Glasrisse; die rote Markierung bleibt aktiv.
+  - `1`: Zeigt ein einzelnes Einschlagzentrum.
+  - `2`: Zeigt zwei Glasrissstrukturen.
+  - `3`: Zeigt drei Glasrissstrukturen und damit die dichteste Darstellung.
 - `Glasbruch-Sound`: Schaltet den Glasbruch-Sound für Effekt und Vorschau ein.
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 

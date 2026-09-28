@@ -44,6 +44,7 @@ const TV_ZOOM_SPEEDS = new Set(["schnell", "mittel", "langsam"]);
 const TV_ZOOM_TARGETS = new Set(["finish-only", "route-first"]);
 const SUGGESTION_STYLES = new Set(["badge", "ribbon", "stripe", "ticket", "outline"]);
 const SUGGESTION_COLOR_THEMES = new Set(["amber", "cyan", "rose"]);
+const X01_BUST_EFFECT_TARGETS = new Set(["player-card", "board", "screen", "impact"]);
 const AVG_TREND_DURATIONS = new Set([220, 320, 500]);
 const SPECIAL_HIT_COLOR_THEMES = new Set(["kind-signal", "ember-rush", "ice-circuit", "volt-lime", "crimson-steel", "arctic-mint", "champagne-night"]);
 const SPECIAL_HIT_ANIMATION_STYLE_ALIASES = Object.freeze({
@@ -358,7 +359,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   checkoutTargetHighlights: { enabled: false, visualPreset: "soft-pulse", segmentStyle: "surface-outline", singleRing: "both", targetSelectionMode: "next", colorTheme: "amber", debug: false },
   tvBoardZoom: { enabled: false, zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true, debug: false },
   checkoutSuggestionStyles: { enabled: false, style: "ribbon", labelText: "CHECKOUT", colorTheme: "amber", colorNumbers: false, debug: false },
-  x01BustActivePlayerHighlight: { enabled: false, crackCount: 2, soundEnabled: true, debug: false },
+  x01BustActivePlayerHighlight: { enabled: false, effectTarget: "player-card", crackCount: 2, soundEnabled: true, debug: false },
   avgTrendArrow: { enabled: false, durationMs: 320, size: "standard", debug: false },
   specialHitHighlights: { enabled: false, colorTheme: "kind-signal", animationStyle: "pop-hit", debug: false },
   cricketTargetHighlighter: { enabled: false, showOpenObjectives: false, showDeadObjectives: true, irrelevantBoardDimStyle: "smoke", colorTheme: "standard", intensity: "normal", debug: false },
@@ -412,7 +413,7 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   checkoutTargetHighlights: { visualPreset: "fast-blink", segmentStyle: "surface-outline", singleRing: "both", targetSelectionMode: "next", colorTheme: "violet" },
   tvBoardZoom: { zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true },
   checkoutSuggestionStyles: { style: "stripe", labelText: "CHECKOUT", colorTheme: "amber" },
-  x01BustActivePlayerHighlight: { crackCount: 2, soundEnabled: true },
+  x01BustActivePlayerHighlight: { effectTarget: "player-card", crackCount: 2, soundEnabled: true },
   avgTrendArrow: { durationMs: 500, size: "standard" },
   specialHitHighlights: { colorTheme: "kind-signal", animationStyle: "electric-jolt" },
   cricketTargetHighlighter: { showOpenObjectives: false, showDeadObjectives: true, irrelevantBoardDimStyle: "hatch", colorTheme: "standard", intensity: "normal" },
@@ -623,7 +624,7 @@ const FEATURE_NORMALIZERS = Object.freeze({
     return { enabled: normalizeBoolean(rawConfig.enabled, false), style: normalizeStringChoice(rawConfig.style, "ribbon", SUGGESTION_STYLES), labelText: normalizeMappedStringChoice(rawConfig.labelText, "CHECKOUT", { "": "", checkout: "CHECKOUT", finish: "FINISH" }), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "amber", SUGGESTION_COLOR_THEMES), colorNumbers: normalizeBoolean(rawConfig.colorNumbers, false), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   x01BustActivePlayerHighlight(rawConfig = {}) {
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), crackCount: normalizeNumberChoice(rawConfig.crackCount, 2, new Set([0, 1, 2, 3])), soundEnabled: normalizeBoolean(rawConfig.soundEnabled, true), debug: normalizeBoolean(rawConfig.debug, false) };
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), effectTarget: normalizeStringChoice(rawConfig.effectTarget, "player-card", X01_BUST_EFFECT_TARGETS), crackCount: normalizeNumberChoice(rawConfig.crackCount, 2, new Set([0, 1, 2, 3])), soundEnabled: normalizeBoolean(rawConfig.soundEnabled, true), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   avgTrendArrow(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), durationMs: normalizeNumberChoice(rawConfig.durationMs, 320, AVG_TREND_DURATIONS), size: normalizeMappedStringChoice(rawConfig.size, "standard", { klein: "klein", small: "klein", standard: "standard", gross: "gross", ["gro" + "\u00df"]: "gross", big: "gross", large: "gross" }), debug: normalizeBoolean(rawConfig.debug, false) };

@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   clearBustActivePlayerHighlightState,
   createBustActivePlayerHighlightState,
+  dismissBustSurfaceHighlightForEvent,
   ensureBustGlassCrackAudio,
   playBustGlassCrackSound,
   runBustActivePlayerHighlightPreview,
@@ -14,6 +15,9 @@ import {
   BUST_ACTIVE_CLASS,
   BUST_CRACK_CLASS,
   BUST_CRACK_OVERLAY_CLASS,
+  BUST_IMPACT_HOLE_CLASS,
+  BUST_IMPACT_SURFACE_CLASS,
+  BUST_SURFACE_CLASS,
   DEMO_CRACK_SETTINGS,
   NATIVE_BUST_EFFECT_HIDDEN_CLASS,
   buildStyleText,
@@ -179,6 +183,47 @@ function setupModernBustDocument(options = {}) {
   return { ...fixture, nativeEffect };
 }
 
+function appendRenderedDartTip(documentRef, initialScreenTip = { x: 0, y: 0 }) {
+  const overlay = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
+  overlay.id = "ad-ext-dart-image-overlay";
+  const flight = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  flight.classList.add("ad-ext-dart-flight-group");
+  const rotate = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  rotate.classList.add("ad-ext-dart-rotate-group");
+  rotate.setAttribute("transform", "rotate(-20 200 300)");
+  const pose = documentRef.createElementNS("http://www.w3.org/2000/svg", "g");
+  pose.classList.add("ad-ext-dart-pose-group");
+  rotate.appendChild(pose);
+  flight.appendChild(rotate);
+  overlay.appendChild(flight);
+  documentRef.body.appendChild(overlay);
+
+  let matrix = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+  overlay.createSVGPoint = () => ({
+    x: 0,
+    y: 0,
+    matrixTransform(transform) {
+      return {
+        x: transform.a * this.x + transform.c * this.y + transform.e,
+        y: transform.b * this.x + transform.d * this.y + transform.f,
+      };
+    },
+  });
+  pose.getScreenCTM = () => matrix;
+  const setScreenTip = (screenTip) => {
+    matrix = {
+      a: 1,
+      b: 0,
+      c: 0,
+      d: 1,
+      e: Number(screenTip.x) - 200,
+      f: Number(screenTip.y) - 300,
+    };
+  };
+  setScreenTip(initialScreenTip);
+  return { overlay, flight, pose, setScreenTip };
+}
+
 test("x01 bust highlight owns the modern player card and suppresses only the native Bust Lottie", () => {
   const fixture = setupModernBustDocument();
   const state = createBustActivePlayerHighlightState();
@@ -198,6 +243,445 @@ test("x01 bust highlight owns the modern player card and suppresses only the nat
   assert.equal(fixture.card.classList.contains(BUST_ACTIVE_CLASS), true);
   assert.equal(fixture.nativeEffect.classList.contains(NATIVE_BUST_EFFECT_HIDDEN_CLASS), true);
   assert.equal(fixture.card.querySelectorAll(`.${BUST_CRACK_CLASS}`).length, 2);
+});
+
+test("x01 bust highlight can target only the board while keeping the player card unchanged", () => {
+  const fixture = setupModernBustDocument();
+  const state = createBustActivePlayerHighlightState();
+
+  const result = syncBustActivePlayerHighlight(
+    {
+      documentRef: fixture.documentRef,
+      windowRef: fixture.windowRef,
+      effectTarget: "board",
+      crackCount: 2,
+      soundEnabled: false,
+    },
+    state
+  );
+
+  assert.equal(result.activeNode, fixture.board);
+  assert.equal(fixture.board.classList.contains(BUST_SURFACE_CLASS), true);
+  assert.equal(fixture.card.classList.contains(BUST_ACTIVE_CLASS), false);
+  assert.equal(fixture.board.querySelectorAll(`.${BUST_CRACK_CLASS}`).length, 2);
+  assert.equal(fixture.nativeEffect.classList.contains(NATIVE_BUST_EFFECT_HIDDEN_CLASS), true);
+});
+
+test("x01 bust highlight can cover the complete match surface without styling the player card", () => {
+  const fixture = setupModernBustDocument();
+  const state = createBustActivePlayerHighlightState();
+
+  const result = syncBustActivePlayerHighlight(
+    {
+      documentRef: fixture.documentRef,
+      windowRef: fixture.windowRef,
+      effectTarget: "screen",
+      crackCount: 1,
+      soundEnabled: false,
+    },
+    state
+  );
+
+  assert.equal(result.activeNode, fixture.documentRef.main);
+  assert.equal(fixture.documentRef.main.classList.contains(BUST_SURFACE_CLASS), true);
+  assert.equal(fixture.card.classList.contains(BUST_ACTIVE_CLASS), false);
+  assert.equal(fixture.documentRef.main.querySelectorAll(`.${BUST_CRACK_CLASS}`).length, 1);
+});
+
+test("x01 bust impact target starts every screen crack at the Bust dart coordinates", () => {
+  const fixture = setupModernBustDocument();
+  const state = createBustActivePlayerHighlightState();
+  const coords = { x: -0.035260654388264506, y: 0.598930369086444 };
+
+  const result = syncBustActivePlayerHighlight(
+    {
+      documentRef: fixture.documentRef,
+      windowRef: fixture.windowRef,
+      effectTarget: "impact",
+      crackCount: 2,
+      gameState: {
+        getActiveThrows: () => [{ segment: { name: "T20" }, coords }],
+      },
+    },
+    state
+  );
+
+  const cracks = fixture.documentRef.main.querySelectorAll(`.${BUST_CRACK_CLASS}`);
+  const expectedX = 718 + 549 * (0.5 + coords.x * (17 / 45));
+  const expectedY = 136 + 549 * (0.5 - coords.y * (17 / 45));
+  assert.equal(result.activeNode, fixture.documentRef.main);
+  assert.equal(fixture.documentRef.main.classList.contains(BUST_IMPACT_SURFACE_CLASS), true);
+  assert.equal(cracks.length, 2);
+  cracks.forEach((crack) => {
+    assert.equal(crack.getAttribute("data-crack-x"), expectedX.toFixed(2));
+    assert.equal(crack.getAttribute("data-crack-y"), expectedY.toFixed(2));
+    assert.equal(crack.getAttribute("data-crack-origin-source"), "throw-coords");
+  });
+  const impactHole = fixture.documentRef.main.querySelector(`.${BUST_IMPACT_HOLE_CLASS}`);
+  assert.equal(impactHole.getAttribute("cx"), expectedX.toFixed(2));
+  assert.equal(impactHole.getAttribute("cy"), expectedY.toFixed(2));
+  assert.equal(impactHole.getAttribute("data-impact-origin-source"), "throw-coords");
+});
+
+test("x01 bust impact follows the rendered last dart tip instead of moving the dart to the hole", () => {
+  const fixture = setupModernBustDocument();
+  const marker = fixture.documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  marker.setAttribute("cx", "10");
+  marker.setAttribute("cy", "20");
+  marker.setAttribute("r", "5");
+  marker.setAttribute("filter", "url(#marker-shadow)");
+  marker.__rect = { left: 900, top: 300, width: 10, height: 10 };
+  fixture.layers[3].appendChild(marker);
+  appendRenderedDartTip(fixture.documentRef, { x: 333, y: 444 });
+  const state = createBustActivePlayerHighlightState();
+
+  syncBustActivePlayerHighlight(
+    {
+      documentRef: fixture.documentRef,
+      windowRef: fixture.windowRef,
+      boardSurface: { svg: fixture.layers[0], group: fixture.layers[0], zoomTarget: fixture.board },
+      effectTarget: "impact",
+      crackCount: 1,
+      gameState: { getActiveThrows: () => [{ coords: { x: -0.8, y: -0.8 } }] },
+    },
+    state
+  );
+
+  const crack = fixture.documentRef.main.querySelector(`.${BUST_CRACK_CLASS}`);
+  const impactHole = fixture.documentRef.main.querySelector(`.${BUST_IMPACT_HOLE_CLASS}`);
+  assert.equal(crack.getAttribute("data-crack-x"), "333.00");
+  assert.equal(crack.getAttribute("data-crack-y"), "444.00");
+  assert.equal(crack.getAttribute("data-crack-origin-source"), "rendered-dart-tip");
+  assert.equal(impactHole.getAttribute("cx"), "333.00");
+  assert.equal(impactHole.getAttribute("cy"), "444.00");
+});
+
+test("x01 bust impact target prefers the rendered last marker over coordinate projection", () => {
+  const fixture = setupModernBustDocument();
+  const marker = fixture.documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  marker.setAttribute("cx", "10");
+  marker.setAttribute("cy", "20");
+  marker.setAttribute("r", "5");
+  marker.setAttribute("filter", "url(#marker-shadow)");
+  marker.__rect = { left: 900, top: 300, width: 10, height: 10 };
+  fixture.layers[3].appendChild(marker);
+  const state = createBustActivePlayerHighlightState();
+
+  syncBustActivePlayerHighlight(
+    {
+      documentRef: fixture.documentRef,
+      windowRef: fixture.windowRef,
+      boardSurface: { svg: fixture.layers[0], group: fixture.layers[0], zoomTarget: fixture.board },
+      effectTarget: "impact",
+      crackCount: 1,
+      gameState: { getActiveThrows: () => [{ coords: { x: -0.8, y: -0.8 } }] },
+    },
+    state
+  );
+
+  const crack = fixture.documentRef.main.querySelector(`.${BUST_CRACK_CLASS}`);
+  const impactHole = fixture.documentRef.main.querySelector(`.${BUST_IMPACT_HOLE_CLASS}`);
+  assert.equal(crack.getAttribute("data-crack-x"), "905.00");
+  assert.equal(crack.getAttribute("data-crack-y"), "305.00");
+  assert.equal(crack.getAttribute("data-crack-origin-source"), "board-marker");
+  assert.equal(impactHole.getAttribute("cx"), "905.00");
+  assert.equal(impactHole.getAttribute("cy"), "305.00");
+
+  marker.__rect = { left: 740, top: 520, width: 10, height: 10 };
+  syncBustActivePlayerHighlight(
+    {
+      documentRef: fixture.documentRef,
+      windowRef: fixture.windowRef,
+      boardSurface: { svg: fixture.layers[0], group: fixture.layers[0], zoomTarget: fixture.board },
+      effectTarget: "impact",
+      crackCount: 1,
+      gameState: { getActiveThrows: () => [{ coords: { x: -0.8, y: -0.8 } }] },
+    },
+    state
+  );
+  assert.equal(fixture.documentRef.main.querySelector(`.${BUST_CRACK_CLASS}`), crack);
+  assert.equal(crack.getAttribute("data-crack-x"), "745.00");
+  assert.equal(crack.getAttribute("data-crack-y"), "525.00");
+  assert.equal(impactHole.getAttribute("cx"), "745.00");
+  assert.equal(impactHole.getAttribute("cy"), "525.00");
+
+  clearBustActivePlayerHighlightState(state);
+  assert.equal(fixture.documentRef.main.classList.contains(BUST_IMPACT_SURFACE_CLASS), false);
+});
+
+test("x01 bust impact tracks the rendered dart tip while board zoom is moving", () => {
+  const fixture = setupModernBustDocument();
+  fixture.board.classList.add("ad-ext-tv-board-zoom");
+  const marker = fixture.documentRef.createElementNS("http://www.w3.org/2000/svg", "circle");
+  marker.setAttribute("cx", "10");
+  marker.setAttribute("cy", "20");
+  marker.setAttribute("r", "5");
+  marker.setAttribute("filter", "url(#marker-shadow)");
+  marker.__rect = { left: 900, top: 300, width: 10, height: 10 };
+  fixture.layers[3].appendChild(marker);
+  const renderedDart = appendRenderedDartTip(fixture.documentRef, { x: 805, y: 265 });
+
+  let nextFrameId = 1;
+  const pendingFrames = new Map();
+  const listenerEntries = [];
+  fixture.windowRef.requestAnimationFrame = (callback) => {
+    const frameId = nextFrameId;
+    nextFrameId += 1;
+    pendingFrames.set(frameId, callback);
+    return frameId;
+  };
+  fixture.windowRef.cancelAnimationFrame = (frameId) => pendingFrames.delete(frameId);
+
+  const cleanup = mountX01BustActivePlayerHighlight({
+    documentRef: fixture.documentRef,
+    windowRef: fixture.windowRef,
+    boardSurface: { svg: fixture.layers[0], group: fixture.layers[0], zoomTarget: fixture.board },
+    config: {
+      getFeatureConfig: () => ({
+        effectTarget: "impact",
+        crackCount: 1,
+        soundEnabled: false,
+      }),
+    },
+    domGuards: {
+      ensureStyle: () => {},
+      removeNodeById: () => {},
+    },
+    helpers: {
+      createRafScheduler: (callback) => ({
+        schedule: callback,
+        cancel: () => {},
+      }),
+    },
+    registries: {
+      listeners: {
+        register: (entry) => listenerEntries.push(entry),
+        remove: () => {},
+      },
+    },
+  });
+
+  const crack = fixture.documentRef.main.querySelector(`.${BUST_CRACK_CLASS}`);
+  const impactHole = fixture.documentRef.main.querySelector(`.${BUST_IMPACT_HOLE_CLASS}`);
+  const crackOverlay = fixture.documentRef.main.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`);
+  assert.equal(crack.getAttribute("data-crack-x"), "805.00");
+  assert.equal(crack.getAttribute("data-crack-y"), "265.00");
+  assert.equal(pendingFrames.size, 1);
+
+  fixture.documentRef.main.__rect = { left: 0, top: 0, width: 1536, height: 808 };
+  renderedDart.setScreenTip({ x: 745, y: 525 });
+  const [frameId, frameCallback] = pendingFrames.entries().next().value;
+  pendingFrames.delete(frameId);
+  frameCallback();
+
+  assert.equal(fixture.documentRef.main.querySelector(`.${BUST_CRACK_CLASS}`), crack);
+  assert.equal(crack.getAttribute("data-crack-x"), "745.00");
+  assert.equal(crack.getAttribute("data-crack-y"), "525.00");
+  assert.equal(impactHole.getAttribute("cx"), "745.00");
+  assert.equal(impactHole.getAttribute("cy"), "525.00");
+  assert.equal(crackOverlay.getAttribute("viewBox"), "0 0 1536 808");
+
+  const transitionRun = listenerEntries.find((entry) => entry.type === "transitionrun");
+  const transitionEnd = listenerEntries.find((entry) => entry.type === "transitionend");
+  assert.ok(transitionRun);
+  assert.ok(transitionEnd);
+  transitionRun.handler({ propertyName: "transform", target: fixture.board });
+  renderedDart.setScreenTip({ x: 685, y: 565 });
+  const [nextPendingFrameId, nextFrameCallback] = pendingFrames.entries().next().value;
+  pendingFrames.delete(nextPendingFrameId);
+  nextFrameCallback();
+  assert.equal(crack.getAttribute("data-crack-x"), "685.00");
+  assert.equal(crack.getAttribute("data-crack-y"), "565.00");
+
+  transitionEnd.handler({ propertyName: "transform", target: fixture.board });
+  assert.equal(pendingFrames.size, 0);
+
+  cleanup();
+  assert.equal(pendingFrames.size, 0);
+});
+
+test("x01 bust impact target falls back to board center when no dart coordinates exist", () => {
+  const fixture = setupModernBustDocument();
+  const state = createBustActivePlayerHighlightState();
+
+  syncBustActivePlayerHighlight(
+    {
+      documentRef: fixture.documentRef,
+      windowRef: fixture.windowRef,
+      effectTarget: "impact",
+      crackCount: 1,
+      gameState: { getActiveThrows: () => [{ segment: { name: "BUST" } }] },
+    },
+    state
+  );
+
+  const crack = fixture.documentRef.main.querySelector(`.${BUST_CRACK_CLASS}`);
+  assert.equal(crack.getAttribute("data-crack-x"), (718 + 549 / 2).toFixed(2));
+  assert.equal(crack.getAttribute("data-crack-y"), (136 + 549 / 2).toFixed(2));
+  assert.equal(crack.getAttribute("data-crack-origin-source"), "board-center");
+  assert.ok(fixture.documentRef.main.querySelector(`.${BUST_IMPACT_HOLE_CLASS}`));
+});
+
+test("x01 bust board target rehydrates after replacement without replaying the entry sound", () => {
+  const fixture = setupModernBustDocument();
+  const replacementBoard = fixture.documentRef.createElement("div");
+  replacementBoard.__rect = { width: 500, height: 500 };
+  fixture.documentRef.main.appendChild(replacementBoard);
+  const state = createBustActivePlayerHighlightState();
+  const { windowRef, audioInstances } = createManualTimerWindow(fixture.documentRef);
+
+  syncBustActivePlayerHighlight(
+    {
+      documentRef: fixture.documentRef,
+      windowRef,
+      boardSurface: { zoomTarget: fixture.board },
+      effectTarget: "board",
+      crackCount: 1,
+      soundEnabled: true,
+    },
+    state
+  );
+  const result = syncBustActivePlayerHighlight(
+    {
+      documentRef: fixture.documentRef,
+      windowRef,
+      boardSurface: { zoomTarget: replacementBoard },
+      effectTarget: "board",
+      crackCount: 1,
+      soundEnabled: true,
+    },
+    state
+  );
+
+  assert.equal(result.enteredBust, false);
+  assert.equal(fixture.board.classList.contains(BUST_SURFACE_CLASS), false);
+  assert.equal(replacementBoard.classList.contains(BUST_SURFACE_CLASS), true);
+  assert.equal(replacementBoard.querySelectorAll(`.${BUST_CRACK_CLASS}`).length, 1);
+  assert.equal(audioInstances.length, 1);
+  assert.equal(audioInstances[0].playCount, 1);
+});
+
+test("x01 bust board overlay dismisses on click until the next Bust", () => {
+  const fixture = setupModernBustDocument();
+  const state = createBustActivePlayerHighlightState();
+  let prevented = 0;
+  let stopped = 0;
+
+  syncBustActivePlayerHighlight(
+    {
+      documentRef: fixture.documentRef,
+      windowRef: fixture.windowRef,
+      effectTarget: "board",
+      crackCount: 1,
+    },
+    state
+  );
+  const dismissed = dismissBustSurfaceHighlightForEvent(state, {
+    target: fixture.layers[0],
+    preventDefault: () => { prevented += 1; },
+    stopPropagation: () => { stopped += 1; },
+  });
+
+  assert.equal(dismissed, true);
+  assert.equal(prevented, 1);
+  assert.equal(stopped, 1);
+  assert.equal(fixture.board.classList.contains(BUST_SURFACE_CLASS), false);
+  assert.equal(fixture.board.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`), null);
+  assert.equal(fixture.nativeEffect.classList.contains(NATIVE_BUST_EFFECT_HIDDEN_CLASS), true);
+
+  const passiveResult = syncBustActivePlayerHighlight(
+    {
+      documentRef: fixture.documentRef,
+      windowRef: fixture.windowRef,
+      effectTarget: "board",
+      crackCount: 1,
+    },
+    state
+  );
+  assert.equal(passiveResult.dismissed, true);
+  assert.equal(fixture.board.classList.contains(BUST_SURFACE_CLASS), false);
+
+  fixture.total.textContent = "20";
+  syncBustActivePlayerHighlight(
+    { documentRef: fixture.documentRef, windowRef: fixture.windowRef, effectTarget: "board" },
+    state
+  );
+  fixture.total.textContent = "BUST";
+  const nextBust = syncBustActivePlayerHighlight(
+    {
+      documentRef: fixture.documentRef,
+      windowRef: fixture.windowRef,
+      effectTarget: "board",
+      crackCount: 1,
+    },
+    state
+  );
+  assert.equal(nextBust.enteredBust, true);
+  assert.equal(nextBust.dismissed, false);
+  assert.equal(fixture.board.classList.contains(BUST_SURFACE_CLASS), true);
+});
+
+test("x01 bust player-card effect stays persistent when clicked", () => {
+  const fixture = setupModernBustDocument();
+  const state = createBustActivePlayerHighlightState();
+  let prevented = false;
+
+  syncBustActivePlayerHighlight(
+    { documentRef: fixture.documentRef, windowRef: fixture.windowRef, crackCount: 1 },
+    state
+  );
+  const dismissed = dismissBustSurfaceHighlightForEvent(state, {
+    target: fixture.card,
+    preventDefault: () => { prevented = true; },
+  });
+
+  assert.equal(dismissed, false);
+  assert.equal(prevented, false);
+  assert.equal(fixture.card.classList.contains(BUST_ACTIVE_CLASS), true);
+});
+
+test("x01 bust board mode registers a click-to-dismiss listener", () => {
+  const fixture = setupModernBustDocument();
+  const listenerEntries = [];
+  const cleanup = mountX01BustActivePlayerHighlight({
+    documentRef: fixture.documentRef,
+    windowRef: fixture.windowRef,
+    config: {
+      getFeatureConfig: () => ({
+        effectTarget: "board",
+        crackCount: 1,
+        soundEnabled: false,
+      }),
+    },
+    domGuards: {
+      ensureStyle: () => {},
+      removeNodeById: () => {},
+    },
+    helpers: {
+      createRafScheduler: (callback) => ({
+        schedule: callback,
+        cancel: () => {},
+      }),
+    },
+    registries: {
+      listeners: {
+        register: (entry) => listenerEntries.push(entry),
+        remove: () => {},
+      },
+    },
+  });
+
+  const clickEntry = listenerEntries.find((entry) => entry.type === "click");
+  assert.ok(clickEntry);
+  assert.equal(fixture.board.classList.contains(BUST_SURFACE_CLASS), true);
+  clickEntry.handler({
+    target: fixture.board,
+    preventDefault: () => {},
+    stopPropagation: () => {},
+  });
+  assert.equal(fixture.board.classList.contains(BUST_SURFACE_CLASS), false);
+
+  cleanup();
 });
 
 test("x01 bust highlight suppresses a native Lottie inserted after Bust entry without replaying the effect", () => {
@@ -467,6 +951,60 @@ test("x01 bust preview applies visuals, cracks and optional sound", () => {
   assert.equal(activeCard.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`), null);
 });
 
+test("x01 bust preview uses the surface overlay contract for board and screen targets", () => {
+  const { documentRef } = setupBustDocument();
+  const targetNode = documentRef.createElement("div");
+  documentRef.body.appendChild(targetNode);
+
+  const cleanup = runBustActivePlayerHighlightPreview({
+    documentRef,
+    targetNode,
+    effectTarget: "board",
+    crackCount: 1,
+  });
+
+  assert.equal(targetNode.classList.contains(BUST_SURFACE_CLASS), true);
+  assert.equal(targetNode.classList.contains(BUST_ACTIVE_CLASS), false);
+  assert.equal(targetNode.querySelectorAll(`.${BUST_CRACK_CLASS}`).length, 1);
+  assert.equal(targetNode.listenerCount(), 1);
+
+  targetNode.click();
+  assert.equal(targetNode.classList.contains(BUST_SURFACE_CLASS), false);
+  assert.equal(targetNode.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`), null);
+
+  cleanup();
+  assert.equal(targetNode.classList.contains(BUST_SURFACE_CLASS), false);
+  assert.equal(targetNode.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`), null);
+  assert.equal(targetNode.listenerCount(), 0);
+});
+
+test("x01 bust impact preview uses one visible example impact for all cracks", () => {
+  const { documentRef } = setupBustDocument();
+  const targetNode = documentRef.createElement("div");
+  targetNode.__rect = { width: 1000, height: 600 };
+  documentRef.body.appendChild(targetNode);
+
+  const cleanup = runBustActivePlayerHighlightPreview({
+    documentRef,
+    targetNode,
+    effectTarget: "impact",
+    crackCount: 2,
+  });
+
+  const cracks = targetNode.querySelectorAll(`.${BUST_CRACK_CLASS}`);
+  assert.equal(cracks.length, 2);
+  assert.equal(targetNode.classList.contains(BUST_IMPACT_SURFACE_CLASS), false);
+  cracks.forEach((crack) => {
+    assert.equal(crack.getAttribute("data-crack-x"), "720.00");
+    assert.equal(crack.getAttribute("data-crack-y"), "204.00");
+    assert.equal(crack.getAttribute("data-crack-origin-source"), "preview-impact");
+  });
+  assert.ok(targetNode.querySelector(`.${BUST_IMPACT_HOLE_CLASS}`));
+
+  cleanup();
+  assert.equal(targetNode.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`), null);
+});
+
 test("x01 bust sound uses Web Audio buffer playback when AudioContext is available", async () => {
   const { documentRef } = setupBustDocument();
   const startedSources = [];
@@ -608,6 +1146,27 @@ test("x01 bust highlight CSS supports modern and legacy cards without motion", (
     /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.ad-ext-x01-bust-active-player-crack[\s\S]*animation: none;/
   );
   assert.match(css, /\.ad-ext-x01-bust-native-effect-hidden \{[\s\S]*display: none !important;/);
+  assert.match(
+    css,
+    /\.ad-ext-x01-bust-surface-highlight::before \{[\s\S]*background: rgba\(217, 31, 62, 0\.2\)/
+  );
+  assert.match(
+    css,
+    /\.ad-ext-x01-bust-surface-highlight::before \{[\s\S]*pointer-events: auto;/
+  );
+  assert.match(
+    css,
+    /html:has\(\.ad-ext-x01-bust-impact-highlight\) #ad-ext-dart-image-overlay \{[\s\S]*z-index: 2147483002 !important;/
+  );
+  assert.match(
+    css,
+    /html:has\(\.ad-ext-x01-bust-impact-highlight\) #ad-ext-dart-image-overlay \{[\s\S]*clip-path: none !important;/
+  );
+  assert.match(
+    css,
+    /#ad-ext-dart-image-overlay \.ad-ext-dart-flight-group:not\(:last-of-type\) \{[\s\S]*visibility: hidden !important;/
+  );
+  assert.match(css, /\.ad-ext-x01-bust-impact-hole \{[\s\S]*fill: rgba\(5, 7, 12, 0\.96\)/);
   assert.doesNotMatch(css, /ad-ext-x01-bust-active-player-shake/);
 });
 
