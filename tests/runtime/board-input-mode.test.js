@@ -7,6 +7,7 @@ import {
   getActiveBoardInputMode,
   getBoardInputModeKey,
   isBoardInputModeControlAvailable,
+  resolveScoringBoardInputMode,
 } from "../../src/shared/board-input-mode.js";
 import { FakeDocument } from "./fake-dom.js";
 
@@ -113,4 +114,100 @@ test("board input observer attributes include host availability, state and label
   ].forEach((attributeName) => {
     assert.equal(BOARD_INPUT_MODE_ATTRIBUTE_FILTER.includes(attributeName), true);
   });
+});
+
+function createGameState(player, options = {}) {
+  const snapshot = options.snapshot ?? {
+    activePlayerIndex: options.activePlayerIndex ?? 0,
+    match: {
+      player: options.matchPlayer ?? 0,
+      players: player === null ? [] : [player],
+    },
+  };
+  return {
+    getSnapshot: () => snapshot,
+    ...(options.withoutActivePlayerApi
+      ? {}
+      : { getActivePlayerIndex: () => options.activePlayerIndex ?? 0 }),
+  };
+}
+
+function createStorage(selectedBoard, options = {}) {
+  return {
+    getItem(key) {
+      if (options.throwOnRead) {
+        throw new DOMException("Access denied", "SecurityError");
+      }
+      return key === "selectedBoard" ? selectedBoard : null;
+    },
+  };
+}
+
+test("scoring board input mode treats explicit player or stored manual ids as manual", () => {
+  assert.equal(
+    resolveScoringBoardInputMode(createGameState({ boardId: "manual" }), {
+      storageRef: createStorage("board-123"),
+    }),
+    "manual"
+  );
+  assert.equal(
+    resolveScoringBoardInputMode(createGameState({}), {
+      storageRef: createStorage("manual"),
+    }),
+    "manual"
+  );
+});
+
+test("scoring board input mode treats player, stored hardware boards and bots as live", () => {
+  assert.equal(
+    resolveScoringBoardInputMode(createGameState({ boardId: "board-123" })),
+    "live"
+  );
+  assert.equal(
+    resolveScoringBoardInputMode(createGameState({}), {
+      storageRef: createStorage("board-123"),
+    }),
+    "live"
+  );
+  for (const player of [{ cpuPPR: 45 }, { isBot: true }, { bot: true }]) {
+    assert.equal(
+      resolveScoringBoardInputMode(createGameState(player), {
+        storageRef: createStorage("manual"),
+      }),
+      "live"
+    );
+  }
+});
+
+test("scoring board input mode treats a hydrated player without board id as manual", () => {
+  assert.equal(
+    resolveScoringBoardInputMode(createGameState(
+      { boardId: "board-123" },
+      { withoutActivePlayerApi: true, activePlayerIndex: 0 }
+    )),
+    "live"
+  );
+  assert.equal(resolveScoringBoardInputMode(createGameState({})), "manual");
+});
+
+test("scoring board input mode fails safe to unknown before a player is hydrated", () => {
+  assert.equal(resolveScoringBoardInputMode(null), "unknown");
+  assert.equal(
+    resolveScoringBoardInputMode({ getSnapshot: () => null }),
+    "unknown"
+  );
+  assert.equal(
+    resolveScoringBoardInputMode(createGameState(null, { activePlayerIndex: 4 })),
+    "unknown"
+  );
+  assert.equal(
+    resolveScoringBoardInputMode({ getSnapshot: () => { throw new Error("pending"); } }),
+    "unknown"
+  );
+  assert.equal(
+    resolveScoringBoardInputMode(null, {
+      storageRef: createStorage("board-123", { throwOnRead: true }),
+    }),
+    "unknown"
+  );
 });

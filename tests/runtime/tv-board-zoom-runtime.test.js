@@ -67,6 +67,16 @@ function createMutableX01GameState(initial = {}) {
   };
 }
 
+function createScoringSnapshot(player = {}, activePlayerIndex = 0, players = [player]) {
+  return {
+    activePlayerIndex,
+    match: {
+      player: activePlayerIndex,
+      players,
+    },
+  };
+}
+
 function installZoomFixture(documentRef) {
   const offsetParent = documentRef.createElement("div");
   offsetParent.__rect = { left: 0, top: 0, width: 1920, height: 1080 };
@@ -166,6 +176,9 @@ function installBoardInputModeControls(fixture, activeMode = "live") {
 
 function startModernZoom(options = {}) {
   const fixture = createModernX01Fixture(options);
+  if (Object.hasOwn(options, "selectedBoard")) {
+    fixture.windowRef.localStorage.setItem("selectedBoard", options.selectedBoard);
+  }
   const boardMode = options.boardInputMode === null
     ? null
     : installBoardInputModeControls(fixture, options.boardInputMode || "live");
@@ -239,12 +252,173 @@ for (const boardInputMode of ["virtual", "segments", "coords"]) {
   });
 }
 
-test("native four-layer vector board without mode controls remains zoomable", () => {
-  const f = startModernZoom({ boardInputMode: null });
+test("explicit virtual DOM mode blocks zoom even for a hardware board", () => {
+  const gameState = createMutableX01GameState({
+    snapshot: createScoringSnapshot({ boardId: "board-123" }),
+  });
+  const f = startModernZoom({ boardInputMode: "virtual", gameState: gameState.api });
+  try {
+    f.timers.advance(25);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    assert.equal(f.board.style.transform || "", "");
+  } finally { f.stop(); }
+});
+
+test("native four-layer vector board without mode controls zooms for a hardware board", () => {
+  const gameState = createMutableX01GameState({
+    snapshot: createScoringSnapshot({ boardId: "board-123" }),
+  });
+  const f = startModernZoom({ boardInputMode: null, gameState: gameState.api });
   try {
     f.timers.advance(25);
     assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
     assert.match(f.board.style.transform, /scale\(2\.750*\)/);
+  } finally { f.stop(); }
+});
+
+test("stored hardware board restores zoom when match player board id is missing", () => {
+  const gameState = createMutableX01GameState({
+    snapshot: createScoringSnapshot({}),
+  });
+  const f = startModernZoom({
+    boardInputMode: null,
+    gameState: gameState.api,
+    selectedBoard: "board-123",
+  });
+  try {
+    f.timers.advance(25);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+    assert.match(f.board.style.transform, /scale\(2\.750*\)/);
+  } finally { f.stop(); }
+});
+
+test("stored hardware board allows zoom before match state hydration", () => {
+  const gameState = createMutableX01GameState();
+  const f = startModernZoom({
+    boardInputMode: null,
+    gameState: gameState.api,
+    selectedBoard: "board-123",
+  });
+  try {
+    f.timers.advance(25);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+    assert.match(f.board.style.transform, /scale\(2\.750*\)/);
+  } finally { f.stop(); }
+});
+
+test("stored manual board zooms the aligned pointer surface before match state hydration", () => {
+  const gameState = createMutableX01GameState();
+  const f = startModernZoom({
+    boardInputMode: null,
+    gameState: gameState.api,
+    selectedBoard: "manual",
+  });
+  try {
+    f.timers.advance(25);
+    assert.equal(f.host.classList.contains(ZOOM_CLASS), true);
+    assert.match(f.host.style.transform, /scale\(2\.750*\)/);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    assert.equal(f.board.style.transform || "", "");
+  } finally { f.stop(); }
+});
+
+test("manual native four-layer vector board zooms its aligned pointer surface", () => {
+  const gameState = createMutableX01GameState({
+    snapshot: createScoringSnapshot({ boardId: "manual" }),
+  });
+  const f = startModernZoom({ boardInputMode: null, gameState: gameState.api });
+  try {
+    f.timers.advance(25);
+    assert.equal(f.host.classList.contains(ZOOM_CLASS), true);
+    assert.match(f.host.style.transform, /scale\(2\.750*\)/);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    assert.equal(f.board.style.transform || "", "");
+  } finally { f.stop(); }
+});
+
+test("missing board id uses the click-safe manual pointer surface", () => {
+  const gameState = createMutableX01GameState({
+    snapshot: createScoringSnapshot({}),
+  });
+  const f = startModernZoom({ boardInputMode: null, gameState: gameState.api });
+  try {
+    f.timers.advance(25);
+    assert.equal(f.host.classList.contains(ZOOM_CLASS), true);
+    assert.match(f.host.style.transform, /scale\(2\.750*\)/);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    assert.equal(f.board.style.transform || "", "");
+  } finally { f.stop(); }
+});
+
+test("manual native board stays unzoomed when its pointer surface is not aligned", () => {
+  const gameState = createMutableX01GameState({
+    snapshot: createScoringSnapshot({ boardId: "manual" }),
+  });
+  const f = startModernZoom({ boardInputMode: null, gameState: gameState.api });
+  try {
+    f.host.__rect = { left: 680, top: 100, width: 700, height: 700 };
+    f.timers.advance(25);
+    assert.equal(f.host.classList.contains(ZOOM_CLASS), false);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+  } finally { f.stop(); }
+});
+
+test("bot players remain zoomable without a scoring board id", () => {
+  const gameState = createMutableX01GameState({
+    snapshot: createScoringSnapshot({ cpuPPR: 45 }),
+  });
+  const f = startModernZoom({ boardInputMode: null, gameState: gameState.api });
+  try {
+    f.timers.advance(25);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+    assert.match(f.board.style.transform, /scale\(2\.750*\)/);
+  } finally { f.stop(); }
+});
+
+test("unknown dense vector board stays unzoomed until hardware state hydrates", () => {
+  const gameState = createMutableX01GameState();
+  const f = startModernZoom({ boardInputMode: null, gameState: gameState.api });
+  try {
+    f.timers.advance(25);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+
+    gameState.state.snapshot = createScoringSnapshot({ boardId: "board-123" });
+    gameState.notify();
+    f.timers.advance(25);
+
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+    assert.match(f.board.style.transform, /scale\(2\.750*\)/);
+  } finally { f.stop(); }
+});
+
+test("active player switches between hardware and click-safe manual zoom targets", () => {
+  const players = [
+    { boardId: "board-123" },
+    { boardId: "manual" },
+  ];
+  const gameState = createMutableX01GameState({
+    snapshot: createScoringSnapshot(players[0], 0, players),
+  });
+  const f = startModernZoom({ boardInputMode: null, gameState: gameState.api });
+  try {
+    f.timers.advance(25);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+
+    gameState.state.snapshot = createScoringSnapshot(players[1], 1, players);
+    gameState.notify();
+    f.timers.advance(25);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    assert.equal(f.board.style.transform || "", "");
+    assert.equal(f.host.classList.contains(ZOOM_CLASS), true);
+    assert.match(f.host.style.transform, /scale\(2\.750*\)/);
+
+    gameState.state.snapshot = createScoringSnapshot(players[0], 0, players);
+    gameState.notify();
+    f.timers.advance(25);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+    assert.match(f.board.style.transform, /scale\(2\.750*\)/);
+    assert.equal(f.host.classList.contains(ZOOM_CLASS), false);
+    assert.equal(f.host.style.transform || "", "");
   } finally { f.stop(); }
 });
 

@@ -65,6 +65,87 @@ const MODE_DEFINITIONS = Object.freeze([
     labels: ["virtual board", "virtual-board", "virtuelles board", "virtuelle tafel"],
   }),
 ]);
+const AUTODARTS_SELECTED_BOARD_STORAGE_KEY = "selectedBoard";
+
+function normalizeActivePlayerIndex(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) && numericValue >= 0
+    ? Math.trunc(numericValue)
+    : null;
+}
+
+function isBotPlayer(player) {
+  return Boolean(
+    player?.isBot === true ||
+    player?.bot === true ||
+    (player?.cpuPPR !== null && player?.cpuPPR !== undefined)
+  );
+}
+
+function resolveStoredBoardInputMode(options = {}) {
+  try {
+    const storageRef = options.storageRef || options.windowRef?.localStorage || null;
+    if (!storageRef || typeof storageRef.getItem !== "function") {
+      return "unknown";
+    }
+
+    const selectedBoard = String(
+      storageRef.getItem(AUTODARTS_SELECTED_BOARD_STORAGE_KEY) || ""
+    ).trim().toLowerCase();
+    if (!selectedBoard) {
+      return "unknown";
+    }
+    return selectedBoard === "manual" ? "manual" : "live";
+  } catch (_) {
+    return "unknown";
+  }
+}
+
+export function resolveScoringBoardInputMode(gameState, options = {}) {
+  const storedBoardMode = resolveStoredBoardInputMode(options);
+  if (!gameState || typeof gameState.getSnapshot !== "function") {
+    return storedBoardMode;
+  }
+
+  try {
+    const snapshot = gameState.getSnapshot();
+    const players = snapshot?.match?.players;
+    if (!snapshot || !Array.isArray(players)) {
+      return storedBoardMode;
+    }
+
+    let activePlayerIndex = null;
+    if (typeof gameState.getActivePlayerIndex === "function") {
+      activePlayerIndex = normalizeActivePlayerIndex(gameState.getActivePlayerIndex());
+    }
+    activePlayerIndex ??= normalizeActivePlayerIndex(
+      snapshot.activePlayerIndex ?? snapshot.match?.player
+    );
+
+    const player = activePlayerIndex === null ? null : players[activePlayerIndex];
+    if (!player || typeof player !== "object") {
+      return storedBoardMode;
+    }
+    if (isBotPlayer(player)) {
+      return "live";
+    }
+
+    const boardId = String(player.boardId ?? "").trim().toLowerCase();
+    if (boardId === "manual" || storedBoardMode === "manual") {
+      return "manual";
+    }
+    if (boardId || storedBoardMode === "live") {
+      return "live";
+    }
+    return "manual";
+  } catch (_) {
+    return storedBoardMode;
+  }
+}
 
 function normalizeText(value) {
   return String(value || "")

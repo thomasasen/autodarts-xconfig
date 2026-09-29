@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.1.13] - 2026-09-29
+
+### Fixed
+
+- Nutzerwirkung: Der TV-Board-Zoom funktioniert jetzt auch bei der manuellen Eingabe „Board“, ohne dass sichtbares Segment und Klickposition auseinanderlaufen. Ein Klick auf D17 wird deshalb weiterhin als D17 gewertet; der BUST-Effekt bleibt an der gerenderten Dartspitze ausgerichtet.
+  Technik: Bei manueller Eingabe transformiert xConfig die größen- und positionsgleiche Pointer-Hülle gemeinsam mit dem nativen Vektorboard statt nur dessen innere Grafik. Nicht ausgerichtete oder noch unbekannte Eingabeflächen bleiben fail-safe ungezoomt; Hardwareboards, Bots und explizite DOM-Modi behalten ihre bisherigen Fallbacks.
+
 ## [3.1.12] - 2026-09-29
 
 ### Fixed
@@ -2217,6 +2224,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.1.13]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.12...v3.1.13
 [3.1.12]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.11...v3.1.12
 [3.1.11]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.10...v3.1.11
 [3.1.10]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.9...v3.1.10

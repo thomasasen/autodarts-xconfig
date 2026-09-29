@@ -21,6 +21,7 @@ import {
   BOARD_INPUT_MODE_CONTROL_SELECTOR,
   collectBoardInputModeControls,
   getActiveBoardInputMode,
+  resolveScoringBoardInputMode,
 } from "../../shared/board-input-mode.js";
 import {
   MODERN_MATCH_SEMANTIC_SELECTORS,
@@ -40,6 +41,8 @@ const LISTENER_KEYS = Object.freeze({
   beforeUnload: `${FEATURE_KEY}:window-beforeunload`,
 });
 const TRANSIENT_RESET_GRACE_MS = 120;
+const VIRTUAL_BOARD_MIN_PATH_COUNT = 40;
+const BOARD_MEDIA_SELECTOR = "img, video, canvas, image";
 const THROW_HISTORY_CLICK_SELECTORS = Object.freeze([
   "#ad-ext-turn .ad-ext-turn-throw",
   ".ad-ext-turn-throw",
@@ -63,13 +66,83 @@ const ZOOM_SEMANTIC_CONTAINER_SELECTORS = Object.freeze([
   ".ad-ext-turn-throw",
 ]);
 
-function isNonLiveBoardInputModeActive(documentRef) {
-  const activeMode = getActiveBoardInputMode(documentRef);
-  if (activeMode) {
-    return activeMode !== "live";
+function isDenseNativeVectorBoard(boardSurface) {
+  const zoomTarget = boardSurface?.zoomTarget || null;
+  if (!zoomTarget?.matches?.(NATIVE_BOARD_SELECTOR)) {
+    return false;
+  }
+  if (zoomTarget.querySelector?.(BOARD_MEDIA_SELECTOR)) {
+    return false;
   }
 
-  return collectBoardInputModeControls(documentRef, { availableOnly: true }).length > 0;
+  return Array.from(zoomTarget.querySelectorAll?.("svg") || []).some(
+    (svgNode) => svgNode.querySelectorAll?.("path")?.length >= VIRTUAL_BOARD_MIN_PATH_COUNT
+  );
+}
+
+function hasMatchingInteractionLayout(interactionSurface, nativeBoard) {
+  const interactionRect = interactionSurface?.getBoundingClientRect?.();
+  const boardRect = nativeBoard?.getBoundingClientRect?.();
+  const interactionWidth = Number(interactionSurface?.offsetWidth) || Number(interactionRect?.width);
+  const interactionHeight = Number(interactionSurface?.offsetHeight) || Number(interactionRect?.height);
+  const boardWidth = Number(nativeBoard?.offsetWidth) || Number(boardRect?.width);
+  const boardHeight = Number(nativeBoard?.offsetHeight) || Number(boardRect?.height);
+  const dimensions = [interactionWidth, interactionHeight, boardWidth, boardHeight];
+  if (!dimensions.every((value) => Number.isFinite(value) && value > 0)) {
+    return false;
+  }
+
+  const tolerancePx = Math.max(2, Math.min(boardWidth, boardHeight) * 0.01);
+  return (
+    Math.abs(interactionWidth - boardWidth) <= tolerancePx &&
+    Math.abs(interactionHeight - boardHeight) <= tolerancePx &&
+    Math.abs(Number(nativeBoard?.offsetLeft) || 0) <= tolerancePx &&
+    Math.abs(Number(nativeBoard?.offsetTop) || 0) <= tolerancePx
+  );
+}
+
+function resolveManualNativeBoardSurface(boardSurface) {
+  const nativeBoard = boardSurface?.zoomTarget || null;
+  if (!nativeBoard?.matches?.(NATIVE_BOARD_SELECTOR)) {
+    return null;
+  }
+
+  const interactionSurface = nativeBoard.parentElement || null;
+  if (!interactionSurface || !hasMatchingInteractionLayout(interactionSurface, nativeBoard)) {
+    return null;
+  }
+
+  const zoomHost = resolveZoomHost(interactionSurface);
+  if (!zoomHost || zoomHost === interactionSurface) {
+    return null;
+  }
+
+  return {
+    ...boardSurface,
+    zoomTarget: interactionSurface,
+    zoomHost,
+  };
+}
+
+function resolveInputSafeBoardSurface(documentRef, gameState, boardSurface, windowRef) {
+  const activeMode = getActiveBoardInputMode(documentRef);
+  if (activeMode && activeMode !== "live") {
+    return null;
+  }
+
+  const scoringBoardMode = resolveScoringBoardInputMode(gameState, { windowRef });
+  if (scoringBoardMode === "manual") {
+    return resolveManualNativeBoardSurface(boardSurface);
+  }
+  if (scoringBoardMode === "live" || activeMode === "live") {
+    return boardSurface;
+  }
+
+  if (collectBoardInputModeControls(documentRef, { availableOnly: true }).length > 0) {
+    return null;
+  }
+
+  return isDenseNativeVectorBoard(boardSurface) ? null : boardSurface;
 }
 const ZOOM_STRUCTURE_CHILDLIST_SELECTORS = Object.freeze([
   ...ZOOM_STRUCTURE_TARGET_SELECTORS,
@@ -655,13 +728,20 @@ export function initializeTvBoardZoom(context = {}) {
       return;
     }
 
-    const targetNode = boardSurface?.zoomTarget || resolveZoomTarget(boardSvg);
+    const inputSafeBoardSurface = resolveInputSafeBoardSurface(
+      documentRef,
+      gameState,
+      boardSurface,
+      windowRef
+    );
+    const effectiveBoardSurface = inputSafeBoardSurface || boardSurface;
+    const targetNode = effectiveBoardSurface?.zoomTarget || resolveZoomTarget(boardSvg);
     if (!targetNode) {
       requestZoomReset("target-missing");
       return;
     }
 
-    const hostNode = boardSurface?.zoomHost || resolveZoomHost(targetNode);
+    const hostNode = effectiveBoardSurface?.zoomHost || resolveZoomHost(targetNode);
     syncGifContainmentIfNeeded(targetNode, hostNode);
 
     const intent = computeZoomIntent({
@@ -682,7 +762,7 @@ export function initializeTvBoardZoom(context = {}) {
     const lifecycleResetReason = String(zoomState.pendingLifecycleResetReason || "");
     zoomState.pendingLifecycleResetReason = "";
 
-    if (isNonLiveBoardInputModeActive(documentRef)) {
+    if (!inputSafeBoardSurface) {
       requestZoomReset("virtual-board-input", {
         force: true,
         immediate: true,
