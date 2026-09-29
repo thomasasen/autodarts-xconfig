@@ -12,6 +12,15 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.1.14] - 2026-09-29
+
+### Fixed
+
+- Nutzerwirkung: Der aktive TV-Board-Zoom bleibt auch dann stabil, wenn die Seite seine Styles ersetzt oder sich nur die Größe des Board-Containers ändert. Verlorene Zoom-Zustände werden selbst ohne auslösendes DOM-Ereignis wiederhergestellt.
+  Technik: Ein Resize-Observer, ein begrenzter Integritätscheck und vollständige Style-Ownership-Prüfungen berechnen den Transform neu, reparieren Ziel- und Hostzustand und bewahren externe Styles als Cleanup-Baseline.
+- Nutzerwirkung: Die moderne Dartanzeige respektiert wieder native Sichtbarkeitszustände, statt Platzhalter oder Dartgrafiken mit erzwungener Deckkraft einzublenden.
+  Technik: Die redundanten `opacity: 1 !important`-Regeln wurden aus den modernen Platzhalter- und Bildstilen entfernt und durch eine Regression abgesichert.
+
 ## [3.1.13] - 2026-09-29
 
 ### Fixed
@@ -2224,6 +2233,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.1.14]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.13...v3.1.14
 [3.1.13]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.12...v3.1.13
 [3.1.12]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.11...v3.1.12
 [3.1.11]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.10...v3.1.11
