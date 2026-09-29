@@ -159,6 +159,10 @@ test("turn dart display replaces native modern inline darts without styling chec
   });
   assert.match(styleText, new RegExp(`\\.${MODERN_TURN_DART_PLACEHOLDER_CLASS} > svg`));
   assert.match(styleText, /background-size: 96% auto !important/);
+  assert.doesNotMatch(
+    styleText,
+    new RegExp(`\\.${MODERN_TURN_DART_PLACEHOLDER_CLASS} \\{[^}]*opacity: 1 !important`, "s")
+  );
   assert.match(styleText, /\.text-checkout-suggestion, \.text-checkout-setup/);
 
   const originalPlaceholder = placeholders[0];

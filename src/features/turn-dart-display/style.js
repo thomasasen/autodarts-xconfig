@@ -135,7 +135,6 @@ function buildTurnDartTextStyleBlock(featureConfig, sizeScale, widthPx, heightPx
 }
 
 .${MODERN_TURN_DART_PLACEHOLDER_CLASS} {
-  opacity: 1 !important;
   pointer-events: none !important;
 }
 
@@ -231,7 +230,6 @@ ${TURN_DART_IMAGE_SELECTOR} {
   background-position: center !important;
   background-repeat: no-repeat !important;
   background-size: ${modernWidthPercent}% auto !important;
-  opacity: 1 !important;
   filter: ${shineFilter} !important;
   pointer-events: none !important;
 }
