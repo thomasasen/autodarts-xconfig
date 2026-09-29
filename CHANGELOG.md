@@ -12,6 +12,15 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.1.12] - 2026-09-29
+
+### Fixed
+
+- Nutzerwirkung: Der automatische Board-Zoom funktioniert wieder auf nativen Live-Boards mit mehreren SVG-Ebenen. Virtuelle, Segment- und Koordinaten-Eingabemodi bleiben weiterhin ungezoomt, damit sichtbare und klickbare Segmente deckungsgleich bleiben.
+  Technik: Die unsichere Ableitung „komplexes SVG ohne Modusschalter = virtuelles Board“ wurde entfernt. Nur semantisch erkannte Nicht-Live-Modi oder noch nicht vollständig hydrierte Modusschalter sperren den Zoom.
+- Nutzerwirkung: Frühe BUST-Visits blockieren den Zoom des folgenden Visits nicht mehr. Board-Animationen behalten fremde Größen-, Positions- und Darstellungsänderungen auch nach Zoom-Reset oder Remount bei.
+  Technik: BUST schließt den gespeicherten Visit-Fortschritt ab, ohne echte Korrekturen oder den Third-Dart-Hold zu verändern. GIF-Containment verwaltet Styles eigentumsbewusst und bleibt auf Board- sowie Tools-Animation-Flächen begrenzt; unsichere Zoom-Wrapper mit fremden Bedienelementen werden abgelehnt.
+
 ## [3.1.11] - 2026-09-28
 
 ### Changed
@@ -2208,6 +2217,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.1.12]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.11...v3.1.12
 [3.1.11]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.10...v3.1.11
 [3.1.10]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.9...v3.1.10
 [3.1.9]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.8...v3.1.9
