@@ -606,8 +606,17 @@ function createOwnedStyleSnapshot(styleDecl, propertyName, valueOverride = null)
 function setOwnedStyle(snapshot, styleDecl, propertyName, value, priority = "") {
   setStyleWithPriority(styleDecl, propertyName, value, priority);
   if (snapshot) {
-    snapshot.applied = { value: String(value || ""), priority: String(priority || "") };
+    snapshot.applied = {
+      value: getStyleValue(styleDecl, propertyName),
+      priority: getStylePriority(styleDecl, propertyName),
+    };
   }
+}
+
+function isOwnedStyleApplied(styleDecl, propertyName, snapshot) {
+  return Boolean(snapshot?.applied) &&
+    getStyleValue(styleDecl, propertyName) === String(snapshot.applied.value || "") &&
+    getStylePriority(styleDecl, propertyName) === String(snapshot.applied.priority || "");
 }
 
 function restoreOwnedStyle(styleDecl, propertyName, snapshot) {
@@ -623,6 +632,50 @@ function restoreOwnedStyle(styleDecl, propertyName, snapshot) {
     return;
   }
   restoreStyleWithPriority(styleDecl, propertyName, snapshot.original);
+}
+
+function adoptExternalOwnedStyle(styleDecl, propertyName, snapshot) {
+  if (!snapshot?.applied) {
+    return false;
+  }
+
+  const current = {
+    value: getStyleValue(styleDecl, propertyName),
+    priority: getStylePriority(styleDecl, propertyName),
+  };
+  if (
+    current.value === String(snapshot.applied.value || "") &&
+    current.priority === String(snapshot.applied.priority || "")
+  ) {
+    return false;
+  }
+
+  snapshot.original = current;
+  snapshot.applied = null;
+  return true;
+}
+
+function adoptExternalTargetStyleChanges(state, targetNode) {
+  const snapshot = state.targetStyleSnapshot;
+  if (!targetNode?.style || snapshot?.node !== targetNode) {
+    return;
+  }
+
+  adoptExternalOwnedStyle(targetNode.style, "transform", snapshot.transform);
+  adoptExternalOwnedStyle(targetNode.style, "transition", snapshot.transition);
+  adoptExternalOwnedStyle(targetNode.style, "transform-origin", snapshot.transformOrigin);
+  adoptExternalOwnedStyle(targetNode.style, "will-change", snapshot.willChange);
+}
+
+function adoptExternalHostStyleChanges(state, hostNode) {
+  const snapshot = state.hostStyleSnapshot;
+  if (!hostNode?.style || snapshot?.node !== hostNode) {
+    return;
+  }
+
+  adoptExternalOwnedStyle(hostNode.style, "overflow", snapshot.overflow);
+  adoptExternalOwnedStyle(hostNode.style, "overflow-x", snapshot.overflowX);
+  adoptExternalOwnedStyle(hostNode.style, "overflow-y", snapshot.overflowY);
 }
 
 function cacheHostStyle(state, hostNode) {
@@ -1927,6 +1980,19 @@ function applyZoomHostState(state, hostNode) {
   }
 }
 
+function hasAppliedZoomHostState(state, hostNode) {
+  if (!hostNode?.style) {
+    return true;
+  }
+
+  const snapshot = state.hostStyleSnapshot;
+  return hostNode.classList?.contains?.(ZOOM_HOST_CLASS) === true &&
+    snapshot?.node === hostNode &&
+    isOwnedStyleApplied(hostNode.style, "overflow", snapshot.overflow) &&
+    isOwnedStyleApplied(hostNode.style, "overflow-x", snapshot.overflowX) &&
+    isOwnedStyleApplied(hostNode.style, "overflow-y", snapshot.overflowY);
+}
+
 export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, options = {}) {
   const { targetNode, hostNode, boardSvg } = resolveApplyZoomNodes(zoomNodes);
   if (!targetNode?.style) {
@@ -1936,6 +2002,8 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
   clearPendingRelease(state);
   resetChangedZoomBindings(state, targetNode, hostNode);
   cacheTargetStyle(state, targetNode);
+  adoptExternalTargetStyleChanges(state, targetNode);
+  adoptExternalHostStyleChanges(state, hostNode);
   const zoomData = buildApplyZoomData(targetNode, hostNode, boardSvg, zoomLevel, intent, state, options);
 
   if (!zoomData) {
@@ -1950,9 +2018,15 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
     state.zoomedElement === targetNode &&
     state.zoomHost === normalizedHostNode &&
     state.lastAppliedIntentSignature === zoomData.intentSignature;
-  const hasAppliedTransform =
+  const hasAppliedVisualState =
     targetNode.classList.contains(ZOOM_CLASS) &&
-    Boolean(String(getStyleValue(targetNode.style, "transform") || "").trim());
+    Boolean(parseAppliedZoomTransform(getStyleValue(targetNode.style, "transform"))) &&
+    isOwnedStyleApplied(
+      targetNode.style,
+      "transform",
+      state.targetStyleSnapshot?.node === targetNode ? state.targetStyleSnapshot.transform : null
+    ) &&
+    hasAppliedZoomHostState(state, hostNode);
   if (options.syncGifOverlayContainment !== false) {
     syncGifOverlayContainment(state, targetNode, hostNode || targetNode);
   }
@@ -1960,7 +2034,7 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
     state.zoomedElement === targetNode &&
     state.zoomHost === normalizedHostNode &&
     state.lastAppliedSignature === zoomData.signature &&
-    hasAppliedTransform
+    hasAppliedVisualState
   ) {
     return zoomData;
   }

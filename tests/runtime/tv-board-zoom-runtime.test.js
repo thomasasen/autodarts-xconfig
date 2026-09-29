@@ -144,6 +144,36 @@ function startTvBoardZoom({ documentRef, windowRef, gameState, featureConfig = {
   });
 }
 
+function installResizeObserverHarness(windowRef) {
+  const observers = [];
+
+  windowRef.ResizeObserver = class FakeResizeObserver {
+    constructor(callback) {
+      this.callback = callback;
+      this.targets = new Set();
+      observers.push(this);
+    }
+
+    observe(target) {
+      this.targets.add(target);
+    }
+
+    disconnect() {
+      this.targets.clear();
+    }
+  };
+
+  return {
+    trigger(target) {
+      observers.forEach((observer) => {
+        if (observer.targets.has(target)) {
+          observer.callback([{ target }], observer);
+        }
+      });
+    },
+  };
+}
+
 function installBoardInputModeControls(fixture, activeMode = "live") {
   const createControl = (mode, label) => {
     const control = fixture.node(fixture.documentRef.main, "button", "", label);
@@ -1387,6 +1417,95 @@ test("tv-board-zoom does not reapply the zoom after unrelated board-svg attribut
     timers.advance(35);
 
     assert.equal(String(targetNode.style.transform || ""), firstTransform);
+  } finally {
+    cleanup();
+    timers.restoreGlobals();
+  }
+});
+
+test("tv-board-zoom repairs externally replaced zoom styles and preserves the new baseline on cleanup", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  timers.installGlobals();
+  const gameState = createMutableX01GameState({ activeScore: 10, throws: [] });
+  const { hostNode, targetNode } = installZoomFixture(documentRef);
+  const cleanup = startTvBoardZoom({ documentRef, windowRef, gameState: gameState.api });
+
+  try {
+    timers.advance(25);
+    assert.match(String(targetNode.style.transform || ""), /scale\(2\.7500\)/);
+
+    targetNode.style.setProperty("transform", "rotate(1deg)");
+    targetNode.classList.remove(ZOOM_CLASS);
+    hostNode.style.setProperty("overflow", "visible");
+    hostNode.classList.remove(ZOOM_HOST_CLASS);
+    documentRef.flushMutations([
+      { type: "attributes", target: targetNode, attributeName: "style", addedNodes: [], removedNodes: [] },
+      { type: "attributes", target: targetNode, attributeName: "class", addedNodes: [], removedNodes: [] },
+      { type: "attributes", target: hostNode, attributeName: "style", addedNodes: [], removedNodes: [] },
+      { type: "attributes", target: hostNode, attributeName: "class", addedNodes: [], removedNodes: [] },
+    ]);
+    timers.advance(25);
+
+    assert.match(String(targetNode.style.transform || ""), /^rotate\(1deg\) translate\(.+scale\(2\.7500\)$/);
+    assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
+    assert.equal(hostNode.style.getPropertyValue("overflow"), "hidden");
+    assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), true);
+  } finally {
+    cleanup();
+    assert.equal(targetNode.style.getPropertyValue("transform"), "rotate(1deg)");
+    assert.equal(hostNode.style.getPropertyValue("overflow"), "visible");
+    timers.restoreGlobals();
+  }
+});
+
+test("tv-board-zoom recomputes the active transform after a container-only resize", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const resizeObservers = installResizeObserverHarness(windowRef);
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  timers.installGlobals();
+  const gameState = createMutableX01GameState({ activeScore: 10, throws: [] });
+  const { hostNode, targetNode } = installZoomFixture(documentRef);
+  const cleanup = startTvBoardZoom({ documentRef, windowRef, gameState: gameState.api });
+
+  try {
+    timers.advance(25);
+    const initialTransform = String(targetNode.style.transform || "");
+
+    hostNode.__rect = { left: 900, top: 30, width: 640, height: 840 };
+    resizeObservers.trigger(hostNode);
+    timers.advance(25);
+
+    assert.notEqual(String(targetNode.style.transform || ""), initialTransform);
+  } finally {
+    cleanup();
+    timers.restoreGlobals();
+  }
+});
+
+test("tv-board-zoom heartbeat repairs silent transform loss without a DOM event", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const timers = createFakeTimerHarness();
+  timers.installOnWindow(windowRef);
+  timers.installGlobals();
+  const gameState = createMutableX01GameState({ activeScore: 10, throws: [] });
+  const { targetNode } = installZoomFixture(documentRef);
+  const cleanup = startTvBoardZoom({ documentRef, windowRef, gameState: gameState.api });
+
+  try {
+    timers.advance(25);
+    targetNode.style.removeProperty("transform");
+    targetNode.classList.remove(ZOOM_CLASS);
+
+    timers.advance(1100);
+
+    assert.match(String(targetNode.style.transform || ""), /scale\(2\.7500\)/);
+    assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
   } finally {
     cleanup();
     timers.restoreGlobals();

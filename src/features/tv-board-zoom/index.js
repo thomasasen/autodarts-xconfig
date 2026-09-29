@@ -41,6 +41,7 @@ const LISTENER_KEYS = Object.freeze({
   beforeUnload: `${FEATURE_KEY}:window-beforeunload`,
 });
 const TRANSIENT_RESET_GRACE_MS = 120;
+const ACTIVE_ZOOM_INTEGRITY_CHECK_MS = 1000;
 const VIRTUAL_BOARD_MIN_PATH_COUNT = 40;
 const BOARD_MEDIA_SELECTOR = "img, video, canvas, image";
 const THROW_HISTORY_CLICK_SELECTORS = Object.freeze([
@@ -592,13 +593,62 @@ export function initializeTvBoardZoom(context = {}) {
 
   let scheduler = null;
   let holdTimerId = 0;
+  let integrityTimerId = 0;
   let gifOverlayShadowRoot = null;
+  let resizeObserver = null;
+  let resizeObserverNodes = [];
 
   function clearHoldTimer() {
     if (holdTimerId) {
       windowRef.clearTimeout(holdTimerId);
     }
     holdTimerId = 0;
+  }
+
+  function clearIntegrityTimer() {
+    if (integrityTimerId) {
+      windowRef.clearTimeout(integrityTimerId);
+    }
+    integrityTimerId = 0;
+  }
+
+  function scheduleIntegrityCheck() {
+    clearIntegrityTimer();
+    if (!zoomState.zoomedElement || documentRef.hidden || documentRef.visibilityState === "hidden") {
+      return;
+    }
+
+    integrityTimerId = windowRef.setTimeout(() => {
+      integrityTimerId = 0;
+      scheduler?.schedule?.();
+    }, ACTIVE_ZOOM_INTEGRITY_CHECK_MS);
+  }
+
+  function disconnectResizeObserver() {
+    resizeObserver?.disconnect?.();
+    resizeObserverNodes = [];
+  }
+
+  function syncResizeObserver(nodes = []) {
+    const nextNodes = [...new Set(nodes.filter((node) => node && isConnectedNode(node)))];
+    if (
+      nextNodes.length === resizeObserverNodes.length &&
+      nextNodes.every((node, index) => node === resizeObserverNodes[index])
+    ) {
+      return;
+    }
+
+    disconnectResizeObserver();
+    if (typeof windowRef.ResizeObserver !== "function" || !nextNodes.length) {
+      return;
+    }
+
+    resizeObserver ||= new windowRef.ResizeObserver(() => {
+      markGifContainmentDirty();
+      scheduler?.schedule?.();
+    });
+    nextNodes.forEach((node) => resizeObserver.observe?.(node));
+    resizeObserverNodes = nextNodes;
   }
 
   function clearTransientResetTimer() {
@@ -705,10 +755,12 @@ export function initializeTvBoardZoom(context = {}) {
 
   scheduler = schedulerFactory(() => {
     clearHoldTimer();
+    clearIntegrityTimer();
     ensureGifOverlayObserver();
     const matchSurface = readModernMatchSurface(documentRef, windowRef);
     lastMatchSurface = matchSurface;
     if (!hasActiveTurnSurface(documentRef, matchSurface)) {
+      disconnectResizeObserver();
       invalidateBoardCache();
       markManualZoomPause(zoomState);
       zoomState.lastTurnId = "";
@@ -724,6 +776,7 @@ export function initializeTvBoardZoom(context = {}) {
     const boardSurface = getBoardSurface();
     const boardSvg = boardSurface?.svg || null;
     if (!boardSvg) {
+      disconnectResizeObserver();
       requestZoomReset("board-missing");
       return;
     }
@@ -737,11 +790,13 @@ export function initializeTvBoardZoom(context = {}) {
     const effectiveBoardSurface = inputSafeBoardSurface || boardSurface;
     const targetNode = effectiveBoardSurface?.zoomTarget || resolveZoomTarget(boardSvg);
     if (!targetNode) {
+      disconnectResizeObserver();
       requestZoomReset("target-missing");
       return;
     }
 
     const hostNode = effectiveBoardSurface?.zoomHost || resolveZoomHost(targetNode);
+    syncResizeObserver([targetNode, hostNode, boardSvg]);
     syncGifContainmentIfNeeded(targetNode, hostNode);
 
     const intent = computeZoomIntent({
@@ -763,6 +818,7 @@ export function initializeTvBoardZoom(context = {}) {
     zoomState.pendingLifecycleResetReason = "";
 
     if (!inputSafeBoardSurface) {
+      disconnectResizeObserver();
       requestZoomReset("virtual-board-input", {
         force: true,
         immediate: true,
@@ -804,6 +860,9 @@ export function initializeTvBoardZoom(context = {}) {
         syncGifOverlayContainment: false,
       }
     );
+    if (zoomData) {
+      scheduleIntegrityCheck();
+    }
     emitDebugEvent(debugState, "log", {
       status: zoomData ? "apply" : "apply-missing-transform",
       reason: String(intent?.reason || ""),
@@ -833,12 +892,18 @@ export function initializeTvBoardZoom(context = {}) {
       key: OBSERVER_KEY,
       target: rootNode,
       callback: (mutations = []) => {
-        // Host replacement can target the zoom container itself. Ignore only our
-        // attribute writes there; child-list changes must still rebind the SVG.
-        const externalMutations = mutations.filter((mutation) =>
-          resolveMutationType(mutation) !== "attributes" ||
-          !["class", "style"].includes(mutation.attributeName) ||
-          hasExternalDomMutation([mutation], isManagedNode));
+        // Reconsider visual writes on active zoom nodes so external overrides can
+        // heal. The RAF scheduler and applied-style fast path absorb our own writes.
+        const externalMutations = mutations.filter((mutation) => {
+          const isManagedZoomVisualMutation =
+            resolveMutationType(mutation) === "attributes" &&
+            ["class", "style"].includes(mutation.attributeName) &&
+            (mutation.target === zoomState.zoomedElement || mutation.target === zoomState.zoomHost);
+          return isManagedZoomVisualMutation ||
+            resolveMutationType(mutation) !== "attributes" ||
+            !["class", "style"].includes(mutation.attributeName) ||
+            hasExternalDomMutation([mutation], isManagedNode);
+        });
         if (!externalMutations.length) {
           return;
         }
@@ -914,6 +979,7 @@ export function initializeTvBoardZoom(context = {}) {
         }
         markManualZoomPause(zoomState);
         clearHoldTimer();
+        clearIntegrityTimer();
         clearTransientResetState();
         resetZoom(speedConfig, zoomState, false, {
           preserveGifContainment: true,
@@ -937,6 +1003,7 @@ export function initializeTvBoardZoom(context = {}) {
       handler: () => {
         clearTransientResetState();
         clearHoldTimer();
+        clearIntegrityTimer();
         zoomState.holdUntilTs = 0;
         zoomState.activeIntent = null;
         resetZoom(speedConfig, zoomState, true);
@@ -955,6 +1022,8 @@ export function initializeTvBoardZoom(context = {}) {
 
     scheduler.cancel();
     clearHoldTimer();
+    clearIntegrityTimer();
+    disconnectResizeObserver();
     try {
       unsubscribeGameState();
     } catch (_) {
