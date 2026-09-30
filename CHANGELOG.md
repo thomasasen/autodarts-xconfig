@@ -12,6 +12,15 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.1.15] - 2026-09-30
+
+### Fixed
+
+- Nutzerwirkung: Nach einer manuellen Wurfkorrektur mit unveränderter Wurfanzahl richtet sich der TV-Board-Zoom sofort wieder auf das aktualisierte Checkout-Ziel aus.
+  Technik: Eine Fortschrittssignatur aus aktivem Score und Wurfsegmenten beendet die manuelle Zoompause auch bei gleichbleibender Wurfanzahl, sobald sich der korrigierte Visit-Inhalt ändert.
+- Nutzerwirkung: Ersetzte Dartmarker bleiben über dem Board sichtbar, verdecken aber nicht mehr die Autodarts-Gewinneranzeige.
+  Technik: Die Overlay-Ebene wurde unter die native Gewinneranzeige abgesenkt und durch eine Laufzeitregression abgesichert.
+
 ## [3.1.14] - 2026-09-29
 
 ### Fixed
@@ -2233,6 +2242,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.1.15]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.14...v3.1.15
 [3.1.14]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.13...v3.1.14
 [3.1.13]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.12...v3.1.13
 [3.1.12]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.11...v3.1.12
