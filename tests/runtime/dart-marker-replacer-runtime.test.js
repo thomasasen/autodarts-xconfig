@@ -86,8 +86,8 @@ test("dart-marker-replacer resolves size settings thirty percent larger with leg
   assert.equal(resolveDartMarkerReplacerConfig({ impactStyle: "invalid" }).impactStyle, "classic");
 });
 
-test("dart-marker-replacer renders above Autodarts board SVG layers", () => {
-  assert.match(buildStyleText(), /#ad-ext-dart-image-overlay\s*\{[^}]*z-index:\s*50;/s);
+test("dart-marker-replacer stays above the board but below the Autodarts winner overlay", () => {
+  assert.match(buildStyleText(), /#ad-ext-dart-image-overlay\s*\{[^}]*z-index:\s*49;/s);
 });
 
 async function waitForCondition(predicate, options = {}) {
