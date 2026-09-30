@@ -465,7 +465,11 @@ function hasExplicitNonX01DomVariant(documentRef) {
   });
 }
 
-export function markManualZoomPause(state, throwCount = Number.NaN) {
+export function markManualZoomPause(
+  state,
+  throwCount = Number.NaN,
+  progressSignature = ""
+) {
   if (!state) {
     return;
   }
@@ -481,6 +485,8 @@ export function markManualZoomPause(state, throwCount = Number.NaN) {
       : state.lastThrowCount;
   state.manualPauseThrowCount =
     Number.isFinite(baseline) && baseline >= 0 ? baseline : -1;
+  state.manualPauseProgressSignature =
+    String(progressSignature || state.lastTurnProgressSignature || "");
 }
 
 function resolveZoomAnchor(intent, parsedSegment, segmentPoint = null) {
@@ -1348,9 +1354,11 @@ function resetZoomIntentForBoundaryChange(state) {
   state.stickyUntilLegEnd = false;
   state.manualPause = false;
   state.manualPauseThrowCount = -1;
+  state.manualPauseProgressSignature = "";
   state.lastTurnId = "";
   state.lastThrowCount = -1;
   state.lastActiveScore = Number.NaN;
+  state.lastTurnProgressSignature = "";
   state.pendingLifecycleResetReason = "game-boundary";
 }
 
@@ -1361,7 +1369,9 @@ function resetZoomIntentForInactiveVariant(state) {
   state.stickyUntilLegEnd = false;
   state.manualPause = false;
   state.manualPauseThrowCount = -1;
+  state.manualPauseProgressSignature = "";
   state.lastActiveScore = Number.NaN;
+  state.lastTurnProgressSignature = "";
   state.pendingLifecycleResetReason = "variant-inactive";
 }
 
@@ -1372,8 +1382,10 @@ function resetZoomIntentForBust(state) {
   state.stickyUntilLegEnd = false;
   state.manualPause = false;
   state.manualPauseThrowCount = -1;
+  state.manualPauseProgressSignature = "";
   state.lastThrowCount = -1;
   state.lastActiveScore = Number.NaN;
+  state.lastTurnProgressSignature = "";
   state.pendingLifecycleResetReason = "bust";
 }
 
@@ -1456,6 +1468,7 @@ function resetZoomIntentForTurnChange(state) {
   state.stickyUntilTurnChange = false;
   state.manualPause = false;
   state.manualPauseThrowCount = -1;
+  state.manualPauseProgressSignature = "";
 }
 
 function getPersistedActiveScore(state) {
@@ -1479,7 +1492,16 @@ function shouldTreatThrowCountDecreaseAsTurnReset(options = {}) {
   return activeScore <= previousActiveScore;
 }
 
-function persistTurnProgress(state, turnId, throwCount, activeScore) {
+function buildTurnProgressSignature(throws, activeScore, x01Rules) {
+  const segments = Array.isArray(throws)
+    ? throws.map((throwEntry) => getThrowSegmentName(throwEntry, x01Rules) || "?")
+    : [];
+  const numericActiveScore = Number(activeScore);
+  const scoreToken = Number.isFinite(numericActiveScore) ? numericActiveScore : "?";
+  return `${scoreToken}|${segments.join(",")}`;
+}
+
+function persistTurnProgress(state, turnId, throwCount, activeScore, progressSignature) {
   state.lastTurnId = turnId;
   state.lastThrowCount = throwCount;
   const numericActiveScore = Number(activeScore);
@@ -1487,6 +1509,7 @@ function persistTurnProgress(state, turnId, throwCount, activeScore) {
     Number.isFinite(numericActiveScore) && numericActiveScore >= 0
       ? numericActiveScore
       : Number.NaN;
+  state.lastTurnProgressSignature = String(progressSignature || "");
 }
 
 function clearDisabledSetupIntent(state, t20SetupZoomEnabled, finishOnlyCheckoutZoom) {
@@ -1552,7 +1575,7 @@ function resolveIntentCheckoutContext({
   };
 }
 
-function isManualPauseStillActive(state, throwCount) {
+function isManualPauseStillActive(state, throwCount, progressSignature) {
   if (!state.manualPause) {
     return false;
   }
@@ -1561,12 +1584,20 @@ function isManualPauseStillActive(state, throwCount) {
     Number.isFinite(state.manualPauseThrowCount) && state.manualPauseThrowCount >= 0
       ? state.manualPauseThrowCount
       : -1;
-  if (throwCount <= baseline) {
+  const pausedSignature = String(state.manualPauseProgressSignature || "");
+  const currentSignature = String(progressSignature || "");
+  const correctedAtSameCount =
+    throwCount === baseline &&
+    Boolean(pausedSignature) &&
+    Boolean(currentSignature) &&
+    pausedSignature !== currentSignature;
+  if (throwCount <= baseline && !correctedAtSameCount) {
     return true;
   }
 
   state.manualPause = false;
   state.manualPauseThrowCount = -1;
+  state.manualPauseProgressSignature = "";
   return false;
 }
 
@@ -1784,6 +1815,11 @@ export function computeZoomIntent(options = {}) {
     x01Rules,
     state,
   });
+  const progressSignature = buildTurnProgressSignature(
+    throws,
+    checkoutContext.activeScore,
+    x01Rules
+  );
 
   if (!turnChanged && previousThrowCount >= 0 && throwCount < previousThrowCount) {
     if (
@@ -1797,13 +1833,25 @@ export function computeZoomIntent(options = {}) {
       resetZoomIntentForTurnChange(state);
       turnChanged = true;
     } else {
-      markManualZoomPause(state, throwCount);
-      persistTurnProgress(state, turnId, throwCount, checkoutContext.activeScore);
+      markManualZoomPause(state, throwCount, progressSignature);
+      persistTurnProgress(
+        state,
+        turnId,
+        throwCount,
+        checkoutContext.activeScore,
+        progressSignature
+      );
       return null;
     }
   }
 
-  persistTurnProgress(state, turnId, throwCount, checkoutContext.activeScore);
+  persistTurnProgress(
+    state,
+    turnId,
+    throwCount,
+    checkoutContext.activeScore,
+    progressSignature
+  );
   clearDisabledSetupIntent(state, t20SetupZoomEnabled, finishOnlyCheckoutZoom);
 
   const canUseT20Setup = canUseThirdDartT20Setup(
@@ -1814,7 +1862,7 @@ export function computeZoomIntent(options = {}) {
     x01Rules
   );
 
-  if (isManualPauseStillActive(state, throwCount)) {
+  if (isManualPauseStillActive(state, throwCount, progressSignature)) {
     return null;
   }
 

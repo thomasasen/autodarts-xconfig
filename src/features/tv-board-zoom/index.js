@@ -518,6 +518,7 @@ export function initializeTvBoardZoom(context = {}) {
     lastTurnId: "",
     lastThrowCount: -1,
     lastActiveScore: Number.NaN,
+    lastTurnProgressSignature: "",
     lastAppliedSignature: "",
     lastAppliedIntentSignature: "",
     lastAppliedZoomTransform: null,
@@ -534,6 +535,7 @@ export function initializeTvBoardZoom(context = {}) {
     stickyUntilLegEnd: false,
     manualPause: false,
     manualPauseThrowCount: -1,
+    manualPauseProgressSignature: "",
     transientResetReason: "",
     transientResetUntilTs: 0,
     transientResetTimerId: 0,
@@ -766,6 +768,8 @@ export function initializeTvBoardZoom(context = {}) {
       zoomState.lastTurnId = "";
       zoomState.lastThrowCount = -1;
       zoomState.manualPause = false;
+      zoomState.manualPauseThrowCount = -1;
+      zoomState.manualPauseProgressSignature = "";
       requestZoomReset("match-surface-inactive", {
         force: true,
         immediate: true,

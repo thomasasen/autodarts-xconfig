@@ -44,10 +44,12 @@ function createZoomState() {
     lastTurnId: "",
     lastThrowCount: -1,
     lastActiveScore: Number.NaN,
+    lastTurnProgressSignature: "",
     stickyUntilTurnChange: false,
     stickyUntilLegEnd: false,
     manualPause: false,
     manualPauseThrowCount: -1,
+    manualPauseProgressSignature: "",
     matchBoundaryToken: "",
     pendingLifecycleResetReason: "",
   };
@@ -1730,6 +1732,58 @@ test("tv-board-zoom pauses auto zoom after manual correction until throw count p
   assert.deepEqual(checkoutIntent, { reason: "checkout", segment: "D20" });
   assert.equal(pausedIntent, null);
   assert.deepEqual(resumedIntent, { reason: "checkout", segment: "D10" });
+});
+
+test("tv-board-zoom resumes checkout focus after a same-count value correction", () => {
+  const documentRef = new FakeDocument();
+  documentRef.suggestionElement.textContent = "";
+  const windowRef = createFakeWindow({ documentRef });
+  const state = createZoomState();
+  const initialThrows = [{ segment: { name: "T20" } }, { segment: { name: "S25" } }];
+
+  const initialIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 36,
+      outMode: "Double Out",
+      activeThrows: initialThrows,
+      activeTurn: {
+        id: "turn-same-count-correction",
+        playerId: "player-1",
+        throws: initialThrows,
+      },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: { checkoutZoomEnabled: true },
+    nowTs: 12500,
+  });
+
+  markManualZoomPause(state, 2);
+  const correctedThrows = [{ segment: { name: "T20" } }, { segment: { name: "S21" } }];
+  const correctedIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 40,
+      outMode: "Double Out",
+      activeThrows: correctedThrows,
+      activeTurn: {
+        id: "turn-same-count-correction",
+        playerId: "player-1",
+        throws: correctedThrows,
+      },
+    }),
+    x01Rules,
+    state,
+    documentRef,
+    windowRef,
+    featureConfig: { checkoutZoomEnabled: true },
+    nowTs: 12600,
+  });
+
+  assert.deepEqual(initialIntent, { reason: "checkout", segment: "D18" });
+  assert.deepEqual(correctedIntent, { reason: "checkout", segment: "D20" });
+  assert.equal(state.manualPause, false);
 });
 
 test("tv-board-zoom zooms out on throw correction and stays paused until new throw progress", () => {
