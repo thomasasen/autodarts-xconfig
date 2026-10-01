@@ -843,17 +843,70 @@ function collectGifOverlayEntries(targetNode, hostNode) {
   return overlays;
 }
 
-function restoreGifOverlayStyles(state) {
+const GIF_CONTAINMENT_SELECTOR = ".fixed:has(#gif-animation, .gif-animation, " +
+  "img[src*=\".gif\" i], video[src*=\".gif\" i], " +
+  "img[src*=\"giphy\" i], video[src*=\"giphy\" i], " +
+  "img[src*=\"tenor\" i], video[src*=\"tenor\" i])";
+
+function syncGifOverlayStylesheets(state, ownerDocument, viewportRect) {
+  const stylesheets = state.gifContainmentStylesheets ||= new Map();
+  const roots = new Set();
+  queryAll(ownerDocument, "autodarts-tools-animations").forEach((host) => {
+    const root = host.shadowRoot;
+    if (!root?.appendChild) {
+      return;
+    }
+    roots.add(root);
+    let style = stylesheets.get(root);
+    if (!style || style.parentNode !== root) {
+      style?.remove?.();
+      style = ownerDocument.createElement("style");
+      style.id = "ad-ext-tv-board-zoom-gif-containment";
+      root.appendChild(style);
+      stylesheets.set(root, style);
+    }
+
+    // Tools rewrites its inline geometry on GIF load/fade. A shadow-root rule
+    // keeps those ordinary inline writes from changing the rendered viewport.
+    const css = `${GIF_CONTAINMENT_SELECTOR} {
+      position: fixed !important;
+      top: ${viewportRect.top.toFixed(2)}px !important;
+      left: ${viewportRect.left.toFixed(2)}px !important;
+      right: auto !important;
+      bottom: auto !important;
+      width: ${viewportRect.width.toFixed(2)}px !important;
+      height: ${viewportRect.height.toFixed(2)}px !important;
+      max-width: none !important;
+      max-height: none !important;
+      overflow: hidden !important;
+    }`;
+    if (style.textContent !== css) {
+      style.textContent = css;
+    }
+  });
+  stylesheets.forEach((style, root) => {
+    if (!roots.has(root)) {
+      style.remove();
+      stylesheets.delete(root);
+    }
+  });
+}
+
+function restoreGifOverlayStyles(state, preserveStylesheets = false) {
   const snapshots = Array.isArray(state?.gifStyleSnapshots) ? state.gifStyleSnapshots : [];
   snapshots.forEach(restoreToolsAnimationGifNodeStyle);
 
   if (state) {
     state.gifStyleSnapshots = [];
+    if (!preserveStylesheets) {
+      state.gifContainmentStylesheets?.forEach((style) => style.remove());
+      state.gifContainmentStylesheets?.clear();
+    }
   }
 }
 
 export function syncGifOverlayContainment(state, targetNode, hostNode) {
-  restoreGifOverlayStyles(state);
+  restoreGifOverlayStyles(state, true);
 
   if (!hostNode) {
     return;
@@ -870,17 +923,17 @@ export function syncGifOverlayContainment(state, targetNode, hostNode) {
     return;
   }
 
-  const overlays = collectGifOverlayEntries(targetNode, hostNode);
-  if (!overlays.length) {
-    return;
-  }
-
   const viewportRect = {
     left: Number(hostRect?.left) || 0,
     top: Number(hostRect?.top) || 0,
     width: hostWidth,
     height: hostHeight,
   };
+  syncGifOverlayStylesheets(state, targetNode?.ownerDocument || hostNode.ownerDocument, viewportRect);
+  const overlays = collectGifOverlayEntries(targetNode, hostNode);
+  if (!overlays.length) {
+    return;
+  }
   const snapshots = [];
   const snapshottedNodes = new Map();
 

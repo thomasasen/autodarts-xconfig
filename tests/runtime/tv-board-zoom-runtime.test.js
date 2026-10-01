@@ -566,6 +566,68 @@ test("tv-board-zoom keeps a late tools gif contained across zoom reset", () => {
   }
 });
 
+test("tools gif geometry stays guarded before insertion, through inline rewrites and zoom reset", () => {
+  const f = startModernZoom();
+  const animationHost = f.documentRef.createElement("autodarts-tools-animations");
+  const shadowRoot = f.documentRef.createElement("div");
+  animationHost.shadowRoot = shadowRoot;
+  f.documentRef.main.appendChild(animationHost);
+
+  try {
+    f.timers.advance(25);
+    const guard = shadowRoot.querySelector("style");
+    assert.ok(guard, "containment must be installed before the first GIF arrives");
+    const initialCss = guard.textContent;
+    const rect = f.host.getBoundingClientRect();
+    assert.ok(initialCss.includes(`top: ${rect.top.toFixed(2)}px !important`));
+    assert.ok(initialCss.includes(`left: ${rect.left.toFixed(2)}px !important`));
+    assert.ok(initialCss.includes(`width: ${rect.width.toFixed(2)}px !important`));
+    assert.ok(initialCss.includes(`height: ${rect.height.toFixed(2)}px !important`));
+    assert.match(initialCss, /\.fixed:has\(/);
+    assert.doesNotMatch(initialCss, /opacity|transition/);
+
+    // Live Tools DOM: the GIF is a direct child of the fixed wrapper.
+    const wrapper = f.documentRef.createElement("div");
+    wrapper.classList.add("fixed");
+    const gif = f.documentRef.createElement("img");
+    gif.setAttribute("src", "https://example.test/finish.gif");
+    wrapper.appendChild(gif);
+    shadowRoot.appendChild(wrapper);
+    f.tick();
+
+    // Tools recalculates ordinary inline styles on load and fade. The
+    // !important shadow stylesheet remains in force without a scheduler pass.
+    wrapper.style.setProperty("top", "-294.20px");
+    wrapper.style.setProperty("left", "17.55px");
+    wrapper.style.setProperty("width", "2178px");
+    wrapper.style.setProperty("height", "2178px");
+    assert.equal(shadowRoot.querySelector("style"), guard);
+    assert.equal(guard.textContent, initialCss);
+    f.tick();
+    assert.equal(shadowRoot.querySelectorAll("style").length, 1);
+    assert.equal(guard.textContent, initialCss);
+
+    f.setBoardInputMode("virtual");
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    assert.equal(shadowRoot.querySelector("style"), guard);
+    assert.equal(guard.textContent, initialCss);
+
+    f.host.__rect = { ...f.host.__rect, width: 640, height: 640 };
+    f.tick();
+    assert.equal(shadowRoot.querySelector("style"), guard);
+    assert.match(guard.textContent, /width: 640\.00px !important/);
+    assert.match(guard.textContent, /height: 640\.00px !important/);
+
+    const replacementRoot = f.documentRef.createElement("div");
+    animationHost.shadowRoot = replacementRoot;
+    f.tick();
+    assert.equal(shadowRoot.querySelector("style"), null);
+    assert.ok(replacementRoot.querySelector("style"), "a replaced GIF root must be guarded before insertion");
+  } finally { f.stop(); }
+  assert.equal(shadowRoot.querySelector("style"), null);
+  assert.equal(animationHost.shadowRoot.querySelector("style"), null);
+});
+
 test("native correction click pauses zoom until the next dart", () => {
   const f = startModernZoom();
   try {
