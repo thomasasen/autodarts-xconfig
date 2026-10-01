@@ -12,6 +12,17 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.2.1] - 2026-10-01
+
+### Fixed
+
+- Nutzerwirkung: GIF-Animationen bleiben auf die Board-Fläche begrenzt, auch wenn Autodarts Tools ihre Position oder Größe beim Laden und Ausblenden verändert.
+  Technik: Eine verwaltete Regel im Shadow-DOM hält die GIF-Hülle an der Board-Geometrie ausgerichtet und wird beim Entfernen der Animationsfläche beziehungsweise beim Cleanup wieder entfernt.
+- Nutzerwirkung: Nach der Rücknahme eines Wurfs richtet sich der TV-Board-Zoom sofort wieder auf das aktuelle Checkout-Ziel aus. Die manuelle Maus-Eingabe bleibt auch bei ausgewähltem Hardwareboard mit dem sichtbaren Board deckungsgleich.
+  Technik: Die Zoompause vergleicht den korrigierten Visit mit dem Fortschritt vor der Rücknahme; native Pointer-Hüllen werden unabhängig vom ausgewählten Board gemeinsam mit der Board-Grafik transformiert.
+- Nutzerwirkung: Die Glasrisse am Einschlagspunkt des BUST-Darts decken die Board-Fläche auch bei anschließenden Zoomänderungen ab.
+  Technik: Einschlagrisse erhalten zusätzliche Reichweite, werden an der SVG-Fläche beschnitten und bei wachsender Fläche anhand ihrer ursprünglichen Diagonale skaliert. Regressionen sichern Randpositionen und Zoomänderungen ab.
+
 ## [3.2.0] - 2026-10-01
 
 ### Added
@@ -2249,6 +2260,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.2.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.2.0...v3.2.1
 [3.2.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.15...v3.2.0
 [3.1.15]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.14...v3.1.15
 [3.1.14]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.13...v3.1.14
