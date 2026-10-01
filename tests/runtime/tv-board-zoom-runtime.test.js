@@ -628,7 +628,7 @@ test("tools gif geometry stays guarded before insertion, through inline rewrites
   assert.equal(animationHost.shadowRoot.querySelector("style"), null);
 });
 
-test("native correction click pauses zoom until the next dart", () => {
+test("native correction click pauses zoom until a valid target becomes available", () => {
   const f = startModernZoom();
   try {
     f.timers.advance(25);
@@ -646,6 +646,42 @@ test("native correction click pauses zoom until the next dart", () => {
     assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
   } finally { f.stop(); }
 });
+
+for (const undoThirdDart of [false, true]) {
+  test(`native undo of dart ${undoThirdDart ? 3 : 2} immediately resumes the current checkout zoom`, () => {
+    const f = startModernZoom({
+      base: undoThirdDart ? 124 : 100,
+      score: 4,
+      throws: undoThirdDart ? ["T20", "T20"] : ["T20", "D18"],
+      route: ["D2"],
+    });
+    try {
+      f.timers.advance(25);
+      assert.equal(f.events.find((event) => event.status === "apply")?.segment, "D2");
+      if (undoThirdDart) {
+        f.setVisit(["T20", "T20", "MISS"], []);
+        f.tick();
+        assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+      }
+
+      f.windowRef.dispatchEvent({
+        type: "pointerdown",
+        target: f.rows[undoThirdDart ? 2 : 1].label,
+      });
+      f.score.textContent = undoThirdDart ? "4" : "40";
+      f.setVisit(undoThirdDart ? ["T20", "T20"] : ["T20"], [undoThirdDart ? "D2" : "D20"]);
+      f.total.textContent = undoThirdDart ? "120" : "60";
+      f.tick();
+      assert.match(f.board.style.transform, /scale\(2\.750*\)/);
+      assert.equal(f.events.filter((event) => event.status === "apply").at(-1)?.segment,
+        undoThirdDart ? "D2" : "D20");
+
+      f.timers.advance(1200);
+      f.tick();
+      assert.match(f.board.style.transform, /scale\(2\.750*\)/);
+    } finally { f.stop(); }
+  });
+}
 
 test("native correction undo reapplies the same zoom before zoom-out completes", () => {
   const f = startModernZoom();
@@ -1241,7 +1277,7 @@ test("tv-board-zoom resets after board stays missing beyond transient grace", as
   }
 });
 
-test("tv-board-zoom keeps immediate correction zoom-out behavior with manual pause", async () => {
+test("tv-board-zoom releases the old zoom after undo when no current target remains", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const timers = createFakeTimerHarness();
@@ -1266,7 +1302,7 @@ test("tv-board-zoom keeps immediate correction zoom-out behavior with manual pau
     gameState.state.activeScore = 181;
     gameState.state.throws = [{ segment: { name: "T20" } }];
     gameState.notify();
-    timers.advance(35);
+    timers.advance(500);
 
     assert.equal(String(targetNode.style.transform || ""), "");
   } finally {

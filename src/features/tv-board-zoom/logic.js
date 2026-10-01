@@ -1639,12 +1639,12 @@ function isManualPauseStillActive(state, throwCount, progressSignature) {
       : -1;
   const pausedSignature = String(state.manualPauseProgressSignature || "");
   const currentSignature = String(progressSignature || "");
-  const correctedAtSameCount =
-    throwCount === baseline &&
+  const correctedSincePause =
+    throwCount <= baseline &&
     Boolean(pausedSignature) &&
     Boolean(currentSignature) &&
     pausedSignature !== currentSignature;
-  if (throwCount <= baseline && !correctedAtSameCount) {
+  if (throwCount <= baseline && !correctedSincePause) {
     return true;
   }
 
@@ -1886,15 +1886,9 @@ export function computeZoomIntent(options = {}) {
       resetZoomIntentForTurnChange(state);
       turnChanged = true;
     } else {
-      markManualZoomPause(state, throwCount, progressSignature);
-      persistTurnProgress(
-        state,
-        turnId,
-        throwCount,
-        checkoutContext.activeScore,
-        progressSignature
-      );
-      return null;
+      // Keep the pre-undo baseline so the changed visit can release the pause
+      // and resolve its current target in this same scheduler pass.
+      markManualZoomPause(state, previousThrowCount);
     }
   }
 

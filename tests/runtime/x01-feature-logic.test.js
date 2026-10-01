@@ -1786,7 +1786,7 @@ test("tv-board-zoom resumes checkout focus after a same-count value correction",
   assert.equal(state.manualPause, false);
 });
 
-test("tv-board-zoom zooms out on throw correction and stays paused until new throw progress", () => {
+test("tv-board-zoom releases setup zoom after undo and resumes when a valid checkout becomes available", () => {
   const documentRef = new FakeDocument();
   documentRef.suggestionElement.textContent = "";
   const windowRef = createFakeWindow({ documentRef });
@@ -2092,7 +2092,7 @@ for (const bustDartCount of [1, 2]) {
   });
 }
 
-test("tv-board-zoom keeps a full-visit correction paused when 3 throws are removed", () => {
+test("tv-board-zoom clears the old target after full-visit undo without retaining a correction pause", () => {
   const documentRef = new FakeDocument();
   documentRef.suggestionElement.textContent = "";
   const windowRef = createFakeWindow({ documentRef });
@@ -2134,11 +2134,12 @@ test("tv-board-zoom keeps a full-visit correction paused when 3 throws are remov
   });
 
   assert.equal(correctionIntent, null);
-  assert.equal(state.manualPause, true);
-  assert.equal(state.manualPauseThrowCount, 0);
+  assert.equal(state.manualPause, false);
+  assert.equal(state.lastThrowCount, 0);
+  assert.equal(state.activeIntent, null);
 });
 
-test("tv-board-zoom treats a 1-to-0 throw rollback as a correction without a Bust boundary", () => {
+test("tv-board-zoom recomputes a 1-to-0 throw rollback without a Bust boundary or correction pause", () => {
   const documentRef = new FakeDocument();
   documentRef.suggestionElement.textContent = "";
   const windowRef = createFakeWindow({ documentRef });
@@ -2191,8 +2192,9 @@ test("tv-board-zoom treats a 1-to-0 throw rollback as a correction without a Bus
   });
 
   assert.equal(correctionIntent, null);
-  assert.equal(state.manualPause, true);
-  assert.equal(state.manualPauseThrowCount, 0);
+  assert.equal(state.manualPause, false);
+  assert.equal(state.lastThrowCount, 0);
+  assert.equal(state.activeIntent, null);
 });
 
 test("tv-board-zoom clears checkout sticky state at a reliable leg boundary before score hydration", () => {
