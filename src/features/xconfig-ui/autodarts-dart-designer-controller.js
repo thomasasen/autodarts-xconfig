@@ -13,7 +13,7 @@ const DESIGNER_IMAGE_MAX_BYTES = 350 * 1024;
 const DESIGNER_IMAGE_WIDTHS = Object.freeze([960, 720, 560]);
 
 function normalizeText(value) {
-  return String(value || "").replace(/\s+/g, " ").trim();
+  return String(value || "").replaceAll(/\s+/g, " ").trim();
 }
 
 function getDesignerTabs(tabList) {
@@ -48,7 +48,7 @@ function getActiveTabIndex(tabs = []) {
   const activeIndex = tabs.findIndex(
     (tab) => String(tab?.getAttribute?.("aria-selected") || "").toLowerCase() === "true"
   );
-  return activeIndex >= 0 ? activeIndex : 0;
+  return Math.max(activeIndex, 0);
 }
 
 function waitForNextFrame(windowRef) {
@@ -209,11 +209,16 @@ function getDataUrlByteSize(dataUrl) {
   if (separatorIndex < 0) {
     return 0;
   }
-  const payload = value.slice(separatorIndex + 1).replace(/\s+/g, "");
+  const payload = value.slice(separatorIndex + 1).replaceAll(/\s+/g, "");
   if (!value.slice(0, separatorIndex).toLowerCase().includes(";base64")) {
     return payload.length;
   }
-  const padding = payload.endsWith("==") ? 2 : payload.endsWith("=") ? 1 : 0;
+  let padding = 0;
+  if (payload.endsWith("==")) {
+    padding = 2;
+  } else if (payload.endsWith("=")) {
+    padding = 1;
+  }
   return Math.max(0, Math.floor((payload.length * 3) / 4) - padding);
 }
 
@@ -248,7 +253,7 @@ export async function rasterizeAutodartsDartDesignerPreview(options = {}) {
     typeof SerializerRef !== "function" ||
     typeof urlApi?.createObjectURL !== "function"
   ) {
-    throw new Error("Die Dartvorschau kann in diesem Browser nicht als Bild gespeichert werden.");
+    throw new TypeError("Die Dartvorschau kann in diesem Browser nicht als Bild gespeichert werden.");
   }
 
   const svgClone = preview.cloneNode(true);

@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.2.0] - 2026-10-01
+
+### Added
+
+- Nutzerwirkung: Eigene Darts lassen sich direkt im Autodarts-Dartdesigner zusammenstellen, lokal in xConfig übernehmen und später mit ihrer gespeicherten Auswahl wiederherstellen. Die Wurfanzeige kann den übernommenen Dart als eigenen Stil verwenden; Sicherung und Wiederherstellung der xConfig-Einstellungen schließen das Design ein.
+  Technik: Eine neue Designer-Anbindung erfasst die fünf Bauteile, bereinigt und rastert die SVG-Vorschau lokal, speichert Bild sowie normalisierte Auswahl in der Laufzeitkonfiguration und bindet Import, Wiederherstellung, Entfernung und Darstellung in Oberfläche und Konfigurationstransfer ein.
+
 ## [3.1.15] - 2026-09-30
 
 ### Fixed
@@ -2242,6 +2249,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.2.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.15...v3.2.0
 [3.1.15]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.14...v3.1.15
 [3.1.14]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.13...v3.1.14
 [3.1.13]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.12...v3.1.13

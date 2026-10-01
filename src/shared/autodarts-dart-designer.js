@@ -15,7 +15,7 @@ const MAX_DESIGNER_OPTION_INDEX = 64;
 
 function normalizeLabel(value) {
   return String(value || "")
-    .replace(/\s+/g, " ")
+    .replaceAll(/\s+/g, " ")
     .trim()
     .slice(0, MAX_DESIGNER_LABEL_LENGTH);
 }
