@@ -58,6 +58,15 @@ const SPECIAL_TRANSFER_FIELDS = Object.freeze({
     label: "Eigenes Dart-Bild",
     maxBytes: TURN_DART_IMAGE_MAX_BYTES,
   }),
+  turnDartDesignerImageDataUrl: Object.freeze({
+    control: "asset",
+    label: "Dartdesigner-Bild",
+    maxBytes: TURN_DART_IMAGE_MAX_BYTES,
+  }),
+  turnDartDesignerConfig: Object.freeze({
+    control: "normalized-object",
+    label: "Dartdesigner-Konfiguration",
+  }),
   backgroundAssetKey: Object.freeze({
     control: "normalized-string",
     label: "Preset-Wallpaper",
@@ -589,6 +598,21 @@ function normalizeStringFieldValue(field, rawValue, spec, defaults) {
     : { valid: false, reason: "Der Wert wird in dieser Version nicht unterstützt." };
 }
 
+function normalizeObjectFieldValue(field, rawValue, spec, defaults) {
+  if (rawValue !== null && (!isObjectLike(rawValue) || Array.isArray(rawValue))) {
+    return { valid: false, reason: "Es wird eine strukturierte Einstellung erwartet." };
+  }
+  const normalized = spec.normalizeConfig({ ...defaults, [field.key]: rawValue })?.[field.key];
+  if (rawValue !== null && normalized === null) {
+    return { valid: false, reason: "Die gespeicherte Konfiguration ist unvollständig." };
+  }
+  return {
+    valid: true,
+    value: normalized,
+    migrated: !deepEqual(normalized, rawValue),
+  };
+}
+
 function normalizeFieldValue(field, rawValue, spec, defaults, sourceType) {
   if (field.control === "asset") {
     return validateImageDataUrl(rawValue, field.maxBytes);
@@ -610,6 +634,9 @@ function normalizeFieldValue(field, rawValue, spec, defaults, sourceType) {
   if (field.control === "normalized-string") {
     return normalizeStringFieldValue(field, rawValue, spec, defaults);
   }
+  if (field.control === "normalized-object") {
+    return normalizeObjectFieldValue(field, rawValue, spec, defaults);
+  }
   return { valid: false, reason: "Für diese Einstellung fehlt eine Importregel." };
 }
 
@@ -622,7 +649,11 @@ function initializeCandidate(currentConfig, mode, assetsIncluded) {
     listFeatureConfigSpecs().forEach((spec) => {
       const currentFeature = getNestedValue(currentConfig.features || {}, splitFeaturePath(spec.configKey));
       const defaultFeature = getNestedValue(defaults.features || {}, splitFeaturePath(spec.configKey));
-      ["backgroundImageDataUrl", "turnDartImageDataUrl"].forEach((key) => {
+      [
+        "backgroundImageDataUrl",
+        "turnDartImageDataUrl",
+        "turnDartDesignerImageDataUrl",
+      ].forEach((key) => {
         if (Object.hasOwn(currentFeature || {}, key) && Object.hasOwn(defaultFeature || {}, key)) {
           defaultFeature[key] = currentFeature[key];
         }

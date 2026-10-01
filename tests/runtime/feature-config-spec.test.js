@@ -33,6 +33,19 @@ const DEFAULT_TURN_DART_CONFIG = Object.freeze({
   turnDartSizePercent: 115,
   turnDartShineEnabled: true,
   turnDartImageDataUrl: "",
+  turnDartDesignerImageDataUrl: "",
+  turnDartDesignerConfig: null,
+});
+
+const TURN_DART_DESIGNER_CONFIG = Object.freeze({
+  version: 1,
+  parts: Object.freeze({
+    flightShape: Object.freeze({ tabIndex: 0, tabLabel: "Flight-Form", optionIndex: 0, optionLabel: "Standard" }),
+    flight: Object.freeze({ tabIndex: 1, tabLabel: "Flight", optionIndex: 8, optionLabel: "Red" }),
+    shaft: Object.freeze({ tabIndex: 2, tabLabel: "Schaft", optionIndex: 1, optionLabel: "Blue" }),
+    barrel: Object.freeze({ tabIndex: 3, tabLabel: "Barrel", optionIndex: 10, optionLabel: "Silver 2" }),
+    point: Object.freeze({ tabIndex: 4, tabLabel: "Spitze", optionIndex: 1, optionLabel: "Gold" }),
+  }),
 });
 
 const RENAMED_FEATURES = Object.freeze([
@@ -427,6 +440,26 @@ test("theme global typography defaults and normalization stay stable", () => {
     );
   }
   assert.equal(spec.normalizeConfig({}).remainingScoreSize, "auto");
+});
+
+test("turn dart display normalizes a complete Autodarts designer selection", () => {
+  const spec = getFeatureConfigSpec("turnDartDisplay");
+  const normalized = spec.normalizeConfig({
+    turnDartStyle: "designer",
+    turnDartDesignerImageDataUrl: "data:image/webp;base64,AAAA",
+    turnDartDesignerConfig: TURN_DART_DESIGNER_CONFIG,
+  });
+
+  assert.equal(normalized.turnDartStyle, "designer");
+  assert.equal(normalized.turnDartDesignerImageDataUrl, "data:image/webp;base64,AAAA");
+  assert.deepEqual(normalized.turnDartDesignerConfig, TURN_DART_DESIGNER_CONFIG);
+  assert.equal(
+    spec.normalizeConfig({
+      turnDartStyle: "designer",
+      turnDartDesignerConfig: { version: 1, parts: {} },
+    }).turnDartDesignerConfig,
+    null
+  );
 });
 
 test("retired game themes no longer expose config specs", () => {

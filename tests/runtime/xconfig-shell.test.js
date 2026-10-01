@@ -6,6 +6,7 @@ import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js
 import { resolveBoardStyleDesignAsset } from "../../src/shared/feature-assets.node.js";
 import { DART_DESIGN_KEYS } from "../../src/shared/feature-assets.manifest.js";
 import { resolveXConfigPreviewAsset } from "../../src/shared/xconfig-preview-assets.node.js";
+import { AUTODARTS_DART_DESIGNER_URL } from "../../src/shared/autodarts-dart-designer.js";
 import {
   THEME_GLOBAL_TEMPLATE_PRESETS,
   getThemeGlobalTemplatePreset,
@@ -4575,6 +4576,13 @@ test("xConfig shell supports independent turn dart upload and clear actions", as
   assert.ok(openThemeSettings);
   openThemeSettings.click();
   await waitForSettingsModal(documentRef);
+
+  const openDartDesignerButton = documentRef.getElementById(
+    "ad-xconfig-field-turn-dart-display-openTurnDartDesigner"
+  );
+  assert.ok(openDartDesignerButton);
+  openDartDesignerButton.click();
+  assert.equal(windowRef.__openedUrls.at(-1), AUTODARTS_DART_DESIGNER_URL);
 
   let turnDartStatus = documentRef.querySelector(
     "[data-adxconfig-turn-dart-image-status='true'][data-feature-key='turn-dart-display']"

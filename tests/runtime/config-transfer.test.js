@@ -14,6 +14,16 @@ import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js
 import { getFeatureCatalogEntryByFeatureKey } from "../../src/shared/feature-catalog.js";
 
 const SMALL_PNG = "data:image/png;base64,iVBORw0KGgo=";
+const TURN_DART_DESIGNER_CONFIG = Object.freeze({
+  version: 1,
+  parts: Object.freeze({
+    flightShape: Object.freeze({ tabIndex: 0, tabLabel: "Flight-Form", optionIndex: 0, optionLabel: "Standard" }),
+    flight: Object.freeze({ tabIndex: 1, tabLabel: "Flight", optionIndex: 8, optionLabel: "Red" }),
+    shaft: Object.freeze({ tabIndex: 2, tabLabel: "Schaft", optionIndex: 1, optionLabel: "Blue" }),
+    barrel: Object.freeze({ tabIndex: 3, tabLabel: "Barrel", optionIndex: 10, optionLabel: "Silver 2" }),
+    point: Object.freeze({ tabIndex: 4, tabLabel: "Spitze", optionIndex: 1, optionLabel: "Gold" }),
+  }),
+});
 
 function createEnvelope(features, options = {}) {
   return {
@@ -133,6 +143,53 @@ test("remaining score size survives export/import and old or invalid backups sta
   );
   assert.ok(
     invalidBackup.report.issues.some((issue) => issue.settingKey === "remainingScoreSize")
+  );
+});
+
+test("Autodarts dart designer image and part selection survive settings transfer", () => {
+  const configured = normalizeRuntimeConfig({
+    features: {
+      turnDartDisplay: {
+        turnDartStyle: "designer",
+        turnDartDesignerImageDataUrl: SMALL_PNG,
+        turnDartDesignerConfig: TURN_DART_DESIGNER_CONFIG,
+      },
+    },
+  });
+  const exported = createSettingsExport(configured, {
+    descriptors: xconfigDescriptors,
+    exportedAt: "2026-10-01T12:34:00.000Z",
+  });
+  const settings = exported.payload.features.turnDartDisplay.settings;
+  assert.equal(settings.turnDartDesignerImageDataUrl, SMALL_PNG);
+  assert.deepEqual(settings.turnDartDesignerConfig, TURN_DART_DESIGNER_CONFIG);
+
+  const roundTrip = analyzeSettingsImport(exported.payload, normalizeRuntimeConfig(), {
+    descriptors: xconfigDescriptors,
+    mode: "replace",
+  });
+  assert.equal(roundTrip.config.features.turnDartDisplay.turnDartStyle, "designer");
+  assert.equal(roundTrip.config.features.turnDartDisplay.turnDartDesignerImageDataUrl, SMALL_PNG);
+  assert.deepEqual(
+    roundTrip.config.features.turnDartDisplay.turnDartDesignerConfig,
+    TURN_DART_DESIGNER_CONFIG
+  );
+
+  const compact = createSettingsExport(configured, {
+    includeAssets: false,
+    descriptors: xconfigDescriptors,
+    exportedAt: "2026-10-01T12:34:00.000Z",
+  });
+  assert.equal(
+    Object.hasOwn(
+      compact.payload.features.turnDartDisplay.settings,
+      "turnDartDesignerImageDataUrl"
+    ),
+    false
+  );
+  assert.deepEqual(
+    compact.payload.features.turnDartDisplay.settings.turnDartDesignerConfig,
+    TURN_DART_DESIGNER_CONFIG
   );
 });
 

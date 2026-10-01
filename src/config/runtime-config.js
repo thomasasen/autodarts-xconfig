@@ -8,6 +8,7 @@ import {
   listFeatureConfigSpecs,
 } from "./feature-config-spec.js";
 import { getNestedValue, setNestedValue, splitFeaturePath } from "./feature-path-utils.js";
+import { normalizeAutodartsDartDesignerConfig } from "../shared/autodarts-dart-designer.js";
 
 function deepClone(value) {
   if (value === null || typeof value !== "object") {
@@ -381,6 +382,16 @@ function applyThemeBackgroundImages(configValue, sourceConfig = null, shouldClea
       ? ""
       : normalizeThemeBackgroundImage(
           sourceConfig?.features?.turnDartDisplay?.turnDartImageDataUrl || ""
+        );
+    targetTurnDartConfig.turnDartDesignerImageDataUrl = shouldClear
+      ? ""
+      : normalizeThemeBackgroundImage(
+          sourceConfig?.features?.turnDartDisplay?.turnDartDesignerImageDataUrl || ""
+        );
+    targetTurnDartConfig.turnDartDesignerConfig = shouldClear
+      ? null
+      : normalizeAutodartsDartDesignerConfig(
+          sourceConfig?.features?.turnDartDisplay?.turnDartDesignerConfig
         );
   }
 }

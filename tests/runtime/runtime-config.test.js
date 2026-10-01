@@ -9,6 +9,17 @@ import {
 } from "../../src/config/runtime-config.js";
 import { defaultFeatureDefinitions } from "../../src/features/feature-registry.js";
 
+const TURN_DART_DESIGNER_CONFIG = Object.freeze({
+  version: 1,
+  parts: Object.freeze({
+    flightShape: Object.freeze({ tabIndex: 0, tabLabel: "Flight-Form", optionIndex: 0, optionLabel: "Standard" }),
+    flight: Object.freeze({ tabIndex: 1, tabLabel: "Flight", optionIndex: 8, optionLabel: "Red" }),
+    shaft: Object.freeze({ tabIndex: 2, tabLabel: "Schaft", optionIndex: 1, optionLabel: "Blue" }),
+    barrel: Object.freeze({ tabIndex: 3, tabLabel: "Barrel", optionIndex: 10, optionLabel: "Silver 2" }),
+    point: Object.freeze({ tabIndex: 4, tabLabel: "Spitze", optionIndex: 1, optionLabel: "Gold" }),
+  }),
+});
+
 test("runtime config exposes a monotonic revision for cache invalidation", () => {
   const runtimeConfig = createRuntimeConfig();
 
@@ -110,7 +121,11 @@ test("createHardResetRuntimeConfig disables every feature and clears theme image
         globalTypography: {
         },
       },
-      turnDartDisplay: { turnDartImageDataUrl: "data:image/png;base64,DDDD" },
+      turnDartDisplay: {
+        turnDartImageDataUrl: "data:image/png;base64,DDDD",
+        turnDartDesignerImageDataUrl: "data:image/webp;base64,EEEE",
+        turnDartDesignerConfig: TURN_DART_DESIGNER_CONFIG,
+      },
     },
   });
 
@@ -130,6 +145,8 @@ test("createHardResetRuntimeConfig disables every feature and clears theme image
   assert.equal(config.features.themes.globalBackground.backgroundAssetKey, "");
   assert.equal(config.features.themes.globalTypography.enabled, false);
   assert.equal(config.features.turnDartDisplay.turnDartImageDataUrl, "");
+  assert.equal(config.features.turnDartDisplay.turnDartDesignerImageDataUrl, "");
+  assert.equal(config.features.turnDartDisplay.turnDartDesignerConfig, null);
   assert.equal(config.features.themes.x01, undefined);
 });
 
@@ -143,7 +160,11 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
         globalTypography: {
         },
       },
-      turnDartDisplay: { turnDartImageDataUrl: "data:image/png;base64,DDDD" },
+      turnDartDisplay: {
+        turnDartImageDataUrl: "data:image/png;base64,DDDD",
+        turnDartDesignerImageDataUrl: "data:image/webp;base64,EEEE",
+        turnDartDesignerConfig: TURN_DART_DESIGNER_CONFIG,
+      },
     },
   });
 
@@ -205,6 +226,14 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   assert.equal(
     config.features.turnDartDisplay.turnDartImageDataUrl,
     "data:image/png;base64,DDDD"
+  );
+  assert.equal(
+    config.features.turnDartDisplay.turnDartDesignerImageDataUrl,
+    "data:image/webp;base64,EEEE"
+  );
+  assert.deepEqual(
+    config.features.turnDartDisplay.turnDartDesignerConfig,
+    TURN_DART_DESIGNER_CONFIG
   );
   assert.equal(config.features.themes.x01, undefined);
 });

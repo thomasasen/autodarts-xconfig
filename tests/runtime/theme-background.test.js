@@ -592,3 +592,27 @@ test("turn dart image status shows the selected bundled turn dart image", () => 
     /turn-dart-german-giant\.png/
   );
 });
+
+test("turn dart image status shows the locally captured Autodarts designer dart", () => {
+  const documentRef = new FakeDocument();
+  const status = buildTurnDartImageStatus(documentRef, {
+    featureKey: "turn-dart-display",
+    title: "Darts in der Wurfanzeige",
+    config: {
+      turnDartStyle: "designer",
+      turnDartImageDataUrl: "data:image/webp;base64,SHOULD_NOT_WIN",
+      turnDartDesignerImageDataUrl: `data:image/webp;base64,${"e".repeat(40)}`,
+    },
+  });
+
+  assert.equal(status.dataset.turnDartImageState, "present");
+  assert.equal(status.dataset.turnDartImageType, "image/webp");
+  assert.match(
+    String(status.querySelector(".ad-xconfig-theme-image-status-summary")?.textContent || ""),
+    /Autodarts-Dartdesigner \(image\/webp, 30 B\)/
+  );
+  assert.equal(
+    status.querySelector(".ad-xconfig-turn-dart-image-preview")?.getAttribute("src"),
+    `data:image/webp;base64,${"e".repeat(40)}`
+  );
+});

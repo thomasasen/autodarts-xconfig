@@ -286,7 +286,7 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 ### Darts in der Wurfanzeige
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Ersetzt die Darts in der Wurfanzeige durch Farbe, Verlauf, Text, ein vorbereitetes Dart-Bild oder einen eigenen Upload.
+- Was macht es sichtbar? Ersetzt die Darts in der Wurfanzeige durch Farbe, Verlauf, Text, ein vorbereitetes Dart-Bild, einen eigenen Upload oder einen lokal gespeicherten Dart aus dem Autodarts-Dartdesigner.
 - Wann sinnvoll? Wenn die Darts im Wurffeld besser zum eigenen Setup passen sollen.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#turn-dart-display)

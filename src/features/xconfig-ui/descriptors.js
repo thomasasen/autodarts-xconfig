@@ -243,6 +243,7 @@ const TURN_DART_STYLE_OPTIONS = Object.freeze([
   { value: "gradient", label: "Verlauf" },
   { value: "preset", label: "Dart-Bild" },
   { value: "image", label: "Eigenes Bild" },
+  { value: "designer", label: "Autodarts-Dartdesigner" },
 ]);
 
 const TURN_DART_SIZE_OPTIONS = Object.freeze([
@@ -390,6 +391,17 @@ export const xconfigDescriptors = Object.freeze([
     featureKey: "turn-dart-display",
     readmeAnchor: "turn-dart-display",
     fields: [
+      actionField("openTurnDartDesigner", "Autodarts-Dartdesigner öffnen", {
+        buttonLabel: "Dartdesigner öffnen",
+        section: "Autodarts-Dartdesigner",
+        description: "Öffnet den offiziellen Autodarts-Dartdesigner. Dort fügt xConfig die lokale Übernahme und das Laden der zuletzt gespeicherten Konfiguration hinzu.",
+        prominent: true,
+      }),
+      actionField("clearTurnDartDesigner", "Dartdesigner-Konfiguration entfernen", {
+        section: "Autodarts-Dartdesigner",
+        description: "Entfernt ausschließlich den von Autodarts übernommenen Dart und seine gespeicherten Bauteile.",
+        successMessage: "Dartdesigner-Konfiguration entfernt.",
+      }),
       selectField("turnDartStyle", "Stil", TURN_DART_STYLE_OPTIONS),
       selectField("turnDartAssetKey", "Dart auswählen", TURN_DART_ASSET_OPTIONS),
       textField("turnDartTextTemplate", "Dart-Text", { placeholder: "Wurf #", maxLength: 48 }),

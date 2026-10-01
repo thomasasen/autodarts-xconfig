@@ -113,6 +113,7 @@ test("createShellActionController dispatches navigation and shell-state commands
     navigateBack: () => calls.push("close"),
     openReadme: (_windowRef, featureKey) => calls.push(["readme", featureKey]),
     openChangelog: () => calls.push("changelog"),
+    openAutodartsDartDesigner: () => calls.push("dart-designer"),
     openSettingsExport: () => calls.push("open-export"),
     startSettingsExport: () => calls.push("start-export"),
     openSettingsImport: () => calls.push("open-import"),
@@ -128,6 +129,7 @@ test("createShellActionController dispatches navigation and shell-state commands
   controller.handleAction("close-settings-backdrop");
   controller.handleAction("open-readme", null, { featureKey: "turn-score-counter" });
   controller.handleAction("open-changelog");
+  controller.handleAction("openTurnDartDesigner");
   controller.handleAction("open-settings-export");
   controller.handleAction("start-settings-export");
   controller.handleAction("open-settings-import");
@@ -146,6 +148,7 @@ test("createShellActionController dispatches navigation and shell-state commands
     "sync",
     ["readme", "turn-score-counter"],
     "changelog",
+    "dart-designer",
     "open-export",
     "start-export",
     "open-import",
@@ -212,6 +215,11 @@ test("createShellActionController dispatches runtime, update and theme commands"
     featureKey: "turn-dart-display",
     configKey: "turnDartDisplay",
   });
+  controller.handleAction("clearTurnDartDesigner", null, {
+    featureKey: "turn-dart-display",
+    configKey: "turnDartDisplay",
+    config: { turnDartStyle: "designer" },
+  });
   controller.handleAction(
     "applyThemeGlobalPreset",
     createActionNode({
@@ -228,9 +236,9 @@ test("createShellActionController dispatches runtime, update and theme commands"
   assert.deepEqual(calls, [
     ["refresh", { force: true, announce: true }],
     "install",
-    ["confirm", "Bist du sicher? Der Hard Reset setzt alles auf Standard zurück, deaktiviert alle Module und löscht globales Wallpaper sowie Dart-Upload."],
+    ["confirm", "Bist du sicher? Der Hard Reset setzt alles auf Standard zurück, deaktiviert alle Module und löscht globales Wallpaper, Dart-Upload sowie Dartdesigner-Konfiguration."],
     "reset",
-    ["confirm", "Bist du sicher? Die empfohlenen Standards schalten alle Module aus und setzen die Konfiguration neu. Globales Wallpaper und Dart-Upload bleiben erhalten."],
+    ["confirm", "Bist du sicher? Die empfohlenen Standards schalten alle Module aus und setzen die Konfiguration neu. Globales Wallpaper, Dart-Upload und Dartdesigner-Konfiguration bleiben erhalten."],
     "defaults",
     ["clear-theme", "globalBackground"],
     ["upload-theme", "globalBackground"],
@@ -241,6 +249,18 @@ test("createShellActionController dispatches runtime, update and theme commands"
           turnDartDisplay: {
             turnDartStyle: "original",
             turnDartImageDataUrl: "",
+          },
+        },
+      },
+    ],
+    [
+      "save-config",
+      {
+        features: {
+          turnDartDisplay: {
+            turnDartStyle: "original",
+            turnDartDesignerImageDataUrl: "",
+            turnDartDesignerConfig: null,
           },
         },
       },
@@ -280,6 +300,8 @@ test("createShellActionController dispatches runtime, update and theme commands"
       },
     ],
     ["sync-turn-dart", "turn-dart-display"],
+    ["sync-turn-dart", "turn-dart-display"],
+    "sync",
     "sync",
     "sync",
     "sync",
@@ -290,6 +312,7 @@ test("createShellActionController dispatches runtime, update and theme commands"
     ["info", "Hard Reset ausgeführt."],
     ["info", "Empfohlene Standards angewendet."],
     ["info", "Dart-Bild entfernt."],
+    ["info", "Dartdesigner-Konfiguration entfernt."],
     ["success", 'Preset "Cyberpunk" angewendet.'],
   ]);
 });

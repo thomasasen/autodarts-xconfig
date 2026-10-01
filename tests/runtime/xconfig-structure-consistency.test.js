@@ -102,6 +102,14 @@ test("turn dart display is an independent global animation module", () => {
   assert.ok(descriptor);
   assert.equal(descriptor.fields.some((field) => field.key === "turnDartStyle"), true);
   assert.equal(descriptor.fields.some((field) => field.action === "uploadTurnDartImage"), true);
+  assert.equal(descriptor.fields.some((field) => field.action === "openTurnDartDesigner"), true);
+  assert.equal(descriptor.fields.some((field) => field.action === "clearTurnDartDesigner"), true);
+  assert.equal(
+    descriptor.fields
+      .find((field) => field.key === "turnDartStyle")
+      .options.some((option) => option.value === "designer"),
+    true
+  );
 });
 
 test("x01 bust active player highlight descriptor exposes target and crack controls", () => {

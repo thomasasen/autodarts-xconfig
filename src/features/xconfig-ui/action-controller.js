@@ -83,7 +83,7 @@ function handleResetConfig(controller) {
 
   const confirmed = confirmAction(
     controller.windowRef,
-    "Bist du sicher? Der Hard Reset setzt alles auf Standard zurück, deaktiviert alle Module und löscht globales Wallpaper sowie Dart-Upload."
+    "Bist du sicher? Der Hard Reset setzt alles auf Standard zurück, deaktiviert alle Module und löscht globales Wallpaper, Dart-Upload sowie Dartdesigner-Konfiguration."
   );
   if (!confirmed) {
     return;
@@ -105,7 +105,7 @@ function handleApplyRecommendedDefaults(controller) {
 
   const confirmed = confirmAction(
     controller.windowRef,
-    "Bist du sicher? Die empfohlenen Standards schalten alle Module aus und setzen die Konfiguration neu. Globales Wallpaper und Dart-Upload bleiben erhalten."
+    "Bist du sicher? Die empfohlenen Standards schalten alle Module aus und setzen die Konfiguration neu. Globales Wallpaper, Dart-Upload und Dartdesigner-Konfiguration bleiben erhalten."
   );
   if (!confirmed) {
     return;
@@ -538,6 +538,29 @@ function handleClearTurnDartImage(controller, feature) {
     .finally(() => controller.queueSync());
 }
 
+function handleClearTurnDartDesigner(controller, feature) {
+  if (!feature || typeof controller.runtimeApi?.saveConfig !== "function") {
+    return;
+  }
+
+  const featureKey = String(feature.featureKey || "").trim();
+  const currentStyle = String(feature.config?.turnDartStyle || "").trim().toLowerCase();
+  const patch = buildFeaturePatch(feature.configKey, {
+    ...(currentStyle === "designer" ? { turnDartStyle: "original" } : {}),
+    turnDartDesignerImageDataUrl: "",
+    turnDartDesignerConfig: null,
+  });
+  Promise.resolve(controller.runtimeApi.saveConfig(patch))
+    .then(() => {
+      controller.setNotice("info", "Dartdesigner-Konfiguration entfernt.");
+      controller.syncTurnDartImageIndicators?.(featureKey);
+    })
+    .catch(() => {
+      controller.setNotice("error", "Dartdesigner-Konfiguration konnte nicht entfernt werden.");
+    })
+    .finally(() => controller.queueSync());
+}
+
 function buildCommandHandlers(controller) {
   return new Map([
     ["open", () => controller.navigateToConfigRoute()],
@@ -554,6 +577,7 @@ function buildCommandHandlers(controller) {
       controller.openReadme(controller.windowRef, feature?.featureKey || "");
     }],
     ["open-changelog", () => controller.openChangelog(controller.windowRef)],
+    ["openTurnDartDesigner", () => controller.openAutodartsDartDesigner(controller.windowRef)],
     ["check-update", () => {
       controller.refreshUpdateStatus({
         force: true,
@@ -610,6 +634,12 @@ function buildCommandHandlers(controller) {
       }
       handleClearTurnDartImage(controller, feature);
     }],
+    ["clearTurnDartDesigner", (_actionNode, feature) => {
+      if (!feature) {
+        return;
+      }
+      handleClearTurnDartDesigner(controller, feature);
+    }],
   ]);
 }
 
@@ -644,6 +674,10 @@ function buildShellActionControllerContext(options = {}) {
     navigateBack: resolveOptionalFunction(options.navigateBack, () => {}),
     openReadme: resolveOptionalFunction(options.openReadme, () => {}),
     openChangelog: resolveOptionalFunction(options.openChangelog, () => {}),
+    openAutodartsDartDesigner: resolveOptionalFunction(
+      options.openAutodartsDartDesigner,
+      () => {}
+    ),
     openUserscriptInstall: resolveOptionalFunction(options.openUserscriptInstall, () => false),
     getXConfigDescriptor: resolveOptionalFunction(options.getXConfigDescriptor, () => null),
     getFeatures: resolveOptionalFunction(options.getFeatures, () => []),

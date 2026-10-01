@@ -1,6 +1,7 @@
 import { getXConfigDescriptor, xconfigDescriptorOrder } from "./descriptors.js";
 import { getXConfigSectionMeta, XCONFIG_SECTION_DEFINITIONS } from "./sections.js";
 import { resolveDartDesignAsset, resolveTurnDartAsset } from "#feature-assets";
+import { AUTODARTS_DART_DESIGNER_URL } from "../../shared/autodarts-dart-designer.js";
 import {
   isBackgroundThemeFeature,
 } from "./path-utils.js";
@@ -326,6 +327,10 @@ export function openReadme(windowRef, featureKey) {
 
 export function openChangelog(windowRef) {
   openExternalHref(windowRef, CHANGELOG_URL);
+}
+
+export function openAutodartsDartDesigner(windowRef) {
+  openExternalHref(windowRef, AUTODARTS_DART_DESIGNER_URL);
 }
 
 function formatUpdateCheckedAt(checkedAt) {
@@ -2614,7 +2619,7 @@ function buildFeatureActionField(documentRef, feature, field, fieldId, features 
       },
     }));
   }
-  if (field.action === "uploadTurnDartImage") {
+  if (field.action === "openTurnDartDesigner") {
     wrapper.appendChild(buildTurnDartImageStatus(documentRef, feature));
   }
   return wrapper;

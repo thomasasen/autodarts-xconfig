@@ -60,12 +60,23 @@ function resolveUploadedTurnDartImageUrl(featureConfig = {}) {
   return dataUrl.startsWith("data:image/") ? dataUrl : "";
 }
 
+function resolveDesignerTurnDartImageUrl(featureConfig = {}) {
+  const dataUrl = String(featureConfig.turnDartDesignerImageDataUrl || "").trim();
+  return dataUrl.startsWith("data:image/") ? dataUrl : "";
+}
+
 function resolveTurnDartImage(featureConfig = {}) {
   const style = String(featureConfig.turnDartStyle || "").trim().toLowerCase();
   if (style === "image") {
     return {
       source: "upload",
       url: resolveUploadedTurnDartImageUrl(featureConfig),
+    };
+  }
+  if (style === "designer") {
+    return {
+      source: "designer",
+      url: resolveDesignerTurnDartImageUrl(featureConfig),
     };
   }
   if (style === "preset") {
@@ -83,7 +94,10 @@ function resolveTurnDartImage(featureConfig = {}) {
 
 function buildTurnDartTextStyleBlock(featureConfig, sizeScale, widthPx, heightPx) {
   const image = resolveTurnDartImage(featureConfig);
-  if (image.url && (image.source === "upload" || image.source === "preset")) {
+  if (
+    image.url &&
+    (image.source === "upload" || image.source === "preset" || image.source === "designer")
+  ) {
     return "";
   }
 
@@ -191,7 +205,8 @@ export function buildTurnDartDisplayStyleText(featureConfig = {}) {
     return "";
   }
 
-  const isUploadedImage = turnDartImage.source === "upload";
+  const isUploadedImage =
+    turnDartImage.source === "upload" || turnDartImage.source === "designer";
   const shineFilter = featureConfig.turnDartShineEnabled === false
     ? "none"
     : "drop-shadow(0 0 5px rgba(255, 255, 255, 0.34))";

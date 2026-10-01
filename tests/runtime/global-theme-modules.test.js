@@ -99,6 +99,16 @@ test("global background, typography and turn darts build isolated CSS", () => {
   const encodedTurnDartSvg = dartCss.match(/data:image\/svg\+xml,([^")]+)/)?.[1] || "";
   assert.match(decodeURIComponent(encodedTurnDartSvg), /stop-color="#22C55E"/);
   assert.doesNotMatch(dartCss, /font-family: "Fragment Mono"/);
+
+  const designerDartCss = buildTurnDartDisplayStyleText({
+    turnDartStyle: "designer",
+    turnDartDesignerImageDataUrl: "data:image/webp;base64,QUJDRA==",
+    turnDartSizePercent: 115,
+    turnDartShineEnabled: false,
+  });
+  assert.match(designerDartCss, /data:image\/webp;base64,QUJDRA==/);
+  assert.match(designerDartCss, /background-size: contain !important/);
+  assert.match(designerDartCss, /filter: none !important/);
 });
 
 test("global typography keeps modern match font scopes independent", () => {

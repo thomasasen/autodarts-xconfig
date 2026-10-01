@@ -139,7 +139,7 @@ const THEME_GLOBAL_TYPOGRAPHY_ACTIVE_PLAYER_TINT_FIELD = fieldCopy(
 
 const THEME_GLOBAL_TURN_DART_STYLE_FIELD = fieldCopy(
   "Ändert die Dart-Grafiken im Wurffeld oben im Spiel.",
-  "Legt fest, ob die Darts in der Wurfanzeige original bleiben, einfarbig, mit Verlauf, als vorbereitetes Dart-Bild oder mit einem eigenen hochgeladenen Bild erscheinen. Die Einstellung betrifft nur die drei Darts in der Wurfanzeige, nicht die Treffermarkierungen am Board.",
+  "Legt fest, ob die Darts in der Wurfanzeige original bleiben, einfarbig, mit Verlauf, als vorbereitetes Dart-Bild, mit einem eigenen Upload oder mit dem lokal gespeicherten Ergebnis des Autodarts-Dartdesigners erscheinen. Die Einstellung betrifft nur die drei Darts in der Wurfanzeige, nicht die Treffermarkierungen am Board.",
   "Ändert die Dart-Grafiken im Wurffeld."
 );
 
@@ -331,11 +331,13 @@ export const xconfigFeatureCopy = deepFreeze({
   }),
   "turn-dart-display": featureCopy({
     cardDescription: "Globale Darstellung der drei Darts im Wurffeld.",
-    visibleDescription: "Ersetzt die Darts in der Wurfanzeige durch Farbe, Verlauf, Text, ein vorbereitetes Dart-Bild oder einen eigenen Upload.",
+    visibleDescription: "Ersetzt die Darts in der Wurfanzeige durch Farbe, Verlauf, Text, ein vorbereitetes Dart-Bild, einen eigenen Upload oder einen lokal gespeicherten Dart aus dem Autodarts-Dartdesigner.",
     visualDescription: "Das Modul arbeitet unabhängig von Hintergrund, Schrift und Farben und verändert keine Treffermarkierungen am Board.",
     usefulWhen: "Wenn die Darts im Wurffeld besser zum eigenen Setup passen sollen.",
     images: [image("Darts in der Wurfanzeige mit Dart-Bild", "turn-dart-display.png")],
     fields: {
+      openTurnDartDesigner: fieldCopy("Öffnet den offiziellen Autodarts-Dartdesigner.", "Dort übernimmt xConfig die fünf gewählten Bauteile und ein lokales Bild des Darts. Eine gespeicherte Konfiguration kann später wieder in den Designer geladen werden.", "Öffnet den Autodarts-Dartdesigner mit xConfig-Übernahme."),
+      clearTurnDartDesigner: fieldCopy("Entfernt den gespeicherten Dartdesigner-Dart.", "Löscht das lokal erzeugte Dart-Bild und die fünf gespeicherten Bauteile, ohne eigene Uploads oder vorbereitete Dart-Bilder zu verändern.", "Entfernt die Dartdesigner-Konfiguration."),
       turnDartStyle: THEME_GLOBAL_TURN_DART_STYLE_FIELD,
       turnDartAssetKey: THEME_GLOBAL_TURN_DART_ASSET_FIELD,
       turnDartTextTemplate: fieldCopy("Zeigt Text pro Wurf an.", "Das Zeichen `#` wird durch die Wurfnummer ersetzt.", "Zeigt Wurftext mit Nummernplatzhalter."),
@@ -1217,6 +1219,11 @@ const THEME_GLOBAL_TURN_DART_STYLE_OPTION_COPY = deepFreeze({
     "Nutzt das hochgeladene Bild in der Wurfanzeige.",
     "Die drei Darts in der Wurfanzeige verwenden das im Modul gespeicherte eigene Bild. Ohne gespeichertes Bild bleibt die Anzeige unverändert.",
     "Nutzt ein eigenes gespeichertes Dart-Bild."
+  ),
+  designer: optionCopy(
+    "Nutzt den aus dem Autodarts-Dartdesigner übernommenen Dart.",
+    "Die drei Darts in der Wurfanzeige verwenden das lokal erzeugte Bild aus Flight-Form, Flight, Schaft, Barrel und Spitze. Ohne gespeicherte Dartdesigner-Konfiguration bleibt die Anzeige unverändert.",
+    "Nutzt den lokal gespeicherten Autodarts-Dart."
   ),
 });
 

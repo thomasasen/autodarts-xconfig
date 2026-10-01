@@ -485,6 +485,15 @@ function readTurnDartImageInfo(feature) {
     };
   }
 
+  if (style === "designer") {
+    const info = parseDataUrlInfo(feature?.config?.turnDartDesignerImageDataUrl);
+    return {
+      ...info,
+      sourceType: info.hasImage ? "autodarts-designer" : "",
+      previewUrl: info.hasImage ? info.dataUrl : "",
+    };
+  }
+
   const info = parseDataUrlInfo(feature?.config?.turnDartImageDataUrl);
   return {
     ...info,
@@ -499,6 +508,12 @@ function buildTurnDartImageStatusSummary(imageInfo) {
 
   if (imageInfo.sourceType === "preset-asset") {
     return `Aktuelles Dart-Bild: Marker-Bild ${imageInfo.presetLabel}.`;
+  }
+
+  if (imageInfo.sourceType === "autodarts-designer") {
+    const sizeText =
+      imageInfo.byteSize > 0 ? `, ${formatByteSize(imageInfo.byteSize)}` : "";
+    return `Aktuelles Dart-Bild: Autodarts-Dartdesigner (${imageInfo.mimeType}${sizeText}).`;
   }
 
   const sizeText =

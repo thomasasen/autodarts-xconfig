@@ -13,6 +13,7 @@ import { DART_DESIGN_KEYS } from "../shared/feature-assets.manifest.js";
 import { TURN_DART_ASSET_KEYS } from "../shared/turn-dart-assets.manifest.js";
 import { BOARD_STYLE_DESIGN_KEYS } from "../shared/board-style-assets.manifest.js";
 import { normalizeGameLayoutPlayerTransitionEffect } from "../shared/game-layout-transition-profiles.js";
+import { normalizeAutodartsDartDesignerConfig } from "../shared/autodarts-dart-designer.js";
 
 const CHECKOUT_EFFECT_ALIASES = Object.freeze({
   "": "grow-only",
@@ -134,7 +135,14 @@ const THEME_PRESET_ASSET_KEY_SET = new Set(THEME_PRESET_ASSET_KEYS);
 const THEME_GLOBAL_TYPOGRAPHY_SCOPE_KEYS = new Set(
   THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTIONS.map((option) => option.value)
 );
-const THEME_GLOBAL_TURN_DART_STYLES = new Set(["original", "solid", "gradient", "preset", "image"]);
+const THEME_GLOBAL_TURN_DART_STYLES = new Set([
+  "original",
+  "solid",
+  "gradient",
+  "preset",
+  "image",
+  "designer",
+]);
 const THEME_GLOBAL_TURN_DART_SIZE_PERCENT = new Set([100, 115, 135]);
 const THEME_GLOBAL_TURN_DART_TEXT_MAX_LENGTH = 48;
 const LEGACY_COLOR_THEME_ALIASES = Object.freeze({
@@ -351,6 +359,8 @@ const DEFAULT_TURN_DART_DISPLAY_CONFIG = Object.freeze({
   turnDartSizePercent: 115,
   turnDartShineEnabled: true,
   turnDartImageDataUrl: "",
+  turnDartDesignerImageDataUrl: "",
+  turnDartDesignerConfig: null,
   debug: false,
 });
 
@@ -781,6 +791,12 @@ const FEATURE_NORMALIZERS = Object.freeze({
         DEFAULT_FEATURE_CONFIGS.turnDartDisplay.turnDartShineEnabled
       ),
       turnDartImageDataUrl: normalizeThemeBackgroundImage(rawConfig.turnDartImageDataUrl),
+      turnDartDesignerImageDataUrl: normalizeThemeBackgroundImage(
+        rawConfig.turnDartDesignerImageDataUrl
+      ),
+      turnDartDesignerConfig: normalizeAutodartsDartDesignerConfig(
+        rawConfig.turnDartDesignerConfig
+      ),
       debug: normalizeBoolean(rawConfig.debug, false),
     };
   },

@@ -30,6 +30,7 @@ import { DARTBOARD_MARKER_HIGHLIGHT_PREVIEW_CLASS } from "./dartboard-marker-hig
 
 const MENU_ITEM_ID = "ad-xconfig-menu-item";
 const PANEL_HOST_ID = "ad-xconfig-panel-host";
+const DART_DESIGNER_PANEL_ID = "ad-xconfig-dart-designer-panel";
 
 const COLOR_PREVIEW_PALETTES = Object.freeze([
   ["checkout-score-autodarts-green", "#5b7d31", "#9fdb58", "#b9ef7b", "#d9ffad", "rgba(159,219,88,.94)", "rgba(159,219,88,.62)", "rgba(159,219,88,.28)"],
@@ -622,6 +623,20 @@ ${buildX01RemainingScoreBarSizeStyle(`#${PANEL_HOST_ID} .ad-xconfig-x01-remainin
 #${PANEL_HOST_ID} .ad-xconfig-setting-row[class*="-preview"]{grid-template-columns:minmax(0,1fr)}
 #${PANEL_HOST_ID} .ad-xconfig-transfer-dialog > .ad-xconfig-modal-header{top:-24px;margin:0;padding:16px 0;display:block}
 @media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-transfer-dialog > .ad-xconfig-modal-header{top:-16px}}
+#${DART_DESIGNER_PANEL_ID}{box-sizing:border-box;margin:0 0 24px;padding:18px 20px;border:1px solid rgba(74,137,255,.55);border-radius:12px;background:linear-gradient(135deg,rgba(0,62,179,.22),rgba(13,24,52,.96));box-shadow:0 10px 28px rgba(0,0,0,.2);color:#fff;font-family:inherit}
+#${DART_DESIGNER_PANEL_ID} .ad-xconfig-dart-designer-heading{font-size:16px;font-weight:800;line-height:1.2}
+#${DART_DESIGNER_PANEL_ID} .ad-xconfig-dart-designer-description{margin:6px 0 0;color:rgba(255,255,255,.72);font-size:14px;line-height:1.45}
+#${DART_DESIGNER_PANEL_ID} .ad-xconfig-dart-designer-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+#${DART_DESIGNER_PANEL_ID} .ad-xconfig-dart-designer-button{min-height:40px;padding:9px 15px;border:1px solid rgba(255,255,255,.28);border-radius:10px;background:rgba(255,255,255,.08);color:#fff;font:700 14px/1.2 inherit;cursor:pointer;transition:background-color .14s ease,border-color .14s ease,opacity .14s ease}
+#${DART_DESIGNER_PANEL_ID} .ad-xconfig-dart-designer-button:hover:not(:disabled){border-color:rgba(255,255,255,.48);background:rgba(255,255,255,.14)}
+#${DART_DESIGNER_PANEL_ID} .ad-xconfig-dart-designer-button--primary{border-color:#4a89ff;background:#003eb3}
+#${DART_DESIGNER_PANEL_ID} .ad-xconfig-dart-designer-button--primary:hover:not(:disabled){background:#0f55c9}
+#${DART_DESIGNER_PANEL_ID} .ad-xconfig-dart-designer-button:disabled{cursor:not-allowed;opacity:.45}
+#${DART_DESIGNER_PANEL_ID} .ad-xconfig-dart-designer-button:focus-visible{outline:2px solid #8ab4ff;outline-offset:3px}
+#${DART_DESIGNER_PANEL_ID} .ad-xconfig-dart-designer-status{min-height:1.35em;margin:10px 0 0;color:rgba(255,255,255,.72);font-size:13px;line-height:1.35}
+#${DART_DESIGNER_PANEL_ID} .ad-xconfig-dart-designer-status[data-state="success"]{color:#9fdb58}
+#${DART_DESIGNER_PANEL_ID} .ad-xconfig-dart-designer-status[data-state="error"]{color:#fda4af}
+@media(max-width:640px){#${DART_DESIGNER_PANEL_ID}{padding:16px}#${DART_DESIGNER_PANEL_ID} .ad-xconfig-dart-designer-actions{flex-direction:column}#${DART_DESIGNER_PANEL_ID} .ad-xconfig-dart-designer-button{width:100%}}
 `;
 
 

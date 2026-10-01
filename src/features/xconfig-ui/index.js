@@ -48,6 +48,11 @@ import { createDartboardMarkerHighlightPreviewAdapter } from "./dartboard-marker
 import { createX01RemainingScoreBarPreviewController } from "./x01-remaining-score-bar-preview-controller.js";
 import { createX01RemainingScoreBarColorPreviewAdapter } from "./x01-remaining-score-bar-color-preview-adapter.js";
 import { createSpecialHitHighlightsPreviewController } from "./special-hit-highlights-preview-controller.js";
+import {
+  AUTODARTS_DART_DESIGNER_PANEL_ID,
+  createAutodartsDartDesignerController,
+} from "./autodarts-dart-designer-controller.js";
+import { AUTODARTS_DART_DESIGNER_PATH } from "../../shared/autodarts-dart-designer.js";
 import { buildStyleText as buildSpecialHitHighlightsStyleText } from "../special-hit-highlights/style.js";
 import {
   downloadSettingsExport,
@@ -67,6 +72,7 @@ import {
   buildShellContent,
   createElement,
   openChangelog,
+  openAutodartsDartDesigner,
   openReadme,
   parseFieldValue,
   syncSettingsPreview,
@@ -188,6 +194,7 @@ function ensureXConfigShell(options = {}) {
   let typographyPreviewFontController = null;
   let x01RemainingScoreBarPreviewController = null;
   let specialHitHighlightsPreviewController = null;
+  let autodartsDartDesignerController = null;
   let electricPreviewFiltersRetained = false;
 
   function clearNoticeTimer() {
@@ -494,6 +501,7 @@ function ensureXConfigShell(options = {}) {
   function queueSync() {
     queueWindowSync(state, windowRef, () => {
       domGuards.ensureStyle(STYLE_ID, styleText);
+      autodartsDartDesignerController?.sync();
       if (isConfigRoute()) {
         const typographyFeature = getFeatures().find(
           (feature) => feature?.featureKey === THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY
@@ -535,6 +543,7 @@ function ensureXConfigShell(options = {}) {
       PREVIEW_FONTS_STYLE_ID,
       SPECIAL_HIT_HIGHLIGHTS_PREVIEW_STYLE_ID,
       ELECTRIC_FILTER_DEFS_NODE_ID,
+      AUTODARTS_DART_DESIGNER_PANEL_ID,
     ],
   });
 
@@ -580,6 +589,9 @@ function ensureXConfigShell(options = {}) {
   }
 
   function shouldScheduleMutationSync(mutations = []) {
+    if (String(windowRef?.location?.pathname || "") === AUTODARTS_DART_DESIGNER_PATH) {
+      return true;
+    }
     if (isConfigRoute()) {
       return true;
     }
@@ -634,6 +646,11 @@ function ensureXConfigShell(options = {}) {
     getFeatures,
     windowRef,
   });
+  autodartsDartDesignerController = createAutodartsDartDesignerController({
+    documentRef,
+    runtimeApi,
+    windowRef,
+  });
 
   const focusController = createShellFocusController({ documentRef, panelHostId: PANEL_HOST_ID });
   renderController = createShellRenderController({
@@ -679,6 +696,7 @@ function ensureXConfigShell(options = {}) {
     navigateBack: () => routeController?.navigateBack(),
     navigateToConfigRoute: () => routeController?.navigateToConfigRoute(),
     openChangelog,
+    openAutodartsDartDesigner,
     openReadme,
     openUserscriptInstall,
     openSettingsExport,
@@ -756,6 +774,7 @@ function ensureXConfigShell(options = {}) {
       specialHitHighlightsPreviewController?.stop();
       typographyPreviewFontController?.deactivate();
       releaseElectricPreviewFilters();
+      autodartsDartDesignerController?.teardown();
     },
     onVisibilityChange: (event) => {
       effectPreviewController?.stopActivePreview();
@@ -774,7 +793,11 @@ function ensureXConfigShell(options = {}) {
     startAutoUpdateChecks,
     state,
     stopAutoUpdateChecks,
-    extraNodeIds: [PREVIEW_FONTS_STYLE_ID, SPECIAL_HIT_HIGHLIGHTS_PREVIEW_STYLE_ID],
+    extraNodeIds: [
+      PREVIEW_FONTS_STYLE_ID,
+      SPECIAL_HIT_HIGHLIGHTS_PREVIEW_STYLE_ID,
+      AUTODARTS_DART_DESIGNER_PANEL_ID,
+    ],
     styleId: STYLE_ID,
     styleText,
     windowRef,

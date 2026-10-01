@@ -368,15 +368,18 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ### Darts in der Wurfanzeige
 
 - Gilt für: `alle Modi`
-- Kurz: Ersetzt die Darts in der Wurfanzeige durch Farbe, Verlauf, Text, ein vorbereitetes Dart-Bild oder einen eigenen Upload.
+- Kurz: Ersetzt die Darts in der Wurfanzeige durch Farbe, Verlauf, Text, ein vorbereitetes Dart-Bild, einen eigenen Upload oder einen lokal gespeicherten Dart aus dem Autodarts-Dartdesigner.
 - Grafisch: Das Modul arbeitet unabhängig von Hintergrund, Schrift und Farben und verändert keine Treffermarkierungen am Board.
 - Wann sinnvoll? Wenn die Darts im Wurffeld besser zum eigenen Setup passen sollen.
+- `Autodarts-Dartdesigner öffnen`: Öffnet den Autodarts-Dartdesigner mit xConfig-Übernahme.
+- `Dartdesigner-Konfiguration entfernen`: Entfernt die Dartdesigner-Konfiguration.
 - `Stil`: Ändert die Dart-Grafiken im Wurffeld.
   - `Original`: Belässt die Darts in der Wurfanzeige unverändert.
   - `Farbe`: Nutzt eine einfarbige Dart-Grafik.
   - `Verlauf`: Nutzt eine Dart-Grafik mit Verlauf.
   - `Dart-Bild`: Nutzt das ausgewählte vorbereitete Dart-Bild.
   - `Eigenes Bild`: Nutzt ein eigenes gespeichertes Dart-Bild.
+  - `Autodarts-Dartdesigner`: Nutzt den lokal gespeicherten Autodarts-Dart.
 - `Dart auswählen`: Wählt ein vorbereitetes Bild für die Darts in der Wurfanzeige aus.
   - `German Gigant`: Verwendet den German-Gigant-Dart als Wurffeld-Dart.
   - `Blue Lightning`: Verwendet Blue Lightning als Wurffeld-Dart.
