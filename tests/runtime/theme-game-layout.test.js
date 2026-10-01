@@ -1024,6 +1024,77 @@ test("game-layout falls back completely for small and ambiguous surfaces", () =>
   assert.equal(resolveModernX01GameLayoutSurface(missingDartIcon.documentRef, missingDartIcon.windowRef), null);
 });
 
+test("Cricket and Tactics reuse floating X01 controls without rearranging the grid or players", () => {
+  for (const variant of ["Cricket", "Tactics"]) {
+    const fixture = createLayoutFixture();
+    fixture.variant.textContent = variant;
+    const grid = fixture.node(fixture.leftColumn, "div", "grid h-full");
+    fixture.node(grid, "div");
+    for (let player = 0; player < 2; player += 1) {
+      const header = fixture.node(grid, "div");
+      fixture.node(header, "span", "font-display", `Player ${player}`);
+    }
+    const targets = variant === "Tactics"
+      ? ["20", "19", "18", "17", "16", "15", "14", "13", "12", "11", "10", "B"]
+      : ["20", "19", "18", "17", "16", "15", "B"];
+    targets.forEach((target) => {
+      fixture.node(grid, "div", "font-body", target);
+      fixture.node(grid, "div");
+      fixture.node(grid, "div");
+    });
+    const timers = createFakeTimerHarness();
+    timers.installOnWindow(fixture.windowRef);
+    const config = createRuntimeConfig({
+      featureToggles: { "themes.gameLayout": true },
+      features: { themes: { gameLayout: { enabled: true } } },
+    });
+    const originalStageChildren = [...fixture.stage.children];
+    const cleanup = mountThemeGameLayout(mountContext(config, fixture));
+    const visible = () => fixture.controlBar.getAttribute("data-ad-ext-game-layout-controls-visible");
+    assert.equal(fixture.stage.getAttribute("data-ad-ext-game-layout-cricket-stage"), "true");
+    assert.equal(fixture.controlBar.getAttribute("data-ad-ext-game-layout-control-bar"), "true");
+    assert.equal(fixture.controlsSlot.getAttribute("data-ad-ext-game-layout-controls-slot"), "true");
+    assert.equal(fixture.root.getAttribute("data-ad-ext-game-layout-root"), null);
+    assert.equal(fixture.players[0].item.getAttribute("data-ad-ext-game-layout-player-item"), null);
+    assert.deepEqual([...fixture.stage.children], originalStageChildren);
+    assert.equal(visible(), null);
+
+    fixture.documentRef.dispatchEvent(new FakeEvent("mousemove"));
+    timers.advance(4000);
+    fixture.windowRef.dispatchEvent(new FakeEvent("resize"));
+    assert.equal(visible(), "true", "rerenders must preserve the active reveal timer");
+    fixture.documentRef.dispatchEvent(new FakeEvent("mousemove"));
+    timers.advance(4999);
+    assert.equal(visible(), "true");
+    timers.advance(1);
+    assert.equal(visible(), null);
+    fixture.windowRef.dispatchEvent(new FakeEvent("resize"));
+    assert.equal(visible(), null, "idle rerenders must not reveal controls");
+
+    const oldControlBar = fixture.controlBar;
+    fixture.documentRef.dispatchEvent(new FakeEvent("mousemove"));
+    const replacement = fixture.node(oldControlBar.parentElement, "div", "relative flex bg-blue");
+    fixture.node(replacement, "button", "input-mode", "Input");
+    fixture.node(replacement, "button", "next", "Next");
+    oldControlBar.remove();
+    fixture.windowRef.dispatchEvent(new FakeEvent("resize"));
+    assert.equal(oldControlBar.getAttribute("data-ad-ext-game-layout-control-bar"), null);
+    assert.equal(replacement.getAttribute("data-ad-ext-game-layout-controls-visible"), "true");
+    timers.advance(5000);
+    assert.equal(replacement.getAttribute("data-ad-ext-game-layout-controls-visible"), null);
+
+    fixture.documentRef.dispatchEvent(new FakeEvent("mousemove"));
+    cleanup();
+    assert.equal(fixture.stage.getAttribute("data-ad-ext-game-layout-cricket-stage"), null);
+    assert.equal(fixture.controlsSlot.getAttribute("data-ad-ext-game-layout-controls-slot"), null);
+    assert.equal(replacement.getAttribute("data-ad-ext-game-layout-control-bar"), null);
+    assert.equal(fixture.documentRef.getElementById(STYLE_ID), null);
+    fixture.documentRef.dispatchEvent(new FakeEvent("mousemove"));
+    timers.advance(5000);
+    assert.equal(replacement.getAttribute("data-ad-ext-game-layout-controls-visible"), null);
+  }
+});
+
 
 test("leg starter rejects missing and internally inconsistent seat indices", () => {
   assert.equal(

@@ -15,7 +15,7 @@ import {
   resolveLegStarterSeat,
 } from "./logic.js";
 import { createGameLayoutPlayerTransitionController } from "./player-transition.js";
-import { resolveModernX01GameLayoutSurface } from "./surface.js";
+import { resolveModernCricketGameControlsSurface, resolveModernX01GameLayoutSurface } from "./surface.js";
 import { STYLE_ID, buildThemeGameLayoutStyleText } from "./style.js";
 
 const FEATURE_KEY = "theme-game-layout";
@@ -31,6 +31,7 @@ const MANAGED_ATTRIBUTES = Object.freeze([
   "data-ad-ext-game-layout-controls-slot",
   "data-ad-ext-game-layout-control-bar",
   "data-ad-ext-game-layout-controls-visible",
+  "data-ad-ext-game-layout-cricket-stage",
   "data-ad-ext-game-layout-player-column",
   "data-ad-ext-game-layout-player-item",
   "data-ad-ext-game-layout-active",
@@ -401,6 +402,23 @@ export function mountThemeGameLayout(context = {}) {
       revealManagedPlayersForDiscovery(appliedState);
       const surface = resolveModernX01GameLayoutSurface(documentRef, windowRef);
       if (!surface) {
+        const cricketControls = resolveModernCricketGameControlsSurface(documentRef, windowRef);
+        if (cricketControls) {
+          clearAppliedState(appliedState, cricketControls.controlBar);
+          resetLayoutTracking();
+          domGuards.ensureStyle(STYLE_ID, buildThemeGameLayoutStyleText());
+          [
+            [cricketControls.stage, "data-ad-ext-game-layout-cricket-stage"],
+            [cricketControls.controlsSlot, "data-ad-ext-game-layout-controls-slot"],
+            [cricketControls.controlBar, "data-ad-ext-game-layout-control-bar"],
+          ].forEach(([node, attribute]) => {
+            rememberNode(appliedState, node);
+            setMarker(node, attribute);
+          });
+          controlBar = cricketControls.controlBar;
+          if (controlsTimer !== null) setMarker(controlBar, "data-ad-ext-game-layout-controls-visible");
+          return;
+        }
         clearAppliedState(appliedState);
         resetControls();
         resetLayoutTracking();

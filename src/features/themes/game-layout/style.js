@@ -206,6 +206,26 @@ export function buildThemeGameLayoutStyleText() {
   max-width:calc(100% - 12px)!important;
   pointer-events:auto!important;
 }
+[data-ad-ext-game-layout-cricket-stage="true"]{position:relative!important}
+[data-ad-ext-game-layout-cricket-stage="true"]>:has([role="img"][aria-label="Dartboard"]){
+  flex:1 1 0%!important;
+  min-height:0!important;
+  min-width:0!important;
+  padding:0!important;
+}
+[data-ad-ext-game-layout-cricket-stage="true"] [data-ad-ext-game-layout-controls-slot="true"]{
+  position:absolute!important;
+  right:16px!important;
+  bottom:max(var(--safe-area-bottom,0px),12px)!important;
+  width:192px!important;
+  max-width:calc(100% - 32px)!important;
+  padding:0!important;
+  margin:0!important;
+}
+[data-ad-ext-game-layout-cricket-stage="true"] [data-ad-ext-game-layout-controls-slot="true"]>*{
+  width:100%!important;
+  max-width:100%!important;
+}
 [data-ad-ext-game-layout-control-bar="true"]{
   opacity:.05!important;
   transition:opacity .2s ease!important;

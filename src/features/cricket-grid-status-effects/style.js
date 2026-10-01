@@ -201,6 +201,17 @@ export function buildStyleText() {
 .${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${LABEL_CLASS}.${NATIVE_LABEL_CLASS} {
   position: relative;
   isolation: isolate;
+  padding-inline: 0 !important;
+  font-size: 1.5rem !important;
+  letter-spacing: -0.02em;
+  background-color: #34363b !important;
+  color: #ffffff !important;
+}
+
+@media (min-width: 48rem) {
+  .${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${LABEL_CLASS}.${NATIVE_LABEL_CLASS} {
+    font-size: 2rem !important;
+  }
 }
 
 .${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${LABEL_CLASS}.${NATIVE_LABEL_CLASS}::before {

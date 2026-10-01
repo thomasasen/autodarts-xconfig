@@ -1,6 +1,8 @@
 import {
+  findModernTurnSurface,
   readModernMatchSurface,
 } from "../../shared/x01-match-surface.js";
+import { readModernCricketGrid } from "../../cricket-surface/modern-grid.js";
 import { NATIVE_BOARD_SELECTOR, findBoardSvgRoot } from "../../../shared/dartboard-svg.js";
 
 function directChildContaining(parentNode, descendantNode) {
@@ -70,6 +72,18 @@ function findControlBar(controlsSlot) {
     current = current.children[0];
   }
   return current && current !== controlsSlot ? current : controlsSlot;
+}
+
+export function resolveModernCricketGameControlsSurface(documentRef, windowRef = documentRef?.defaultView) {
+  const grid = readModernCricketGrid(documentRef);
+  const turn = grid && findModernTurnSurface(documentRef, windowRef);
+  if (!turn) return null;
+  const boardSvg = findBoardSvgRoot(documentRef);
+  const nativeBoard = boardSvg?.closest?.(NATIVE_BOARD_SELECTOR);
+  const surface = nativeBoard && findStage(turn.turnContainer, nativeBoard);
+  if (!surface || !surface.stage.parentElement?.contains?.(grid.root)) return null;
+  const controlBar = findControlBar(surface.controlsSlot);
+  return controlBar?.querySelector?.("button") ? { ...surface, controlBar } : null;
 }
 
 export function resolveModernX01GameLayoutSurface(documentRef, windowRef = documentRef?.defaultView) {
