@@ -4,7 +4,7 @@ export const XCONFIG_PREVIEW_SOURCE_FILES = Object.freeze({
   "theme-global-typography": "template-theme-global-typography-xConfig.png",
   "theme-global-presets": "template-theme-global-typography-xConfig.png",
   "theme-game-layout": "theme-game-layout.webp",
-  "turn-dart-display": "animation-dart-marker-darts.png",
+  "turn-dart-display": "turn-dart-display.png",
   "checkout-score-highlight": "animation-checkout-score-pulse.gif",
   "x01-remaining-score-bar": "animation-x01-score-progress.png",
   "x01-bust-active-player-highlight": "x01-bust-active-player-highlight.webp",

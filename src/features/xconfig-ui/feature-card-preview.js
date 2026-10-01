@@ -148,6 +148,10 @@ const FEATURE_PREVIEW_RESOLVERS = Object.freeze({
     kind: "take-out-darts-alert",
     url: resolveXConfigPreviewAsset("take-out-darts-alert"),
   }),
+  "turn-dart-display": () => ({
+    kind: "turn-dart-display",
+    url: resolveXConfigPreviewAsset("turn-dart-display"),
+  }),
   "turn-score-counter": () => ({
     kind: "turn-score-counter",
     url: resolveXConfigPreviewAsset("turn-score-counter"),

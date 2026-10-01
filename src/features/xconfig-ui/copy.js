@@ -334,7 +334,7 @@ export const xconfigFeatureCopy = deepFreeze({
     visibleDescription: "Ersetzt die Darts in der Wurfanzeige durch Farbe, Verlauf, Text, ein vorbereitetes Dart-Bild oder einen eigenen Upload.",
     visualDescription: "Das Modul arbeitet unabhängig von Hintergrund, Schrift und Farben und verändert keine Treffermarkierungen am Board.",
     usefulWhen: "Wenn die Darts im Wurffeld besser zum eigenen Setup passen sollen.",
-    images: [image("Darts in der Wurfanzeige mit Verlauf", "template-global-turn-darts-gradient.png")],
+    images: [image("Darts in der Wurfanzeige mit Dart-Bild", "turn-dart-display.png")],
     fields: {
       turnDartStyle: THEME_GLOBAL_TURN_DART_STYLE_FIELD,
       turnDartAssetKey: THEME_GLOBAL_TURN_DART_ASSET_FIELD,

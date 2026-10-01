@@ -4196,6 +4196,7 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
   assert.match(styleText, /\.ad-xconfig-switch-track\{[^}]*width:48px[^}]*height:28px[^}]*border-radius:999px[^}]*background:#353b46/);
   assert.match(styleText, /\.ad-xconfig-switch-input:checked \+ \.ad-xconfig-switch-track\{[^}]*background:var\(--color-brand-blue-50,#4a89ff\)/);
   assert.match(styleText, /\[data-preview-kind="theme-game-layout"\] \.ad-xconfig-card-bg img\{[^}]*object-fit:contain[^}]*object-position:right center[^}]*filter:brightness\(\.9\)/);
+  assert.match(styleText, /\[data-preview-kind="turn-dart-display"\] \.ad-xconfig-card-bg img\{[^}]*object-fit:contain[^}]*object-position:center/);
   documentRef.querySelectorAll("[data-adxconfig-section='template'] .ad-xconfig-card").forEach((card) => {
     const featureKey = String(card.getAttribute("data-feature-key") || "");
     assert.ok(card.querySelector(".ad-xconfig-card-bg img"), `missing theme card image for ${featureKey}`);
@@ -4243,6 +4244,12 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
       ".ad-xconfig-card[data-feature-key='turn-score-counter']"
     )?.getAttribute("data-preview-kind"),
     "turn-score-counter"
+  );
+  assert.equal(
+    documentRef.querySelector(
+      ".ad-xconfig-card[data-feature-key='turn-dart-display']"
+    )?.getAttribute("data-preview-kind"),
+    "turn-dart-display"
   );
 
   runtime.stop();

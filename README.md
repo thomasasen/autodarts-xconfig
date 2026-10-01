@@ -291,7 +291,7 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#turn-dart-display)
 
-![Darts in der Wurfanzeige mit Verlauf](docs/screenshots/template-global-turn-darts-gradient.png)
+![Darts in der Wurfanzeige mit Dart-Bild](docs/screenshots/turn-dart-display.png)
 
 <a id="animation-autodarts-animate-avg-trend-arrow"></a>
 <a id="animation-autodarts-animate-average-trend-arrow"></a>

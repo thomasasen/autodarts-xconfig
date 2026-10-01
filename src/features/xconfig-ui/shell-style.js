@@ -194,6 +194,7 @@ ${buildX01RemainingScoreBarStyleText()}
 #${PANEL_HOST_ID} .ad-xconfig-card[data-preview-kind="dart-marker"] .ad-xconfig-card-bg img{object-fit:contain;object-position:center}
 #${PANEL_HOST_ID} .ad-xconfig-card[data-preview-kind="dart-marker"]:hover .ad-xconfig-card-bg img{object-fit:contain;object-position:center}
 #${PANEL_HOST_ID} .ad-xconfig-card[data-preview-kind="take-out-darts-alert"] .ad-xconfig-card-bg img{object-fit:contain;object-position:center}
+#${PANEL_HOST_ID} .ad-xconfig-card[data-preview-kind="turn-dart-display"] .ad-xconfig-card-bg img{object-fit:contain;object-position:center}
 #${PANEL_HOST_ID} .ad-xconfig-card[data-preview-kind="turn-score-counter"] .ad-xconfig-card-bg img{object-fit:contain;object-position:center}
 #${PANEL_HOST_ID} .ad-xconfig-card-content{position:relative;z-index:3;width:70%;min-height:224px;padding:24px;display:flex;flex-direction:column;flex:1;min-width:0}
 #${PANEL_HOST_ID} .ad-xconfig-card--theme-global .ad-xconfig-card-content{width:54%}

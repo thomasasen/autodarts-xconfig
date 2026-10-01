@@ -401,7 +401,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Dart-Bild entfernen`: Entfernt das eigene Dart-Bild.
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Darts in der Wurfanzeige mit Verlauf](screenshots/template-global-turn-darts-gradient.png)
+![Darts in der Wurfanzeige mit Dart-Bild](screenshots/turn-dart-display.png)
 
 <a id="animation-autodarts-animate-avg-trend-arrow"></a>
 <a id="animation-autodarts-animate-average-trend-arrow"></a>
