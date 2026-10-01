@@ -500,6 +500,59 @@ test("x01 bust impact tracks the rendered dart tip while board zoom is moving", 
   assert.equal(pendingFrames.size, 0);
 });
 
+for (const { initialX, finalX, direction } of [
+  { initialX: 990, finalX: 200, direction: "right" },
+  { initialX: 10, finalX: 800, direction: "left" },
+]) {
+  test(`x01 bust impact cracks still reach the ${direction} surface edge after zoom out`, () => {
+    const fixture = setupModernBustDocument();
+    fixture.documentRef.main.__rect = { left: 0, top: 0, width: 1000, height: 600 };
+    const renderedDart = appendRenderedDartTip(fixture.documentRef, { x: initialX, y: 300 });
+    const state = createBustActivePlayerHighlightState();
+    const context = {
+      documentRef: fixture.documentRef,
+      windowRef: fixture.windowRef,
+      effectTarget: "impact",
+      crackCount: 1,
+      random: () => 0.5,
+    };
+    syncBustActivePlayerHighlight(context, state);
+    const overlay = fixture.documentRef.main.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`);
+    const crack = overlay.querySelector(`.${BUST_CRACK_CLASS}`);
+    const path = crack.querySelector(".ad-ext-x01-bust-crack-main");
+    const initialPathData = path.getAttribute("d");
+    const assertReachesEdge = (width) => {
+      const scale = Number(/scale\(([^)]+)\)/.exec(path.getAttribute("transform") || "")?.[1] || 1);
+      const endpointXs = Array.from(
+        path.getAttribute("d").matchAll(/Q\s+[-\d.]+\s+[-\d.]+\s+([-\d.]+)\s+[-\d.]+/g),
+        (match) => Number(crack.getAttribute("data-crack-x")) + Number(match[1]) * scale
+      );
+      assert.ok(direction === "right" ? Math.max(...endpointXs) >= width : Math.min(...endpointXs) <= 0,
+        `cracks must reach the current ${direction} edge, beyond the original zoom area`);
+    };
+
+    renderedDart.setScreenTip({ x: finalX, y: 300 });
+    const result = syncBustActivePlayerHighlight(context, state);
+    assert.equal(result.enteredBust, false);
+    assert.equal(fixture.documentRef.main.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`), overlay);
+    assert.equal(overlay.querySelector(`.${BUST_CRACK_CLASS}`), crack);
+    assert.equal(crack.querySelector(".ad-ext-x01-bust-crack-main"), path);
+    assert.equal(path.getAttribute("d"), initialPathData);
+    assert.equal(crack.getAttribute("data-crack-x"), finalX.toFixed(2));
+    assertReachesEdge(1000);
+
+    fixture.documentRef.main.__rect = { left: 0, top: 0, width: 2000, height: 1200 };
+    renderedDart.setScreenTip({ x: finalX * 2, y: 600 });
+    syncBustActivePlayerHighlight(context, state);
+    assert.equal(overlay.getAttribute("viewBox"), "0 0 2000 1200");
+    assertReachesEdge(2000);
+    assert.equal(path.getAttribute("d"), initialPathData);
+
+    clearBustActivePlayerHighlightState(state);
+    assert.equal(fixture.documentRef.main.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`), null);
+  });
+}
+
 test("x01 bust impact target falls back to board center when no dart coordinates exist", () => {
   const fixture = setupModernBustDocument();
   const state = createBustActivePlayerHighlightState();

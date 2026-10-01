@@ -6,6 +6,7 @@ import {
 } from "./style.js";
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+const impactSurfaceDiagonalByCrack = new WeakMap();
 function randomBetween(random, minimum, maximum) {
   return minimum + random() * (maximum - minimum);
 }
@@ -160,14 +161,21 @@ function createCrackGroup(documentRef, random, index, surface, origin = null) {
   const splinterSegments = [];
   const noiseSegments = [];
   const shardSegments = [];
-  const crackRadii = buildCrackRadii(random, Math.hypot(surface.width, surface.height) * 1.1);
+  const surfaceDiagonal = Math.hypot(surface.width, surface.height);
+  const maximumRadius = surfaceDiagonal * 1.1;
+  const crackRadii = buildCrackRadii(random, maximumRadius);
+  if (normalizedOrigin) {
+    // Impact cracks move with the dart tip; clip at the SVG rather than the original origin.
+    crackRadii.push(maximumRadius);
+    impactSurfaceDiagonalByCrack.set(group, surfaceDiagonal);
+  }
   for (let rayIndex = 0; rayIndex < DEMO_CRACK_SETTINGS.rays; rayIndex += 1) {
     let angle =
       (Math.PI * 2 * rayIndex) / (DEMO_CRACK_SETTINGS.rays + 1) + Math.PI / 18;
     let previousPoint = null;
     for (let levelIndex = 0; levelIndex < crackRadii.length; levelIndex += 1) {
       if (
-        previousPoint &&
+        !normalizedOrigin && previousPoint &&
         !isPointInsideSurface(previousPoint, centerX, centerY, surface.width, surface.height)
       ) {
         break;
@@ -299,6 +307,17 @@ export function updateBustCrackOrigin(node, origin) {
     setAttributeIfChanged(crack, "data-crack-y", y);
     setAttributeIfChanged(crack, "transform", nextTransform);
     setAttributeIfChanged(crack, "data-crack-origin-source", source);
+    const originalDiagonal = impactSurfaceDiagonalByCrack.get(crack);
+    if (originalDiagonal) {
+      const scale = Math.max(1, Math.hypot(surface.width, surface.height) / originalDiagonal);
+      const pathTransform = `scale(${scale})`;
+      crack.querySelectorAll?.("path")?.forEach?.((path) => {
+        if (path.getAttribute?.("transform") !== pathTransform) {
+          setAttributeIfChanged(path, "transform", pathTransform);
+          changed = true;
+        }
+      });
+    }
   });
 
   let impactHole = overlay.querySelector?.(`.${BUST_IMPACT_HOLE_CLASS}`) || null;
