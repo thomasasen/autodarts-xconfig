@@ -155,10 +155,13 @@ export function calculateBoardFocusLayout(options = {}) {
     };
   }
 
-  const railWidth = clamp(width * 0.42, 480, GAME_LAYOUT_RAIL_MAX_WIDTH);
+  // Grow only when both dimensions have room; ultrawide, short windows stay compact.
+  const displayScale = clamp(Math.min(width / 1536, height / 808), 1, 2);
+  const turnHeight = GAME_LAYOUT_TURN_HEIGHT * displayScale;
+  const railWidth = clamp(width * 0.42, 480, GAME_LAYOUT_RAIL_MAX_WIDTH * displayScale);
   const playerViewportHeight = Math.max(
     0,
-    height - GAME_LAYOUT_PADDING * 2 - GAME_LAYOUT_TURN_HEIGHT - GAME_LAYOUT_TURN_PLAYER_GAP
+    height - GAME_LAYOUT_PADDING * 2 - turnHeight - GAME_LAYOUT_TURN_PLAYER_GAP
   );
   const requestedActiveIndex = Number(options.activeIndex);
   const hasActivePlayer = options.activeIndex == null ||
@@ -171,7 +174,7 @@ export function calculateBoardFocusLayout(options = {}) {
     : 0;
   const allPlayersFit = fitHeight >= GAME_LAYOUT_PLAYER_MIN_HEIGHT;
   const playerHeight = allPlayersFit
-    ? Math.min(GAME_LAYOUT_PLAYER_MAX_HEIGHT, fitHeight)
+    ? Math.min(GAME_LAYOUT_PLAYER_MAX_HEIGHT * displayScale, fitHeight)
     : GAME_LAYOUT_PLAYER_MIN_HEIGHT;
   const inactivePlayerHeight = hasActivePlayer
     ? playerHeight * GAME_LAYOUT_INACTIVE_SCALE
@@ -239,6 +242,8 @@ export function calculateBoardFocusLayout(options = {}) {
     height,
     playerCount,
     railWidth,
+    turnHeight,
+    turnScale: displayScale,
     playerViewportHeight,
     playerHeight,
     inactivePlayerHeight,

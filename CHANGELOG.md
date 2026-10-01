@@ -12,6 +12,15 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.2.2] - 2026-10-01
+
+### Changed
+
+- Nutzerwirkung: Spieleranzeigen wachsen auf großen Monitoren mit dem verfügbaren Platz. Namen, AVG und Restpunkte bleiben auch bei kompakten Karten und mehreren Spielern lesbar.
+  Technik: Das Game Layout skaliert Karten und Typografie anhand von Fensterbreite und -höhe, passt Namen sowie AVG an ihren Bereich an und hält ausgeblendete Spieler bei erneuter DOM-Erkennung im verwalteten Scrollfenster.
+- Nutzerwirkung: Wurfanzeige, Dart-Symbole, Wurfwerte und Checkout-Hinweise wachsen auf großen Monitoren gemeinsam. Geworfene Darts verschwinden weiterhin wie in der nativen Anzeige; Checkout-Hinweise bleiben sichtbar.
+  Technik: Die berechnete Wurfhöhe steuert Raster, Spielerpositionen und Scrollbereich. Lokale Skalierungsvariablen passen Werte, Platzhalter und Beschriftungen an, während die Sichtbarkeitsregel für leere Dartfelder Checkout- und Setup-Hinweise ausnimmt.
+
 ## [3.2.1] - 2026-10-01
 
 ### Fixed
@@ -2260,6 +2269,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.2.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.2.1...v3.2.2
 [3.2.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.2.0...v3.2.1
 [3.2.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.15...v3.2.0
 [3.1.15]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.14...v3.1.15

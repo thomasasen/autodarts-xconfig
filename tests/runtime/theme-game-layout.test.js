@@ -237,33 +237,34 @@ test("board-focus geometry maximizes the board and keeps readable player rows", 
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-controls-slot="true"[^}]*justify-self:center!important/);
   assert.match(buildThemeGameLayoutStyleText(), />:nth-child\(2\)\{display:none!important\}/);
   assert.match(buildThemeGameLayoutStyleText(), /grid-template-columns:var\(--ad-game-layout-rail-width\) minmax\(0,1fr\)!important/);
-  assert.match(buildThemeGameLayoutStyleText(), /grid-template-columns:minmax\(0,1fr\) minmax\(150px,max-content\) auto!important/);
-  assert.match(buildThemeGameLayoutStyleText(), /grid-template-rows:52px minmax\(0,1fr\)!important/);
+  assert.match(buildThemeGameLayoutStyleText(), /grid-template-columns:minmax\(0,1fr\) minmax\(calc\(150px \* var\(--ad-game-layout-player-scale\)\),max-content\) auto!important/);
+  assert.match(buildThemeGameLayoutStyleText(), /grid-template-rows:minmax\(0,1fr\) auto!important/);
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-name-container="true"[^}]*flex:1 1 auto!important[^}]*max-width:100%!important/);
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-name-container="true"[^}]*>\*[^}]*width:100%!important/);
-  assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-name-plate="true"[^}]*flex:1 1 auto!important[^}]*min-height:52px!important/);
-  assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-stat-region="0"[^}]*padding-top:10px!important/);
+  assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-name-plate="true"[^}]*flex:1 1 auto!important[^}]*min-height:var\(--ad-game-layout-name-height\)!important/);
+  assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-stat-region="0"[^}]*padding-top:min\(calc\(10px \* var\(--ad-game-layout-player-scale\)\),max\(0px,calc\(var\(--ad-game-layout-card-height\) - 140px\)\)\)!important/);
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-score-value="true"[^}]*align-self:end!important[^}]*height:var\(--ad-game-layout-score-span\)!important/);
   assert.match(buildThemeGameLayoutStyleText(), /left:var\(--ad-game-layout-variant-left,16px\)!important/);
-  assert.match(buildThemeGameLayoutStyleText(), /height:auto!important;[^}]*line-height:1!important;[^}]*font-size:var\(--ad-game-layout-name-font-size,clamp\(2rem,calc\(var\(--ad-game-layout-player-height\) \* \.225\),2\.25rem\)\)!important/);
+  assert.match(buildThemeGameLayoutStyleText(), /height:auto!important;[^}]*line-height:1!important;[^}]*font-size:var\(--ad-game-layout-name-font-size,clamp\(2rem,calc\(var\(--ad-game-layout-player-height\) \* \.225\),calc\(2\.25rem \* var\(--ad-game-layout-player-scale\)\)\)\)!important/);
   assert.match(
     buildThemeGameLayoutStyleText(),
-    /font-size:var\(--ad-ext-theme-remaining-score-font-size,clamp\(4rem,calc\(var\(--ad-game-layout-score-span\) \/ \.84\),7rem\)\)!important/
+    /--ad-game-layout-score-font-limit:clamp\(2rem,calc\(var\(--ad-game-layout-score-span\) \/ \.84\),calc\(7rem \* var\(--ad-game-layout-player-scale\)\)\)/
   );
+  assert.match(buildThemeGameLayoutStyleText(), /font-size:min\(var\(--ad-ext-theme-remaining-score-font-size,var\(--ad-game-layout-score-font-limit\)\),var\(--ad-game-layout-score-font-limit\)\)!important/);
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-score-value="true"[^}]*font-number\.overflow-hidden[^}]*overflow:visible!important/);
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-turn-slot="true"[^}]*bg-surface-surface>:first-child>\*[^}]*transform:none!important/);
   assert.match(buildThemeGameLayoutStyleText(), /bg-surface-surface>:first-child\{[^}]*flex:3 1 75%!important[^}]*width:75%!important/);
   assert.match(buildThemeGameLayoutStyleText(), /bg-surface-surface>:last-child\{[^}]*flex:1 1 25%!important[^}]*width:25%!important[^}]*max-width:none!important/);
   assert.match(buildThemeGameLayoutStyleText(), /bg-surface-surface\{[^}]*left:auto!important[^}]*flex:1 1 100%!important[^}]*width:100%!important[^}]*transform:none!important/);
-  assert.match(buildThemeGameLayoutStyleText(), /--ad-game-layout-turn-value-font-size:clamp\(2\.25rem,3\.35vw,3\.5rem\)/);
+  assert.match(buildThemeGameLayoutStyleText(), /--ad-game-layout-turn-value-font-size:clamp\(2\.25rem,calc\(var\(--ad-game-layout-rail-width\) \* \.08\),calc\(3\.5rem \* var\(--ad-game-layout-turn-scale\)\)\)/);
   assert.match(buildThemeGameLayoutStyleText(), /bg-surface-surface>:first-child>\*:not\(\.text-checkout-suggestion,\.text-checkout-setup\)::before\{[^}]*font-size:var\(--ad-game-layout-turn-value-font-size\)!important/);
   assert.match(buildThemeGameLayoutStyleText(), /bg-surface-surface>:last-child>span,[^{}]*bg-surface-surface>:first-child>\.font-number>span:not\(\[aria-hidden="true"\]\) \*\{[^}]*font-size:var\(--ad-game-layout-turn-value-font-size\)!important/);
-  assert.match(buildThemeGameLayoutStyleText(), /\*\.text-checkout-suggestion\{[^}]*padding:10px 12px!important[^}]*box-sizing:border-box!important/);
+  assert.match(buildThemeGameLayoutStyleText(), /\*\.text-checkout-suggestion\{[^}]*padding:calc\(10px \* var\(--ad-game-layout-turn-scale\)\) calc\(12px \* var\(--ad-game-layout-turn-scale\)\)!important[^}]*box-sizing:border-box!important/);
   assert.doesNotMatch(buildThemeGameLayoutStyleText(), /font-size:1\.6rem!important/);
   assert.doesNotMatch(buildThemeGameLayoutStyleText(), /nth-child\(3\)/);
-  assert.match(buildThemeGameLayoutStyleText(), /:is\(\.text-checkout-suggestion,\.text-checkout-setup\)\[data-ad-ext-label\]::before\{[^}]*padding:4\.5px 10\.5px!important[^}]*font-size:16\.5px!important/);
+  assert.match(buildThemeGameLayoutStyleText(), /:is\(\.text-checkout-suggestion,\.text-checkout-setup\)\[data-ad-ext-label\]::before\{[^}]*font-size:calc\(16\.5px \* var\(--ad-game-layout-turn-scale\)\)!important/);
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-active="false"[^}]*filter:grayscale\(1\)!important[^}]*opacity:\.55!important/);
-  assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-active="false"[^}]*grid-template-columns:minmax\(0,1fr\) minmax\(110px,\.35fr\) 34px!important[^}]*transform:none!important/);
+  assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-active="false"[^}]*grid-template-columns:minmax\(0,1fr\) minmax\(calc\(110px \* var\(--ad-game-layout-player-scale\)\),\.35fr\) calc\(34px \* var\(--ad-game-layout-player-scale\)\)!important[^}]*transform:none!important/);
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-name-region="true"[^}]*zoom:\.84/);
   assert.match(
     buildThemeGameLayoutStyleText(),
@@ -318,6 +319,184 @@ test("board-focus geometry maximizes the board and keeps readable player rows", 
   });
 });
 
+test("board-focus player cards grow with large viewports without sacrificing board space", () => {
+  const baseline = calculateBoardFocusLayout({ width: 1536, height: 808, playerCount: 3 });
+  let previous = baseline;
+  for (const [width, height] of [[1920, 1080], [2560, 1440], [3840, 2160]]) {
+    const metrics = calculateBoardFocusLayout({ width, height, playerCount: 3 });
+    assert.ok(metrics.playerHeight > previous.playerHeight);
+    assert.ok(metrics.railWidth > previous.railWidth);
+    assert.ok(metrics.inactivePlayerHeight > previous.inactivePlayerHeight);
+    assert.equal(metrics.visiblePlayerCount, 3);
+    assert.equal(metrics.overflow, false);
+    assert.ok(metrics.boardSize >= height - 16);
+    previous = metrics;
+  }
+
+  const wideShort = calculateBoardFocusLayout({ width: 3840, height: 808, playerCount: 3 });
+  assert.equal(wideShort.playerHeight, baseline.playerHeight);
+  assert.equal(wideShort.railWidth, GAME_LAYOUT_RAIL_MAX_WIDTH);
+  const narrowTall = calculateBoardFocusLayout({ width: 1180, height: 808, playerCount: 3 });
+  assert.equal(narrowTall.playerHeight, baseline.playerHeight);
+
+  for (const activeIndex of [0, -1]) {
+    for (const playerCount of [2, 6, 12, 24]) {
+      const metrics = calculateBoardFocusLayout({ width: 2560, height: 1440, playerCount, activeIndex });
+      const activeVisible = activeIndex >= 0 ? 1 : 0;
+      const usedHeight = activeVisible * metrics.playerHeight +
+        (metrics.visiblePlayerCount - activeVisible) * metrics.inactivePlayerHeight +
+        (metrics.visiblePlayerCount - 1) * 10;
+      assert.ok(usedHeight <= metrics.playerViewportHeight + 0.001);
+      assert.equal(metrics.overflow, metrics.visiblePlayerCount < playerCount);
+    }
+  }
+});
+
+test("board-focus turn height grows only with available width and height and reserves player space", () => {
+  for (const [width, height, scale] of [
+    [1536, 808, 1], [1920, 1080, 1.25], [2560, 1440, 5 / 3],
+    [3840, 2160, 2], [3840, 808, 1], [1180, 808, 1],
+  ]) {
+    const metrics = calculateBoardFocusLayout({ width, height, playerCount: 6 });
+    assert.equal(metrics.turnScale, scale);
+    assert.equal(metrics.turnHeight, 144 * scale);
+    assert.equal(metrics.playerViewportHeight, height - 32 - metrics.turnHeight - 16);
+    const usedHeight = metrics.playerHeight +
+      (metrics.visiblePlayerCount - 1) * metrics.inactivePlayerHeight +
+      (metrics.visiblePlayerCount - 1) * 10;
+    assert.ok(usedHeight <= metrics.playerViewportHeight + 0.001);
+  }
+});
+
+test("game-layout updates turn height, player offsets and wheel bounds and restores native sizing", () => {
+  const fixture = createLayoutFixture({ width: 3840, height: 2160, playerCount: 36 });
+  fixture.players.forEach((player) => { player.score.textContent = "301"; });
+  const config = createRuntimeConfig({
+    featureToggles: { "themes.gameLayout": true },
+    features: { themes: { gameLayout: { enabled: true } } },
+  });
+  const cleanup = mountThemeGameLayout(mountContext(config, fixture));
+  const height = () => fixture.root.style.getPropertyValue("--ad-game-layout-turn-height");
+  const scale = () => fixture.root.style.getPropertyValue("--ad-game-layout-turn-scale");
+  assert.equal(height(), "288px");
+  assert.equal(scale(), "2");
+  assert.equal(fixture.root.getAttribute("data-ad-ext-game-layout-overflow"), "true");
+  assert.equal(fixture.players[0].item.style.getPropertyValue("--ad-game-layout-player-y"), "320px");
+  for (const [localY, expected] of [[250, false], [350, true]]) {
+    const wheel = new FakeEvent("wheel", { bubbles: false, cancelable: true });
+    const rect = fixture.root.getBoundingClientRect();
+    Object.assign(wheel, { deltaY: 120, clientX: rect.left + 100, clientY: rect.top + localY });
+    fixture.root.dispatchEvent(wheel);
+    assert.equal(wheel.defaultPrevented, expected);
+  }
+  fixture.root.__rect.width = 1536;
+  fixture.root.__rect.height = 808;
+  fixture.windowRef.dispatchEvent(new FakeEvent("resize"));
+  assert.equal(height(), "144px");
+  assert.equal(scale(), "1");
+  assert.equal(fixture.players[0].item.style.getPropertyValue("--ad-game-layout-player-y"), "176px");
+  fixture.root.__rect.width = 1000;
+  fixture.windowRef.dispatchEvent(new FakeEvent("resize"));
+  assert.equal(height(), "");
+  assert.equal(scale(), "");
+  fixture.root.__rect.width = 3840;
+  fixture.root.__rect.height = 2160;
+  fixture.windowRef.dispatchEvent(new FakeEvent("resize"));
+  assert.equal(height(), "288px");
+  cleanup();
+  assert.equal(height(), "");
+  assert.equal(scale(), "");
+});
+
+test("game-layout updates player content scale on resize and removes it on fallback and cleanup", () => {
+  const fixture = createLayoutFixture({ width: 2560, height: 1440, playerCount: 3 });
+  const config = createRuntimeConfig({
+    featureToggles: { "themes.gameLayout": true },
+    features: { themes: { gameLayout: { enabled: true } } },
+  });
+  const cleanup = mountThemeGameLayout(mountContext(config, fixture));
+  const scale = () => fixture.root.style.getPropertyValue("--ad-game-layout-player-scale");
+  assert.ok(Number(scale()) > 1);
+
+  fixture.root.__rect.width = 1536;
+  fixture.root.__rect.height = 808;
+  fixture.windowRef.dispatchEvent(new FakeEvent("resize"));
+  assert.equal(scale(), "1");
+
+  fixture.root.__rect.width = 1000;
+  fixture.windowRef.dispatchEvent(new FakeEvent("resize"));
+  assert.equal(scale(), "");
+  fixture.root.__rect.width = 2560;
+  fixture.root.__rect.height = 1440;
+  fixture.windowRef.dispatchEvent(new FakeEvent("resize"));
+  assert.ok(Number(scale()) > 1);
+  cleanup();
+  assert.equal(scale(), "");
+});
+
+test("game-layout fits the AVG line to the score column and restores its preferred size after resizing", () => {
+  const fixture = createLayoutFixture({ width: 2560, height: 1440 });
+  const average = fixture.players[0].card.querySelector(".average");
+  average.textContent = "";
+  const averageRow = fixture.node(average, "div", "w-full");
+  const text = fixture.node(averageRow, "span", "inline-block", "Leg 159.0 / Match 159.0");
+  let availableWidth = 250;
+  Object.defineProperties(text, {
+    clientWidth: { get: () => availableWidth },
+    scrollWidth: { get: () => {
+      const fontSize = Number.parseFloat(average.style.getPropertyValue("--ad-game-layout-avg-font-size")) || 44;
+      return Math.round(fontSize * 10 + 60);
+    } },
+  });
+  const getComputedStyle = fixture.windowRef.getComputedStyle.bind(fixture.windowRef);
+  fixture.windowRef.getComputedStyle = (node) => node === text
+    ? { fontSize: average.style.getPropertyValue("--ad-game-layout-avg-font-size") || "44px" }
+    : getComputedStyle(node);
+  const config = createRuntimeConfig({
+    featureToggles: { "themes.gameLayout": true },
+    features: { themes: { gameLayout: { enabled: true } } },
+  });
+  const cleanup = mountThemeGameLayout(mountContext(config, fixture));
+  const size = () => average.style.getPropertyValue("--ad-game-layout-avg-font-size");
+  assert.equal(size(), "19px");
+  assert.ok(text.scrollWidth <= text.clientWidth);
+  availableWidth = 500;
+  fixture.windowRef.dispatchEvent(new FakeEvent("resize"));
+  assert.equal(size(), "");
+  availableWidth = 200;
+  fixture.windowRef.dispatchEvent(new FakeEvent("resize"));
+  assert.equal(size(), "14px");
+  assert.ok(text.scrollWidth <= text.clientWidth);
+  cleanup();
+  assert.equal(size(), "");
+});
+
+test("game-layout fits the whole name region into a compact card row and restores it on resize", () => {
+  const fixture = createLayoutFixture({ playerCount: 6 });
+  const player = fixture.players[0];
+  player.nameRegion.__rect = { left: 16, top: 176, width: 300, height: 52 };
+  let rowHeight = 20;
+  const getComputedStyle = fixture.windowRef.getComputedStyle.bind(fixture.windowRef);
+  fixture.windowRef.getComputedStyle = (node) => node === player.content
+    ? { gridTemplateRows: `${rowHeight}px 22px` }
+    : getComputedStyle(node);
+  const config = createRuntimeConfig({
+    featureToggles: { "themes.gameLayout": true },
+    features: { themes: { gameLayout: { enabled: true } } },
+  });
+  const cleanup = mountThemeGameLayout(mountContext(config, fixture));
+  const nameHeight = () => player.nameRegion.style.getPropertyValue("--ad-game-layout-name-height");
+  assert.equal(nameHeight(), "20px");
+  rowHeight = 80;
+  fixture.windowRef.dispatchEvent(new FakeEvent("resize"));
+  assert.equal(nameHeight(), "");
+  rowHeight = 20;
+  fixture.windowRef.dispatchEvent(new FakeEvent("resize"));
+  assert.equal(nameHeight(), "20px");
+  cleanup();
+  assert.equal(nameHeight(), "");
+});
+
 test("board-focus ignores hit-effect layers when protecting native correction icons", () => {
   const styleText = buildThemeGameLayoutStyleText();
 
@@ -327,11 +506,11 @@ test("board-focus ignores hit-effect layers when protecting native correction ic
   );
   assert.match(
     styleText,
-    /:has\(>span\[aria-hidden="true"\]:not\(\.opacity-0\)>svg\)::before[^}]*opacity:0!important/
+    /:not\(\.text-checkout-suggestion,\.text-checkout-setup\):has\(>span\[aria-hidden="true"\]:not\(\.opacity-0\)>svg\)::before[^}]*opacity:0!important/
   );
   assert.match(
     styleText,
-    /:has\(>span\[aria-hidden="true"\]:not\(\.opacity-0\)>svg\)>span:not\(\[aria-hidden="true"\]\)[^}]*opacity:0!important/
+    /:not\(\.text-checkout-suggestion,\.text-checkout-setup\):has\(>span\[aria-hidden="true"\]:not\(\.opacity-0\)>svg\)>span:not\(\[aria-hidden="true"\]\)[^}]*opacity:0!important/
   );
   assert.doesNotMatch(
     styleText,
@@ -352,7 +531,7 @@ test("board-focus keeps enhanced scoring captions small in every thrown slot", (
   const css = buildThemeGameLayoutStyleText();
   assert.match(
     css,
-    /:root:has\(#ad-ext_style_enhanced-scoring-display\)[^{}]*>\.font-number\.cursor-pointer>span:not\(\[aria-hidden="true"\]\) \*\{[^}]*font-size:1rem!important;[^}]*line-height:1!important;/
+    /:root:has\(#ad-ext_style_enhanced-scoring-display\)[^{}]*>\.font-number\.cursor-pointer>span:not\(\[aria-hidden="true"\]\) \*\{[^}]*font-size:calc\(1rem \* var\(--ad-game-layout-turn-scale\)\)!important;[^}]*line-height:1!important;/
   );
   assert.doesNotMatch(css, /cursor-pointer[^{}]*nth-child/);
   assert.match(css, /font-size:var\(--ad-game-layout-turn-value-font-size\)!important/);
@@ -611,6 +790,35 @@ test("game-layout active-first overflow keeps the active player visible while in
   assert.equal(fixture.players[0].item.getAttribute("data-ad-ext-game-layout-visible"), "false");
   assert.equal(fixture.players[1].item.getAttribute("data-ad-ext-game-layout-visible"), "true");
 
+  cleanup();
+});
+
+test("game-layout keeps its own hidden overflow players in discovery across resizes and player changes", () => {
+  const fixture = createLayoutFixture({ width: 1180, height: 650, playerCount: 8 });
+  const getComputedStyle = fixture.windowRef.getComputedStyle.bind(fixture.windowRef);
+  fixture.windowRef.getComputedStyle = (node) => {
+    const item = node.closest?.('[data-ad-ext-game-layout-player-item="true"]');
+    const ownedHidden = item?.getAttribute("data-ad-ext-game-layout-visible") === "false";
+    return { ...getComputedStyle(node), visibility: ownedHidden ? "hidden" : "visible" };
+  };
+  const config = createRuntimeConfig({
+    featureToggles: { "themes.gameLayout": true },
+    features: { themes: { gameLayout: { enabled: true, playerOrder: "active-first" } } },
+  });
+  const cleanup = mountThemeGameLayout(mountContext(config, fixture));
+  const assertAllOwned = () => fixture.players.forEach((player) => {
+    assert.equal(player.item.getAttribute("data-ad-ext-game-layout-player-item"), "true");
+    assert.ok(["true", "false"].includes(player.item.getAttribute("data-ad-ext-game-layout-visible")));
+  });
+  assertAllOwned();
+  assert.equal(fixture.players[7].item.getAttribute("data-ad-ext-game-layout-visible"), "false");
+  fixture.windowRef.dispatchEvent(new FakeEvent("resize"));
+  assertAllOwned();
+  setActivePlayer(fixture, 7);
+  fixture.windowRef.dispatchEvent(new FakeEvent("resize"));
+  assertAllOwned();
+  assert.equal(fixture.players[7].item.getAttribute("data-ad-ext-game-layout-visible"), "true");
+  assert.equal(fixture.players[7].item.style.getPropertyValue("--ad-game-layout-player-y"), "176px");
   cleanup();
 });
 

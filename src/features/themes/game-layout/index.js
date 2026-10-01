@@ -4,8 +4,8 @@ import { isThemeGameContextActive } from "../shared/theme-utils.js";
 import {
   GAME_LAYOUT_PADDING,
   GAME_LAYOUT_NAME_MIN_FONT_SIZE,
+  GAME_LAYOUT_PLAYER_MAX_HEIGHT,
   GAME_LAYOUT_PLAYER_GAP,
-  GAME_LAYOUT_TURN_HEIGHT,
   GAME_LAYOUT_TURN_PLAYER_GAP,
   calculateBoardFocusLayout,
   calculateClearRailRange,
@@ -52,9 +52,14 @@ const MANAGED_PROPERTIES = Object.freeze([
   "--ad-game-layout-rail-width",
   "--ad-game-layout-board-size",
   "--ad-game-layout-player-height",
+  "--ad-game-layout-player-scale",
+  "--ad-game-layout-turn-height",
+  "--ad-game-layout-turn-scale",
   "--ad-game-layout-thumb-height",
   "--ad-game-layout-thumb-offset",
   "--ad-game-layout-name-font-size",
+  "--ad-game-layout-name-height",
+  "--ad-game-layout-avg-font-size",
   "--ad-game-layout-variant-left",
   "--ad-game-layout-variant-width",
 ]);
@@ -149,8 +154,42 @@ function avoidHeaderCollisions(surface, metrics, documentRef) {
   variantNode.style?.setProperty?.("--ad-game-layout-variant-width", `${range.width}px`);
 }
 
+function fitPlayerAverage(player, windowRef) {
+  const region = player.statRegions[0];
+  const textNode = region?.querySelector?.("span");
+  if (!textNode) return;
+
+  region.style?.removeProperty?.("--ad-game-layout-avg-font-size");
+  // Native gaps do not shrink with the font, so remeasure after fitting.
+  for (let pass = 0; pass < 3; pass += 1) {
+    const preferredFontSize = Number.parseFloat(windowRef?.getComputedStyle?.(textNode)?.fontSize);
+    const availableWidth = Number(textNode.clientWidth);
+    const contentWidth = Number(textNode.scrollWidth);
+    const fittedFontSize = calculateFittedFontSize({
+      preferredFontSize,
+      availableWidth,
+      contentWidth,
+      availableHeight: 1,
+      contentHeight: 1,
+    });
+    if (!(fittedFontSize > 0 && fittedFontSize < preferredFontSize)) break;
+    region.style?.setProperty?.("--ad-game-layout-avg-font-size", `${fittedFontSize}px`);
+  }
+}
+
 function selfCorrectSurface(surface, metrics, documentRef, windowRef) {
-  surface.players.forEach((player) => fitPlayerName(player, windowRef));
+  surface.players.forEach((player) => {
+    fitPlayerAverage(player, windowRef);
+    const region = player.nameRegion;
+    region.style?.removeProperty?.("--ad-game-layout-name-height");
+    const rowHeight = Number.parseFloat(windowRef?.getComputedStyle?.(player.content)?.gridTemplateRows);
+    const regionHeight = Number(region.getBoundingClientRect?.().height);
+    const preferredZoom = player.item.getAttribute?.("data-ad-ext-game-layout-active") === "false" ? 0.84 : 1;
+    if (rowHeight > 0 && regionHeight > rowHeight) {
+      region.style?.setProperty?.("--ad-game-layout-name-height", `${rowHeight / preferredZoom}px`);
+    }
+    fitPlayerName(player, windowRef);
+  });
   avoidHeaderCollisions(surface, metrics, documentRef);
 }
 
@@ -206,6 +245,14 @@ function clearAppliedState(state, preservedControlBar = null) {
   state.wheelHandler = null;
 }
 
+function revealManagedPlayersForDiscovery(state) {
+  state.nodes.forEach((node) => {
+    if (node.getAttribute?.("data-ad-ext-game-layout-visible") === "false") {
+      node.removeAttribute?.("data-ad-ext-game-layout-visible");
+    }
+  });
+}
+
 function markSurface(state, surface, metrics, options = {}) {
   const mark = (node, attribute, value = "true") => {
     rememberNode(state, node);
@@ -223,6 +270,12 @@ function markSurface(state, surface, metrics, options = {}) {
   surface.root.style?.setProperty?.("--ad-game-layout-rail-width", `${metrics.railWidth}px`);
   surface.root.style?.setProperty?.("--ad-game-layout-board-size", `${metrics.boardSize}px`);
   surface.root.style?.setProperty?.("--ad-game-layout-player-height", `${metrics.playerHeight}px`);
+  surface.root.style?.setProperty?.("--ad-game-layout-turn-height", `${metrics.turnHeight}px`);
+  surface.root.style?.setProperty?.("--ad-game-layout-turn-scale", String(metrics.turnScale));
+  surface.root.style?.setProperty?.(
+    "--ad-game-layout-player-scale",
+    String(Math.max(1, metrics.playerHeight / GAME_LAYOUT_PLAYER_MAX_HEIGHT))
+  );
   surface.root.style?.setProperty?.("--ad-game-layout-thumb-height", `${metrics.scrollThumbHeight}px`);
   surface.root.style?.setProperty?.("--ad-game-layout-thumb-offset", `${metrics.scrollThumbOffset}px`);
   mark(surface.stage, "data-ad-ext-game-layout-stage");
@@ -235,7 +288,7 @@ function markSurface(state, surface, metrics, options = {}) {
   mark(surface.controlBar, "data-ad-ext-game-layout-control-bar");
   surface.playerColumns.forEach((column) => mark(column, "data-ad-ext-game-layout-player-column"));
 
-  let nextPlayerY = GAME_LAYOUT_PADDING + GAME_LAYOUT_TURN_HEIGHT + GAME_LAYOUT_TURN_PLAYER_GAP;
+  let nextPlayerY = GAME_LAYOUT_PADDING + metrics.turnHeight + GAME_LAYOUT_TURN_PLAYER_GAP;
   players.forEach((player, index) => {
     const visible = pinActiveAtStart
       ? index === 0 || (
@@ -343,6 +396,9 @@ export function mountThemeGameLayout(context = {}) {
         return;
       }
 
+      // Host discovery filters invisible cards. Remove only our own visibility
+      // marker while reading, then reapply the complete window before painting.
+      revealManagedPlayersForDiscovery(appliedState);
       const surface = resolveModernX01GameLayoutSurface(documentRef, windowRef);
       if (!surface) {
         clearAppliedState(appliedState);
@@ -467,8 +523,8 @@ export function mountThemeGameLayout(context = {}) {
         const isInsidePlayerRail =
           localX >= GAME_LAYOUT_PADDING &&
           localX <= GAME_LAYOUT_PADDING + lastMetrics.railWidth &&
-          localY >= GAME_LAYOUT_PADDING + GAME_LAYOUT_TURN_HEIGHT + GAME_LAYOUT_TURN_PLAYER_GAP &&
-          localY <= GAME_LAYOUT_PADDING + GAME_LAYOUT_TURN_HEIGHT +
+          localY >= GAME_LAYOUT_PADDING + lastMetrics.turnHeight + GAME_LAYOUT_TURN_PLAYER_GAP &&
+          localY <= GAME_LAYOUT_PADDING + lastMetrics.turnHeight +
             GAME_LAYOUT_TURN_PLAYER_GAP + lastMetrics.playerViewportHeight;
         if (!isInsidePlayerRail) return;
         const nextIndex = moveBoardFocusWindow(
