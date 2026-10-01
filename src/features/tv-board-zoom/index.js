@@ -132,7 +132,12 @@ function resolveInputSafeBoardSurface(documentRef, gameState, boardSurface, wind
   }
 
   const scoringBoardMode = resolveScoringBoardInputMode(gameState, { windowRef });
-  if (scoringBoardMode === "manual") {
+  const nativeBoard = boardSurface?.zoomTarget;
+  // Native coordinate input remains available with a selected hardware board.
+  // Its touch-action wrapper must share the visible board's zoom geometry.
+  const hasNativePointerSurface = nativeBoard?.matches?.(NATIVE_BOARD_SELECTOR) &&
+    nativeBoard.parentElement?.style?.touchAction === "none";
+  if (scoringBoardMode === "manual" || hasNativePointerSurface) {
     return resolveManualNativeBoardSurface(boardSurface);
   }
   if (scoringBoardMode === "live" || activeMode === "live") {

@@ -366,6 +366,43 @@ test("manual native four-layer vector board zooms its aligned pointer surface", 
   } finally { f.stop(); }
 });
 
+for (const hydrated of [false, true]) {
+  test(`native mouse input zooms with the board despite a selected hardware board (${hydrated ? "hydrated" : "pending"})`, () => {
+    const gameState = createMutableX01GameState({
+      activeScore: 4,
+      snapshot: hydrated ? createScoringSnapshot({ boardId: "board-123" }) : null,
+    });
+    const f = startModernZoom({
+      boardInputMode: null,
+      gameState: gameState.api,
+      selectedBoard: "board-123",
+      score: 4,
+      route: ["D2"],
+    });
+    try {
+      f.host.style.touchAction = "none";
+      f.timers.advance(25);
+      assert.equal(f.events.at(-1).segment, "D2");
+      assert.match(f.host.style.transform, /scale\(2\.750*\)/);
+      assert.equal(f.board.style.transform || "", "");
+    } finally { f.stop(); }
+  });
+}
+
+test("native mouse input with hardware state stays unzoomed if its surface is misaligned", () => {
+  const gameState = createMutableX01GameState({
+    snapshot: createScoringSnapshot({ boardId: "board-123" }),
+  });
+  const f = startModernZoom({ boardInputMode: null, gameState: gameState.api });
+  try {
+    f.host.style.touchAction = "none";
+    f.host.__rect = { left: 680, top: 100, width: 700, height: 700 };
+    f.timers.advance(25);
+    assert.equal(f.host.classList.contains(ZOOM_CLASS), false);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+  } finally { f.stop(); }
+});
+
 test("missing board id uses the click-safe manual pointer surface", () => {
   const gameState = createMutableX01GameState({
     snapshot: createScoringSnapshot({}),
