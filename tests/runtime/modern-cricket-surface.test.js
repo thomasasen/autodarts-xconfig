@@ -9,7 +9,8 @@ import {
 } from "../../src/features/cricket-surface/modern-grid.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 import { initializeCricketTargetHighlighter } from "../../src/features/cricket-target-highlighter/index.js";
-import { OVERLAY_ID } from "../../src/features/cricket-target-highlighter/style.js";
+import { OVERLAY_ID, PRESENTATION_PATTERN_IDS, resolveCricketVisualConfig } from "../../src/features/cricket-target-highlighter/style.js";
+import { renderCricketHighlights } from "../../src/features/cricket-target-highlighter/logic.js";
 import {
   clearCricketGridStatusEffectsState,
   createCricketGridStatusEffectsState,
@@ -34,6 +35,101 @@ import {
 import { createDomGuards } from "../../src/core/dom-guards.js";
 import { createObserverRegistry } from "../../src/core/observer-registry.js";
 import { createListenerRegistry } from "../../src/core/listener-registry.js";
+import { buildFeatureSettingPatch } from "../../src/features/xconfig-ui/path-utils.js";
+import { getFeatureConfigSpec } from "../../src/config/feature-config-spec.js";
+
+test("board patterns distinguish scoring from pressure and color-only mode removes pattern fills", () => {
+  const host = fixture(3);
+  appendBoardFixture(host.documentRef);
+  host.cells.get("20")[0].dataset.marks = "3";
+  host.cells.get("19")[1].dataset.marks = "3";
+  const renderState = host.read();
+  const visualConfig = resolveCricketVisualConfig({ colorTheme: "blue-orange", statusStyle: "pattern" });
+  assert.deepEqual(visualConfig.theme.scoring, { r: 56, g: 189, b: 248 });
+  assert.deepEqual(visualConfig.theme.pressure, { r: 251, g: 146, b: 60 });
+  assert.equal(renderCricketHighlights({ documentRef: host.documentRef, visualConfig, renderState }), true);
+  assert.equal(host.documentRef.getElementById(PRESENTATION_PATTERN_IDS.scoring).getAttribute("patternTransform"), "rotate(135)");
+  assert.equal(host.documentRef.getElementById(PRESENTATION_PATTERN_IDS.pressure).getAttribute("patternTransform"), "rotate(45)");
+  renderCricketHighlights({ documentRef: host.documentRef, visualConfig: resolveCricketVisualConfig({ statusStyle: "color" }), renderState });
+  assert.ok(host.documentRef.getElementById(OVERLAY_ID).querySelectorAll(".is-scoring").every((shape) => !String(shape.style.fill || "").startsWith("url(")));
+});
+
+test("calm table settings preserve scoring semantics and marks while disabling unwanted effects", () => {
+  for (const tactics of [false, true]) {
+    const host = fixture(4, tactics);
+    host.cells.get("20")[0].dataset.marks = "3";
+    host.cells.get("19")[1].dataset.marks = "3";
+    host.cells.get("18").forEach((cell) => { cell.dataset.marks = "3"; });
+    const patch = buildFeatureSettingPatch("cricketGridStatusEffects", "displayProfile", "calm");
+    const spec = getFeatureConfigSpec("cricketGridStatusEffects");
+    const normalized = spec.normalizeConfig({ ...patch.features.cricketGridStatusEffects, colorTheme: "blue-orange" });
+    assert.equal(normalized.displayProfile, "calm");
+    assert.equal(normalized.rowWave, false);
+    assert.equal(normalized.roundTransitionWipe, false);
+    assert.equal(normalized.feedback, "impulse");
+    const visualConfig = resolveCricketGridStatusEffectsConfig(normalized);
+    assert.equal(visualConfig.theme.scoring, "56, 189, 248");
+    const state = createCricketGridStatusEffectsState(host.windowRef);
+    const renderState = host.read();
+    updateCricketGridStatusEffects({ documentRef: host.documentRef, windowRef: host.windowRef, state, visualConfig, renderState, cricketRules });
+    assert.equal(host.root.getAttribute("data-ad-crfx-scoring-style"), "edge");
+    assert.equal(host.root.getAttribute("data-ad-crfx-pressure-style"), "edge");
+    assert.equal(renderState.stateMap.get("20").boardPresentation, "scoring");
+    assert.equal(renderState.stateMap.get("19").boardPresentation, "pressure");
+    assert.equal(renderState.stateMap.get("18").boardPresentation, "dead");
+    assert.equal(host.cells.get("20")[0].dataset.marks, "3");
+    clearCricketGridStatusEffectsState(state);
+    assert.equal(host.root.getAttribute("data-ad-crfx-scoring-style"), null);
+  }
+});
+
+test("old table configurations retain their switches and choosing feedback off changes only feedback", () => {
+  const spec = getFeatureConfigSpec("cricketGridStatusEffects");
+  const old = spec.normalizeConfig({ rowWave: false, hitSpark: false, deltaChips: true, colorTheme: "high-contrast" });
+  assert.equal(old.rowWave, false);
+  assert.equal(old.hitSpark, false);
+  assert.equal(old.deltaChips, true);
+  assert.equal(old.statusStyle, "legacy");
+  assert.equal(old.feedback, "custom");
+  const next = spec.normalizeConfig({ ...old, ...buildFeatureSettingPatch("cricketGridStatusEffects", "feedback", "off").features.cricketGridStatusEffects });
+  assert.equal(next.hitSpark, false);
+  assert.equal(next.deltaChips, false);
+  assert.equal(next.rowWave, old.rowWave);
+  assert.equal(next.colorTheme, old.colorTheme);
+  assert.equal(resolveCricketGridStatusEffectsConfig({ scoringStyle: "off", pressureStyle: "off" }).scoringStripe, false);
+  assert.equal(resolveCricketGridStatusEffectsConfig({ scoringStyle: "off", pressureStyle: "off" }).pressureEdge, false);
+});
+
+test("advanced table switches can re-enable effects after the main presentation was turned off", () => {
+  const spec = getFeatureConfigSpec("cricketGridStatusEffects");
+  const off = spec.normalizeConfig({
+    ...buildFeatureSettingPatch("cricketGridStatusEffects", "scoringStyle", "off").features.cricketGridStatusEffects,
+    ...buildFeatureSettingPatch("cricketGridStatusEffects", "pressureStyle", "off").features.cricketGridStatusEffects,
+    rowWave: false,
+  });
+  for (const key of ["scoringStripe", "pressureEdge", "pressureOverlay"]) {
+    const next = spec.normalizeConfig({ ...off, ...buildFeatureSettingPatch("cricketGridStatusEffects", key, true).features.cricketGridStatusEffects });
+    assert.equal(resolveCricketGridStatusEffectsConfig(next)[key], true, key);
+    assert.equal(next.rowWave, false);
+    assert.equal(next[key === "scoringStripe" ? "scoringStyle" : "pressureStyle"], "legacy");
+  }
+});
+
+test("new settings override old Cricket aliases without resetting unrelated saved values", () => {
+  const boardSpec = getFeatureConfigSpec("cricketTargetHighlighter");
+  const learning = buildFeatureSettingPatch("cricketTargetHighlighter", "displayProfile", "learning");
+  const board = boardSpec.normalizeConfig({ showOpenTargets: false, dimIrrelevantBoardTargets: false, colorTheme: "blue-orange", ...learning.features.cricketTargetHighlighter });
+  assert.equal(board.showOpenObjectives, true);
+  assert.equal(board.irrelevantBoardDimStyle, "smoke");
+  assert.equal(board.displayProfile, "learning");
+  assert.equal(board.colorTheme, "blue-orange");
+  const gridSpec = getFeatureConfigSpec("cricketGridStatusEffects");
+  const edge = buildFeatureSettingPatch("cricketGridStatusEffects", "pressureStyle", "edge");
+  const grid = gridSpec.normalizeConfig({ threatEdge: false, opponentPressureOverlay: true, rowWave: false, ...edge.features.cricketGridStatusEffects });
+  assert.equal(grid.pressureEdge, true);
+  assert.equal(grid.pressureOverlay, false);
+  assert.equal(grid.rowWave, false);
+});
 
 function fixture(playerCount = 3, tactics = false) {
   const documentRef = new FakeDocument();

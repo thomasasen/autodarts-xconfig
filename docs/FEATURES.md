@@ -1,9 +1,9 @@
 <!-- xconfig-generated:start -->
 # Feature-Übersicht
 
-`autodarts-xconfig` bündelt `21` Module in einem Userscript:
+`autodarts-xconfig` bündelt `22` Module in einem Userscript:
 
-- `17` Anzeigen und Komfortfunktionen
+- `18` Anzeigen und Komfortfunktionen
 - `4` Designmodule
 
 Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Alle Kacheln stehen gemeinsam auf einer Seite in den Bereichen **Design**, **Alle Modi**, **X01** und **Cricket / Tactics**. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).
@@ -12,7 +12,7 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Alle Kacheln 
 
 ## Hinweise zur Konfiguration
 
-- Insgesamt `21` Module: `17` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
+- Insgesamt `22` Module: `18` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
 - `↺ Zurücksetzen`: Setzt alle Einstellungen vollständig auf Standard zurück, deaktiviert alle Module, schaltet die Diagnose aus und entfernt globales Hintergrundbild sowie Dart-Upload.
 - `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
 - `Exportieren` / `Importieren`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.
@@ -139,23 +139,23 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 **Cricket-Ziele hervorheben**
 - `Offene Ziele anzeigen (OPEN)`: Aus
 - `Erledigte Ziele anzeigen (DEAD)`: An
-- `Andere Felder abdunkeln`: Schraffur
+- `Andere Felder abdunkeln`: Rauch
 - `Farben`: Standard
-- `Stärke`: Standard
+- `Stärke`: Dezent
 
 **Cricket-Statusanzeigen**
-- `Welle durch die Zeile`: An
-- `Zielmarke hervorheben`: An
-- `Markierungen auffüllen`: An
+- `Welle durch die Zeile`: Aus
+- `Zielmarke hervorheben`: Aus
+- `Markierungen auffüllen`: Aus
 - `Druck anzeigen (PRESSURE)`: An
 - `Punktemöglichkeit anzeigen (SCORING)`: An
 - `Erledigte Zeilen abdunkeln (DEAD)`: An
-- `Änderungen anzeigen`: An
+- `Änderungen anzeigen`: Aus
 - `Treffer-Impuls`: An
-- `Zugwechsel-Übergang`: An
-- `Druckfläche anzeigen (PRESSURE)`: An
-- `Farben`: High Contrast
-- `Stärke`: Standard
+- `Rundenwechsel-Übergang`: Aus
+- `Druckfläche anzeigen (PRESSURE)`: Aus
+- `Farben`: Standard
+- `Stärke`: Dezent
 
 ## Design
 
@@ -831,6 +831,89 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 
 ## Cricket / Tactics
 
+<a id="cricket-tactics-layout"></a>
+
+### Cricket-/Tactics-Layout
+
+- Gilt für: `Cricket`, `Tactics`
+- Kurz: Tabelle und Spieleranzeige erhalten abgestimmte Größen und eine stabile Zuordnung.
+- Grafisch: Ausgewogen, Fernansicht und Mehrspieler verteilen Platz und Schriftgrößen. Native Marks, Zielreihenfolge und Spielerpositionen bleiben erhalten.
+- Wann sinnvoll? Wenn du Marks und Spielernamen aus der Entfernung besser lesen oder mehrere Spieler leichter vergleichen möchtest.
+- Standardmäßig ist das Layout ausgeschaltet.
+- Tactics übernimmt die Cricket-Einstellungen und passt Größen an seine zwölf Zielzeilen an. Eigene Tactics-Werte lassen sich zusätzlich speichern.
+- Profile ändern nur die Layout-Karte. Board-Zielmarkierung und Tabellen-Statuseffekte werden getrennt eingestellt.
+- `Layoutprofil`: Wählt Ausgewogen, Fernansicht oder Mehrspieler. Individuelle Änderungen werden als Benutzerdefiniert angezeigt. Das Profil ändert ausschließlich diese Layout-Karte.
+  - `Ausgewogen`: Verteilt Platz und Größen ausgewogen.
+  - `Fernansicht`: Betont die Tabelle mit größeren Marks, Namen und Punkten.
+  - `Mehrspieler`: Verwendet kompakte Abstände und gleichmäßige Spielerspalten.
+  - `Benutzerdefiniert`: Zeigt eine individuell angepasste Kombination an.
+- `Platzverteilung`: Verteilt den verfügbaren Platz zwischen Tabelle und Board. Automatisch berücksichtigt Spielerzahl und Zielanzahl; eine unsichere Board-Anordnung bleibt unverändert.
+  - `Automatisch`: Berücksichtigt Spielerzahl und Cricket- oder Tactics-Zielanzahl.
+  - `Tabelle betonen`: Gibt der Tabelle mehr Platz.
+  - `Board betonen`: Gibt dem Board mehr Platz.
+- `Eigene Einstellungen für Tactics`: Ausgeschaltet übernimmt Tactics die Cricket-Einstellungen. Gespeicherte Tactics-Werte bleiben für eine spätere Aktivierung erhalten.
+- `Layoutprofil`: Gilt bei aktivierten eigenen Tactics-Einstellungen. Wählt Ausgewogen, Fernansicht oder Mehrspieler. Individuelle Änderungen werden als Benutzerdefiniert angezeigt. Das Profil ändert ausschließlich diese Layout-Karte.
+  - `Ausgewogen`: Verteilt Platz und Größen ausgewogen.
+  - `Fernansicht`: Betont die Tabelle mit größeren Marks, Namen und Punkten.
+  - `Mehrspieler`: Verwendet kompakte Abstände und gleichmäßige Spielerspalten.
+  - `Benutzerdefiniert`: Zeigt eine individuell angepasste Kombination an.
+- `Platzverteilung`: Gilt bei aktivierten eigenen Tactics-Einstellungen. Verteilt den verfügbaren Platz zwischen Tabelle und Board. Automatisch berücksichtigt Spielerzahl und Zielanzahl; eine unsichere Board-Anordnung bleibt unverändert.
+  - `Automatisch`: Berücksichtigt Spielerzahl und Cricket- oder Tactics-Zielanzahl.
+  - `Tabelle betonen`: Gibt der Tabelle mehr Platz.
+  - `Board betonen`: Gibt dem Board mehr Platz.
+- `Mark-Größe`: Vergrößert die nativen Mark-Symbole bis zur verfügbaren Zellengröße. Ihre Bedeutung und Zuordnung bleiben erhalten.
+  - `Original`: Behält native Mark-Größen bei, begrenzt durch die Zellengröße.
+  - `Groß`: Vergrößert Marks bis zur verfügbaren Zellengröße.
+  - `Sehr groß`: Verwendet besonders große Marks, soweit sie in die Zellen passen.
+- `Zielzahlen`: Wählt die Größe der Zielzahlen. Die verfügbare Zeilenhöhe begrenzt die Größe, besonders bei Tactics.
+  - `Automatisch`: Passt die Zielzahlen an die verfügbare Zeilenhöhe an.
+  - `Groß`: Bevorzugt größere Zielzahlen.
+  - `Sehr groß`: Bevorzugt besonders große Zielzahlen.
+- `Namen und Punkte`: Wählt die Größe der Spielernamen und Punkte innerhalb des verfügbaren Spielerkopfs. Die globale Schriftart bleibt erhalten.
+  - `Normal`: Verwendet normale Größen für Namen und Punkte.
+  - `Groß`: Reserviert mehr Höhe für größere Namen und Punkte.
+- `Abstände`: Wählt normale oder kompakte Abstände. Tactics verwendet wegen seiner zusätzlichen Zielzeilen kleinere Abstände.
+  - `Normal`: Verwendet normale Abstände; Tactics passt sie automatisch an.
+  - `Kompakt`: Verwendet kleinere Abstände zwischen den Tabellenzellen.
+- `Aktiver Spieler`: Markiert den aktiven Spieler im Kopf und optional mit einer Linie oder dezenten Spaltenfläche. Bei uneindeutigem Aktivstatus wird niemand zusätzlich markiert.
+  - `Native Anzeige`: Behält nur die native Aktivmarkierung bei.
+  - `Kopfmarkierung`: Markiert den aktiven Spielerkopf zusätzlich.
+  - `Kopfmarkierung mit Spaltenlinie`: Ergänzt eine schmale Linie an den Zellen des aktiven Spielers.
+  - `Kopfmarkierung mit dezenter Spaltenfläche`: Ergänzt eine dezente Fläche in der aktiven Spalte.
+- `Spielernamen`: Begrenzt Namen auf eine oder zwei Zeilen in einer gleich hohen Namensfläche. Der vollständige Name bleibt als Hinweis verfügbar.
+  - `Eine Zeile mit Kürzung`: Kürzt lange Namen auf eine feste Zeile.
+  - `Bis zu zwei Zeilen`: Reserviert für jeden Namen bis zu zwei gleich hohe Zeilen.
+- `Nebenstatistiken`: Zeigt native Nebenstatistiken, etwa MPR, normal, dezent oder ausgeblendet. Erfasst beschriftete MPR-Werte und die Statistikplaketten neben der Punktzahl. Name, Punkte und Marks bleiben sichtbar.
+  - `Normal`: Behält native Nebenstatistiken bei.
+  - `Dezent`: Nimmt Nebenstatistiken gegenüber Namen und Punkten zurück.
+  - `Aus`: Blendet native Nebenstatistiken aus; Punkte und Marks bleiben sichtbar.
+- `Tactics: Mark-Größe`: Gilt bei aktivierten eigenen Tactics-Einstellungen. Vergrößert die nativen Mark-Symbole bis zur verfügbaren Zellengröße. Ihre Bedeutung und Zuordnung bleiben erhalten.
+  - `Original`: Behält native Mark-Größen bei, begrenzt durch die Zellengröße.
+  - `Groß`: Vergrößert Marks bis zur verfügbaren Zellengröße.
+  - `Sehr groß`: Verwendet besonders große Marks, soweit sie in die Zellen passen.
+- `Tactics: Zielzahlen`: Gilt bei aktivierten eigenen Tactics-Einstellungen. Wählt die Größe der Zielzahlen. Die verfügbare Zeilenhöhe begrenzt die Größe, besonders bei Tactics.
+  - `Automatisch`: Passt die Zielzahlen an die verfügbare Zeilenhöhe an.
+  - `Groß`: Bevorzugt größere Zielzahlen.
+  - `Sehr groß`: Bevorzugt besonders große Zielzahlen.
+- `Tactics: Namen und Punkte`: Gilt bei aktivierten eigenen Tactics-Einstellungen. Wählt die Größe der Spielernamen und Punkte innerhalb des verfügbaren Spielerkopfs. Die globale Schriftart bleibt erhalten.
+  - `Normal`: Verwendet normale Größen für Namen und Punkte.
+  - `Groß`: Reserviert mehr Höhe für größere Namen und Punkte.
+- `Tactics: Aktiver Spieler`: Gilt bei aktivierten eigenen Tactics-Einstellungen. Markiert den aktiven Spieler im Kopf und optional mit einer Linie oder dezenten Spaltenfläche. Bei uneindeutigem Aktivstatus wird niemand zusätzlich markiert.
+  - `Native Anzeige`: Behält nur die native Aktivmarkierung bei.
+  - `Kopfmarkierung`: Markiert den aktiven Spielerkopf zusätzlich.
+  - `Kopfmarkierung mit Spaltenlinie`: Ergänzt eine schmale Linie an den Zellen des aktiven Spielers.
+  - `Kopfmarkierung mit dezenter Spaltenfläche`: Ergänzt eine dezente Fläche in der aktiven Spalte.
+- `Tactics: Spielernamen`: Gilt bei aktivierten eigenen Tactics-Einstellungen. Begrenzt Namen auf eine oder zwei Zeilen in einer gleich hohen Namensfläche. Der vollständige Name bleibt als Hinweis verfügbar.
+  - `Eine Zeile mit Kürzung`: Kürzt lange Namen auf eine feste Zeile.
+  - `Bis zu zwei Zeilen`: Reserviert für jeden Namen bis zu zwei gleich hohe Zeilen.
+- `Tactics: Nebenstatistiken`: Gilt bei aktivierten eigenen Tactics-Einstellungen. Zeigt native Nebenstatistiken, etwa MPR, normal, dezent oder ausgeblendet. Erfasst beschriftete MPR-Werte und die Statistikplaketten neben der Punktzahl. Name, Punkte und Marks bleiben sichtbar.
+  - `Normal`: Behält native Nebenstatistiken bei.
+  - `Dezent`: Nimmt Nebenstatistiken gegenüber Namen und Punkten zurück.
+  - `Aus`: Blendet native Nebenstatistiken aus; Punkte und Marks bleiben sichtbar.
+- `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+
+![Cricket-Layout: schematische Beispielansicht](screenshots/cricket-layout-example.png)
+
 <a id="animation-autodarts-animate-cricket-target-highlighter"></a>
 <a id="animation-autodarts-animate-cricket-highlighter"></a>
 
@@ -838,18 +921,27 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 
 - Gilt für: `Cricket`, `Tactics`
 - Kurz: Zielzustände und Drucksituationen werden direkt am Board sichtbar.
-- Grafisch: Board-Segmente erhalten je nach Zustand farbige Overlays. Relevante Ziele leuchten grün oder rot, irrelevante Felder werden je nach Stil abgeschwächt, geschraffiert oder maskiert.
+- Grafisch: Board-Segmente erhalten je nach Zustand farbige Overlays und optional unterschiedliche Muster. Andere Felder werden je nach Stil abgeschwächt, geschraffiert oder maskiert.
 - Wann sinnvoll? Wenn du in Cricket oder Tactics schneller sehen möchtest, welche Ziele offen, scorable, unter Druck oder bereits erledigt sind.
-- `Offene Ziele anzeigen (OPEN)`: Zeigt offene Ziele zusätzlich am Board an.
-- `Erledigte Ziele anzeigen (DEAD)`: Zeigt erledigte Ziele weiter als `DEAD` an.
+- `Darstellungsprofil`: Ruhig und Lernen setzen die Anzeigeoptionen dieser Board-Karte. Individuelle Änderungen werden als Benutzerdefiniert angezeigt; die Farbpalette bleibt erhalten.
+  - `Ruhig`: Verwendet dezente Muster und eine leichte Abdunklung anderer Felder.
+  - `Lernen`: Zeigt offene Ziele, Punkteziele, Gegnerdruck und für alle geschlossene Ziele mit zusätzlichen Mustern.
+  - `Benutzerdefiniert`: Zeigt eine individuell angepasste Kombination der Board-Einstellungen an.
+- `Offene Ziele anzeigen`: Zeigt offene Ziele zusätzlich am Board an.
+- `Für alle geschlossene Ziele markieren`: Markiert für alle Spieler geschlossene Ziele.
 - `Andere Felder abdunkeln`: Bestimmt den Abdunkelungsstil für irrelevante Felder.
   - `Aus`: Mit dieser Option bleiben irrelevante Board-Felder optisch unangetastet. Das Board behält überall seine normale Grundwirkung, während nur die tatsächlich markierten Zustände zusätzliche Overlays bekommen.
   - `Rauch`: Diese Variante legt eine weiche, gleichmäßige Abdunkelung über irrelevante Segmente. Das Board wirkt ruhiger, ohne mit Mustern oder starker Maskierung vom aktiven Ziel abzulenken.
   - `Schraffur`: Diese Stufe kombiniert eine graue Dämpfung mit sichtbarer Schraffur. Irrelevante Felder sind dadurch klarer als passive Zone gekennzeichnet als bei `Rauch`.
   - `Abdeckung`: Diese Variante nutzt die härteste Abdunkelung und deckt irrelevante Bereiche fast wie mit einer schwarzen Maske ab. Dadurch stehen aktive, offene und druckrelevante Ziele maximal im Vordergrund.
-- `Farben`: Passt die Farben für Scoring- und Druckzustände an.
+- `Farben`: Wählt die Farben für Punktemöglichkeiten und Gegnerdruck.
   - `Standard`: Diese Palette verwendet das Standard-Grün für Scoring und das normale Rot für Druckzustände. Sie liefert die vorgesehene Grundwirkung ohne zusätzliche Kontrastschärfung.
-  - `High Contrast`: Diese Palette verstärkt vor allem die grüne Scoring-Wirkung gegenüber dem Standardmodus. Dadurch heben sich offensive Ziele klarer vom Board und von anderen Zuständen ab.
+  - `Hoher Kontrast`: Diese Palette verstärkt vor allem die grüne Scoring-Wirkung gegenüber dem Standardmodus. Dadurch heben sich offensive Ziele klarer vom Board und von anderen Zuständen ab.
+  - `Blau/Orange`: Blau für Punktemöglichkeiten, Orange für Druck. Zusätzliche Muster sind unabhängig wählbar.
+- `Statusdarstellung`: Zusätzliche Muster unterscheiden Punktemöglichkeiten und Gegnerdruck auch ohne alleinige Farberkennung. Der bisherige Stil erhält bestehende Darstellungen.
+  - `Bisheriger Stil`: Erhält den bisherigen Darstellungsstil.
+  - `Farbe`: Verwendet Farbe ohne zusätzliche Statusmuster.
+  - `Farbe und Muster`: Punkteziele und Gegnerdruck erhalten unterschiedliche Schraffuren beziehungsweise Randarten.
 - `Stärke`: Regelt Deckkraft und Sichtbarkeit der Board-Overlays.
   - `Dezent`: Diese Stufe reduziert Deckkraft und Konturwirkung der Board-Overlays. Zustände bleiben lesbar, drängen sich aber weniger stark in den Vordergrund.
   - `Standard`: Diese Einstellung liefert den Standardwert für Füllung, Kontur und Dimmwirkung. Das Board bleibt gut interpretierbar, ohne optisch zu schwer zu werden.
@@ -867,23 +959,47 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 - Kurz: Zusätzliche Live-Effekte direkt in der Cricket-/Tactics-Matrix.
 - Grafisch: Zellen, Zeilen und Zielmarken reagieren mit grünen und roten Zuständen, kurzen Hinweisen, Kanten und Übergängen. So werden Fortschritt, Gegnerdruck und Zugwechsel in der Matrix selbst sichtbarer.
 - Wann sinnvoll? Wenn du Fortschritt, Gegnerdruck und Wechsel im Grid klarer sehen willst.
-- `Welle durch die Zeile`: Lässt nach Änderungen einen kurzen Lichtlauf über die Zeile laufen.
-- `Zielmarke hervorheben`: Lässt relevante Zielmarken und Beschriftungen stärker leuchten.
-- `Markierungen auffüllen`: Betont die Markierungsstufen in den Spielerzellen.
-- `Druck anzeigen (PRESSURE)`: Zeichnet bei Gegnerdruck eine rote Warnkante.
-- `Punktemöglichkeit anzeigen (SCORING)`: Hebt offensiv scorable Bereiche grün hervor.
-- `Erledigte Zeilen abdunkeln (DEAD)`: Dunkelt `DEAD`-Zeilen optisch ab.
-- `Änderungen anzeigen`: Zeigt kurz `+1`, `+2` oder `+3` direkt an der Matrix an.
-- `Treffer-Impuls`: Erzeugt einen kurzen Trefferfunken am betroffenen Bereich.
-- `Zugwechsel-Übergang`: Kennzeichnet den Zugwechsel mit einem kurzen Matrix-Übergang.
-- `Druckfläche anzeigen (PRESSURE)`: Legt bei Gegnerdruck eine zusätzliche rote Druckfläche über betroffene Bereiche.
+- `Effektprofil`: Ruhig verwendet zurückhaltende Ränder und einen kurzen Trefferimpuls. Belebt aktiviert die bisherigen Einzeleffekte. Individuelle Änderungen werden als Benutzerdefiniert angezeigt; die Farbpalette bleibt erhalten.
+  - `Ruhig`: Schaltet großflächige Wellen und Rundenübergänge aus. Verwendet unterscheidbare Ränder und einen kurzen Impuls.
+  - `Belebt`: Aktiviert die bisherigen Einzeleffekte; die Farbpalette bleibt erhalten.
+  - `Benutzerdefiniert`: Zeigt eine individuell angepasste Kombination der Tabellen-Einstellungen an.
+- `Statusdarstellung`: Zusätzliche Muster unterscheiden Punktemöglichkeiten und Gegnerdruck auch ohne alleinige Farberkennung. Der bisherige Stil erhält bestehende Darstellungen.
+  - `Bisheriger Stil`: Erhält den bisherigen Darstellungsstil.
+  - `Farbe`: Verwendet Farbe ohne zusätzliche Statusmuster.
+  - `Farbe und Muster`: Punkteziele und Gegnerdruck erhalten unterschiedliche Schraffuren beziehungsweise Randarten.
+- `Punktemöglichkeiten`: Punktemöglichkeiten können unverändert im bisherigen Stil, ausgeschaltet, als Rand oder mit Rand und Fläche erscheinen.
+  - `Bisheriger Stil`: Erhält die bisherigen Einzeleinstellungen.
+  - `Aus`: Schaltet diese Hervorhebung aus; native Marks bleiben erhalten.
+  - `Rand`: Verwendet einen klaren Rand ohne zusätzliche Statusfläche.
+  - `Rand und dezente Fläche`: Verwendet Rand und dezente Fläche.
+- `Druck durch Gegner`: Gegnerdruck kann unverändert im bisherigen Stil, ausgeschaltet, als Rand oder mit Rand und Fläche erscheinen.
+  - `Bisheriger Stil`: Erhält die bisherigen Einzeleinstellungen.
+  - `Aus`: Schaltet diese Hervorhebung aus; native Marks bleiben erhalten.
+  - `Rand`: Verwendet einen klaren Rand ohne zusätzliche Statusfläche.
+  - `Rand und dezente Fläche`: Verwendet Rand und dezente Fläche.
+- `Für alle geschlossene Ziele zurücknehmen`: Nimmt für alle Spieler geschlossene Ziele zurück.
+- `Trefferfeedback`: Aus entfernt Impuls und Änderungsanzeige. Ein kurzer Impuls kann allein oder zusammen mit der Zahl neu hinzugekommener Marks erscheinen. Dauerhafte native Marks bleiben erhalten.
+  - `Aus`: Dauerhafte native Marks bleiben sichtbar.
+  - `Kurzer Impuls`: Zeigt neue Marks kurz durch einen Impuls an.
+  - `Impuls mit Änderungsanzeige`: Zeigt einen kurzen Impuls und die Anzahl neu hinzugekommener Marks an.
+  - `Benutzerdefiniert`: Zeigt die über Einzelschalter gewählte Kombination an.
 - `Farben`: Passt die Farben der Grid-Effekte an.
   - `Standard`: Diese Palette verwendet die Standardfarben für offensive und druckbezogene Grid-Effekte. Sie liefert den normalen Look für Badge-Glows, Streifen, Kanten und Zellmarkierungen.
-  - `High Contrast`: Diese Palette verstärkt vor allem die grüne Offensivwirkung im Grid. Badge-Glows, Scoring-Streifen und offensive Flächen heben sich dadurch klarer von roten Druckzuständen ab.
+  - `Hoher Kontrast`: Diese Palette verstärkt vor allem die grüne Offensivwirkung im Grid. Badge-Glows, Scoring-Streifen und offensive Flächen heben sich dadurch klarer von roten Druckzuständen ab.
+  - `Blau/Orange`: Blau für Punktemöglichkeiten, Orange für Druck. Zusätzliche Muster sind unabhängig wählbar.
 - `Stärke`: Regelt die Gesamtstärke der Matrixeffekte.
   - `Dezent`: Diese Stufe reduziert die Opazität und den Glanz der Grid-FX-Komponenten. Zeilen, Badges und Zellzustände bleiben informativ, treten aber weniger plakativ auf.
   - `Standard`: Diese Einstellung liefert den Standardwert für Badge-Glow, Zellfüllung, Druckkante und Scoring-Streifen. Das Grid bleibt klar interpretierbar und zugleich kontrolliert.
   - `Stark`: Diese Stufe erhöht die sichtbare Stärke von Glow, Füllung und Kanten im gesamten Grid-FX-Paket. Offensiv- und Druckzustände wirken dadurch markanter und dominieren die Matrix stärker.
+- `Welle durch die Zeile`: Lässt nach Änderungen einen kurzen Lichtlauf über die Zeile laufen.
+- `Zielmarke hervorheben`: Lässt relevante Zielmarken und Beschriftungen stärker leuchten.
+- `Markierungen auffüllen (ältere Ansicht)`: Betont Markierungsstufen in der älteren Tabellenansicht.
+- `Druckkante`: Zeichnet bei Gegnerdruck eine Warnkante.
+- `Punktemöglichkeiten anzeigen`: Hebt Punktemöglichkeiten hervor.
+- `Änderungen anzeigen`: Zeigt kurz `+1`, `+2` oder `+3` direkt an der Matrix an.
+- `Treffer-Impuls`: Erzeugt einen kurzen Trefferfunken am betroffenen Bereich.
+- `Rundenwechsel-Übergang`: Kennzeichnet einen Rundenwechsel mit einem kurzen Matrix-Übergang.
+- `Druckfläche`: Legt bei Gegnerdruck eine zusätzliche Druckfläche über betroffene Bereiche.
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ![Cricket-Statusanzeigen](screenshots/animation-cricket-grid-fx.png)

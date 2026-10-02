@@ -8,10 +8,11 @@ import {
   createSettingsExport,
   createSettingsTransferSchema,
 } from "../../src/config/config-transfer.js";
-import { createDefaultFeatureConfig } from "../../src/config/feature-config-spec.js";
+import { createDefaultFeatureConfig, getFeatureConfigSpec } from "../../src/config/feature-config-spec.js";
 import { normalizeRuntimeConfig } from "../../src/config/runtime-config.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
 import { getFeatureCatalogEntryByFeatureKey } from "../../src/shared/feature-catalog.js";
+import { buildFeatureSettingPatch } from "../../src/features/xconfig-ui/path-utils.js";
 
 const SMALL_PNG = "data:image/png;base64,iVBORw0KGgo=";
 const TURN_DART_DESIGNER_CONFIG = Object.freeze({
@@ -35,6 +36,26 @@ function createEnvelope(features, options = {}) {
     features,
   };
 }
+
+test("Cricket and Tactics profiles survive export/import with separate layout settings and palettes", () => {
+  const values = (feature, field, value) => Object.values(buildFeatureSettingPatch(feature, field, value).features)[0];
+  const configured = normalizeRuntimeConfig({
+    featureToggles: { cricketLayout: true, cricketGridStatusEffects: true, cricketTargetHighlighter: true },
+    features: {
+      cricketLayout: { enabled: true, ...values("cricketLayout", "profile", "distance"), tacticsOverrides: true, ...values("cricketLayout", "tacticsProfile", "multiplayer") },
+      cricketGridStatusEffects: { enabled: true, ...values("cricketGridStatusEffects", "displayProfile", "calm"), colorTheme: "blue-orange" },
+      cricketTargetHighlighter: { enabled: true, ...values("cricketTargetHighlighter", "displayProfile", "learning"), colorTheme: "blue-orange" },
+    },
+  });
+  const exported = createSettingsExport(configured, { descriptors: xconfigDescriptors });
+  const roundTrip = analyzeSettingsImport(exported.payload, normalizeRuntimeConfig(), { descriptors: xconfigDescriptors, mode: "replace" });
+  for (const key of ["cricketLayout", "cricketGridStatusEffects", "cricketTargetHighlighter"]) {
+    // Backups use canonical settings; retired aliases need not be exported twice.
+    const spec = getFeatureConfigSpec(key);
+    assert.deepEqual(spec.normalizeConfig(roundTrip.config.features[key]), spec.normalizeConfig(configured.features[key]));
+    assert.equal(roundTrip.config.featureToggles[key], true);
+  }
+});
 
 test("settings transfer schema covers every visible stored field", () => {
   const schema = createSettingsTransferSchema(xconfigDescriptors);

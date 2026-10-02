@@ -397,17 +397,18 @@ function ensureStripedPattern(overlay, options = {}) {
     pattern.setAttribute("patternUnits", "userSpaceOnUse");
     pattern.setAttribute("width", "8");
     pattern.setAttribute("height", "8");
-    pattern.setAttribute("patternTransform", "rotate(135)");
     defs.appendChild(pattern);
   }
 
   const baseColor = options.color || { r: 0, g: 0, b: 0 };
+  const transform = `rotate(${options.angle === 45 ? 45 : 135})`;
+  pattern.setAttribute("patternTransform", transform);
   const baseAlpha = clampAlpha(options.baseAlpha, 0.6);
   const stripeAlpha = clampAlpha(options.stripeAlpha, 0.3);
   const patternSignature = [
     "8",
     "8",
-    "rotate(135)",
+    transform,
     Math.round(Number(baseColor.r) || 0),
     Math.round(Number(baseColor.g) || 0),
     Math.round(Number(baseColor.b) || 0),
@@ -475,19 +476,20 @@ function ensurePresentationPatterns(overlay, visualConfig) {
   const deadColor = visualConfig?.deadColor || { r: 112, g: 118, b: 128 };
   const inactiveDimStyle = resolveInactiveDimStyle(visualConfig, visualConfig?.intensity || {});
   return {
-    scoring: ensureStripedPattern(overlay, {
+    scoring: visualConfig?.statusStyle === "color" ? "" : ensureStripedPattern(overlay, {
       patternId: PRESENTATION_PATTERN_IDS.scoring,
       color: scoringColor,
       baseAlpha: 0.72,
       stripeAlpha: 0.32,
     }),
-    pressure: ensureStripedPattern(overlay, {
+    pressure: visualConfig?.statusStyle === "color" ? "" : ensureStripedPattern(overlay, {
       patternId: PRESENTATION_PATTERN_IDS.pressure,
       color: pressureColor,
+      angle: visualConfig?.statusStyle === "pattern" ? 45 : 135,
       baseAlpha: 0.64,
       stripeAlpha: 0.28,
     }),
-    dead: ensureStripedPattern(overlay, {
+    dead: visualConfig?.statusStyle === "color" ? "" : ensureStripedPattern(overlay, {
       patternId: PRESENTATION_PATTERN_IDS.dead,
       color: deadColor,
       baseAlpha: 0.46,

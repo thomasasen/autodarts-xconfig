@@ -10,6 +10,7 @@ import { mountAvgTrendArrow } from "./avg-trend-arrow/index.js";
 import { mountSpecialHitHighlights } from "./special-hit-highlights/index.js";
 import { mountCricketTargetHighlighter } from "./cricket-target-highlighter/index.js";
 import { mountCricketGridStatusEffects } from "./cricket-grid-status-effects/index.js";
+import { mountCricketLayout } from "./cricket-layout/index.js";
 import { mountDartboardMarkerHighlight } from "./dartboard-marker-highlight/index.js";
 import { mountDartMarkerReplacer, runDartMarkerReplacerAction } from "./dart-marker-replacer/index.js";
 import { mountTakeOutDartsAlert } from "./take-out-darts-alert/index.js";
@@ -140,6 +141,7 @@ function normalizeDefinition(definition, options = {}) {
 }
 
 const featureInitializers = Object.freeze({
+  "cricket-layout": mountCricketLayout,
   "checkout-score-highlight": mountCheckoutScoreHighlight,
   "checkout-target-highlights": mountCheckoutTargetHighlights,
   "tv-board-zoom": mountTvBoardZoom,

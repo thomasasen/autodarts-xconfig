@@ -56,6 +56,7 @@ const THEME_PRESETS = Object.freeze({
     scoring: "34, 197, 94",
     pressure: "239, 68, 68",
   },
+  "blue-orange": { scoring: "56, 189, 248", pressure: "251, 146, 60" },
 });
 
 const INTENSITY_PRESETS = Object.freeze({
@@ -121,16 +122,19 @@ export function resolveCricketGridStatusEffectsConfig(featureConfig = {}) {
   };
 
   return {
+    statusStyle: ["color", "pattern"].includes(featureConfig.statusStyle) ? featureConfig.statusStyle : "legacy",
+    scoringStyle: ["off", "edge", "surface"].includes(featureConfig.scoringStyle) ? featureConfig.scoringStyle : "legacy",
+    pressureStyle: ["off", "edge", "surface"].includes(featureConfig.pressureStyle) ? featureConfig.pressureStyle : "legacy",
     rowWave: normalizeBoolean(featureConfig.rowWave, true),
     badgeBeacon: normalizeBoolean(featureConfig.badgeBeacon, true),
     markProgress: normalizeBoolean(featureConfig.markProgress, true),
-    pressureEdge: normalizeBoolean(pressureEdgeValue, true),
-    scoringStripe: normalizeBoolean(scoringStripeValue, true),
+    pressureEdge: featureConfig.pressureStyle !== "off" && normalizeBoolean(pressureEdgeValue, true),
+    scoringStripe: featureConfig.scoringStyle !== "off" && normalizeBoolean(scoringStripeValue, true),
     deadRowMuted: normalizeBoolean(deadRowMutedValue, true),
     deltaChips: normalizeBoolean(featureConfig.deltaChips, true),
     hitSpark: normalizeBoolean(featureConfig.hitSpark, true),
     roundTransitionWipe: normalizeBoolean(featureConfig.roundTransitionWipe, true),
-    pressureOverlay: normalizeBoolean(pressureOverlayValue, true),
+    pressureOverlay: !["off", "edge"].includes(featureConfig.pressureStyle) && normalizeBoolean(pressureOverlayValue, true),
     // Runtime aliases for compatibility with legacy callsites.
     threatEdge: normalizeBoolean(pressureEdgeValue, true),
     scoringLane: normalizeBoolean(scoringStripeValue, true),
@@ -204,8 +208,6 @@ export function buildStyleText() {
   padding-inline: 0 !important;
   font-size: 1.5rem !important;
   letter-spacing: -0.02em;
-  background-color: #34363b !important;
-  color: #ffffff !important;
 }
 
 @media (min-width: 48rem) {
@@ -448,6 +450,22 @@ export function buildStyleText() {
   box-shadow: inset 0 0 0 1px rgba(127, 214, 247, 0.36);
   opacity: 1;
 }
+
+.${ROOT_CLASS}[data-ad-crfx-status-style="color"] .${CELL_CLASS}.${PRESSURE_CLASS}{background-image:linear-gradient(rgba(var(--ad-ext-crfx-danger-rgb),.12),rgba(var(--ad-ext-crfx-danger-rgb),.12))!important}
+.${ROOT_CLASS}[data-ad-crfx-status-style="pattern"]:not(.${MODERN_ROOT_CLASS}) .${CELL_CLASS}::before{content:"";position:absolute;inset:0;pointer-events:none}
+.${ROOT_CLASS}[data-ad-crfx-status-style="pattern"] .${CELL_CLASS}.${SCORE_CLASS}::before{background-image:repeating-linear-gradient(135deg,rgba(var(--ad-ext-crfx-offense-rgb),.19) 0 3px,transparent 3px 9px)}
+.${ROOT_CLASS}[data-ad-crfx-status-style="pattern"] .${CELL_CLASS}.${THREAT_CLASS}::before,
+.${ROOT_CLASS}[data-ad-crfx-status-style="pattern"] .${CELL_CLASS}.${PRESSURE_CLASS}::before{background-image:repeating-linear-gradient(45deg,rgba(var(--ad-ext-crfx-danger-rgb),.19) 0 3px,transparent 3px 9px);outline:1px dashed rgba(var(--ad-ext-crfx-danger-rgb),.85);outline-offset:-2px}
+.${ROOT_CLASS}[data-ad-crfx-status-style="pattern"] .${LABEL_CLASS}.${LABEL_STATE_CLASS.scoring}::before{border-style:solid}
+.${ROOT_CLASS}[data-ad-crfx-status-style="pattern"] .${LABEL_CLASS}.${LABEL_STATE_CLASS.pressure}::before{border:1px dashed rgba(var(--ad-ext-crfx-danger-rgb),.85);box-shadow:none}
+.${ROOT_CLASS}[data-ad-crfx-scoring-style="edge"] .${CELL_CLASS}.${SCORE_CLASS},
+.${ROOT_CLASS}[data-ad-crfx-scoring-style="edge"] .${CELL_CLASS}.${SCORE_CLASS}::before{background:none!important;box-shadow:inset 0 0 0 2px rgba(var(--ad-ext-crfx-offense-rgb),.9)!important}
+.${ROOT_CLASS}[data-ad-crfx-pressure-style="edge"] .${CELL_CLASS}.${THREAT_CLASS},
+.${ROOT_CLASS}[data-ad-crfx-pressure-style="edge"] .${CELL_CLASS}.${THREAT_CLASS}::before{background:none!important;box-shadow:inset 0 0 0 2px rgba(var(--ad-ext-crfx-danger-rgb),.9)!important}
+.${ROOT_CLASS}[data-ad-crfx-scoring-style="off"] .${LABEL_CLASS}.${LABEL_STATE_CLASS.scoring}::before,
+.${ROOT_CLASS}[data-ad-crfx-pressure-style="off"] .${LABEL_CLASS}.${LABEL_STATE_CLASS.pressure}::before{background:none!important;box-shadow:none!important;border:0!important}
+/* The muted state affects the overlay, so native marks retain their contrast. */
+.${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${CELL_CLASS}.${DEAD_CLASS}{opacity:1;filter:none}
 
 .${ROOT_CLASS}:not(.${MODERN_ROOT_CLASS}) .${MARK_PROGRESS_CLASS} {
   transform-origin: center;

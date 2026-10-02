@@ -10,6 +10,8 @@
   return Object.freeze(value);
 }
 
+import { CRICKET_LAYOUT_OPTIONS, tacticsLayoutKey } from "../../shared/cricket-layout-config.js";
+
 function buildCopyEntry(description, docsDescription, featuresDescription = "") {
   return {
     description: String(description || "").trim(),
@@ -247,6 +249,25 @@ const THEME_GLOBAL_TEMPLATE_PRESET_FIELD_COPY = deepFreeze(
     ])
   )
 );
+
+const CRICKET_LAYOUT_FIELD_TEXT = Object.freeze({
+  profile: "Wählt Ausgewogen, Fernansicht oder Mehrspieler. Individuelle Änderungen werden als Benutzerdefiniert angezeigt. Das Profil ändert ausschließlich diese Layout-Karte.",
+  space: "Verteilt den verfügbaren Platz zwischen Tabelle und Board. Automatisch berücksichtigt Spielerzahl und Zielanzahl; eine unsichere Board-Anordnung bleibt unverändert.",
+  markSize: "Vergrößert die nativen Mark-Symbole bis zur verfügbaren Zellengröße. Ihre Bedeutung und Zuordnung bleiben erhalten.",
+  targetSize: "Wählt die Größe der Zielzahlen. Die verfügbare Zeilenhöhe begrenzt die Größe, besonders bei Tactics.",
+  textSize: "Wählt die Größe der Spielernamen und Punkte innerhalb des verfügbaren Spielerkopfs. Die globale Schriftart bleibt erhalten.",
+  density: "Wählt normale oder kompakte Abstände. Tactics verwendet wegen seiner zusätzlichen Zielzeilen kleinere Abstände.",
+  activeIndicator: "Markiert den aktiven Spieler im Kopf und optional mit einer Linie oder dezenten Spaltenfläche. Bei uneindeutigem Aktivstatus wird niemand zusätzlich markiert.",
+  names: "Begrenzt Namen auf eine oder zwei Zeilen in einer gleich hohen Namensfläche. Der vollständige Name bleibt als Hinweis verfügbar.",
+  mpr: "Zeigt native Nebenstatistiken, etwa MPR, normal, dezent oder ausgeblendet. Erfasst beschriftete MPR-Werte und die Statistikplaketten neben der Punktzahl. Name, Punkte und Marks bleiben sichtbar.",
+});
+
+const cricketLayoutFieldsCopy = Object.fromEntries(Object.entries(CRICKET_LAYOUT_FIELD_TEXT).flatMap(([key, description]) => [
+  [key, fieldCopy(description, description)],
+  [tacticsLayoutKey(key), fieldCopy(`Für Tactics: ${description}`, `Gilt bei aktivierten eigenen Tactics-Einstellungen. ${description}`)],
+]));
+
+const cricketStatusStyleCopy = fieldCopy("Wählt den bisherigen Stil, reine Farben oder zusätzliche Muster und Ränder.", "Zusätzliche Muster unterscheiden Punktemöglichkeiten und Gegnerdruck auch ohne alleinige Farberkennung. Der bisherige Stil erhält bestehende Darstellungen.");
 
 export const xconfigFeatureCopy = deepFreeze({
   "theme-global-background": featureCopy({
@@ -687,28 +708,42 @@ export const xconfigFeatureCopy = deepFreeze({
       debug: DEBUG_FIELD,
     },
   }),
+  "cricket-layout": featureCopy({
+    images: [image("Cricket-Layout: schematische Beispielansicht", "cricket-layout-example.png")],
+    cardDescription: "Passt Cricket und Tactics an Bildschirm, Spielerzahl und Betrachtungsabstand an.",
+    visibleDescription: "Tabelle und Spieleranzeige erhalten abgestimmte Größen und eine stabile Zuordnung.",
+    visualDescription: "Ausgewogen, Fernansicht und Mehrspieler verteilen Platz und Schriftgrößen. Native Marks, Zielreihenfolge und Spielerpositionen bleiben erhalten.",
+    usefulWhen: "Wenn du Marks und Spielernamen aus der Entfernung besser lesen oder mehrere Spieler leichter vergleichen möchtest.",
+    featuresDetails: ["Standardmäßig ist das Layout ausgeschaltet.", "Tactics übernimmt die Cricket-Einstellungen und passt Größen an seine zwölf Zielzeilen an. Eigene Tactics-Werte lassen sich zusätzlich speichern.", "Profile ändern nur die Layout-Karte. Board-Zielmarkierung und Tabellen-Statuseffekte werden getrennt eingestellt."],
+    fields: { ...cricketLayoutFieldsCopy,
+      tacticsOverrides: fieldCopy("Verwendet eigene Layout-Werte für Tactics.", "Ausgeschaltet übernimmt Tactics die Cricket-Einstellungen. Gespeicherte Tactics-Werte bleiben für eine spätere Aktivierung erhalten."),
+      debug: DEBUG_FIELD,
+    },
+  }),
   "cricket-target-highlighter": featureCopy({
     cardDescription:
       "Zeigt Cricket- und Tactics-Zustände direkt auf dem Board statt nur in der Matrix.",
     visibleDescription:
       "Zielzustände und Drucksituationen werden direkt am Board sichtbar.",
     visualDescription:
-      "Board-Segmente erhalten je nach Zustand farbige Overlays. Relevante Ziele leuchten grün oder rot, irrelevante Felder werden je nach Stil abgeschwächt, geschraffiert oder maskiert.",
+      "Board-Segmente erhalten je nach Zustand farbige Overlays und optional unterschiedliche Muster. Andere Felder werden je nach Stil abgeschwächt, geschraffiert oder maskiert.",
     usefulWhen:
       "Wenn du in Cricket oder Tactics schneller sehen möchtest, welche Ziele offen, scorable, unter Druck oder bereits erledigt sind.",
     images: [
       image("Cricket-Ziele hervorheben", "animation-cricket-target-highlighter.png"),
     ],
     fields: {
+      displayProfile: fieldCopy("Wählt eine ruhige Darstellung oder das Lernprofil mit zusätzlichen offenen Zielen.", "Ruhig und Lernen setzen die Anzeigeoptionen dieser Board-Karte. Individuelle Änderungen werden als Benutzerdefiniert angezeigt; die Farbpalette bleibt erhalten."),
+      statusStyle: cricketStatusStyleCopy,
       showOpenObjectives: fieldCopy(
         "Zeigt offene Ziele zusätzlich als eigene Board-Hinweise an.",
         "Aktiviert sichtbare Open-Overlays für Ziele, die noch nicht geschlossen sind. Ohne diese Option konzentriert sich das Board stärker auf scorable, Druck- und Dead-Zustände.",
         "Zeigt offene Ziele zusätzlich am Board an."
       ),
       showDeadObjectives: fieldCopy(
-        "Zeigt vollständig erledigte Ziele weiter als `DEAD` an.",
-        "Bestimmt, ob bereits erledigte Ziele weiterhin als tote Segmente sichtbar bleiben. Ist die Option aus, verschwinden diese Hinweise vom Board.",
-        "Zeigt erledigte Ziele weiter als `DEAD` an."
+        "Markiert Ziele, die für alle Spieler geschlossen sind.",
+        "Bestimmt, ob für alle Spieler geschlossene Ziele weiterhin am Board markiert werden. Ein nur für einen Spieler geschlossenes Ziel bleibt taktisch relevant.",
+        "Markiert für alle Spieler geschlossene Ziele."
       ),
       irrelevantBoardDimStyle: fieldCopy(
         "Bestimmt, wie stark irrelevante Board-Felder optisch zurückgenommen werden.",
@@ -716,9 +751,9 @@ export const xconfigFeatureCopy = deepFreeze({
         "Bestimmt den Abdunkelungsstil für irrelevante Felder."
       ),
       colorTheme: fieldCopy(
-        "Passt die Farben für Scoring- und Druckzustände an.",
-        "Wechselt zwischen dem normalen Farbschema und einer kontraststärkeren Variante. Die Zustände bleiben gleich, nur Grün- und Rotwirkung werden optisch kräftiger.",
-        "Passt die Farben für Scoring- und Druckzustände an."
+        "Wählt die Farben für Punktemöglichkeiten und Gegnerdruck.",
+        "Wählt Standard, Hoher Kontrast oder Blau/Orange. Die Zustände bleiben gleich und zusätzliche Muster lassen sich unabhängig wählen.",
+        "Wählt die Farben für Punktemöglichkeiten und Gegnerdruck."
       ),
       intensity: fieldCopy(
         "Regelt Deckkraft und Sichtbarkeit der Board-Overlays.",
@@ -739,6 +774,11 @@ export const xconfigFeatureCopy = deepFreeze({
       "Wenn du Fortschritt, Gegnerdruck und Wechsel im Grid klarer sehen willst.",
     images: [image("Cricket-Statusanzeigen", "animation-cricket-grid-fx.png")],
     fields: {
+      displayProfile: fieldCopy("Wählt ein ruhiges oder belebtes Effektprofil.", "Ruhig verwendet zurückhaltende Ränder und einen kurzen Trefferimpuls. Belebt aktiviert die bisherigen Einzeleffekte. Individuelle Änderungen werden als Benutzerdefiniert angezeigt; die Farbpalette bleibt erhalten."),
+      statusStyle: cricketStatusStyleCopy,
+      scoringStyle: fieldCopy("Wählt die Hervorhebung von Punktemöglichkeiten.", "Punktemöglichkeiten können unverändert im bisherigen Stil, ausgeschaltet, als Rand oder mit Rand und Fläche erscheinen."),
+      pressureStyle: fieldCopy("Wählt die Hervorhebung von Gegnerdruck.", "Gegnerdruck kann unverändert im bisherigen Stil, ausgeschaltet, als Rand oder mit Rand und Fläche erscheinen."),
+      feedback: fieldCopy("Wählt einen kurzen Trefferimpuls mit optionaler Änderungsanzeige.", "Aus entfernt Impuls und Änderungsanzeige. Ein kurzer Impuls kann allein oder zusammen mit der Zahl neu hinzugekommener Marks erscheinen. Dauerhafte native Marks bleiben erhalten."),
       rowWave: fieldCopy(
         "Lässt bei Änderungen einen kurzen Lichtlauf über die betroffene Zeile laufen.",
         "Startet nach einer relevanten Zustandsänderung einen kurzen Lichtlauf. Grafisch zieht eine helle Welle einmal über die betroffene Matrixzeile.",
@@ -750,24 +790,24 @@ export const xconfigFeatureCopy = deepFreeze({
         "Lässt relevante Zielmarken und Beschriftungen stärker leuchten."
       ),
       markProgress: fieldCopy(
-        "Betont den Fortschritt von einer, zwei oder drei Markierungen in den Spielerzellen.",
-        "Hebt neue oder relevante Markierungsstufen in Spielerzellen sichtbar hervor. Die Stufen werden deutlicher ausgemalt und sind leichter voneinander zu unterscheiden.",
-        "Betont die Markierungsstufen in den Spielerzellen."
+        "Betont Markierungsstufen in der älteren Tabellenansicht.",
+        "Hebt neue Markierungsstufen in der älteren Tabellenansicht hervor. Im aktuellen nativen Layout bleiben die ursprünglichen Mark-Symbole unverändert; dort stehen Trefferimpuls und Änderungsanzeige zur Verfügung.",
+        "Betont Markierungsstufen in der älteren Tabellenansicht."
       ),
       pressureEdge: fieldCopy(
-        "Zeichnet bei Gegnerdruck eine rote Kante am betroffenen Bereich.",
-        "Ergänzt eine deutliche Druckkante, wenn eine Zeile oder Zelle unter relevantem Gegnerdruck steht. Die Kante dient als schneller Warnhinweis, ohne die komplette Zelle umzufärben.",
-        "Zeichnet bei Gegnerdruck eine rote Warnkante."
+        "Zeichnet bei Gegnerdruck eine Kante in der gewählten Druckfarbe.",
+        "Ergänzt eine deutliche Druckkante, wenn eine Zeile oder Zelle unter relevantem Gegnerdruck steht. Eine Änderung übernimmt die Druckdarstellung im bisherigen Stil; die Druckfläche bleibt separat einstellbar.",
+        "Zeichnet bei Gegnerdruck eine Warnkante."
       ),
       scoringStripe: fieldCopy(
-        "Hebt Bereiche, auf denen noch gepunktet werden kann, mit einer grünen Bahn hervor.",
-        "Zeichnet offensiv sinnvolle Scoring-Zeilen oder Zellen mit einer gut sichtbaren grünen Akzentfläche nach. So springen potenzielle Punkteziele schneller ins Auge.",
-        "Hebt offensiv scorable Bereiche grün hervor."
+        "Hebt Punktemöglichkeiten mit der gewählten Punktefarbe hervor.",
+        "Zeichnet Zeilen oder Zellen, auf denen gepunktet werden kann, mit einer Akzentfläche nach. Eine Änderung übernimmt die Punktedarstellung im bisherigen Stil. Randdarstellungen werden über Punktemöglichkeiten gewählt.",
+        "Hebt Punktemöglichkeiten hervor."
       ),
       deadRowMuted: fieldCopy(
-        "Dunkelt vollständig irrelevante `DEAD`-Zeilen optisch ab.",
-        "Nimmt Zeilen, die im aktuellen Zustand als `DEAD` gelten, sichtbar zurück. Grafisch werden diese Bereiche matter und konkurrieren weniger mit aktiven Zielen.",
-        "Dunkelt `DEAD`-Zeilen optisch ab."
+        "Nimmt für alle Spieler geschlossene Ziele zurück.",
+        "Nimmt ausschließlich Ziele zurück, die für alle Spieler geschlossen sind. Im aktuellen nativen Layout wird die Statusfläche abgeschwächt; die Marks bleiben lesbar.",
+        "Nimmt für alle Spieler geschlossene Ziele zurück."
       ),
       deltaChips: fieldCopy(
         "Zeigt nach Treffern kurz kleine `+1`, `+2` oder `+3`-Hinweise an.",
@@ -780,23 +820,23 @@ export const xconfigFeatureCopy = deepFreeze({
         "Erzeugt einen kurzen Trefferfunken am betroffenen Bereich."
       ),
       roundTransitionWipe: fieldCopy(
-        "Kennzeichnet den Zugwechsel mit einem kurzen Übergang in der Matrix.",
-        "Legt beim Wechsel auf den nächsten Spieler einen kurzen Übergang über den betroffenen Matrixbereich. So wird der Zugwechsel schneller lesbar.",
-        "Kennzeichnet den Zugwechsel mit einem kurzen Matrix-Übergang."
+        "Kennzeichnet einen Rundenwechsel mit einem kurzen Übergang.",
+        "Legt bei einer erkannten neuen Runde einen kurzen Übergang über die Matrix. Ein normaler Spielerwechsel löst diesen Übergang nicht aus.",
+        "Kennzeichnet einen Rundenwechsel mit einem kurzen Matrix-Übergang."
       ),
       pressureOverlay: fieldCopy(
-        "Legt bei Gegnerdruck eine zusätzliche rote Druckfläche über betroffene Bereiche.",
-        "Ergänzt bei relevantem Gegnerdruck eine sichtbare rote Fläche zusätzlich zur Kante. So springt defensiver Druck auch dann ins Auge, wenn man nicht auf jede Zellfarbe achtet.",
-        "Legt bei Gegnerdruck eine zusätzliche rote Druckfläche über betroffene Bereiche."
+        "Legt bei Gegnerdruck eine zusätzliche Druckfläche über betroffene Bereiche.",
+        "Ergänzt bei relevantem Gegnerdruck eine Fläche in der gewählten Druckfarbe. Eine Änderung übernimmt die Druckdarstellung im bisherigen Stil; die Druckkante bleibt separat einstellbar.",
+        "Legt bei Gegnerdruck eine zusätzliche Druckfläche über betroffene Bereiche."
       ),
       colorTheme: fieldCopy(
-        "Passt die Grün-/Rot-Wirkung der Grid-Effekte an.",
-        "Wechselt zwischen Standard und kontraststärkerer Farbpalette für offensive und druckbezogene Grid-Effekte. Die Zustandslogik selbst bleibt identisch.",
+        "Wählt die Farben für Punktemöglichkeiten und Gegnerdruck.",
+        "Wählt Standard, Hoher Kontrast oder Blau/Orange. Die Zustandslogik bleibt identisch und Muster lassen sich zusätzlich wählen.",
         "Passt die Farben der Grid-Effekte an."
       ),
       intensity: fieldCopy(
         "Regelt die Gesamtstärke von Leuchten, Flächen und Kanten.",
-        "Steuert Deckkraft, Leuchtkraft und Sichtbarkeit aller Matrixeffekte. Höhere Stufen lassen grüne und rote Zustände markanter erscheinen.",
+        "Steuert Deckkraft, Leuchtkraft und Sichtbarkeit der Matrixeffekte unabhängig von der gewählten Farbpalette.",
         "Regelt die Gesamtstärke der Matrixeffekte."
       ),
       debug: DEBUG_FIELD,
@@ -2389,7 +2429,42 @@ const GAME_LAYOUT_PLAYER_TRANSITION_EFFECT_OPTION_COPY = deepFreeze({
   ),
 });
 
+const cricketLayoutOptionText = {
+  profile: { balanced: "Verteilt Platz und Größen ausgewogen.", distance: "Betont die Tabelle mit größeren Marks, Namen und Punkten.", multiplayer: "Verwendet kompakte Abstände und gleichmäßige Spielerspalten.", custom: "Zeigt eine individuell angepasste Kombination an." },
+  space: { auto: "Berücksichtigt Spielerzahl und Cricket- oder Tactics-Zielanzahl.", table: "Gibt der Tabelle mehr Platz.", board: "Gibt dem Board mehr Platz." },
+  markSize: { original: "Behält native Mark-Größen bei, begrenzt durch die Zellengröße.", large: "Vergrößert Marks bis zur verfügbaren Zellengröße.", "very-large": "Verwendet besonders große Marks, soweit sie in die Zellen passen." },
+  targetSize: { auto: "Passt die Zielzahlen an die verfügbare Zeilenhöhe an.", large: "Bevorzugt größere Zielzahlen.", "very-large": "Bevorzugt besonders große Zielzahlen." },
+  textSize: { normal: "Verwendet normale Größen für Namen und Punkte.", large: "Reserviert mehr Höhe für größere Namen und Punkte." },
+  density: { normal: "Verwendet normale Abstände; Tactics passt sie automatisch an.", compact: "Verwendet kleinere Abstände zwischen den Tabellenzellen." },
+  activeIndicator: { native: "Behält nur die native Aktivmarkierung bei.", header: "Markiert den aktiven Spielerkopf zusätzlich.", line: "Ergänzt eine schmale Linie an den Zellen des aktiven Spielers.", tint: "Ergänzt eine dezente Fläche in der aktiven Spalte." },
+  names: { single: "Kürzt lange Namen auf eine feste Zeile.", "two-lines": "Reserviert für jeden Namen bis zu zwei gleich hohe Zeilen." },
+  mpr: { normal: "Behält native Nebenstatistiken bei.", subtle: "Nimmt Nebenstatistiken gegenüber Namen und Punkten zurück.", off: "Blendet native Nebenstatistiken aus; Punkte und Marks bleiben sichtbar." },
+};
+const cricketLayoutOptionsCopy = Object.fromEntries(Object.entries(CRICKET_LAYOUT_OPTIONS).flatMap(([key, options]) => {
+  const descriptions = Object.fromEntries(options.map(({ value }) => [value, optionCopy(cricketLayoutOptionText[key][value], cricketLayoutOptionText[key][value])]));
+  return [[key, descriptions], [tacticsLayoutKey(key), descriptions]];
+}));
+const cricketStatusOptionsCopy = {
+  statusStyle: {
+    legacy: optionCopy("Erhält den bisherigen Darstellungsstil.", "Erhält den bisherigen Darstellungsstil."),
+    color: optionCopy("Verwendet Farbe ohne zusätzliche Statusmuster.", "Verwendet Farbe ohne zusätzliche Statusmuster."),
+    pattern: optionCopy("Unterscheidet Punkteziele und Druck zusätzlich über Muster oder Ränder.", "Punkteziele und Gegnerdruck erhalten unterschiedliche Schraffuren beziehungsweise Randarten."),
+  },
+  colorTheme: {
+    standard: optionCopy("Türkis für Punktemöglichkeiten, Rot für Druck.", "Türkis für Punktemöglichkeiten, Rot für Druck."),
+    "high-contrast": optionCopy("Kräftiges Grün für Punktemöglichkeiten, Rot für Druck.", "Kräftiges Grün für Punktemöglichkeiten, Rot für Druck."),
+    "blue-orange": optionCopy("Blau für Punktemöglichkeiten, Orange für Druck.", "Blau für Punktemöglichkeiten, Orange für Druck. Zusätzliche Muster sind unabhängig wählbar."),
+  },
+};
+const cricketEmphasisOptionsCopy = {
+  legacy: optionCopy("Erhält die bisherigen Einzeleinstellungen.", "Erhält die bisherigen Einzeleinstellungen."),
+  off: optionCopy("Schaltet diese Hervorhebung aus.", "Schaltet diese Hervorhebung aus; native Marks bleiben erhalten."),
+  edge: optionCopy("Verwendet einen klaren Rand.", "Verwendet einen klaren Rand ohne zusätzliche Statusfläche."),
+  surface: optionCopy("Verwendet Rand und dezente Fläche.", "Verwendet Rand und dezente Fläche."),
+};
+
 const xconfigFieldOptionCopy = deepFreeze({
+  "cricket-layout": cricketLayoutOptionsCopy,
   "theme-global-background": {
     backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
     backgroundOpacity: THEME_BACKGROUND_OPACITY_OPTION_COPY,
@@ -2450,12 +2525,32 @@ const xconfigFieldOptionCopy = deepFreeze({
     animationStyle: SPECIAL_HIT_ANIMATION_STYLE_OPTION_COPY,
   },
   "cricket-target-highlighter": {
+    ...cricketStatusOptionsCopy,
+    displayProfile: {
+      calm: optionCopy("Zurückhaltende Hinweise ohne zusätzliche offene Ziele.", "Verwendet dezente Muster und eine leichte Abdunklung anderer Felder."),
+      learning: optionCopy("Zeigt auch offene Ziele deutlich an.", "Zeigt offene Ziele, Punkteziele, Gegnerdruck und für alle geschlossene Ziele mit zusätzlichen Mustern."),
+      custom: optionCopy("Zeigt individuell angepasste Werte an.", "Zeigt eine individuell angepasste Kombination der Board-Einstellungen an."),
+    },
     irrelevantBoardDimStyle: CRICKET_DIM_STYLE_OPTION_COPY,
-    colorTheme: CRICKET_BOARD_COLOR_OPTION_COPY,
+    colorTheme: { ...CRICKET_BOARD_COLOR_OPTION_COPY, "blue-orange": cricketStatusOptionsCopy.colorTheme["blue-orange"] },
     intensity: CRICKET_BOARD_INTENSITY_OPTION_COPY,
   },
   "cricket-grid-status-effects": {
-    colorTheme: CRICKET_GRID_COLOR_OPTION_COPY,
+    ...cricketStatusOptionsCopy,
+    scoringStyle: cricketEmphasisOptionsCopy,
+    pressureStyle: cricketEmphasisOptionsCopy,
+    feedback: {
+      off: optionCopy("Kein zusätzlicher Trefferimpuls und keine Änderungszahl.", "Dauerhafte native Marks bleiben sichtbar."),
+      impulse: optionCopy("Ein kurzer Trefferimpuls.", "Zeigt neue Marks kurz durch einen Impuls an."),
+      changes: optionCopy("Trefferimpuls mit Änderungszahl.", "Zeigt einen kurzen Impuls und die Anzahl neu hinzugekommener Marks an."),
+      custom: optionCopy("Zeigt eine individuelle Kombination an.", "Zeigt die über Einzelschalter gewählte Kombination an."),
+    },
+    displayProfile: {
+      calm: optionCopy("Ruhige Ränder und ein kurzer Trefferimpuls.", "Schaltet großflächige Wellen und Rundenübergänge aus. Verwendet unterscheidbare Ränder und einen kurzen Impuls."),
+      animated: optionCopy("Aktiviert die bisherigen Einzeleffekte.", "Aktiviert die bisherigen Einzeleffekte; die Farbpalette bleibt erhalten."),
+      custom: optionCopy("Zeigt individuell angepasste Werte an.", "Zeigt eine individuell angepasste Kombination der Tabellen-Einstellungen an."),
+    },
+    colorTheme: { ...CRICKET_GRID_COLOR_OPTION_COPY, "blue-orange": cricketStatusOptionsCopy.colorTheme["blue-orange"] },
     intensity: CRICKET_GRID_INTENSITY_OPTION_COPY,
   },
   "bot-board-style": {
@@ -2663,7 +2758,7 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         ["markProgress", "Markierungen auffüllen"], ["pressureEdge", "Druck anzeigen (PRESSURE)"],
         ["scoringStripe", "Punktemöglichkeit anzeigen (SCORING)"],
         ["deadRowMuted", "Erledigte Zeilen abdunkeln (DEAD)"], ["deltaChips", "Änderungen anzeigen"],
-        ["hitSpark", "Treffer-Impuls"], ["roundTransitionWipe", "Zugwechsel-Übergang"],
+        ["hitSpark", "Treffer-Impuls"], ["roundTransitionWipe", "Rundenwechsel-Übergang"],
         ["pressureOverlay", "Druckfläche anzeigen (PRESSURE)"], ["colorTheme", "Farben"],
         ["intensity", "Stärke"],
       ]),

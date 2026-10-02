@@ -31,6 +31,7 @@ const rawFeatureCatalog = [
   catalogEntry("x01-bust-active-player-highlight", "x01BustActivePlayerHighlight", "Überworfen (BUST) hervorheben", ["x01"], "", "", immediate),
   catalogEntry("avg-trend-arrow", "avgTrendArrow", "AVG-Trend anzeigen", ["all"], "Animation/Autodarts Animate AVG Trend Arrow.user.js", "a-average-arrow"),
   catalogEntry("special-hit-highlights", "specialHitHighlights", "Triple, Double & Bull hervorheben", ["all"], "Animation/Autodarts Animate Special Hit Highlights.user.js", "a-triple-double-bull"),
+  catalogEntry("cricket-layout", "cricketLayout", "Cricket-/Tactics-Layout", ["cricket", "tactics"], "", "", immediate),
   catalogEntry("cricket-target-highlighter", "cricketTargetHighlighter", "Cricket-Ziele hervorheben", ["cricket", "tactics"], "Animation/Autodarts Animate Cricket Target Highlighter.user.js", "a-cricket-target"),
   catalogEntry("cricket-grid-status-effects", "cricketGridStatusEffects", "Cricket-Statusanzeigen", ["cricket", "tactics"], "Animation/Autodarts Animate Cricket Grid Status Effects.user.js", "a-cricket-grid-status-effects"),
   catalogEntry("dartboard-marker-highlight", "dartboardMarkerHighlight", "Treffermarkierungen hervorheben", ["all"], "Animation/Autodarts Animate Dartboard Marker Highlight.user.js", "a-dartboard-marker-highlight"),

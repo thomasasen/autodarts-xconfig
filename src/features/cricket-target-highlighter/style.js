@@ -44,6 +44,10 @@ const THEME_PRESETS = Object.freeze({
     scoring: { r: 34, g: 197, b: 94 },
     pressure: { r: 239, g: 68, b: 68 },
   },
+  ["blue-orange"]: {
+    scoring: { r: 56, g: 189, b: 248 },
+    pressure: { r: 251, g: 146, b: 60 },
+  },
 });
 
 const INTENSITY_PRESETS = Object.freeze({
@@ -99,6 +103,7 @@ export function resolveCricketVisualConfig(featureConfig = {}) {
   const dimIrrelevantBoardTargets = irrelevantBoardDimStyle !== "off";
 
   return {
+    statusStyle: ["color", "pattern"].includes(featureConfig.statusStyle) ? featureConfig.statusStyle : "legacy",
     theme,
     intensity,
     baseColor: BASE_COLOR,

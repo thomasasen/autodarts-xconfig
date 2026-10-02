@@ -8,6 +8,7 @@ import checkoutTargetHighlightsWebp from "../assets/xconfig-previews/checkout-ta
 import tvBoardZoomWebp from "../assets/xconfig-previews/tv-board-zoom.webp";
 import checkoutSuggestionStylesWebp from "../assets/xconfig-previews/checkout-suggestion-styles.webp";
 import cricketTargetHighlighterWebp from "../assets/xconfig-previews/cricket-target-highlighter.webp";
+import cricketLayoutWebp from "../assets/xconfig-previews/cricket-layout.webp";
 import cricketGridStatusEffectsWebp from "../assets/xconfig-previews/cricket-grid-status-effects.webp";
 import avgTrendArrowWebp from "../assets/xconfig-previews/avg-trend-arrow.webp";
 import specialHitHighlightsWebp from "../assets/xconfig-previews/special-hit-highlights.webp";
@@ -30,6 +31,7 @@ export const XCONFIG_PREVIEW_ASSETS = Object.freeze({
   "tv-board-zoom": tvBoardZoomWebp,
   "checkout-suggestion-styles": checkoutSuggestionStylesWebp,
   "cricket-target-highlighter": cricketTargetHighlighterWebp,
+  "cricket-layout": cricketLayoutWebp,
   "cricket-grid-status-effects": cricketGridStatusEffectsWebp,
   "avg-trend-arrow": avgTrendArrowWebp,
   "special-hit-highlights": specialHitHighlightsWebp,

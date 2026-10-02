@@ -14,6 +14,8 @@ import { TURN_DART_ASSET_KEYS } from "../shared/turn-dart-assets.manifest.js";
 import { BOARD_STYLE_DESIGN_KEYS } from "../shared/board-style-assets.manifest.js";
 import { normalizeGameLayoutPlayerTransitionEffect } from "../shared/game-layout-transition-profiles.js";
 import { normalizeAutodartsDartDesignerConfig } from "../shared/autodarts-dart-designer.js";
+import { DEFAULT_CRICKET_LAYOUT_CONFIG, normalizeCricketLayoutConfig } from "../shared/cricket-layout-config.js";
+import { CRICKET_BOARD_PROFILES, CRICKET_GRID_PROFILES, resolveCricketDisplayProfile, resolveCricketFeedback } from "../shared/cricket-display-config.js";
 
 const CHECKOUT_EFFECT_ALIASES = Object.freeze({
   "": "grow-only",
@@ -76,7 +78,9 @@ const SPECIAL_HIT_ANIMATION_STYLE_ALIASES = Object.freeze({
   "electric-jolt": "electric-jolt",
   "electric-arc": "electric-jolt",
 });
-const CRICKET_HIGHLIGHT_THEMES = new Set(["standard", "high-contrast"]);
+const CRICKET_HIGHLIGHT_THEMES = new Set(["standard", "high-contrast", "blue-orange"]);
+const CRICKET_STATUS_STYLES = new Set(["legacy", "color", "pattern"]);
+const CRICKET_STATUS_EMPHASIS = new Set(["legacy", "off", "edge", "surface"]);
 const CRICKET_HIGHLIGHT_INTENSITIES = new Set(["subtle", "normal", "strong"]);
 const CRICKET_HIGHLIGHT_IRRELEVANT_DIM_STYLES = new Set(["off", "smoke", "hatch", "mask"]);
 const DARTBOARD_MARKER_HIGHLIGHT_SIZES = new Set([4, 6, 9]);
@@ -365,6 +369,7 @@ const DEFAULT_TURN_DART_DISPLAY_CONFIG = Object.freeze({
 });
 
 const DEFAULT_FEATURE_CONFIGS = Object.freeze({
+  cricketLayout: DEFAULT_CRICKET_LAYOUT_CONFIG,
   checkoutScoreHighlight: { enabled: false, effect: "grow-only", colorTheme: "159, 219, 88", intensity: "standard", triggerSource: "suggestion-first", debug: false },
   checkoutTargetHighlights: { enabled: false, visualPreset: "soft-pulse", segmentStyle: "surface-outline", singleRing: "both", targetSelectionMode: "next", colorTheme: "amber", debug: false },
   tvBoardZoom: { enabled: false, zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true, debug: false },
@@ -372,8 +377,8 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   x01BustActivePlayerHighlight: { enabled: false, effectTarget: "player-card", crackCount: 2, soundEnabled: true, debug: false },
   avgTrendArrow: { enabled: false, durationMs: 320, size: "standard", debug: false },
   specialHitHighlights: { enabled: false, colorTheme: "kind-signal", animationStyle: "pop-hit", debug: false },
-  cricketTargetHighlighter: { enabled: false, showOpenObjectives: false, showDeadObjectives: true, irrelevantBoardDimStyle: "smoke", colorTheme: "standard", intensity: "normal", debug: false },
-  cricketGridStatusEffects: { enabled: false, rowWave: true, badgeBeacon: true, markProgress: true, pressureEdge: true, scoringStripe: true, deadRowMuted: true, deltaChips: true, hitSpark: true, roundTransitionWipe: true, pressureOverlay: true, colorTheme: "standard", intensity: "normal", debug: false },
+  cricketTargetHighlighter: { enabled: false, showOpenObjectives: false, showDeadObjectives: true, irrelevantBoardDimStyle: "smoke", colorTheme: "standard", statusStyle: "legacy", displayProfile: "custom", intensity: "normal", debug: false },
+  cricketGridStatusEffects: { enabled: false, rowWave: true, badgeBeacon: true, markProgress: true, pressureEdge: true, scoringStripe: true, deadRowMuted: true, deltaChips: true, hitSpark: true, roundTransitionWipe: true, pressureOverlay: true, colorTheme: "standard", statusStyle: "legacy", scoringStyle: "legacy", pressureStyle: "legacy", displayProfile: "animated", feedback: "changes", intensity: "normal", debug: false },
   dartboardMarkerHighlight: { enabled: false, size: 6, color: "rgb(49, 130, 206)", effect: "soft-glow", opacityPercent: 85, outline: "aus", debug: false },
   dartMarkerReplacer: { enabled: false, design: "autodarts", animateDarts: true, sizePercent: 120, hideOriginalMarkers: false, impactStyle: "classic", enableShadow: true, enableShadowBlur: true, enableWobble: true, enableFlightBlur: true, flightSpeed: "standard", debug: false },
   takeOutDartsAlert: { enabled: false, imageSize: "standard", pulseAnimation: true, pulseScale: 1.04, debug: false },
@@ -426,8 +431,8 @@ const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   x01BustActivePlayerHighlight: { effectTarget: "player-card", crackCount: 2, soundEnabled: true },
   avgTrendArrow: { durationMs: 500, size: "standard" },
   specialHitHighlights: { colorTheme: "kind-signal", animationStyle: "electric-jolt" },
-  cricketTargetHighlighter: { showOpenObjectives: false, showDeadObjectives: true, irrelevantBoardDimStyle: "hatch", colorTheme: "standard", intensity: "normal" },
-  cricketGridStatusEffects: { rowWave: true, badgeBeacon: true, markProgress: true, pressureEdge: true, scoringStripe: true, deadRowMuted: true, deltaChips: true, hitSpark: true, roundTransitionWipe: true, pressureOverlay: true, colorTheme: "high-contrast", intensity: "normal" },
+  cricketTargetHighlighter: { ...CRICKET_BOARD_PROFILES.calm, colorTheme: "standard", displayProfile: "calm" },
+  cricketGridStatusEffects: { ...CRICKET_GRID_PROFILES.calm, colorTheme: "standard", displayProfile: "calm", feedback: "impulse" },
   dartboardMarkerHighlight: { size: 6, color: "rgb(49, 130, 206)", effect: "size-pulse", opacityPercent: 100, outline: "weiss" },
   dartMarkerReplacer: { design: "germangiant", animateDarts: true, sizePercent: 120, hideOriginalMarkers: true, impactStyle: "dramatic", enableShadow: true, enableShadowBlur: true, enableWobble: true, enableFlightBlur: true, flightSpeed: "standard" },
   takeOutDartsAlert: { imageSize: "large", pulseAnimation: true, pulseScale: 1.04 },
@@ -621,6 +626,7 @@ const LEGACY_IMPORTERS = Object.freeze({
 });
 
 const FEATURE_NORMALIZERS = Object.freeze({
+  cricketLayout: normalizeCricketLayoutConfig,
   checkoutScoreHighlight(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), effect: normalizeMappedStringChoice(rawConfig.effect, "grow-only", CHECKOUT_EFFECT_ALIASES), colorTheme: normalizeLegacyColorTheme(rawConfig.colorTheme, "159, 219, 88"), intensity: normalizeStringChoice(rawConfig.intensity, "standard", CHECKOUT_INTENSITIES), triggerSource: normalizeStringChoice(rawConfig.triggerSource, "suggestion-first", CHECKOUT_TRIGGER_SOURCES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
@@ -655,14 +661,16 @@ const FEATURE_NORMALIZERS = Object.freeze({
         ? "smoke"
         : "off";
     }
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), showOpenObjectives: normalizeBoolean(showOpenValue, false), showDeadObjectives: normalizeBoolean(showDeadValue, true), irrelevantBoardDimStyle, dimIrrelevantBoardTargets: irrelevantBoardDimStyle !== "off", colorTheme: normalizeStringChoice(rawConfig.colorTheme, "standard", CRICKET_HIGHLIGHT_THEMES), intensity: normalizeStringChoice(rawConfig.intensity, "normal", CRICKET_HIGHLIGHT_INTENSITIES), debug: normalizeBoolean(rawConfig.debug, false) };
+    const values = { enabled: normalizeBoolean(rawConfig.enabled, false), showOpenObjectives: normalizeBoolean(showOpenValue, false), showDeadObjectives: normalizeBoolean(showDeadValue, true), irrelevantBoardDimStyle, dimIrrelevantBoardTargets: irrelevantBoardDimStyle !== "off", colorTheme: normalizeStringChoice(rawConfig.colorTheme, "standard", CRICKET_HIGHLIGHT_THEMES), statusStyle: normalizeStringChoice(rawConfig.statusStyle, "legacy", CRICKET_STATUS_STYLES), intensity: normalizeStringChoice(rawConfig.intensity, "normal", CRICKET_HIGHLIGHT_INTENSITIES), debug: normalizeBoolean(rawConfig.debug, false) };
+    return { ...values, displayProfile: resolveCricketDisplayProfile(values, CRICKET_BOARD_PROFILES) };
   },
   cricketGridStatusEffects(rawConfig = {}) {
     const pressureEdgeValue = Object.hasOwn(rawConfig, "threatEdge") ? rawConfig.threatEdge : rawConfig.pressureEdge;
     const scoringStripeValue = Object.hasOwn(rawConfig, "scoringLane") ? rawConfig.scoringLane : rawConfig.scoringStripe;
     const deadRowMutedValue = Object.hasOwn(rawConfig, "deadRowCollapse") ? rawConfig.deadRowCollapse : rawConfig.deadRowMuted;
     const pressureOverlayValue = Object.hasOwn(rawConfig, "opponentPressureOverlay") ? rawConfig.opponentPressureOverlay : rawConfig.pressureOverlay;
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), rowWave: normalizeBoolean(rawConfig.rowWave, true), badgeBeacon: normalizeBoolean(rawConfig.badgeBeacon, true), markProgress: normalizeBoolean(rawConfig.markProgress, true), pressureEdge: normalizeBoolean(pressureEdgeValue, true), scoringStripe: normalizeBoolean(scoringStripeValue, true), deadRowMuted: normalizeBoolean(deadRowMutedValue, true), deltaChips: normalizeBoolean(rawConfig.deltaChips, true), hitSpark: normalizeBoolean(rawConfig.hitSpark, true), roundTransitionWipe: normalizeBoolean(rawConfig.roundTransitionWipe, true), pressureOverlay: normalizeBoolean(pressureOverlayValue, true), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "standard", CRICKET_HIGHLIGHT_THEMES), intensity: normalizeStringChoice(rawConfig.intensity, "normal", CRICKET_HIGHLIGHT_INTENSITIES), debug: normalizeBoolean(rawConfig.debug, false) };
+    const values = { enabled: normalizeBoolean(rawConfig.enabled, false), rowWave: normalizeBoolean(rawConfig.rowWave, true), badgeBeacon: normalizeBoolean(rawConfig.badgeBeacon, true), markProgress: normalizeBoolean(rawConfig.markProgress, true), pressureEdge: normalizeBoolean(pressureEdgeValue, true), scoringStripe: normalizeBoolean(scoringStripeValue, true), deadRowMuted: normalizeBoolean(deadRowMutedValue, true), deltaChips: normalizeBoolean(rawConfig.deltaChips, true), hitSpark: normalizeBoolean(rawConfig.hitSpark, true), roundTransitionWipe: normalizeBoolean(rawConfig.roundTransitionWipe, true), pressureOverlay: normalizeBoolean(pressureOverlayValue, true), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "standard", CRICKET_HIGHLIGHT_THEMES), statusStyle: normalizeStringChoice(rawConfig.statusStyle, "legacy", CRICKET_STATUS_STYLES), scoringStyle: normalizeStringChoice(rawConfig.scoringStyle, "legacy", CRICKET_STATUS_EMPHASIS), pressureStyle: normalizeStringChoice(rawConfig.pressureStyle, "legacy", CRICKET_STATUS_EMPHASIS), intensity: normalizeStringChoice(rawConfig.intensity, "normal", CRICKET_HIGHLIGHT_INTENSITIES), debug: normalizeBoolean(rawConfig.debug, false) };
+    return { ...values, displayProfile: resolveCricketDisplayProfile(values, CRICKET_GRID_PROFILES), feedback: resolveCricketFeedback(values) };
   },
   dartboardMarkerHighlight(rawConfig = {}) {
     const colorThemeRaw = String(rawConfig.color || "").trim();

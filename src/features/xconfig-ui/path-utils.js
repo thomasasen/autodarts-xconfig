@@ -3,6 +3,8 @@ import {
   splitFeaturePath as splitSharedFeaturePath,
 } from "../../config/feature-path-utils.js";
 import { normalizeThemeBackgroundHost } from "../../shared/theme-background-host-utils.js";
+import { buildCricketLayoutSettingValues } from "../../shared/cricket-layout-config.js";
+import { buildCricketDisplaySettingValues } from "../../shared/cricket-display-config.js";
 
 export function splitFeaturePath(featureKey) {
   return splitSharedFeaturePath(featureKey);
@@ -22,9 +24,12 @@ export function buildFeatureSettingPatch(configKey, settingKey, value) {
     return patch;
   }
 
-  const featurePatch = {
-    [String(settingKey || "").trim()]: value,
-  };
+  const key = String(settingKey || "").trim();
+  const featurePatch = configKey === "cricketLayout"
+    ? buildCricketLayoutSettingValues(key, value)
+    : ["cricketGridStatusEffects", "cricketTargetHighlighter"].includes(configKey)
+      ? buildCricketDisplaySettingValues(configKey, key, value)
+      : { [key]: value };
   setNestedValue(patch.features, path, featurePatch);
   return patch;
 }

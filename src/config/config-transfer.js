@@ -48,6 +48,11 @@ const LEGACY_SETTING_ALIASES = Object.freeze({
   }),
 });
 const SPECIAL_TRANSFER_FIELDS = Object.freeze({
+  tacticsDensity: Object.freeze({
+    control: "select",
+    label: "Gespeicherte Tactics-Abstände",
+    options: Object.freeze(["normal", "compact"]),
+  }),
   backgroundImageDataUrl: Object.freeze({
     control: "asset",
     label: "Eigenes Hintergrundbild",

@@ -514,6 +514,7 @@ function clearPersistentState(state) {
 
   if (state.gridRoot?.classList) {
     state.gridRoot.classList.remove(ROOT_CLASS, MODERN_ROOT_CLASS);
+    ["status", "scoring", "pressure"].forEach((key) => state.gridRoot.removeAttribute(`data-ad-crfx-${key}-style`));
   }
 
   state.trackedCells.clear();
@@ -1944,6 +1945,11 @@ export function updateCricketGridStatusEffects(options = {}) {
   state.gridRoot.classList.add(ROOT_CLASS);
   toggleClass(state.gridRoot, MODERN_ROOT_CLASS, gridSnapshot.modern === true);
   applyRootCssVars(state.gridRoot, visualConfig);
+  ["status", "scoring", "pressure"].forEach((key) => {
+    const value = visualConfig[`${key}Style`] || "legacy";
+    const attribute = `data-ad-crfx-${key}-style`;
+    if (state.gridRoot.getAttribute(attribute) !== value) state.gridRoot.setAttribute(attribute, value);
+  });
 
   const marksDiff =
     typeof cricketRules.diffMarksByLabel === "function"

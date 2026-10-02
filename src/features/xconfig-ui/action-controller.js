@@ -250,6 +250,7 @@ function handleSetSettingSelectOption(controller, actionNode, feature) {
   }
 
   const optionValues = resolveFieldOptionValues(field);
+  if (field.options?.find((option) => String(option.value) === settingRawValue)?.disabled) return;
   const inputWrap =
     actionNode?.closest?.(".ad-xconfig-setting-input") ||
     actionNode?.parentElement ||

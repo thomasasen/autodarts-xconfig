@@ -11,6 +11,7 @@ export const XCONFIG_PREVIEW_ASSET_FILES = Object.freeze({
   "tv-board-zoom": "tv-board-zoom.webp",
   "checkout-suggestion-styles": "checkout-suggestion-styles.webp",
   "cricket-target-highlighter": "cricket-target-highlighter.webp",
+  "cricket-layout": "cricket-layout.webp",
   "cricket-grid-status-effects": "cricket-grid-status-effects.webp",
   "avg-trend-arrow": "avg-trend-arrow.webp",
   "special-hit-highlights": "special-hit-highlights.webp",

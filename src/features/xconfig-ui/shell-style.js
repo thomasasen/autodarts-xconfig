@@ -78,6 +78,7 @@ const COLOR_PREVIEW_GRADIENTS = Object.freeze([
   ["x01-traffic-light", "linear-gradient(116deg,#991b1b 0%,#ef4444 52%,#f87171 100%),linear-gradient(116deg,#92400e 0%,#f59e0b 52%,#facc15 100%),linear-gradient(116deg,#14532d 0%,#22c55e 52%,#84cc16 100%)", "33.333% 100%,33.334% 100%,33.333% 100%", "left center,center center,right center", "rgba(250,204,21,.94)", "rgba(239,68,68,.58)", "rgba(34,197,94,.26)"],
   ["cricket-standard", "linear-gradient(116deg,#064e3b 0%,#00b287 48%,#5eead4 100%),linear-gradient(116deg,#7f1d1d 0%,#ef4444 48%,#fca5a5 100%)", "50% 100%,50% 100%", "left center,right center", "rgba(94,234,212,.94)", "rgba(0,178,135,.58)", "rgba(239,68,68,.25)"],
   ["cricket-high-contrast", "linear-gradient(116deg,#14532d 0%,#22c55e 48%,#86efac 100%),linear-gradient(116deg,#7f1d1d 0%,#ef4444 48%,#fca5a5 100%)", "50% 100%,50% 100%", "left center,right center", "rgba(134,239,172,.94)", "rgba(34,197,94,.6)", "rgba(239,68,68,.25)"],
+  ["cricket-blue-orange", "linear-gradient(116deg,#075985 0%,#38bdf8 48%,#bae6fd 100%),linear-gradient(116deg,#9a3412 0%,#fb923c 48%,#fed7aa 100%)", "50% 100%,50% 100%", "left center,right center", "rgba(186,230,253,.94)", "rgba(56,189,248,.6)", "rgba(251,146,60,.25)"],
 ]);
 
 function buildColorPreviewPaletteRule(definition) {

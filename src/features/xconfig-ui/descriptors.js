@@ -10,6 +10,8 @@ import { BOARD_STYLE_DESIGN_OPTIONS } from "../../shared/board-style-assets.mani
 import { DART_DESIGN_OPTIONS } from "../../shared/feature-assets.manifest.js";
 import { TURN_DART_ASSET_OPTIONS } from "../../shared/turn-dart-assets.manifest.js";
 import { GAME_LAYOUT_PLAYER_TRANSITION_EFFECT_OPTIONS } from "../../shared/game-layout-transition-profiles.js";
+import { CRICKET_LAYOUT_OPTIONS, tacticsLayoutKey } from "../../shared/cricket-layout-config.js";
+import { CRICKET_STATUS_STYLE_OPTIONS, CRICKET_STATUS_EMPHASIS_OPTIONS, CRICKET_FEEDBACK_OPTIONS } from "../../shared/cricket-display-config.js";
 
 const X01_REMAINING_SCORE_BAR_COLOR_CYCLE_PREVIEW_EFFECT =
   "x01-remaining-score-bar-color-cycle";
@@ -20,6 +22,7 @@ function checkboxField(key, label, fieldOptions = {}) {
     label,
     control: "checkbox",
     section: String(fieldOptions.section || "").trim(),
+    visibleWhen: fieldOptions.visibleWhen || null,
   });
 }
 
@@ -29,12 +32,14 @@ function selectField(key, label, options = [], fieldOptions = {}) {
     label,
     control: "select",
     section: String(fieldOptions.section || "").trim(),
+    visibleWhen: fieldOptions.visibleWhen || null,
     multiple: fieldOptions.multiple === true,
     options: Object.freeze(
       options.map((option) =>
         Object.freeze({
           value: option.value,
           label: option.label,
+          disabled: option.disabled === true,
           previewFontFamily: String(option.previewFontFamily || "").trim(),
           previewEffect: String(option.previewEffect || "").trim(),
           previewColorTheme: String(option.previewColorTheme || "").trim(),
@@ -46,6 +51,16 @@ function selectField(key, label, options = [], fieldOptions = {}) {
 
 function colorPreviewOption(value, label, previewColorTheme = value, previewEffect = "") {
   return { value, label, previewColorTheme, previewEffect };
+}
+
+const CRICKET_LAYOUT_LABELS = Object.freeze({ profile: "Layoutprofil", space: "Platzverteilung", markSize: "Mark-Größe", targetSize: "Zielzahlen", textSize: "Namen und Punkte", density: "Abstände", activeIndicator: "Aktiver Spieler", names: "Spielernamen", mpr: "Nebenstatistiken" });
+function cricketLayoutFields(tactics = false, advanced = false) {
+  return Object.entries(CRICKET_LAYOUT_OPTIONS).filter(([key]) =>
+    (!tactics || key !== "density") && ["profile", "space"].includes(key) !== advanced).map(([key, options]) => selectField(
+    tactics ? tacticsLayoutKey(key) : key,
+    `${tactics && advanced ? "Tactics: " : ""}${CRICKET_LAYOUT_LABELS[key]}`, options,
+    { section: advanced ? "Erweitert" : tactics ? "Tactics" : "Layout", visibleWhen: tactics ? { key: "tacticsOverrides", value: true } : null }
+  ));
 }
 
 function colorField(key, label, fieldOptions = {}) {
@@ -103,6 +118,7 @@ const README_ANCHOR_ALIASES = Object.freeze({
 });
 
 const NEW_DESIGN_READY_FEATURE_KEYS = new Set([
+  "cricket-layout",
   "theme-global-background",
   "theme-global-typography",
   "theme-game-layout",
@@ -144,6 +160,7 @@ function descriptorEntry(definition) {
     visualDescription: featureCopy?.visualDescription || "",
     usefulWhen: featureCopy?.usefulWhen || "",
     settingsDetailHeading: featureCopy?.readmeDetailHeading || "",
+    refreshSettingsOnChange: definition.refreshSettingsOnChange === true,
     settingsDetails: Object.freeze(
       Array.isArray(featureCopy?.featuresDetails)
         ? featureCopy.featuresDetails
@@ -613,20 +630,40 @@ export const xconfigDescriptors = Object.freeze([
       ]),
     ],
   }),
+  descriptorEntry({
+    featureKey: "cricket-layout",
+    refreshSettingsOnChange: true,
+    readmeAnchor: "cricket-tactics-layout",
+    description: "Passt Tabelle, Spieleranzeige und Board-Aufteilung an Cricket und Tactics an.",
+    fields: [
+      ...cricketLayoutFields(),
+      checkboxField("tacticsOverrides", "Eigene Einstellungen für Tactics", { section: "Tactics" }),
+      ...cricketLayoutFields(true),
+      ...cricketLayoutFields(false, true),
+      ...cricketLayoutFields(true, true),
+      { ...DEBUG_FIELD, section: "Erweitert" },
+    ],
+  }),
   animationDescriptorEntry({
     featureKey: "cricket-target-highlighter",
+    refreshSettingsOnChange: true,
     readmeAnchor: "animation-autodarts-animate-cricket-target-highlighter",
     description: "Visualisiert Ziel- und Druckzustände in Cricket und Tactics.",
     fields: [
-      checkboxField("showOpenObjectives", "Offene Ziele anzeigen (OPEN)"),
-      checkboxField("showDeadObjectives", "Erledigte Ziele anzeigen (DEAD)"),
+      selectField("displayProfile", "Darstellungsprofil", [
+        { value: "calm", label: "Ruhig" }, { value: "learning", label: "Lernen" }, { value: "custom", label: "Benutzerdefiniert", disabled: true },
+      ]),
+      checkboxField("showOpenObjectives", "Offene Ziele anzeigen"),
+      checkboxField("showDeadObjectives", "Für alle geschlossene Ziele markieren"),
       selectValueLabelField("irrelevantBoardDimStyle", "Andere Felder abdunkeln", [
         ["off", "Aus"], ["smoke", "Rauch"], ["hatch", "Schraffur"], ["mask", "Abdeckung"],
       ]),
       selectField("colorTheme", "Farben", [
         colorPreviewOption("standard", "Standard", "cricket-standard"),
-        colorPreviewOption("high-contrast", "High Contrast", "cricket-high-contrast"),
+        colorPreviewOption("high-contrast", "Hoher Kontrast", "cricket-high-contrast"),
+        colorPreviewOption("blue-orange", "Blau/Orange", "cricket-blue-orange"),
       ]),
+      selectField("statusStyle", "Statusdarstellung", CRICKET_STATUS_STYLE_OPTIONS),
       selectValueLabelField("intensity", "Stärke", [
         ["subtle", "Dezent"], ["normal", "Standard"], ["strong", "Stark"],
       ]),
@@ -634,26 +671,35 @@ export const xconfigDescriptors = Object.freeze([
   }),
   animationDescriptorEntry({
     featureKey: "cricket-grid-status-effects",
+    refreshSettingsOnChange: true,
     readmeAnchor: "animation-autodarts-animate-cricket-grid-status-effects",
     description: "Ergänzt die Cricket-/Tactics-Matrix um zusätzliche Live-Effekte.",
     fields: [
-      checkboxField("rowWave", "Welle durch die Zeile"),
-      checkboxField("badgeBeacon", "Zielmarke hervorheben"),
-      checkboxField("markProgress", "Markierungen auffüllen"),
-      checkboxField("pressureEdge", "Druck anzeigen (PRESSURE)"),
-      checkboxField("scoringStripe", "Punktemöglichkeit anzeigen (SCORING)"),
-      checkboxField("deadRowMuted", "Erledigte Zeilen abdunkeln (DEAD)"),
-      checkboxField("deltaChips", "Änderungen anzeigen"),
-      checkboxField("hitSpark", "Treffer-Impuls"),
-      checkboxField("roundTransitionWipe", "Zugwechsel-Übergang"),
-      checkboxField("pressureOverlay", "Druckfläche anzeigen (PRESSURE)"),
+      selectField("displayProfile", "Effektprofil", [
+        { value: "calm", label: "Ruhig" }, { value: "animated", label: "Belebt" }, { value: "custom", label: "Benutzerdefiniert", disabled: true },
+      ]),
+      selectField("statusStyle", "Statusdarstellung", CRICKET_STATUS_STYLE_OPTIONS),
+      selectField("scoringStyle", "Punktemöglichkeiten", CRICKET_STATUS_EMPHASIS_OPTIONS),
+      selectField("pressureStyle", "Druck durch Gegner", CRICKET_STATUS_EMPHASIS_OPTIONS),
+      checkboxField("deadRowMuted", "Für alle geschlossene Ziele zurücknehmen"),
+      selectField("feedback", "Trefferfeedback", CRICKET_FEEDBACK_OPTIONS),
       selectField("colorTheme", "Farben", [
         colorPreviewOption("standard", "Standard", "cricket-standard"),
-        colorPreviewOption("high-contrast", "High Contrast", "cricket-high-contrast"),
+        colorPreviewOption("high-contrast", "Hoher Kontrast", "cricket-high-contrast"),
+        colorPreviewOption("blue-orange", "Blau/Orange", "cricket-blue-orange"),
       ]),
       selectValueLabelField("intensity", "Stärke", [
         ["subtle", "Dezent"], ["normal", "Standard"], ["strong", "Stark"],
       ]),
+      checkboxField("rowWave", "Welle durch die Zeile", { section: "Erweitert" }),
+      checkboxField("badgeBeacon", "Zielmarke hervorheben", { section: "Erweitert" }),
+      checkboxField("markProgress", "Markierungen auffüllen (ältere Ansicht)", { section: "Erweitert" }),
+      checkboxField("pressureEdge", "Druckkante", { section: "Erweitert" }),
+      checkboxField("scoringStripe", "Punktemöglichkeiten anzeigen", { section: "Erweitert" }),
+      checkboxField("deltaChips", "Änderungen anzeigen", { section: "Erweitert" }),
+      checkboxField("hitSpark", "Treffer-Impuls", { section: "Erweitert" }),
+      checkboxField("roundTransitionWipe", "Rundenwechsel-Übergang", { section: "Erweitert" }),
+      checkboxField("pressureOverlay", "Druckfläche", { section: "Erweitert" }),
     ],
   }),
   animationDescriptorEntry({

@@ -12,6 +12,7 @@ export const XCONFIG_PREVIEW_SOURCE_FILES = Object.freeze({
   "tv-board-zoom": "animation-tv-board-zoom.gif",
   "checkout-suggestion-styles": "animation-style-checkout-suggestions.png",
   "cricket-target-highlighter": "animation-cricket-target-highlighter.png",
+  "cricket-layout": "cricket-layout-example.png",
   "cricket-grid-status-effects": "animation-cricket-grid-fx.png",
   "avg-trend-arrow": "animation-average-trend-arrow.png",
   "special-hit-highlights": "animation-triple-double-bull-hits.gif",

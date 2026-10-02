@@ -296,8 +296,8 @@ test("xConfig color preset settings expose matching preview themes", () => {
       "checkout-suggestion-styles:colorTheme",
       ["checkout-suggestion-amber", "checkout-suggestion-cyan", "checkout-suggestion-rose"],
     ],
-    ["cricket-target-highlighter:colorTheme", ["cricket-standard", "cricket-high-contrast"]],
-    ["cricket-grid-status-effects:colorTheme", ["cricket-standard", "cricket-high-contrast"]],
+    ["cricket-target-highlighter:colorTheme", ["cricket-standard", "cricket-high-contrast", "cricket-blue-orange"]],
+    ["cricket-grid-status-effects:colorTheme", ["cricket-standard", "cricket-high-contrast", "cricket-blue-orange"]],
     [
       "dartboard-marker-highlight:color",
       [

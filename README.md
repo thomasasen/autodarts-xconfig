@@ -205,6 +205,7 @@ Wähle den Spielmodus oder den gewünschten sichtbaren Effekt und öffne anschli
 | [Überworfen (BUST) hervorheben](#animation-autodarts-x01-bust-active-player-highlight) | Funktion | `X01` | Ersetzt den nativen BUST-Effekt durch eine rote Glasbruch-Markierung auf dem gewählten Bereich oder am Darts-Einschlag. |
 | [AVG-Trend anzeigen](#animation-autodarts-animate-avg-trend-arrow) | Funktion | `alle Modi` | Zeigt die AVG-Richtung mit einem kurzen Pfeil direkt an der Anzeige. |
 | [Triple, Double & Bull hervorheben](#animation-autodarts-animate-special-hit-highlights) | Funktion | `alle Modi` | Hebt Triple-, Double- und Bull-Treffer mit Farben, Licht und kurzen Bewegungen hervor. |
+| [Cricket-/Tactics-Layout](#cricket-tactics-layout) | Funktion | `Cricket`, `Tactics` | Passt Cricket und Tactics an Bildschirm, Spielerzahl und Betrachtungsabstand an. |
 | [Cricket-Ziele hervorheben](#animation-autodarts-animate-cricket-target-highlighter) | Funktion | `Cricket`, `Tactics` | Zeigt Cricket- und Tactics-Zustände direkt auf dem Board statt nur in der Matrix. |
 | [Cricket-Statusanzeigen](#animation-autodarts-animate-cricket-grid-status-effects) | Funktion | `Cricket`, `Tactics` | Ergänzt die Cricket-/Tactics-Matrix um Live-Effekte für Fortschritt, Druck und Wechsel. |
 | [Treffermarkierungen hervorheben](#animation-autodarts-animate-dartboard-marker-highlight) | Funktion | `alle Modi` | Macht vorhandene Marker auf dem virtuellen Board klarer und auffälliger. |
@@ -459,6 +460,18 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 ![Überworfen (BUST) hervorheben](docs/screenshots/x01-bust-active-player-highlight.webp)
 
 ## Cricket / Tactics
+
+<a id="cricket-tactics-layout"></a>
+
+### Cricket-/Tactics-Layout
+
+- Gilt für: `Cricket`, `Tactics`
+- Was macht es sichtbar? Tabelle und Spieleranzeige erhalten abgestimmte Größen und eine stabile Zuordnung.
+- Wann sinnvoll? Wenn du Marks und Spielernamen aus der Entfernung besser lesen oder mehrere Spieler leichter vergleichen möchtest.
+
+[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#cricket-tactics-layout)
+
+![Cricket-Layout: schematische Beispielansicht](docs/screenshots/cricket-layout-example.png)
 
 <a id="animation-autodarts-animate-cricket-target-highlighter"></a>
 <a id="animation-autodarts-animate-cricket-highlighter"></a>

@@ -440,6 +440,19 @@ function refreshStableModalContent(previousShellNode, nextShellNode) {
     return;
   }
 
+  // Presets and conditional fields can change several controls in one saved update.
+  // Retain the modal/body identity and the user's expanded advanced sections.
+  if (previousModalBody.closest?.(".ad-xconfig-modal")?.getAttribute("data-adxconfig-refresh-settings") === "true") {
+    const openedSections = new Set(Array.from(previousModalBody.querySelectorAll("details[open]"))
+      .map((node) => node.getAttribute("data-adxconfig-settings-section")));
+    while (previousModalBody.firstChild) previousModalBody.firstChild.remove();
+    Array.from(nextModalBody.childNodes || nextModalBody.children || []).forEach((node) => previousModalBody.appendChild(node));
+    previousModalBody.querySelectorAll("details[data-adxconfig-settings-section]").forEach((node) => {
+      if (openedSections.has(node.getAttribute("data-adxconfig-settings-section"))) node.setAttribute("open", "");
+    });
+    return;
+  }
+
   STABLE_MODAL_PREVIEW_REFRESH_SELECTORS.forEach((selector) => {
     const previousPreview = previousModalBody.querySelector?.(selector) || null;
     const nextPreview = nextModalBody.querySelector?.(selector) || null;

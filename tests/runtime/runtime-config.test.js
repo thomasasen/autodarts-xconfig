@@ -192,10 +192,13 @@ test("createRecommendedRuntimeConfig applies the documented recommended profile 
   assert.equal(config.features.avgTrendArrow.durationMs, 500);
   assert.equal(config.features.specialHitHighlights.colorTheme, "kind-signal");
   assert.equal(config.features.specialHitHighlights.animationStyle, "electric-jolt");
-  assert.equal(config.features.cricketTargetHighlighter.irrelevantBoardDimStyle, "hatch");
-  assert.equal(config.features.cricketGridStatusEffects.intensity, "normal");
-  assert.equal(config.features.cricketGridStatusEffects.colorTheme, "high-contrast");
-  assert.equal(config.features.cricketGridStatusEffects.pressureOverlay, true);
+  assert.equal(config.features.cricketTargetHighlighter.irrelevantBoardDimStyle, "smoke");
+  assert.equal(config.features.cricketTargetHighlighter.displayProfile, "calm");
+  assert.equal(config.features.cricketGridStatusEffects.displayProfile, "calm");
+  assert.equal(config.features.cricketGridStatusEffects.rowWave, false);
+  assert.equal(config.features.cricketGridStatusEffects.intensity, "subtle");
+  assert.equal(config.features.cricketGridStatusEffects.colorTheme, "standard");
+  assert.equal(config.features.cricketGridStatusEffects.pressureOverlay, false);
   assert.equal(config.features.dartboardMarkerHighlight.effect, "size-pulse");
   assert.equal(config.features.dartboardMarkerHighlight.opacityPercent, 100);
   assert.equal(config.features.dartboardMarkerHighlight.outline, "weiss");

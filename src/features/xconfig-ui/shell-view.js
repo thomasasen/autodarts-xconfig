@@ -2957,6 +2957,7 @@ function buildFeatureSelectField(documentRef, feature, field, fieldId) {
       className: buildSelectOptionClassName(state, previewColorTheme),
       attributes: {
         "data-adxconfig-action": "set-setting-select-option",
+        disabled: option.disabled ? "" : undefined,
         "data-adxconfig-option-note": "true",
         "data-feature-key": feature.featureKey,
         "data-config-key": feature.configKey,
@@ -3457,7 +3458,8 @@ function buildSettingsModal(documentRef, state, features) {
   }
   const feature = features.find((entry) => entry.featureKey === state.activeSettingsFeatureKey) || null;
   const descriptor = feature ? getXConfigDescriptor(feature.featureKey) : null;
-  const fields = Array.isArray(descriptor?.fields) ? descriptor.fields : [];
+  const fields = Array.isArray(descriptor?.fields) ? descriptor.fields.filter((field) =>
+    !field.visibleWhen || feature.config?.[field.visibleWhen.key] === field.visibleWhen.value) : [];
   if (!feature || !fields.length) {
     return null;
   }
@@ -3473,6 +3475,7 @@ function buildSettingsModal(documentRef, state, features) {
     attributes: {
       role: "dialog",
       "aria-modal": "true",
+      "data-adxconfig-refresh-settings": descriptor.refreshSettingsOnChange ? "true" : "false",
       "data-adxconfig-modal": "true",
       "aria-labelledby": "ad-xconfig-settings-title",
       tabindex: "-1",
@@ -3569,13 +3572,14 @@ function buildSettingsModal(documentRef, state, features) {
     let sectionBody = body;
     if (sectionLabel) {
       if (!sectionBodies.has(sectionLabel)) {
-        const section = createElement(documentRef, "section", {
+        const advanced = sectionLabel === "Erweitert";
+        const section = createElement(documentRef, advanced ? "details" : "section", {
           className: "ad-xconfig-settings-section",
           attributes: {
             "data-adxconfig-settings-section": sectionLabel.toLowerCase(),
           },
         });
-        section.appendChild(createElement(documentRef, "h4", {
+        section.appendChild(createElement(documentRef, advanced ? "summary" : "h4", {
           className: "ad-xconfig-settings-section-title",
           text: sectionLabel,
         }));

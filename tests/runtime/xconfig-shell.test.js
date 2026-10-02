@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 
 import { CONFIG_STORAGE_KEY } from "../../src/config/config-store.js";
+import { normalizeRuntimeConfig } from "../../src/config/runtime-config.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
 import { resolveBoardStyleDesignAsset } from "../../src/shared/feature-assets.node.js";
 import { DART_DESIGN_KEYS } from "../../src/shared/feature-assets.manifest.js";
@@ -703,6 +704,91 @@ test("xConfig observer still syncs closed-shell sidebar mutations", async () => 
   assert.ok(sidebarRectReads > 0);
 
   runtime.stop();
+});
+
+test("fresh xConfig settings start with calm Cricket recommendations", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage: new FakeStorage() });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  try {
+    await waitForMenuButton(documentRef);
+    documentRef.getElementById("ad-xconfig-menu-item").click();
+    await waitForShellOpen(windowRef, documentRef);
+    documentRef.querySelector("[data-adxconfig-action='open-settings'][data-feature-key='cricket-grid-status-effects']").click();
+    await waitForSettingsModal(documentRef);
+    assert.ok(documentRef.querySelector("[data-setting-key='displayProfile'][data-setting-value='calm'][data-active='true']"));
+    assert.ok(documentRef.querySelector("[data-setting-key='statusStyle'][data-setting-value='pattern'][data-active='true']"));
+    assert.equal(documentRef.querySelector("[data-setting-key='rowWave']")?.checked, false);
+  } finally { runtime.stop(); }
+});
+
+test("Cricket layout saves scoped profiles and shows Tactics overrides only when selected", async () => {
+  const localStorage = new FakeStorage({ [CONFIG_STORAGE_KEY]: JSON.stringify(normalizeRuntimeConfig()) });
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  try {
+    await waitForMenuButton(documentRef);
+    documentRef.getElementById("ad-xconfig-menu-item").click();
+    await waitForShellOpen(windowRef, documentRef);
+    documentRef.querySelector("[data-adxconfig-action='open-settings'][data-feature-key='cricket-layout']").click();
+    await waitForSettingsModal(documentRef);
+    const tacticsSelector = "[data-setting-key='tacticsProfile']";
+    const advanced = documentRef.querySelector("details[data-adxconfig-settings-section='erweitert']");
+    assert.ok(advanced);
+    assert.equal(advanced.getAttribute("open"), null);
+    assert.ok(advanced.querySelector("[data-setting-key='markSize']"));
+    assert.equal(advanced.querySelector("[data-setting-key='profile']"), null);
+    assert.equal(documentRef.querySelector(tacticsSelector), null);
+    clickSelectSettingOption(documentRef, "cricket-layout", "profile", "distance");
+    await waitForStoredConfig(localStorage, (config) => config.features.cricketLayout.profile === "distance");
+    let saved = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+    assert.equal(saved.features.cricketLayout.markSize, "very-large");
+    assert.equal(saved.features.cricketTargetHighlighter.statusStyle, "legacy");
+    assert.equal(saved.features.cricketGridStatusEffects.rowWave, true);
+    const customOption = documentRef.querySelector("[data-feature-key='cricket-layout'][data-setting-key='profile'][data-setting-value='custom']");
+    assert.equal(customOption.getAttribute("disabled"), "");
+    customOption.click();
+    assert.equal(JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features.cricketLayout.profile, "distance");
+    clickSettingToggle(documentRef, "cricket-layout", "tacticsOverrides", true);
+    await waitFor(() => documentRef.querySelector(tacticsSelector));
+    assert.equal(documentRef.querySelector("[data-setting-key='tacticsDensity']"), null);
+    clickSelectSettingOption(documentRef, "cricket-layout", "tacticsProfile", "multiplayer");
+    await waitForStoredConfig(localStorage, (config) => config.features.cricketLayout.tacticsProfile === "multiplayer");
+    saved = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+    assert.equal(saved.features.cricketLayout.profile, "distance");
+    assert.equal(saved.features.cricketLayout.tacticsMarkSize, "large");
+    clickSelectSettingOption(documentRef, "cricket-layout", "markSize", "original");
+    await waitForStoredConfig(localStorage, (config) => config.features.cricketLayout.profile === "custom");
+  } finally { runtime.stop(); }
+});
+
+test("Cricket status settings expose advanced controls separately and apply calm profiles atomically", async () => {
+  const localStorage = new FakeStorage({ [CONFIG_STORAGE_KEY]: JSON.stringify(normalizeRuntimeConfig()) });
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  try {
+    await waitForMenuButton(documentRef);
+    documentRef.getElementById("ad-xconfig-menu-item").click();
+    await waitForShellOpen(windowRef, documentRef);
+    documentRef.querySelector("[data-adxconfig-action='open-settings'][data-feature-key='cricket-grid-status-effects']").click();
+    await waitForSettingsModal(documentRef);
+    const advanced = documentRef.querySelector("details[data-adxconfig-settings-section='erweitert']");
+    assert.ok(advanced);
+    assert.equal(advanced.getAttribute("open"), null);
+    assert.ok(advanced.querySelector("[data-setting-key='rowWave']"));
+    clickSelectSettingOption(documentRef, "cricket-grid-status-effects", "colorTheme", "blue-orange");
+    await waitForStoredConfig(localStorage, (config) => config.features.cricketGridStatusEffects.colorTheme === "blue-orange");
+    clickSelectSettingOption(documentRef, "cricket-grid-status-effects", "displayProfile", "calm");
+    await waitForStoredConfig(localStorage, (config) => config.features.cricketGridStatusEffects.displayProfile === "calm");
+    const saved = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+    assert.equal(saved.features.cricketGridStatusEffects.colorTheme, "blue-orange");
+    assert.equal(saved.features.cricketGridStatusEffects.rowWave, false);
+    assert.equal(saved.features.cricketGridStatusEffects.pressureOverlay, false);
+    assert.equal(saved.features.cricketLayout.enabled, false);
+    assert.equal(saved.features.cricketTargetHighlighter.statusStyle, "legacy");
+  } finally { runtime.stop(); }
 });
 
 test("xConfig settings modal preserves node identity and scroll offsets during external sync", async () => {
@@ -1483,17 +1569,18 @@ test("xConfig shell renders every feature exactly once in ordered domain section
     "tv-board-zoom",
   ]);
   assert.deepEqual(readSectionCards("cricket-tactics"), [
+    "cricket-layout",
     "cricket-target-highlighter",
     "cricket-grid-status-effects",
   ]);
 
   const allCardFeatureKeys = documentRef.querySelectorAll(".ad-xconfig-card")
     .map((cardNode) => String(cardNode.getAttribute("data-feature-key") || ""));
-  assert.equal(allCardFeatureKeys.length, 21);
-  assert.equal(new Set(allCardFeatureKeys).size, 21);
+  assert.equal(allCardFeatureKeys.length, xconfigDescriptors.length);
+  assert.equal(new Set(allCardFeatureKeys).size, xconfigDescriptors.length);
   assert.deepEqual(
     sectionNodes.map((sectionNode) => sectionNode.querySelector(".ad-xconfig-section-count")?.textContent),
-    ["4 Kacheln", "9 Kacheln", "6 Kacheln", "2 Kacheln"]
+    ["4 Kacheln", "9 Kacheln", "6 Kacheln", "3 Kacheln"]
   );
 
   runtime.stop();
@@ -1652,7 +1739,7 @@ test("xConfig shell marks pending themes and animations as deprecated", async ()
     const featureKey = String(card.getAttribute("data-feature-key") || "");
     const expectedStatus = ["theme-global-background", "theme-global-typography", "theme-global-presets", "theme-game-layout", "bot-board-style", "turn-dart-display", "tv-board-zoom", "checkout-target-highlights", "checkout-suggestion-styles", "checkout-score-highlight", "avg-trend-arrow", "dart-marker-replacer", "dartboard-marker-highlight", "take-out-darts-alert",
       "single-bull-hit-sound", "special-hit-highlights", "turn-score-counter", "x01-remaining-score-bar", "x01-bust-active-player-highlight", "cricket-target-highlighter",
-      "cricket-grid-status-effects"].includes(
+      "cricket-grid-status-effects", "cricket-layout"].includes(
       featureKey
     )
       ? "ready"
@@ -2719,10 +2806,11 @@ test("xConfig shell hard reset clears all modules and recommended defaults prese
         config.features.checkoutSuggestionStyles.style === "stripe" &&
         config.features.checkoutSuggestionStyles.labelText === "CHECKOUT" &&
         config.features.specialHitHighlights.animationStyle === "electric-jolt" &&
-        config.features.cricketTargetHighlighter.irrelevantBoardDimStyle === "hatch" &&
-        config.features.cricketGridStatusEffects.intensity === "normal" &&
-        config.features.cricketGridStatusEffects.colorTheme === "high-contrast" &&
-        config.features.cricketGridStatusEffects.pressureOverlay === true &&
+        config.features.cricketTargetHighlighter.irrelevantBoardDimStyle === "smoke" &&
+        config.features.cricketGridStatusEffects.displayProfile === "calm" &&
+        config.features.cricketGridStatusEffects.intensity === "subtle" &&
+        config.features.cricketGridStatusEffects.colorTheme === "standard" &&
+        config.features.cricketGridStatusEffects.pressureOverlay === false &&
         config.features.dartboardMarkerHighlight.effect === "size-pulse" &&
         config.features.dartMarkerReplacer.hideOriginalMarkers === true &&
         config.features.dartMarkerReplacer.design === "germangiant" &&
