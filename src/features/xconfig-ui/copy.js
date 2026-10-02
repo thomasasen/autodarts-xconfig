@@ -916,10 +916,12 @@ export const xconfigFeatureCopy = deepFreeze({
     readmeDetailHeading: "Wichtiger Hinweis",
     readmeDetails: [
       "Auf dem virtuellen Board bleibt `Treffermarkierungen durch Darts ersetzen` aktiv und ersetzt sichtbare Treffermarkierungen durch Dart-Grafiken. Im Live-Modus pausiert das Modul automatisch, damit dort keine zusätzlichen Darts erscheinen.",
+      "`Realistische Wurfrichtung` richtet die Flights auch in der unteren Boardhälfte oberhalb des Trefferpunkts aus. `Flachere Dart-Perspektive` verkürzt die Dart-Grafik entlang ihrer Längsachse für einen Blick zum Betrachter. Beide Optionen sind unabhängig und standardmäßig aus; die Spitze bleibt am Trefferpunkt.",
       "Leistungsintensive Effekte können auf schwächeren Geräten zu Rucklern, verzögerter Darstellung oder weniger flüssigen Animationen führen.",
     ],
     featuresDetails: [
       "Auf dem virtuellen Board bleibt das Modul aktiv. Im Live-Modus pausiert es automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.",
+      "Die unabhängigen Optionen `Realistische Wurfrichtung` und `Flachere Dart-Perspektive` sind standardmäßig aus. Sie richten Flights nach oben aus beziehungsweise verkürzen die sichtbare Dart-Länge, ohne den Trefferpunkt zu verschieben.",
       "Leistungsintensive Effekte können auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.",
     ],
     images: [image("Treffermarkierungen durch Darts ersetzen", "dart-marker-replacer.webp")],
@@ -949,9 +951,19 @@ export const xconfigFeatureCopy = deepFreeze({
         "Verhindert Doppelanzeigen, indem die ursprüngliche Treffermarkierung unsichtbar gemacht wird, solange die Dart-Grafik aktiv ist. Auf dem virtuellen Board bleibt das Modul dabei aktiv, im Live-Modus pausiert es jedoch vollständig automatisch.",
         "Blendet die ursprünglichen Marker zugunsten der Dart-Grafiken aus. Im Live-Modus pausiert das Modul automatisch."
       ),
+      realisticDirection: fieldCopy(
+        "Richtet die Flights auf dem gesamten Board oberhalb des Trefferpunkts aus.",
+        "Stellt einen Wurf von einer gemeinsamen Position oberhalb des Boards dar. Auch unten zeigen die Flights nach oben, seitliche Treffer erhalten eine leichte Neigung. Die Fluganimation folgt dieser Richtung. Standardmäßig aus; die Dartspitze bleibt am Trefferpunkt.",
+        "Richtet Flights auch unten nach oben aus und passt die Flugrichtung an. Standardmäßig aus."
+      ),
+      flatPerspective: fieldCopy(
+        "Verkürzt die sichtbare Dart-Länge für eine flachere Perspektive zum Betrachter.",
+        "Verkürzt die Dart-Grafik entlang ihrer Längsachse auf 65 Prozent. Das nähert mit dem vorhandenen Dart-Bild einen Blick zum Betrachter an. Die Dart-Dicke und die Trefferposition bleiben erhalten; Schatten und Einschlagstil werden mitgeführt. Unabhängig von der Wurfrichtung und standardmäßig aus.",
+        "Verkürzt die sichtbare Dart-Länge perspektivisch. Unabhängig von der Wurfrichtung und standardmäßig aus."
+      ),
       impactStyle: fieldCopy(
         "Bestimmt, wie stark sich Winkel, Perspektive und Schatten der Darts unterscheiden. Natürlich ist sichtbar, aber dezent; Dramatisch wirkt kräftiger.",
-        "Klassisch erhält die bisherige einheitliche Ausrichtung. Natürlich gibt jedem Dart eine stabile, realistische Variation bei Winkel, Perspektive und Schatten. Dramatisch verstärkt diese Unterschiede für einen deutlicheren Demo- und TV-Look, ohne die Spitze vom Trefferpunkt zu verschieben.",
+        "Klassisch verzichtet auf zusätzliche Variation. Natürlich gibt jedem Dart eine stabile Variation bei Winkel, Perspektive und Schatten. Dramatisch verstärkt diese Unterschiede für einen deutlicheren Demo- und TV-Look. Alle Stile lassen sich mit realistischer Wurfrichtung und flacherer Dart-Perspektive kombinieren, ohne die Spitze vom Trefferpunkt zu verschieben.",
         "Regelt die stabile Variation von Dart-Winkel, Perspektive und Schatten."
       ),
       enableShadow: fieldCopy(

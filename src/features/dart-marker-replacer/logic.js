@@ -17,6 +17,7 @@ import {
   buildShadowPoseSettings,
   buildTipAnchoredPoseTransform,
   resolveDartImpactPose,
+  resolveDartRotationDeg,
 } from "./pose.js";
 import {
   DART_CLASS,
@@ -811,12 +812,6 @@ function getShadowSettings(dartLength, dartOpacity, visualConfig) {
   };
 }
 
-function getRotationDeg(center, boardCenter) {
-  const angleToCenter =
-    (Math.atan2(boardCenter.y - center.y, boardCenter.x - center.x) * 180) / Math.PI;
-  return angleToCenter - 180;
-}
-
 function setDartGeometry(entry, options = {}) {
   const imageNode = entry?.imageNode;
   const shadowNode = entry?.shadowNode;
@@ -827,7 +822,6 @@ function setDartGeometry(entry, options = {}) {
   }
 
   const center = options.center;
-  const boardCenter = options.boardCenter;
   const dartLength = options.dartLength;
   const dartHeight = options.dartHeight;
   const sourceUrl = options.sourceUrl;
@@ -838,7 +832,10 @@ function setDartGeometry(entry, options = {}) {
   const y = center.y - offsets.offsetY;
   const rotationDeg = Number.isFinite(options.rotationDeg)
     ? Number(options.rotationDeg)
-    : getRotationDeg(center, boardCenter);
+    : resolveDartRotationDeg({
+      ...options,
+      realisticDirection: visualConfig.realisticDirection,
+    });
   const dartOpacity = DART_OPACITY;
   const shadowSettings = getShadowSettings(dartLength, dartOpacity, visualConfig);
   const pose = resolveDartImpactPose({
@@ -850,6 +847,7 @@ function setDartGeometry(entry, options = {}) {
     tip: center,
     dartLength,
     pose,
+    flatPerspective: visualConfig.flatPerspective,
   });
 
   if (sourceUrl) {
@@ -1047,9 +1045,14 @@ function cancelEntryFlight(state, entry) {
   }
 }
 
-function getFlightOffsets(center, boardCenter, dartLength) {
+function getFlightOffsets(center, boardCenter, dartLength, rotationDeg) {
   let dx = center.x - boardCenter.x;
   let dy = center.y - boardCenter.y;
+  if (Number.isFinite(rotationDeg)) {
+    const theta = rotationDeg * Math.PI / 180;
+    dx = Math.cos(theta);
+    dy = Math.sin(theta);
+  }
   let length = Math.hypot(dx, dy);
 
   if (!Number.isFinite(length) || length < 0.001) {
@@ -1131,6 +1134,7 @@ function buildDartGeometrySignature({
     Number(dartLength || 0).toFixed(2),
     Number(dartHeight || 0).toFixed(2),
     Number(rotationDeg || 0).toFixed(2),
+    visualConfig?.flatPerspective ? "flat-on" : "flat-off",
     pose.impactStyle,
     Number(pose.rotationJitterDeg).toFixed(4),
     Number(pose.skewYDeg).toFixed(4),
@@ -1156,6 +1160,8 @@ function buildVisualSignature(visualConfig, sourceUrl) {
     visualConfig?.animateDarts ? "animate-on" : "animate-off",
     visualConfig?.hideOriginalMarkers ? "hide-on" : "hide-off",
     String(visualConfig?.impactStyle || "classic"),
+    visualConfig?.realisticDirection ? "real-direction-on" : "real-direction-off",
+    visualConfig?.flatPerspective ? "flat-on" : "flat-off",
     visualConfig?.enableShadow ? "shadow-on" : "shadow-off",
     visualConfig?.enableShadowBlur ? "shadow-blur-on" : "shadow-blur-off",
     visualConfig?.enableWobble ? "wobble-on" : "wobble-off",
@@ -1204,7 +1210,10 @@ function applyDartGeometryIfNeeded(entry, options = {}) {
     return false;
   }
 
-  const rotationDeg = getRotationDeg(options.center, options.boardCenter);
+  const rotationDeg = resolveDartRotationDeg({
+    ...options,
+    realisticDirection: options.visualConfig?.realisticDirection,
+  });
   const signature = buildDartGeometrySignature({
     ...options,
     rotationDeg,
@@ -1232,7 +1241,10 @@ function triggerFlightAnimation(entry, state, visualConfig, boardCenter, feature
   }
 
   const flightGroup = entry.container;
-  const offsets = getFlightOffsets(entry.center, boardCenter, entry.dartLength);
+  const offsets = getFlightOffsets(
+    entry.center, boardCenter, entry.dartLength,
+    visualConfig.realisticDirection ? entry.rotationDeg : undefined
+  );
   const duration = Math.max(0, Number(visualConfig.flightDurationMs) || 0);
   const flightBlurEnabled = Boolean(visualConfig.enableFlightBlur);
   const flightKeyframes = [
@@ -1852,6 +1864,7 @@ export function updateDartMarkerReplacer(options = {}) {
       index,
       center,
       boardCenter,
+      boardRadius: radiusPx,
       dartLength,
       dartHeight,
       sourceUrl: dartImageSource,

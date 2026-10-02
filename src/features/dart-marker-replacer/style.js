@@ -61,6 +61,8 @@ export function resolveDartMarkerReplacerConfig(featureConfig = {}) {
     sizePercent,
     sizeMultiplier: (sizePercent / 100) * 1.3,
     hideOriginalMarkers: normalizeBoolean(featureConfig.hideOriginalMarkers, false),
+    realisticDirection: normalizeBoolean(featureConfig.realisticDirection, false),
+    flatPerspective: normalizeBoolean(featureConfig.flatPerspective, false),
     impactStyle: normalizeDartImpactStyle(featureConfig.impactStyle),
     enableShadow: normalizeBoolean(featureConfig.enableShadow, true),
     enableShadowBlur: normalizeBoolean(featureConfig.enableShadowBlur, true),

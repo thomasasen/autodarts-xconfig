@@ -524,6 +524,7 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 - Grafisch: Statt des normalen Markers liegt ein Dart-Bild im getroffenen Segment. Auf Wunsch fliegt der Dart sichtbar ein, bevor er an seiner Zielposition landet.
 - Wann sinnvoll? Wenn du Treffer auf dem virtuellen Board persönlicher oder realistischer darstellen möchtest.
 - Auf dem virtuellen Board bleibt das Modul aktiv. Im Live-Modus pausiert es automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.
+- Die unabhängigen Optionen `Realistische Wurfrichtung` und `Flachere Dart-Perspektive` sind standardmäßig aus. Sie richten Flights nach oben aus beziehungsweise verkürzen die sichtbare Dart-Länge, ohne den Trefferpunkt zu verschieben.
 - Leistungsintensive Effekte können auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.
 - `Dart-Demo`: Startet eine direkte Vorschau mit dem aktuell konfigurierten Dart-Design.
 - `Dart-Design`: Wählt das Bilddesign der eingeblendeten Darts.
@@ -557,6 +558,8 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Standard`: Diese Einstellung verwendet die reguläre Grundgröße für den Dart-Marker. Der Dart ist klar sichtbar, ohne den Trefferbereich unnötig stark zu füllen.
   - `Groß`: Diese Stufe vergrößert die Dart-Grafik sichtbar über die Standardgröße hinaus. Treffer wirken dadurch präsenter, nehmen aber auch mehr vom Segmentbild ein.
 - `Original-Marker ausblenden`: Blendet die ursprünglichen Marker zugunsten der Dart-Grafiken aus. Im Live-Modus pausiert das Modul automatisch.
+- `Realistische Wurfrichtung`: Richtet Flights auch unten nach oben aus und passt die Flugrichtung an. Standardmäßig aus.
+- `Flachere Dart-Perspektive`: Verkürzt die sichtbare Dart-Länge perspektivisch. Unabhängig von der Wurfrichtung und standardmäßig aus.
 - `Einschlagstil`: Regelt die stabile Variation von Dart-Winkel, Perspektive und Schatten.
   - `Klassisch`: Der Dart-Einschlag bleibt klassisch und einheitlich ausgerichtet.
   - `Natürlich`: Darts wirken natürlicher, bleiben aber kontrolliert und gut lesbar.

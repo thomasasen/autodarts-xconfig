@@ -128,6 +128,14 @@ test("dart marker replacer impact style defaults and normalization stay compatib
   assert.equal(spec.normalizeConfig({ impactStyle: "natural" }).impactStyle, "natural");
   assert.equal(spec.normalizeConfig({ impactStyle: "dramatic" }).impactStyle, "dramatic");
   assert.equal(spec.normalizeConfig({ impactStyle: "invalid" }).impactStyle, "classic");
+  for (const key of ["realisticDirection", "flatPerspective"]) {
+    assert.equal(spec.createDefaultConfig()[key], false);
+    assert.equal(createRecommendedFeatureConfig("dartMarkerReplacer")[key], false);
+    assert.equal(spec.normalizeConfig({ [key]: true })[key], true);
+    assert.equal(spec.normalizeConfig({ [key]: "true" })[key], true);
+    assert.equal(spec.normalizeConfig({ [key]: "false" })[key], false);
+    assert.equal(spec.normalizeConfig({ [key]: "invalid" })[key], false);
+  }
 });
 
 test("bot board style defaults and normalization stay restricted to the bundled choices", () => {
@@ -279,6 +287,8 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     animateDarts: true,
     sizePercent: 120,
     hideOriginalMarkers: true,
+    realisticDirection: false,
+    flatPerspective: false,
     impactStyle: "dramatic",
     enableShadow: true,
     enableShadowBlur: true,

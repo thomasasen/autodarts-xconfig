@@ -3491,6 +3491,13 @@ test("xConfig dart design options render split layout with preview and active ba
 
   clickSelectSettingOption(documentRef, "dart-marker-replacer", "design", "red");
   await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerReplacer.design === "red");
+  assert.equal(JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features.dartMarkerReplacer.realisticDirection, false);
+  assert.equal(JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features.dartMarkerReplacer.flatPerspective, false);
+  clickSettingToggle(documentRef, "dart-marker-replacer", "realisticDirection", true);
+  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerReplacer.realisticDirection === true);
+  assert.equal(JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features.dartMarkerReplacer.flatPerspective, false);
+  clickSettingToggle(documentRef, "dart-marker-replacer", "flatPerspective", true);
+  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerReplacer.flatPerspective === true);
   clickSettingToggle(documentRef, "dart-marker-replacer", "enableShadow", false);
   await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerReplacer.enableShadow === false);
   clickSettingToggle(documentRef, "dart-marker-replacer", "enableShadowBlur", false);
@@ -3502,6 +3509,8 @@ test("xConfig dart design options render split layout with preview and active ba
 
   const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.dartMarkerReplacer.design, "red");
+  assert.equal(storedConfig.features.dartMarkerReplacer.realisticDirection, true);
+  assert.equal(storedConfig.features.dartMarkerReplacer.flatPerspective, true);
   assert.equal(storedConfig.features.dartMarkerReplacer.enableShadow, false);
   assert.equal(storedConfig.features.dartMarkerReplacer.enableShadowBlur, false);
   assert.equal(storedConfig.features.dartMarkerReplacer.enableWobble, false);

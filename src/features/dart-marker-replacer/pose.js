@@ -1,4 +1,19 @@
 const IMPACT_STYLES = new Set(["classic", "natural", "dramatic"]);
+const FLAT_PERSPECTIVE_SCALE_X = 0.65;
+
+export function resolveDartRotationDeg(options = {}) {
+  const { center, boardCenter } = options;
+  if (!options.realisticDirection) {
+    const angleToCenter = Math.atan2(boardCenter.y - center.y, boardCenter.x - center.x);
+    return angleToCenter * 180 / Math.PI - 180;
+  }
+
+  const radius = Math.max(1, Number(options.boardRadius) || 1);
+  // Project a shared throwing position above the board; bound misses to keep the tail above the tip.
+  const dx = clamp(center.x - boardCenter.x, -radius, radius);
+  const dy = clamp(center.y - boardCenter.y, -radius, radius);
+  return Math.atan2(-radius * 2.5 - dy, -dx) * 180 / Math.PI;
+}
 
 const POSE_RANGES = Object.freeze({
   natural: Object.freeze({
@@ -79,7 +94,7 @@ export function buildTipAnchoredPoseTransform(options = {}) {
   const tipX = Number(options.tip?.x) || 0;
   const tipY = Number(options.tip?.y) || 0;
   const dartLength = Math.max(1, Number(options.dartLength) || 1);
-  if (pose.impactStyle === "classic") {
+  if (pose.impactStyle === "classic" && !options.flatPerspective) {
     return {
       transform: "",
       matrix: { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 },
@@ -89,7 +104,8 @@ export function buildTipAnchoredPoseTransform(options = {}) {
   const rotation = (Number(pose.rotationJitterDeg) || 0) * Math.PI / 180;
   const shear = Math.tan((Number(pose.skewYDeg) || 0) * Math.PI / 180) +
     (Number(pose.tailLiftPx) || 0) / dartLength;
-  const scaleX = Number(pose.scaleX) || 1;
+  const scaleX = (Number(pose.scaleX) || 1) *
+    (options.flatPerspective ? FLAT_PERSPECTIVE_SCALE_X : 1);
   const scaleY = Number(pose.scaleY) || 1;
   const cos = Math.cos(rotation);
   const sin = Math.sin(rotation);

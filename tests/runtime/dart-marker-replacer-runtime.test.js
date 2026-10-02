@@ -84,6 +84,11 @@ test("dart-marker-replacer resolves size settings thirty percent larger with leg
   assert.equal(resolveDartMarkerReplacerConfig({ sizePercent: 999 }).sizePercent, 120);
   assert.equal(resolveDartMarkerReplacerConfig({ impactStyle: "natural" }).impactStyle, "natural");
   assert.equal(resolveDartMarkerReplacerConfig({ impactStyle: "invalid" }).impactStyle, "classic");
+  assert.equal(resolveDartMarkerReplacerConfig().realisticDirection, false);
+  assert.equal(resolveDartMarkerReplacerConfig().flatPerspective, false);
+  assert.equal(resolveDartMarkerReplacerConfig({ realisticDirection: "true" }).realisticDirection, true);
+  assert.equal(resolveDartMarkerReplacerConfig({ flatPerspective: "true" }).flatPerspective, true);
+  assert.equal(resolveDartMarkerReplacerConfig({ flatPerspective: "false" }).flatPerspective, false);
 });
 
 test("dart-marker-replacer stays above the board but below the Autodarts winner overlay", () => {
@@ -463,6 +468,107 @@ test("dart-marker-replacer separates flight, rotation, pose, and image layers", 
   assert.equal(entry.shadowNode.__animations.length, 1);
 
   clearDartMarkerReplacerState(state);
+});
+
+test("dart-marker-replacer opt-in direction updates cached lower-board darts without replaying flights", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const { markers } = installBoardFixture(documentRef, [{
+    cx: 0, cy: 0, r: 5, rectWidth: 4, rectHeight: 4, rectLeft: 448, rectTop: 518,
+  }]);
+  const state = createDartMarkerReplacerState(windowRef);
+  const update = (realisticDirection) => updateDartMarkerReplacer({
+    documentRef, state,
+    visualConfig: { ...ANIMATED_VISUAL_CONFIG, realisticDirection },
+    updateMode: { requiresBoardRescan: false, requiresMarkerRescan: false },
+  });
+  update(false);
+  const entry = state.entriesByMarker.get(markers[0]);
+  const originalRotation = entry.rotateGroup.getAttribute("transform");
+  const originalTip = { ...entry.tipPointLocal };
+  assert.ok(Math.sin(entry.rotationDeg * Math.PI / 180) > 0, "legacy flight points down");
+  update(true);
+  assert.ok(Math.sin(entry.rotationDeg * Math.PI / 180) < 0, "opt-in flight points up");
+  assert.deepEqual(entry.tipPointLocal, originalTip);
+  assert.equal(entry.container.__animations.length, 1);
+  update(false);
+  assert.equal(entry.rotateGroup.getAttribute("transform"), originalRotation);
+  clearDartMarkerReplacerState(state);
+});
+
+test("dart-marker-replacer real-direction flights arrive from above even on the lower board", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  installBoardFixture(documentRef, [{
+    cx: 450, cy: 520, r: 5, matrix: { a: 1, d: 1, e: 0, f: 0 },
+  }]);
+  const state = createDartMarkerReplacerState(windowRef);
+  updateDartMarkerReplacer({
+    documentRef, state,
+    visualConfig: { ...ANIMATED_VISUAL_CONFIG, realisticDirection: true },
+  });
+  const keyframes = getFlightGroups(documentRef)[0].__animations[0].keyframes;
+  for (const frame of keyframes.slice(0, 2)) {
+    const y = Number(/translate\([^,]+,\s*([-+0-9.eE]+)px\)/.exec(frame.transform)?.[1]);
+    assert.ok(y < 0, "flight starts and approaches above its impact point");
+  }
+  clearDartMarkerReplacerState(state);
+});
+
+test("dart-marker-replacer flat perspective updates cached geometry and resets without moving the tip", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const { markers } = installBoardFixture(documentRef, [{
+    cx: 0, cy: 0, r: 5, rectWidth: 4, rectHeight: 4, rectLeft: 448, rectTop: 518,
+  }]);
+  const state = createDartMarkerReplacerState(windowRef);
+  const update = (flatPerspective) => updateDartMarkerReplacer({
+    documentRef, state,
+    visualConfig: { ...VISUAL_CONFIG, flatPerspective },
+    updateMode: { requiresBoardRescan: false, requiresMarkerRescan: false },
+  });
+  update(false);
+  const entry = state.entriesByMarker.get(markers[0]);
+  const originalTip = { ...entry.tipPointLocal };
+  const originalRotation = entry.rotateGroup.getAttribute("transform");
+  update(true);
+  const matrix = entry.poseGroup.getAttribute("transform").slice(7, -1).split(" ").map(Number);
+  const [a, b, c, d, e, f] = matrix;
+  assert.ok(a < 0.7, "foreshortens the long axis");
+  approxEqual(a * originalTip.x + c * originalTip.y + e, originalTip.x, 1e-5);
+  approxEqual(b * originalTip.x + d * originalTip.y + f, originalTip.y, 1e-5);
+  assert.equal(entry.rotateGroup.getAttribute("transform"), originalRotation);
+  assert.equal(entry.shadowNode.parentNode, entry.poseGroup);
+  const flatTransform = entry.poseGroup.getAttribute("transform");
+  update(true);
+  assert.equal(entry.poseGroup.getAttribute("transform"), flatTransform);
+  update(false);
+  assert.equal(entry.poseGroup.getAttribute("transform"), null);
+  assert.deepEqual(entry.tipPointLocal, originalTip);
+  clearDartMarkerReplacerState(state);
+});
+
+test("dart-marker-replacer demo reflects both opt-in settings and resets them on the next preview", () => {
+  const documentRef = new FakeDocument();
+  installAppendSupport(documentRef);
+  const windowRef = createFakeWindow({ documentRef });
+  const targetNode = documentRef.createElement("div");
+  documentRef.body.appendChild(targetNode);
+  const preview = (featureConfig) => runDartMarkerReplacerPreview({
+    documentRef, windowRef, targetNode, featureConfig: { animateDarts: false, ...featureConfig },
+  });
+  preview({ realisticDirection: true, flatPerspective: true });
+  const rotate = targetNode.querySelector(`g.${DART_ROTATE_CLASS}`);
+  const rotationDeg = Number(/rotate\(([-+0-9.eE]+)/.exec(rotate.getAttribute("transform"))?.[1]);
+  assert.ok(rotationDeg < -90 && rotationDeg > -135, "demo tail points above its tip");
+  const pose = targetNode.querySelector(`g.${DART_POSE_CLASS}`);
+  assert.match(pose.getAttribute("transform"), /^matrix\(0\.65 0 0 1 /);
+  const marker = targetNode.querySelector(".ad-ext-dart-marker-replacer-preview-marker");
+  assert.equal(marker.style.opacity, "1");
+  preview({});
+  assert.equal(targetNode.querySelector(`g.${DART_ROTATE_CLASS}`).getAttribute("transform"), "rotate(18 194 70)");
+  assert.equal(targetNode.querySelector(`g.${DART_POSE_CLASS}`).getAttribute("transform"), null);
+  assert.equal(targetNode.querySelectorAll(`g.${DART_CONTAINER_CLASS}`).length, 1);
 });
 
 test("dart-marker-replacer supports configurable shadow, shadow blur, wobble, and flight blur effects", () => {

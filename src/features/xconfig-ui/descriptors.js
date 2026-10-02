@@ -753,6 +753,8 @@ export const xconfigDescriptors = Object.freeze([
         [108, "Klein"], [120, "Standard"], [138, "Groß"],
       ]),
       checkboxField("hideOriginalMarkers", "Original-Marker ausblenden"),
+      checkboxField("realisticDirection", "Realistische Wurfrichtung"),
+      checkboxField("flatPerspective", "Flachere Dart-Perspektive"),
       selectValueLabelField("impactStyle", "Einschlagstil", [
         ["classic", "Klassisch"], ["natural", "Natürlich"], ["dramatic", "Dramatisch"],
       ]),

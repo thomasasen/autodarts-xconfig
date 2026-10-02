@@ -24,6 +24,7 @@ import {
   buildShadowPoseSettings,
   buildTipAnchoredPoseTransform,
   resolveDartImpactPose,
+  resolveDartRotationDeg,
 } from "./pose.js";
 
 const PREVIEW_ID = "ad-ext-dart-marker-replacer-preview";
@@ -158,10 +159,13 @@ function animatePreviewDart(entry, visualConfig, windowRef, session) {
   const durationMs = Math.max(0, Number(visualConfig.flightDurationMs) || 0);
   const blurStart = visualConfig.enableFlightBlur ? "blur(2px)" : "blur(0px)";
   const blurMid = visualConfig.enableFlightBlur ? "blur(1px)" : "blur(0px)";
+  const theta = entry.rotationDeg * Math.PI / 180;
+  const startX = visualConfig.realisticDirection ? Math.cos(theta) * 104 : 104;
+  const startY = visualConfig.realisticDirection ? Math.sin(theta) * 104 : -26;
   const flightAnimation = entry.container.animate(
     [
-      { transform: "translate(104px,-26px) scale(.94)", opacity: 0.2, filter: blurStart },
-      { transform: "translate(34px,-8px) scale(.98)", opacity: 0.76, filter: blurMid },
+      { transform: `translate(${startX}px,${startY}px) scale(.94)`, opacity: 0.2, filter: blurStart },
+      { transform: `translate(${visualConfig.realisticDirection ? startX / 3 : 34}px,${visualConfig.realisticDirection ? startY / 3 : -8}px) scale(.98)`, opacity: 0.76, filter: blurMid },
       { transform: "translate(0,0) scale(1)", opacity: 1, filter: "blur(0px)" },
     ],
     {
@@ -293,9 +297,15 @@ export function runDartMarkerReplacerPreview(options = {}) {
   const container = createSvgElement(documentRef, "g", {
     class: DART_CONTAINER_CLASS,
   });
+  const rotationDeg = visualConfig.realisticDirection ? resolveDartRotationDeg({
+    center: target,
+    boardCenter: { x: 160, y: 84 },
+    boardRadius: 62,
+    realisticDirection: true,
+  }) : 18;
   const rotateGroup = createSvgElement(documentRef, "g", {
     class: DART_ROTATE_CLASS,
-    transform: `rotate(18 ${target.x} ${target.y})`,
+    transform: `rotate(${rotationDeg} ${target.x} ${target.y})`,
   });
   const pose = resolveDartImpactPose({
     markerKey: "preview-marker",
@@ -306,6 +316,7 @@ export function runDartMarkerReplacerPreview(options = {}) {
     tip: target,
     dartLength,
     pose,
+    flatPerspective: visualConfig.flatPerspective,
   });
   const poseGroup = createSvgElement(documentRef, "g", {
     class: DART_POSE_CLASS,
@@ -355,7 +366,7 @@ export function runDartMarkerReplacerPreview(options = {}) {
   }
 
   const durationMs = animatePreviewDart(
-    { container, shadowNode, imageNode },
+    { container, shadowNode, imageNode, rotationDeg },
     visualConfig,
     windowRef,
     session
