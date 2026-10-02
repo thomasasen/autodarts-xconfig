@@ -124,12 +124,12 @@ export function buildThemeGameLayoutStyleText() {
   font-size:calc(16.5px * var(--ad-game-layout-turn-scale))!important;
   line-height:1!important;
 }
-[data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:first-child>*{
+[data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:first-child>*:not(.ad-ext-hit-highlight){
   transform:none!important;
   transform-origin:center!important;
 }
-[data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:first-child>*>span[aria-hidden="true"],
-[data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:first-child>*>span:not([aria-hidden="true"]){
+[data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:first-child>*>span[aria-hidden="true"]:not(.ad-ext-hit-effect-layer,.ad-ext-hit-frame-layer),
+[data-ad-ext-game-layout-turn-slot="true"] .bg-surface-surface>:first-child>*>span:not([aria-hidden="true"],.ad-ext-hit-score,.ad-ext-hit-segment){
   animation:none!important;
   transition:none!important;
 }

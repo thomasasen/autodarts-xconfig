@@ -518,6 +518,27 @@ test("board-focus ignores hit-effect layers when protecting native correction ic
   );
 });
 
+test("board-focus preserves special-hit motion while suppressing native slot animations", () => {
+  const styleText = buildThemeGameLayoutStyleText();
+
+  assert.match(
+    styleText,
+    /bg-surface-surface>:first-child>\*:not\(\.ad-ext-hit-highlight\)\{\s*transform:none!important;\s*transform-origin:center!important;/
+  );
+  assert.doesNotMatch(
+    styleText,
+    /bg-surface-surface>:first-child>\*\{[^}]*transform:none!important/
+  );
+  assert.match(
+    styleText,
+    /span\[aria-hidden="true"\]:not\(\.ad-ext-hit-effect-layer,\.ad-ext-hit-frame-layer\),\s*[^{}]*>span:not\(\[aria-hidden="true"\],\.ad-ext-hit-score,\.ad-ext-hit-segment\)\{\s*animation:none!important;\s*transition:none!important;/
+  );
+  assert.doesNotMatch(
+    styleText,
+    />span:not\(\[aria-hidden="true"\]\)\{[^}]*animation:none!important/
+  );
+});
+
 test("board-focus keeps highlighted and regular throw values at the same font size", () => {
   const styleText = buildThemeGameLayoutStyleText();
 
