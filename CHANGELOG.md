@@ -12,6 +12,25 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.3.0] - 2026-10-02
+
+### Added
+
+- Nutzerwirkung: Cricket und Tactics erhalten ein eigenes Layout mit Profilen für ausgewogene Darstellung, Fernansicht und mehrere Spieler. Tabellen- und Board-Aufteilung, Markierungen, Namen und MPR lassen sich anpassen; Tactics kann eigene Einstellungen verwenden.
+  Technik: Ein separates Layout-Modul berechnet die Darstellung aus Spieler- und Zielanzahl, verwaltet die Dekoration der nativen Spielfläche und integriert normalisierte Profile sowie Tactics-Overrides in xConfig und den Konfigurationstransfer.
+- Nutzerwirkung: Ersetzte Dartmarker können optional eine realistische Wurfrichtung und eine flachere Perspektive erhalten. Beide Optionen sind unabhängig wählbar und in der Vorschau sichtbar.
+  Technik: Die Rotation kann aus einer gemeinsamen Wurfposition abgeleitet werden; die flachere Projektion bleibt an der Dartspitze verankert. Laufzeit, Vorschau und Konfigurationsnormalisierung teilen dieselben Optionen.
+
+### Changed
+
+- Nutzerwirkung: Cricket- und Tactics-Zustände lassen sich mit ruhigen oder belebten Profilen, Farben und Mustern sowie abgestuftem Trefferfeedback darstellen. Schwebende Bedienelemente geben der Board-Fläche mehr Platz.
+  Technik: Gemeinsame Anzeigeprofile steuern Board- und Tabellenstile mit kompatiblen Konfigurationsaliasen. Das Game Layout übernimmt den Lebenszyklus der schwebenden Steuerung auch für die moderne Cricket-Fläche.
+
+### Fixed
+
+- Nutzerwirkung: Besondere Treffer behalten ihre Hervorhebungsanimationen auch bei aktiviertem Game Layout.
+  Technik: Die Layout-Regeln für native Wurffelder nehmen die verwalteten Treffer-, Rahmen-, Score- und Segmentebenen von Transform- und Animationsresets aus; eine Regression sichert diese Ausnahmen ab.
+
 ## [3.2.2] - 2026-10-01
 
 ### Changed
@@ -2269,6 +2288,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.3.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.2.2...v3.3.0
 [3.2.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.2.1...v3.2.2
 [3.2.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.2.0...v3.2.1
 [3.2.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.1.15...v3.2.0

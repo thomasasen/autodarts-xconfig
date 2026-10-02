@@ -7,6 +7,11 @@ import { STYLE_ID, buildCricketLayoutStyleText } from "./style.js";
 
 const FEATURE_KEY = "cricket-layout";
 
+function isCricketScoreNode(node, mprNodes) {
+  return !mprNodes.some((mpr) => mpr === node || mpr.contains(node)) &&
+    /^[\d\s.,+-]+$/.test(String(node.textContent || "").trim());
+}
+
 function resolvePanels(grid, documentRef) {
   const svg = findBoardSvgRoot(documentRef);
   const board = svg?.closest?.(NATIVE_BOARD_SELECTOR);
@@ -137,13 +142,15 @@ export function mountCricketLayout(context = {}) {
           set(shape, "data-ad-cricket-nameplate-shape", "true");
         }
       }
-      const isMpr = (node) => /^MPR\s*:?\s*[\d.,]*$/i.test(String(node?.textContent || "").trim());
+      const isMpr = (node) => /^MPR\s*(?::\s*)?[\d.,]*$/i.test(String(node?.textContent || "").trim());
       const mprNodes = Array.from(header.querySelectorAll("span,div,p")).filter((node) =>
         isMpr(node) && !isMpr(node.parentElement));
       const numericNodes = Array.from(header.querySelectorAll(".font-number")).filter((node) =>
-        !mprNodes.some((mpr) => mpr === node || mpr.contains(node)) && /^[\d\s.,+-]+$/.test(String(node.textContent || "").trim()));
+        isCricketScoreNode(node, mprNodes));
       const boldScores = numericNodes.filter((node) => node.classList.contains("font-bold"));
-      const score = boldScores.length === 1 ? boldScores[0] : numericNodes.length === 1 ? numericNodes[0] : null;
+      let score = null;
+      if (boldScores.length === 1) score = boldScores[0];
+      else if (numericNodes.length === 1) score = numericNodes[0];
       if (score) {
         set(score, "data-ad-cricket-score", "true");
         // Current native heads render unlabeled statistic badges beside the main score.

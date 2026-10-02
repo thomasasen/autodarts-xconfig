@@ -211,6 +211,19 @@ test("nested MPR values are treated as one statistic and never resized as score 
   assert.equal(statistic.getAttribute("data-ad-cricket-mpr-value"), null);
 });
 
+test("MPR labels accept native spacing and optional colons while rejecting malformed long labels", () => {
+  const labels = ["MPR", "MPR2.6", "MPR 2.6", "MPR: 2.6", "mpr : 2,6", `MPR${" ".repeat(10_000)}x`, "MPR: 2.6 points"];
+  for (const [index, text] of labels.entries()) {
+    const host = fixture(1);
+    const statistic = host.headers[0].children.at(-1);
+    statistic.textContent = text;
+    const cleanup = mountCricketLayout(host.context);
+    assert.equal(statistic.getAttribute("data-ad-cricket-mpr-value"), index < 5 ? "true" : null, text.slice(0, 30));
+    assert.equal(host.headers[0].querySelector(".font-number").getAttribute("data-ad-cricket-score"), "true");
+    cleanup();
+  }
+});
+
 test("native score and unlabeled statistic badges remain separate, with statistics hidden independently", () => {
   const host = fixture(2, true);
   const header = host.headers[0];

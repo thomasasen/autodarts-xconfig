@@ -13,7 +13,7 @@ import { createListenerRegistry } from "./listener-registry.js";
 import { createObserverRegistry } from "./observer-registry.js";
 
 const GLOBAL_NAMESPACE_KEY = "__adXConfig";
-export const API_VERSION = "3.2.2";
+export const API_VERSION = "3.3.0";
 const STARTUP_DEFER_INTERVAL_MS = 16;
 
 function getWindowTimerApi(windowRef) {

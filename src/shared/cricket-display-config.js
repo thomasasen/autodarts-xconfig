@@ -30,6 +30,21 @@ export function resolveCricketFeedback(values) {
   return values.deltaChips ? "custom" : "off";
 }
 
+function buildCricketGridSettingValues(key, value) {
+  if (key === "feedback" && value !== "custom") return { hitSpark: value !== "off", deltaChips: value === "changes" };
+  if (key === "scoringStyle" && value !== "legacy") return { scoringStyle: value, scoringStripe: value !== "off", scoringLane: value !== "off" };
+  if (key === "pressureStyle" && value !== "legacy") return { pressureStyle: value, pressureEdge: value !== "off", threatEdge: value !== "off", pressureOverlay: value === "surface", opponentPressureOverlay: value === "surface" };
+  const aliases = { pressureEdge: "threatEdge", scoringStripe: "scoringLane", deadRowMuted: "deadRowCollapse", pressureOverlay: "opponentPressureOverlay" };
+  if (aliases[key]) {
+    // Advanced switches take over their presentation so an earlier "off" preset cannot mask them.
+    let style = {};
+    if (key === "scoringStripe") style = { scoringStyle: "legacy" };
+    else if (["pressureEdge", "pressureOverlay"].includes(key)) style = { pressureStyle: "legacy" };
+    return { [key]: value, [aliases[key]]: value, ...style };
+  }
+  return { [key]: value };
+}
+
 export function buildCricketDisplaySettingValues(configKey, key, value) {
   const profiles = configKey === "cricketGridStatusEffects" ? CRICKET_GRID_PROFILES : CRICKET_BOARD_PROFILES;
   if (key === "displayProfile" && profiles[value]) {
@@ -39,21 +54,9 @@ export function buildCricketDisplaySettingValues(configKey, key, value) {
       : { showOpenTargets: values.showOpenObjectives, showDeadTargets: values.showDeadObjectives, dimIrrelevantBoardTargets: values.irrelevantBoardDimStyle !== "off" };
     return { ...values, ...aliases, displayProfile: value };
   }
-  if (configKey === "cricketGridStatusEffects") {
-    if (key === "feedback" && value !== "custom") return { hitSpark: value !== "off", deltaChips: value === "changes" };
-    if (key === "scoringStyle" && value !== "legacy") return { scoringStyle: value, scoringStripe: value !== "off", scoringLane: value !== "off" };
-    if (key === "pressureStyle" && value !== "legacy") return { pressureStyle: value, pressureEdge: value !== "off", threatEdge: value !== "off", pressureOverlay: value === "surface", opponentPressureOverlay: value === "surface" };
-    const aliases = { pressureEdge: "threatEdge", scoringStripe: "scoringLane", deadRowMuted: "deadRowCollapse", pressureOverlay: "opponentPressureOverlay" };
-    if (aliases[key]) {
-      // Advanced switches take over their presentation so an earlier "off" preset cannot mask them.
-      const style = key === "scoringStripe" ? { scoringStyle: "legacy" }
-        : ["pressureEdge", "pressureOverlay"].includes(key) ? { pressureStyle: "legacy" } : {};
-      return { [key]: value, [aliases[key]]: value, ...style };
-    }
-  } else {
-    if (key === "irrelevantBoardDimStyle") return { [key]: value, dimIrrelevantBoardTargets: value !== "off" };
-    const aliases = { showOpenObjectives: "showOpenTargets", showDeadObjectives: "showDeadTargets" };
-    if (aliases[key]) return { [key]: value, [aliases[key]]: value };
-  }
+  if (configKey === "cricketGridStatusEffects") return buildCricketGridSettingValues(key, value);
+  if (key === "irrelevantBoardDimStyle") return { [key]: value, dimIrrelevantBoardTargets: value !== "off" };
+  const aliases = { showOpenObjectives: "showOpenTargets", showDeadObjectives: "showDeadTargets" };
+  if (aliases[key]) return { [key]: value, [aliases[key]]: value };
   return { [key]: value };
 }

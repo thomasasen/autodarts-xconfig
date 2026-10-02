@@ -137,7 +137,10 @@ function replaceMarkedSection(documentText, replacement) {
 function syncReadme() {
   const current = readFileSync(readmePath, "utf8");
   const replacement = buildReadmeFeatureDocs();
-  const next = replaceMarkedSection(current, replacement);
+  const next = replaceMarkedSection(current, replacement).replace(
+    /## Im Überblick\r?\n[\s\S]*?(?=\r?\n## )/,
+    `${buildXConfigOverviewSection("Im Überblick", overviewCounts).trim()}\n`
+  );
   writeFileSync(readmePath, next, "utf8");
 }
 

@@ -7,7 +7,9 @@ export function calculateCricketLayout(options = {}) {
   const height = Math.max(1, Number(options.height) || 500);
   const settings = options.settings || {};
   const automaticShare = clamp(.49 + (playerCount - 2) * .035 + (targetCount === 12 ? .04 : 0), .46, .67);
-  const tableShare = settings.space === "table" ? .67 : settings.space === "board" ? .43 : automaticShare;
+  let tableShare = automaticShare;
+  if (settings.space === "table") tableShare = .67;
+  else if (settings.space === "board") tableShare = .43;
   const gap = Math.min(settings.density === "compact" || targetCount === 12 ? 2 : 4, height / (targetCount * 8));
   const labelWidth = Math.min(width * .2, clamp(width * .075, 36, 64));
   const columnWidth = Math.max(20, (width - labelWidth - gap * playerCount) / playerCount);
@@ -16,7 +18,9 @@ export function calculateCricketLayout(options = {}) {
   const rowHeight = Math.max(1, (height - headerHeight - gap * targetCount) / targetCount);
   const maxMark = Math.max(1, Math.min(rowHeight - 6, columnWidth - 8));
   const preferredMark = settings.markSize === "very-large" ? 60 : 44;
-  const preferredTarget = settings.targetSize === "very-large" ? 38 : settings.targetSize === "large" ? 30 : 24;
+  let preferredTarget = 24;
+  if (settings.targetSize === "very-large") preferredTarget = 38;
+  else if (settings.targetSize === "large") preferredTarget = 30;
   return {
     tableShare,
     gap,

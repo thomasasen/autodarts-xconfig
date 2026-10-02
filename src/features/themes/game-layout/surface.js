@@ -81,7 +81,7 @@ export function resolveModernCricketGameControlsSurface(documentRef, windowRef =
   const boardSvg = findBoardSvgRoot(documentRef);
   const nativeBoard = boardSvg?.closest?.(NATIVE_BOARD_SELECTOR);
   const surface = nativeBoard && findStage(turn.turnContainer, nativeBoard);
-  if (!surface || !surface.stage.parentElement?.contains?.(grid.root)) return null;
+  if (!surface?.stage.parentElement?.contains?.(grid.root)) return null;
   const controlBar = findControlBar(surface.controlsSlot);
   return controlBar?.querySelector?.("button") ? { ...surface, controlBar } : null;
 }

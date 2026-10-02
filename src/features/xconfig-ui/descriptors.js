@@ -55,11 +55,12 @@ function colorPreviewOption(value, label, previewColorTheme = value, previewEffe
 
 const CRICKET_LAYOUT_LABELS = Object.freeze({ profile: "Layoutprofil", space: "Platzverteilung", markSize: "Mark-Größe", targetSize: "Zielzahlen", textSize: "Namen und Punkte", density: "Abstände", activeIndicator: "Aktiver Spieler", names: "Spielernamen", mpr: "Nebenstatistiken" });
 function cricketLayoutFields(tactics = false, advanced = false) {
+  const section = tactics ? "Tactics" : "Layout";
   return Object.entries(CRICKET_LAYOUT_OPTIONS).filter(([key]) =>
     (!tactics || key !== "density") && ["profile", "space"].includes(key) !== advanced).map(([key, options]) => selectField(
     tactics ? tacticsLayoutKey(key) : key,
     `${tactics && advanced ? "Tactics: " : ""}${CRICKET_LAYOUT_LABELS[key]}`, options,
-    { section: advanced ? "Erweitert" : tactics ? "Tactics" : "Layout", visibleWhen: tactics ? { key: "tacticsOverrides", value: true } : null }
+    { section: advanced ? "Erweitert" : section, visibleWhen: tactics ? { key: "tacticsOverrides", value: true } : null }
   ));
 }
 

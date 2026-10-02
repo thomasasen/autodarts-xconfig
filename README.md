@@ -61,7 +61,7 @@ Alles wird direkt im Spiel über **xConfig** eingestellt. Du findest den Eintrag
 
 ## Im Überblick
 
-- Insgesamt `21` Module: `17` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
+- Insgesamt `22` Module: `18` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
 - `↺ Zurücksetzen`: Setzt alle Einstellungen vollständig auf Standard zurück, deaktiviert alle Module, schaltet die Diagnose aus und entfernt globales Hintergrundbild sowie Dart-Upload.
 - `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
 - `Exportieren` / `Importieren`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.

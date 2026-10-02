@@ -484,10 +484,14 @@ test("runtime applyRecommendedDefaults applies the documented recommended profil
   assert.equal(storedConfig.features.checkoutSuggestionStyles.style, "stripe");
   assert.equal(storedConfig.features.activePlayerSweep, undefined);
   assert.equal(storedConfig.features.specialHitHighlights.animationStyle, "electric-jolt");
-  assert.equal(storedConfig.features.cricketTargetHighlighter.irrelevantBoardDimStyle, "hatch");
-  assert.equal(storedConfig.features.cricketGridStatusEffects.intensity, "normal");
-  assert.equal(storedConfig.features.cricketGridStatusEffects.colorTheme, "high-contrast");
-  assert.equal(storedConfig.features.cricketGridStatusEffects.pressureOverlay, true);
+  assert.equal(storedConfig.features.cricketTargetHighlighter.displayProfile, "calm");
+  assert.equal(storedConfig.features.cricketTargetHighlighter.irrelevantBoardDimStyle, "smoke");
+  assert.equal(storedConfig.features.cricketGridStatusEffects.displayProfile, "calm");
+  assert.equal(storedConfig.features.cricketGridStatusEffects.statusStyle, "pattern");
+  assert.equal(storedConfig.features.cricketGridStatusEffects.feedback, "impulse");
+  assert.equal(storedConfig.features.cricketGridStatusEffects.intensity, "subtle");
+  assert.equal(storedConfig.features.cricketGridStatusEffects.colorTheme, "standard");
+  assert.equal(storedConfig.features.cricketGridStatusEffects.pressureOverlay, false);
   assert.equal(storedConfig.features.dartboardMarkerHighlight.effect, "size-pulse");
   assert.equal(storedConfig.features.dartboardMarkerHighlight.opacityPercent, 100);
   assert.equal(storedConfig.features.dartMarkerReplacer.hideOriginalMarkers, true);

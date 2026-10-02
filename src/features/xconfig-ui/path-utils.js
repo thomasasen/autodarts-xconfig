@@ -25,11 +25,12 @@ export function buildFeatureSettingPatch(configKey, settingKey, value) {
   }
 
   const key = String(settingKey || "").trim();
-  const featurePatch = configKey === "cricketLayout"
-    ? buildCricketLayoutSettingValues(key, value)
-    : ["cricketGridStatusEffects", "cricketTargetHighlighter"].includes(configKey)
-      ? buildCricketDisplaySettingValues(configKey, key, value)
-      : { [key]: value };
+  let featurePatch = { [key]: value };
+  if (configKey === "cricketLayout") {
+    featurePatch = buildCricketLayoutSettingValues(key, value);
+  } else if (["cricketGridStatusEffects", "cricketTargetHighlighter"].includes(configKey)) {
+    featurePatch = buildCricketDisplaySettingValues(configKey, key, value);
+  }
   setNestedValue(patch.features, path, featurePatch);
   return patch;
 }
