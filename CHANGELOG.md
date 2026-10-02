@@ -12,6 +12,20 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.3.1] - 2026-10-02
+
+### Changed
+
+- Nutzerwirkung: Die flachere Dart-Perspektive lässt sich zwischen „Dezent“ und „Deutlich“ wählen. Die Vorgabe ist eine dezente Verkürzung; die Auswahl bleibt auch bei ausgeschalteter Perspektive und beim Export beziehungsweise Import erhalten.
+  Technik: Normalisierte Perspektivstärken steuern 85 beziehungsweise 65 Prozent der ursprünglichen Dart-Länge in Laufzeit und Vorschau. Geometrie- und Darstellungssignaturen berücksichtigen die Stärke nur bei aktivierter Perspektive, sodass Änderungen weder die Wurfanimation erneut abspielen noch die Dartspitze verschieben.
+
+### Fixed
+
+- Nutzerwirkung: Die automatisierten Browserprüfungen der Veröffentlichung installieren nur den tatsächlich verwendeten Chromium-Browser und vermeiden zusätzliche Downloads ungenutzter Browser-Abhängigkeiten.
+  Technik: Der Playwright-Workflow richtet die Browserinstallation am einzigen konfigurierten Testprojekt aus. Alle Browser- und DOM-Vertragstests bleiben Bestandteil des Laufs.
+- Nutzerwirkung: Schatten und BUST-Einschläge bleiben bei beiden Perspektivstärken, allen Einschlagstilen und Board-Zoom am sichtbaren Dart ausgerichtet. Barrel, Schaft und Flights werden gemeinsam verkürzt; die Flights werden nicht separat vergrößert.
+  Technik: Erweiterte Pose-, Laufzeit-, Vorschau-, Konfigurationstransfer- und BUST-Regressionen sichern die vollständige Projektion und die unveränderte Trefferposition ab. Nicht mehr unterstützte gespeicherte Flight-Optionen werden verworfen.
+
 ## [3.3.0] - 2026-10-02
 
 ### Added
@@ -2288,6 +2302,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.3.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.3.0...v3.3.1
 [3.3.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.2.2...v3.3.0
 [3.2.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.2.1...v3.2.2
 [3.2.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.2.0...v3.2.1

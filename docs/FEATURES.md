@@ -559,7 +559,10 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Groß`: Diese Stufe vergrößert die Dart-Grafik sichtbar über die Standardgröße hinaus. Treffer wirken dadurch präsenter, nehmen aber auch mehr vom Segmentbild ein.
 - `Original-Marker ausblenden`: Blendet die ursprünglichen Marker zugunsten der Dart-Grafiken aus. Im Live-Modus pausiert das Modul automatisch.
 - `Realistische Wurfrichtung`: Richtet Flights auch unten nach oben aus und passt die Flugrichtung an. Standardmäßig aus.
-- `Flachere Dart-Perspektive`: Verkürzt die sichtbare Dart-Länge perspektivisch. Unabhängig von der Wurfrichtung und standardmäßig aus.
+- `Flachere Dart-Perspektive`: Verkürzt Barrel, Schaft und Flights gemeinsam mit wählbarer Stärke. Unabhängig von der Wurfrichtung und standardmäßig aus.
+- `Perspektivstärke`: Wählt Dezent mit 85 Prozent oder Deutlich mit 65 Prozent Dart-Länge. Wirkt nur bei aktivierter flacherer Dart-Perspektive; Vorgabe ist Dezent.
+  - `Dezent`: Zeigt 85 Prozent der ursprünglichen Dart-Länge.
+  - `Deutlich`: Zeigt 65 Prozent der ursprünglichen Dart-Länge.
 - `Einschlagstil`: Regelt die stabile Variation von Dart-Winkel, Perspektive und Schatten.
   - `Klassisch`: Der Dart-Einschlag bleibt klassisch und einheitlich ausgerichtet.
   - `Natürlich`: Darts wirken natürlicher, bleiben aber kontrolliert und gut lesbar.

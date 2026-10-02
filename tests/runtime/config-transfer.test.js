@@ -57,6 +57,21 @@ test("Cricket and Tactics profiles survive export/import with separate layout se
   }
 });
 
+test("dart perspective strength survives export/import even while perspective is disabled", () => {
+  for (const flatPerspective of [true, false]) {
+    const configured = normalizeRuntimeConfig({
+      features: { dartMarkerReplacer: { enabled: true, flatPerspective, perspectiveStrength: "strong" } },
+    });
+    const exported = createSettingsExport(configured, { descriptors: xconfigDescriptors });
+    assert.equal(exported.payload.features.dartMarkerReplacer.settings.perspectiveStrength, "strong");
+    const imported = analyzeSettingsImport(exported.payload, normalizeRuntimeConfig(), {
+      descriptors: xconfigDescriptors, mode: "replace",
+    });
+    assert.equal(imported.config.features.dartMarkerReplacer.flatPerspective, flatPerspective);
+    assert.equal(imported.config.features.dartMarkerReplacer.perspectiveStrength, "strong");
+  }
+});
+
 test("settings transfer schema covers every visible stored field", () => {
   const schema = createSettingsTransferSchema(xconfigDescriptors);
 

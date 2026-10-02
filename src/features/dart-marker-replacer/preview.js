@@ -317,6 +317,7 @@ export function runDartMarkerReplacerPreview(options = {}) {
     dartLength,
     pose,
     flatPerspective: visualConfig.flatPerspective,
+    perspectiveStrength: visualConfig.perspectiveStrength,
   });
   const poseGroup = createSvgElement(documentRef, "g", {
     class: DART_POSE_CLASS,

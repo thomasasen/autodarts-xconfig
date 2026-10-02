@@ -136,6 +136,13 @@ test("dart marker replacer impact style defaults and normalization stay compatib
     assert.equal(spec.normalizeConfig({ [key]: "false" })[key], false);
     assert.equal(spec.normalizeConfig({ [key]: "invalid" })[key], false);
   }
+  assert.equal(spec.createDefaultConfig().perspectiveStrength, "mild");
+  assert.equal(createRecommendedFeatureConfig("dartMarkerReplacer").perspectiveStrength, "mild");
+  assert.equal(spec.normalizeConfig({ flatPerspective: true }).perspectiveStrength, "mild");
+  assert.equal(spec.normalizeConfig({ perspectiveStrength: " STRONG " }).perspectiveStrength, "strong");
+  assert.equal(spec.normalizeConfig({ perspectiveStrength: "invalid" }).perspectiveStrength, "mild");
+  assert.deepEqual(spec.normalizeConfig({ orthogonalFlights: true }), spec.normalizeConfig(),
+    "old saved flight-cross settings are discarded after the revert");
 });
 
 test("bot board style defaults and normalization stay restricted to the bundled choices", () => {
@@ -289,6 +296,7 @@ test("createRecommendedFeatureConfig returns the documented recommended defaults
     hideOriginalMarkers: true,
     realisticDirection: false,
     flatPerspective: false,
+    perspectiveStrength: "mild",
     impactStyle: "dramatic",
     enableShadow: true,
     enableShadowBlur: true,

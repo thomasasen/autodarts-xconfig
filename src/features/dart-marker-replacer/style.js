@@ -1,5 +1,5 @@
 import { DART_DESIGN_KEYS } from "#feature-assets";
-import { normalizeDartImpactStyle } from "./pose.js";
+import { normalizeDartImpactStyle, normalizeDartPerspectiveStrength } from "./pose.js";
 
 export const STYLE_ID = "ad-ext-dart-marker-replacer-style";
 export const OVERLAY_ID = "ad-ext-dart-image-overlay";
@@ -63,6 +63,7 @@ export function resolveDartMarkerReplacerConfig(featureConfig = {}) {
     hideOriginalMarkers: normalizeBoolean(featureConfig.hideOriginalMarkers, false),
     realisticDirection: normalizeBoolean(featureConfig.realisticDirection, false),
     flatPerspective: normalizeBoolean(featureConfig.flatPerspective, false),
+    perspectiveStrength: normalizeDartPerspectiveStrength(featureConfig.perspectiveStrength),
     impactStyle: normalizeDartImpactStyle(featureConfig.impactStyle),
     enableShadow: normalizeBoolean(featureConfig.enableShadow, true),
     enableShadowBlur: normalizeBoolean(featureConfig.enableShadowBlur, true),

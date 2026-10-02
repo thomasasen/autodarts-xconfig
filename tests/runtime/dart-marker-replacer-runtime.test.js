@@ -86,9 +86,14 @@ test("dart-marker-replacer resolves size settings thirty percent larger with leg
   assert.equal(resolveDartMarkerReplacerConfig({ impactStyle: "invalid" }).impactStyle, "classic");
   assert.equal(resolveDartMarkerReplacerConfig().realisticDirection, false);
   assert.equal(resolveDartMarkerReplacerConfig().flatPerspective, false);
+  assert.deepEqual(resolveDartMarkerReplacerConfig({ orthogonalFlights: true }), resolveDartMarkerReplacerConfig(),
+    "saved values of the reverted flight option no longer affect rendering");
   assert.equal(resolveDartMarkerReplacerConfig({ realisticDirection: "true" }).realisticDirection, true);
   assert.equal(resolveDartMarkerReplacerConfig({ flatPerspective: "true" }).flatPerspective, true);
   assert.equal(resolveDartMarkerReplacerConfig({ flatPerspective: "false" }).flatPerspective, false);
+  assert.equal(resolveDartMarkerReplacerConfig().perspectiveStrength, "mild");
+  assert.equal(resolveDartMarkerReplacerConfig({ perspectiveStrength: " STRONG " }).perspectiveStrength, "strong");
+  assert.equal(resolveDartMarkerReplacerConfig({ perspectiveStrength: "invalid" }).perspectiveStrength, "mild");
 });
 
 test("dart-marker-replacer stays above the board but below the Autodarts winner overlay", () => {
@@ -522,19 +527,24 @@ test("dart-marker-replacer flat perspective updates cached geometry and resets w
     cx: 0, cy: 0, r: 5, rectWidth: 4, rectHeight: 4, rectLeft: 448, rectTop: 518,
   }]);
   const state = createDartMarkerReplacerState(windowRef);
-  const update = (flatPerspective) => updateDartMarkerReplacer({
+  const update = (flatPerspective, perspectiveStrength = "mild") => updateDartMarkerReplacer({
     documentRef, state,
-    visualConfig: { ...VISUAL_CONFIG, flatPerspective },
+    visualConfig: { ...ANIMATED_VISUAL_CONFIG, flatPerspective, perspectiveStrength },
     updateMode: { requiresBoardRescan: false, requiresMarkerRescan: false },
   });
   update(false);
   const entry = state.entriesByMarker.get(markers[0]);
   const originalTip = { ...entry.tipPointLocal };
   const originalRotation = entry.rotateGroup.getAttribute("transform");
+  const originalSource = entry.imageNode.getAttribute("href");
+  assert.equal(entry.container.__animations.length, 1);
   update(true);
   const matrix = entry.poseGroup.getAttribute("transform").slice(7, -1).split(" ").map(Number);
+  assert.equal(entry.imageNode.getAttribute("href"), originalSource,
+    "projects the original whole dart without enlarging its flight separately");
+  assert.equal(entry.shadowNode.getAttribute("href"), entry.imageNode.getAttribute("href"));
   const [a, b, c, d, e, f] = matrix;
-  assert.ok(a < 0.7, "foreshortens the long axis");
+  approxEqual(a, 0.85);
   approxEqual(a * originalTip.x + c * originalTip.y + e, originalTip.x, 1e-5);
   approxEqual(b * originalTip.x + d * originalTip.y + f, originalTip.y, 1e-5);
   assert.equal(entry.rotateGroup.getAttribute("transform"), originalRotation);
@@ -542,8 +552,23 @@ test("dart-marker-replacer flat perspective updates cached geometry and resets w
   const flatTransform = entry.poseGroup.getAttribute("transform");
   update(true);
   assert.equal(entry.poseGroup.getAttribute("transform"), flatTransform);
-  update(false);
+  update(true, "strong");
+  const strongTransform = entry.poseGroup.getAttribute("transform");
+  assert.notEqual(strongTransform, flatTransform, "strength change invalidates cached geometry");
+  const [strongA, strongB, strongC, strongD, strongE, strongF] = strongTransform.slice(7, -1).split(" ").map(Number);
+  approxEqual(strongA, 0.65);
+  approxEqual(strongA * originalTip.x + strongC * originalTip.y + strongE, originalTip.x, 1e-5);
+  approxEqual(strongB * originalTip.x + strongD * originalTip.y + strongF, originalTip.y, 1e-5);
+  assert.equal(entry.imageNode.getAttribute("href"), originalSource);
+  update(true, "strong");
+  assert.equal(entry.poseGroup.getAttribute("transform"), strongTransform);
+  update(false, "strong");
   assert.equal(entry.poseGroup.getAttribute("transform"), null);
+  const disabledSignature = entry.lastGeometrySignature;
+  update(false, "mild");
+  assert.equal(entry.lastGeometrySignature, disabledSignature, "disabled strength changes do not rerender");
+  assert.equal(entry.container.__animations.length, 1, "strength changes do not replay the flight");
+  assert.equal(entry.imageNode.getAttribute("href"), originalSource);
   assert.deepEqual(entry.tipPointLocal, originalTip);
   clearDartMarkerReplacerState(state);
 });
@@ -562,12 +587,17 @@ test("dart-marker-replacer demo reflects both opt-in settings and resets them on
   const rotationDeg = Number(/rotate\(([-+0-9.eE]+)/.exec(rotate.getAttribute("transform"))?.[1]);
   assert.ok(rotationDeg < -90 && rotationDeg > -135, "demo tail points above its tip");
   const pose = targetNode.querySelector(`g.${DART_POSE_CLASS}`);
-  assert.match(pose.getAttribute("transform"), /^matrix\(0\.65 0 0 1 /);
+  assert.match(pose.getAttribute("transform"), /^matrix\(0\.85 0 0 1 /);
+  assert.match(targetNode.querySelector(`image.${DART_CLASS}`).getAttribute("href"), /Dart_autodarts\.png$/);
   const marker = targetNode.querySelector(".ad-ext-dart-marker-replacer-preview-marker");
   assert.equal(marker.style.opacity, "1");
-  preview({});
+  preview({ realisticDirection: true, flatPerspective: true, perspectiveStrength: "strong" });
+  assert.match(targetNode.querySelector(`g.${DART_POSE_CLASS}`).getAttribute("transform"), /^matrix\(0\.65 0 0 1 /);
+  assert.match(targetNode.querySelector(`image.${DART_CLASS}`).getAttribute("href"), /Dart_autodarts\.png$/);
+  preview({ perspectiveStrength: "strong" });
   assert.equal(targetNode.querySelector(`g.${DART_ROTATE_CLASS}`).getAttribute("transform"), "rotate(18 194 70)");
   assert.equal(targetNode.querySelector(`g.${DART_POSE_CLASS}`).getAttribute("transform"), null);
+  assert.match(targetNode.querySelector(`image.${DART_CLASS}`).getAttribute("href"), /Dart_autodarts\.png$/);
   assert.equal(targetNode.querySelectorAll(`g.${DART_CONTAINER_CLASS}`).length, 1);
 });
 

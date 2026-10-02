@@ -51,18 +51,22 @@ test("realistic dart direction keeps the flight above the tip across the board a
   }), -270, "disabled option preserves the lower-board radial direction");
 });
 
-test("flat perspective foreshortens the dart independently of impact style and fixes its tip", () => {
+test("both perspective strengths shorten the whole dart, preserve its tip and only act when enabled", () => {
   const tip = { x: 766.3948619086914, y: 862.5449351985626 };
   for (const impactStyle of ["classic", "natural", "dramatic"]) {
     const pose = resolveDartImpactPose({ markerKey: "lower-board", index: 2, impactStyle });
     const normal = buildTipAnchoredPoseTransform({ tip, dartLength: 257, pose });
-    const flat = buildTipAnchoredPoseTransform({ tip, dartLength: 257, pose, flatPerspective: true });
     const normalLength = Math.hypot(normal.matrix.a, normal.matrix.b);
-    assert.ok(Math.hypot(flat.matrix.a, flat.matrix.b) < normalLength * 0.7);
-    assert.equal(flat.matrix.c, normal.matrix.c, "preserves transverse image width");
-    assert.equal(flat.matrix.d, normal.matrix.d);
-    assert.ok(Math.abs(flat.matrix.a * tip.x + flat.matrix.c * tip.y + flat.matrix.e - tip.x) < 1e-5);
-    assert.ok(Math.abs(flat.matrix.b * tip.x + flat.matrix.d * tip.y + flat.matrix.f - tip.y) < 1e-5);
+    for (const [perspectiveStrength, expectedScale] of [[undefined, 0.85], ["mild", 0.85], ["strong", 0.65], ["constructor", 0.85]]) {
+      const options = { tip, dartLength: 257, pose, perspectiveStrength };
+      assert.deepEqual(buildTipAnchoredPoseTransform(options), normal, "strength alone has no effect");
+      const flat = buildTipAnchoredPoseTransform({ ...options, flatPerspective: true });
+      assert.ok(Math.abs(Math.hypot(flat.matrix.a, flat.matrix.b) / normalLength - expectedScale) < 2e-8);
+      assert.equal(flat.matrix.c, normal.matrix.c, "preserves transverse image width");
+      assert.equal(flat.matrix.d, normal.matrix.d);
+      assert.ok(Math.abs(flat.matrix.a * tip.x + flat.matrix.c * tip.y + flat.matrix.e - tip.x) < 1e-5);
+      assert.ok(Math.abs(flat.matrix.b * tip.x + flat.matrix.d * tip.y + flat.matrix.f - tip.y) < 1e-5);
+    }
   }
 });
 

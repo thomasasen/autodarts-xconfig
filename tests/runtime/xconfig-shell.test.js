@@ -3493,11 +3493,27 @@ test("xConfig dart design options render split layout with preview and active ba
   await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerReplacer.design === "red");
   assert.equal(JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features.dartMarkerReplacer.realisticDirection, false);
   assert.equal(JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features.dartMarkerReplacer.flatPerspective, false);
+  const perspectiveOptionsSelector = "[data-adxconfig-action='set-setting-select-option'][data-feature-key='dart-marker-replacer'][data-setting-key='perspectiveStrength']";
+  assert.deepEqual(documentRef.querySelectorAll(perspectiveOptionsSelector).map(node => node.getAttribute("data-setting-value")), ["mild", "strong"]);
+  assert.equal(documentRef.querySelector(`${perspectiveOptionsSelector}[data-setting-value='mild']`).getAttribute("data-active"), "true");
+  clickSelectSettingOption(documentRef, "dart-marker-replacer", "perspectiveStrength", "strong");
+  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerReplacer.perspectiveStrength === "strong");
+  assert.equal(JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features.dartMarkerReplacer.flatPerspective, false,
+    "choosing a strength does not enable perspective");
   clickSettingToggle(documentRef, "dart-marker-replacer", "realisticDirection", true);
   await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerReplacer.realisticDirection === true);
   assert.equal(JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features.dartMarkerReplacer.flatPerspective, false);
   clickSettingToggle(documentRef, "dart-marker-replacer", "flatPerspective", true);
   await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerReplacer.flatPerspective === true);
+  assert.deepEqual(documentRef.querySelectorAll(perspectiveOptionsSelector).map(node => node.getAttribute("data-setting-value")), ["mild", "strong"]);
+  clickSelectSettingOption(documentRef, "dart-marker-replacer", "perspectiveStrength", "strong");
+  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerReplacer.perspectiveStrength === "strong");
+  clickSettingToggle(documentRef, "dart-marker-replacer", "flatPerspective", false);
+  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerReplacer.flatPerspective === false);
+  assert.equal(documentRef.querySelectorAll(perspectiveOptionsSelector).length, 2);
+  clickSettingToggle(documentRef, "dart-marker-replacer", "flatPerspective", true);
+  await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerReplacer.flatPerspective === true);
+  assert.equal(documentRef.querySelector(`${perspectiveOptionsSelector}[data-setting-value='strong']`).getAttribute("data-active"), "true");
   clickSettingToggle(documentRef, "dart-marker-replacer", "enableShadow", false);
   await waitForStoredConfig(localStorage, (config) => config.features.dartMarkerReplacer.enableShadow === false);
   clickSettingToggle(documentRef, "dart-marker-replacer", "enableShadowBlur", false);
@@ -3511,6 +3527,7 @@ test("xConfig dart design options render split layout with preview and active ba
   assert.equal(storedConfig.features.dartMarkerReplacer.design, "red");
   assert.equal(storedConfig.features.dartMarkerReplacer.realisticDirection, true);
   assert.equal(storedConfig.features.dartMarkerReplacer.flatPerspective, true);
+  assert.equal(storedConfig.features.dartMarkerReplacer.perspectiveStrength, "strong");
   assert.equal(storedConfig.features.dartMarkerReplacer.enableShadow, false);
   assert.equal(storedConfig.features.dartMarkerReplacer.enableShadowBlur, false);
   assert.equal(storedConfig.features.dartMarkerReplacer.enableWobble, false);

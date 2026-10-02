@@ -361,44 +361,46 @@ test("x01 bust impact follows the rendered last dart tip instead of moving the d
   assert.equal(impactHole.getAttribute("cy"), "444.00");
 });
 
-test("x01 bust impact keeps the tip of a realistic flattened dart through all impact styles and zoom", () => {
-  const tip = { x: 200, y: 300 };
-  const rotation = resolveDartRotationDeg({
-    center: tip, boardCenter: { x: 100, y: 150 }, boardRadius: 200, realisticDirection: true,
-  });
-  const cos = Math.cos(rotation * Math.PI / 180);
-  const sin = Math.sin(rotation * Math.PI / 180);
-  for (const impactStyle of ["classic", "natural", "dramatic"]) {
-    for (const zoom of [1, 1.7]) {
-      const fixture = setupModernBustDocument();
-      const dart = appendRenderedDartTip(fixture.documentRef);
-      const { matrix: m, transform } = buildTipAnchoredPoseTransform({
-        tip, dartLength: 200, flatPerspective: true,
-        pose: resolveDartImpactPose({ markerKey: "lower-board", index: 2, impactStyle }),
-      });
-      dart.pose.setAttribute("transform", transform);
-      dart.pose.parentNode.setAttribute("transform", `rotate(${rotation} ${tip.x} ${tip.y})`);
-      // Compose the SVG pose, tip-centred rotation and screen-space zoom/translation.
-      dart.pose.getScreenCTM = () => ({
-        a: zoom * (cos * m.a - sin * m.b), b: zoom * (sin * m.a + cos * m.b),
-        c: zoom * (cos * m.c - sin * m.d), d: zoom * (sin * m.c + cos * m.d),
-        e: zoom * (cos * m.e - sin * m.f + tip.x - cos * tip.x + sin * tip.y) + 35,
-        f: zoom * (sin * m.e + cos * m.f + tip.y - sin * tip.x - cos * tip.y) + 45,
-      });
-      syncBustActivePlayerHighlight({
-        documentRef: fixture.documentRef, windowRef: fixture.windowRef,
-        boardSurface: { svg: fixture.layers[0], group: fixture.layers[0], zoomTarget: fixture.board },
-        effectTarget: "impact", crackCount: 1,
-        gameState: { getActiveThrows: () => [{ coords: { x: -0.8, y: -0.8 } }] },
-      }, createBustActivePlayerHighlightState());
-      const hole = fixture.documentRef.main.querySelector(`.${BUST_IMPACT_HOLE_CLASS}`);
-      const crack = fixture.documentRef.main.querySelector(`.${BUST_CRACK_CLASS}`);
-      assert.equal(hole.getAttribute("cx"), (tip.x * zoom + 35).toFixed(2));
-      assert.equal(hole.getAttribute("cy"), (tip.y * zoom + 45).toFixed(2));
-      assert.equal(crack.getAttribute("data-crack-origin-source"), "rendered-dart-tip");
+for (const perspectiveStrength of ["mild", "strong"]) {
+  test(`x01 bust impact keeps the tip of a realistic flattened dart through all impact styles and zoom (${perspectiveStrength})`, () => {
+    const tip = { x: 200, y: 300 };
+    const rotation = resolveDartRotationDeg({
+      center: tip, boardCenter: { x: 100, y: 150 }, boardRadius: 200, realisticDirection: true,
+    });
+    const cos = Math.cos(rotation * Math.PI / 180);
+    const sin = Math.sin(rotation * Math.PI / 180);
+    for (const impactStyle of ["classic", "natural", "dramatic"]) {
+      for (const zoom of [1, 1.7]) {
+        const fixture = setupModernBustDocument();
+        const dart = appendRenderedDartTip(fixture.documentRef);
+        const { matrix: m, transform } = buildTipAnchoredPoseTransform({
+          tip, dartLength: 200, flatPerspective: true, perspectiveStrength,
+          pose: resolveDartImpactPose({ markerKey: "lower-board", index: 2, impactStyle }),
+        });
+        dart.pose.setAttribute("transform", transform);
+        dart.pose.parentNode.setAttribute("transform", `rotate(${rotation} ${tip.x} ${tip.y})`);
+        // Compose the SVG pose, tip-centred rotation and screen-space zoom/translation.
+        dart.pose.getScreenCTM = () => ({
+          a: zoom * (cos * m.a - sin * m.b), b: zoom * (sin * m.a + cos * m.b),
+          c: zoom * (cos * m.c - sin * m.d), d: zoom * (sin * m.c + cos * m.d),
+          e: zoom * (cos * m.e - sin * m.f + tip.x - cos * tip.x + sin * tip.y) + 35,
+          f: zoom * (sin * m.e + cos * m.f + tip.y - sin * tip.x - cos * tip.y) + 45,
+        });
+        syncBustActivePlayerHighlight({
+          documentRef: fixture.documentRef, windowRef: fixture.windowRef,
+          boardSurface: { svg: fixture.layers[0], group: fixture.layers[0], zoomTarget: fixture.board },
+          effectTarget: "impact", crackCount: 1,
+          gameState: { getActiveThrows: () => [{ coords: { x: -0.8, y: -0.8 } }] },
+        }, createBustActivePlayerHighlightState());
+        const hole = fixture.documentRef.main.querySelector(`.${BUST_IMPACT_HOLE_CLASS}`);
+        const crack = fixture.documentRef.main.querySelector(`.${BUST_CRACK_CLASS}`);
+        assert.equal(hole.getAttribute("cx"), (tip.x * zoom + 35).toFixed(2));
+        assert.equal(hole.getAttribute("cy"), (tip.y * zoom + 45).toFixed(2));
+        assert.equal(crack.getAttribute("data-crack-origin-source"), "rendered-dart-tip");
+      }
     }
-  }
-});
+  });
+}
 
 test("x01 bust impact target prefers the rendered last marker over coordinate projection", () => {
   const fixture = setupModernBustDocument();

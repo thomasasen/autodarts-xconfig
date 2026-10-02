@@ -1,5 +1,10 @@
 const IMPACT_STYLES = new Set(["classic", "natural", "dramatic"]);
-const FLAT_PERSPECTIVE_SCALE_X = 0.65;
+const FLAT_PERSPECTIVE_SCALES = Object.freeze({ mild: 0.85, strong: 0.65 });
+
+export function normalizeDartPerspectiveStrength(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return Object.hasOwn(FLAT_PERSPECTIVE_SCALES, normalized) ? normalized : "mild";
+}
 
 export function resolveDartRotationDeg(options = {}) {
   const { center, boardCenter } = options;
@@ -105,7 +110,7 @@ export function buildTipAnchoredPoseTransform(options = {}) {
   const shear = Math.tan((Number(pose.skewYDeg) || 0) * Math.PI / 180) +
     (Number(pose.tailLiftPx) || 0) / dartLength;
   const scaleX = (Number(pose.scaleX) || 1) *
-    (options.flatPerspective ? FLAT_PERSPECTIVE_SCALE_X : 1);
+    (options.flatPerspective ? FLAT_PERSPECTIVE_SCALES[normalizeDartPerspectiveStrength(options.perspectiveStrength)] : 1);
   const scaleY = Number(pose.scaleY) || 1;
   const cos = Math.cos(rotation);
   const sin = Math.sin(rotation);

@@ -16,6 +16,7 @@ import {
 import {
   buildShadowPoseSettings,
   buildTipAnchoredPoseTransform,
+  normalizeDartPerspectiveStrength,
   resolveDartImpactPose,
   resolveDartRotationDeg,
 } from "./pose.js";
@@ -848,6 +849,7 @@ function setDartGeometry(entry, options = {}) {
     dartLength,
     pose,
     flatPerspective: visualConfig.flatPerspective,
+    perspectiveStrength: visualConfig.perspectiveStrength,
   });
 
   if (sourceUrl) {
@@ -1135,6 +1137,7 @@ function buildDartGeometrySignature({
     Number(dartHeight || 0).toFixed(2),
     Number(rotationDeg || 0).toFixed(2),
     visualConfig?.flatPerspective ? "flat-on" : "flat-off",
+    visualConfig?.flatPerspective ? normalizeDartPerspectiveStrength(visualConfig.perspectiveStrength) : "",
     pose.impactStyle,
     Number(pose.rotationJitterDeg).toFixed(4),
     Number(pose.skewYDeg).toFixed(4),
@@ -1162,6 +1165,7 @@ function buildVisualSignature(visualConfig, sourceUrl) {
     String(visualConfig?.impactStyle || "classic"),
     visualConfig?.realisticDirection ? "real-direction-on" : "real-direction-off",
     visualConfig?.flatPerspective ? "flat-on" : "flat-off",
+    visualConfig?.flatPerspective ? normalizeDartPerspectiveStrength(visualConfig.perspectiveStrength) : "",
     visualConfig?.enableShadow ? "shadow-on" : "shadow-off",
     visualConfig?.enableShadowBlur ? "shadow-blur-on" : "shadow-blur-off",
     visualConfig?.enableWobble ? "wobble-on" : "wobble-off",

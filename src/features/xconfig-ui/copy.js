@@ -957,9 +957,14 @@ export const xconfigFeatureCopy = deepFreeze({
         "Richtet Flights auch unten nach oben aus und passt die Flugrichtung an. Standardmäßig aus."
       ),
       flatPerspective: fieldCopy(
-        "Verkürzt die sichtbare Dart-Länge für eine flachere Perspektive zum Betrachter.",
-        "Verkürzt die Dart-Grafik entlang ihrer Längsachse auf 65 Prozent. Das nähert mit dem vorhandenen Dart-Bild einen Blick zum Betrachter an. Die Dart-Dicke und die Trefferposition bleiben erhalten; Schatten und Einschlagstil werden mitgeführt. Unabhängig von der Wurfrichtung und standardmäßig aus.",
-        "Verkürzt die sichtbare Dart-Länge perspektivisch. Unabhängig von der Wurfrichtung und standardmäßig aus."
+        "Verkürzt die sichtbare Dart-Länge für einen Blick zum Betrachter.",
+        "Verkürzt Barrel, Schaft und Flights gemeinsam entlang der Längsachse und bewahrt ihr Längenverhältnis. Die Perspektivstärke ist zwischen Dezent und Deutlich wählbar. Das nähert mit dem vorhandenen Dart-Bild einen Blick zum Betrachter an. Die perspektivisch sichtbaren Flight-Flügel müssen im Bild keinen exakten 90-Grad-Winkel bilden. Die Dart-Dicke und die Trefferposition bleiben erhalten; Schatten und Einschlagstil werden mitgeführt. Unabhängig von der Wurfrichtung und standardmäßig aus.",
+        "Verkürzt Barrel, Schaft und Flights gemeinsam mit wählbarer Stärke. Unabhängig von der Wurfrichtung und standardmäßig aus."
+      ),
+      perspectiveStrength: fieldCopy(
+        "Bestimmt, wie stark der Dart zum Betrachter verkürzt erscheint.",
+        "Dezent zeigt 85 Prozent der ursprünglichen Dart-Länge, Deutlich zeigt 65 Prozent. Barrel, Schaft und Flights werden gemeinsam verkürzt. Die Auswahl wirkt nur bei aktivierter flacherer Dart-Perspektive. Dezent ist die Vorgabe; Schatten, Einschlagstil und Trefferposition werden mitgeführt.",
+        "Wählt Dezent mit 85 Prozent oder Deutlich mit 65 Prozent Dart-Länge. Wirkt nur bei aktivierter flacherer Dart-Perspektive; Vorgabe ist Dezent."
       ),
       impactStyle: fieldCopy(
         "Bestimmt, wie stark sich Winkel, Perspektive und Schatten der Darts unterscheiden. Natürlich ist sichtbar, aber dezent; Dramatisch wirkt kräftiger.",
@@ -2320,6 +2325,19 @@ const X01_REMAINING_SCORE_BAR_EFFECT_OPTION_COPY = deepFreeze({
   ),
 });
 
+const DART_PERSPECTIVE_STRENGTH_OPTION_COPY = deepFreeze({
+  mild: optionCopy(
+    "Verkürzt die Dart-Länge dezent um 15 Prozent.",
+    "Zeigt Barrel, Schaft und Flights gemeinsam mit 85 Prozent ihrer ursprünglichen Länge. Die dezente Verkürzung ist die Vorgabe.",
+    "Zeigt 85 Prozent der ursprünglichen Dart-Länge."
+  ),
+  strong: optionCopy(
+    "Verkürzt die Dart-Länge deutlich um 35 Prozent.",
+    "Zeigt Barrel, Schaft und Flights gemeinsam mit 65 Prozent ihrer ursprünglichen Länge. Das verstärkt den Blick zum Betrachter, ohne die Flights separat zu vergrößern.",
+    "Zeigt 65 Prozent der ursprünglichen Dart-Länge."
+  ),
+});
+
 const DART_IMPACT_STYLE_OPTION_COPY = deepFreeze({
   classic: optionCopy(
     "Behält den bisherigen, einheitlichen Dart-Einschlag bei.",
@@ -2579,6 +2597,7 @@ const xconfigFieldOptionCopy = deepFreeze({
   "dart-marker-replacer": {
     design: DART_DESIGN_OPTION_COPY,
     sizePercent: DART_IMAGE_SIZE_OPTION_COPY,
+    perspectiveStrength: DART_PERSPECTIVE_STRENGTH_OPTION_COPY,
     impactStyle: DART_IMPACT_STYLE_OPTION_COPY,
     flightSpeed: DART_FLIGHT_SPEED_OPTION_COPY,
   },
