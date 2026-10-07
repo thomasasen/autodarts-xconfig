@@ -3,9 +3,8 @@ import {
   getFirstCheckoutRouteSegment,
   resolveCheckoutSurfaceSemantics,
 } from "../x01-checkout-route.js";
-import { isGameStateStaleForCurrentMatchRoute, resolveX01CheckoutContext } from "../x01-checkout-context.js";
-import { readModernMatchSurface, readModernThrows } from "../shared/x01-match-surface.js";
-import { isX01VariantText } from "../../domain/variant-rules.js";
+import { resolveX01CheckoutContext } from "../x01-checkout-context.js";
+import { readModernMatchSurface } from "../shared/x01-match-surface.js";
 import {
   NATIVE_BOARD_SELECTOR,
   getBoardRadius,
@@ -38,7 +37,6 @@ const CHECKOUT_DOUBLE_ZOOM_RANGE = Object.freeze({
 const TRANSFORM_SIGNATURE_STEP_PX = 0.5;
 const TRANSLATE_PREFIX = "translate(";
 const SCALE_PREFIX = "scale(";
-const VARIANT_ELEMENT_ID = "ad-ext-game-variant";
 const TURN_POINTS_SELECTOR = ".ad-ext-turn-points";
 
 function normalizeText(value) {
@@ -392,77 +390,6 @@ export function getTurnId(turn) {
   const turnNumber = Number.isFinite(turn?.turn) ? turn.turn : -1;
   const playerId = String(turn?.playerId || "").trim();
   return `fallback:${round}:${turnNumber}:${playerId}`;
-}
-
-function normalizeBoundaryTokenValue(value) {
-  const normalized = String(value || "").trim();
-  return normalized || "";
-}
-
-function resolveGameBoundaryToken(gameState) {
-  if (!gameState || typeof gameState.getSnapshot !== "function") {
-    return "";
-  }
-
-  const snapshot = gameState.getSnapshot();
-  if (!snapshot || typeof snapshot !== "object") {
-    return "";
-  }
-
-  const match = snapshot.match && typeof snapshot.match === "object" ? snapshot.match : null;
-  const gameScopeCandidates = [
-    match?.currentGameId,
-    match?.gameId,
-    match?.game?.id,
-    match?.currentLegId,
-    match?.legId,
-    match?.leg?.id,
-    match?.setId,
-    match?.set?.id,
-  ];
-
-  for (const candidate of gameScopeCandidates) {
-    const token = normalizeBoundaryTokenValue(candidate);
-    if (token) {
-      return `game:${token}`;
-    }
-  }
-
-  const matchScopeCandidates = [
-    match?.id,
-    match?._id,
-    match?.matchId,
-    snapshot.topic,
-  ];
-  for (const candidate of matchScopeCandidates) {
-    const token = normalizeBoundaryTokenValue(candidate);
-    if (token) {
-      return `match:${token}`;
-    }
-  }
-
-  return "";
-}
-
-function readDomVariantText(documentRef) {
-  if (!documentRef || typeof documentRef.getElementById !== "function") {
-    return "";
-  }
-
-  return String(documentRef.getElementById(VARIANT_ELEMENT_ID)?.textContent || "").trim();
-}
-
-function hasExplicitNonX01DomVariant(documentRef) {
-  const variantText = readDomVariantText(documentRef);
-  if (!variantText) {
-    return false;
-  }
-
-  return !isX01VariantText(variantText, {
-    allowMissing: false,
-    allowEmpty: false,
-    allowNumeric: true,
-  });
 }
 
 export function markManualZoomPause(
@@ -1340,42 +1267,49 @@ export function buildZoomTransform(options = {}) {
   };
 }
 
+export function resolveTvBoardZoomTruth(options = {}) {
+  return options.x01Truth || resolveX01CheckoutContext({
+    gameState: options.gameState,
+    documentRef: options.documentRef,
+    windowRef: options.windowRef,
+    x01Rules: options.x01Rules,
+  });
+}
+
 function resolveZoomGameState(options) {
-  const surface = options.matchSurface || readModernMatchSurface(options.documentRef, options.windowRef);
-  const original = options.gameState;
-  if (!surface.turnContainer || surface.variant !== "X01") {
-    return original;
+  const truth = resolveTvBoardZoomTruth(options);
+  if (!truth.actionable) {
+    return null;
   }
-  const stale = isGameStateStaleForCurrentMatchRoute(original, options.windowRef, options.documentRef);
-  const current = stale ? null : original;
-  const domThrows = readModernThrows(surface, options.x01Rules);
-  const domTurn = domThrows && Number.isFinite(surface.activeScore) && surface.playerKey
-    ? {
-        id: `dom:${surface.playerKey}:${surface.activeScore + domThrows.reduce((sum, entry) => sum + entry.score, 0)}`,
-        playerId: surface.playerKey,
-        throws: domThrows,
-      }
-    : null;
-  if (domTurn && hasVisibleBustTurnScore(options.documentRef, surface) &&
-      String(options.state?.lastTurnId || "").startsWith(`dom:${surface.playerKey}:`)) {
-    // BUST restores the visit's starting score, so score + throws no longer identifies the turn.
-    domTurn.id = options.state.lastTurnId;
+  let activeTurn = truth.activeTurn;
+  if (
+    truth.source === "dom" &&
+    activeTurn &&
+    hasVisibleBustTurnScore(options.documentRef, options.matchSurface) &&
+    String(options.state?.lastTurnId || "").startsWith("dom:")
+  ) {
+    activeTurn = { ...activeTurn, id: options.state.lastTurnId };
   }
-  const turn = current?.getActiveTurn?.() || domTurn;
   return {
-    isX01Variant: () => true,
-    getOutMode: () => current?.getOutMode?.() || surface.outMode,
-    getActiveTurn: () => turn,
-    getActiveThrows: () => turn === domTurn ? domThrows || [] : current?.getActiveThrows?.() || [],
-    getActiveScore: () => current?.getActiveScore?.() ?? surface.activeScore,
-    getSnapshot: () => current?.getSnapshot?.() || {
-      match: { id: String(options.windowRef?.location?.pathname || "").split("/").at(-1) },
-    },
+    isX01Variant: () => truth.active,
+    getOutMode: () => truth.outMode,
+    getActiveTurn: () => activeTurn,
+    getActiveThrows: () => truth.activeThrows,
+    getActiveScore: () => truth.activeScore,
+    getActivePlayerIndex: () => truth.activePlayerIndex,
+    getSnapshot: () => ({
+      match: { id: truth.matchId },
+      activePlayerIndex: truth.activePlayerIndex,
+      activeScore: truth.activeScore,
+      outMode: truth.outMode,
+    }),
+    x01Truth: truth,
   };
 }
 
 function resolveZoomIntentSettings(options = {}) {
   const gameState = resolveZoomGameState(options);
+  const x01Truth = gameState?.x01Truth || resolveTvBoardZoomTruth(options);
   const config = options.featureConfig;
   const checkoutZoomTarget =
     String(config?.checkoutZoomTarget || "").trim().toLowerCase() === "route-first"
@@ -1384,16 +1318,14 @@ function resolveZoomIntentSettings(options = {}) {
 
   return {
     gameState,
+    x01Truth,
     x01Rules: options.x01Rules,
     state: options.state,
     documentRef: options.documentRef,
     windowRef: options.windowRef,
     config,
     nowTs: Number.isFinite(options.nowTs) ? options.nowTs : Date.now(),
-    outMode:
-      gameState && typeof gameState.getOutMode === "function"
-        ? String(gameState.getOutMode() || "")
-        : "",
+    outMode: String(x01Truth?.outMode || ""),
     checkoutZoomTarget,
     t20SetupZoomEnabled: config?.t20SetupZoomEnabled !== false,
     finishOnlyCheckoutZoom: Boolean(config?.checkoutZoomEnabled) && checkoutZoomTarget === "finish-only",
@@ -1479,24 +1411,14 @@ function resolveTurnProgressState(state, gameState) {
 }
 
 function resolveHydrationCheckoutIntent({
-  gameState,
-  x01Rules,
+  checkoutContext,
   state,
-  documentRef,
-  windowRef,
   config,
 }) {
   if (!config?.checkoutZoomEnabled) {
     return null;
   }
 
-  const checkoutContext = resolveX01CheckoutContext({
-    gameState,
-    documentRef,
-    windowRef,
-    dartsRemaining: 1,
-    x01Rules,
-  });
   const checkoutSurface = checkoutContext.checkoutSurface;
   const visibleSegments = checkoutSurface.visibleRouteSegments;
   const finishSegment = checkoutSurface.authoritativeFinishSegment;
@@ -1578,22 +1500,12 @@ function clearDisabledSetupIntent(state, t20SetupZoomEnabled, finishOnlyCheckout
 }
 
 function resolveIntentCheckoutContext({
-  gameState,
-  documentRef,
-  windowRef,
+  x01CheckoutContext,
   outMode,
   throwCount,
   x01Rules,
   state,
 }) {
-  const x01CheckoutContext = resolveX01CheckoutContext({
-    gameState,
-    documentRef,
-    windowRef,
-    outMode,
-    dartsRemaining: Math.max(0, 3 - throwCount),
-    x01Rules,
-  });
   let activeScore = x01CheckoutContext.activeScore;
   let checkoutSurface = x01CheckoutContext.checkoutSurface;
 
@@ -1793,36 +1705,22 @@ function resolveFallbackT20SetupIntent(state, t20SetupZoomEnabled, canUseT20Setu
   return buildAndStoreIntent(state, "t20-setup", "T20");
 }
 
-function hasActiveX01ZoomContext({ gameState, x01Rules, state, documentRef, matchSurface }) {
-  if (!gameState || typeof gameState.isX01Variant !== "function" || !x01Rules) {
-    return false;
-  }
-
-  if (hasExplicitNonX01DomVariant(documentRef) ||
-      (matchSurface.variant && matchSurface.variant !== "X01")) {
+function hasActiveX01ZoomContext({ x01Truth, x01Rules, state }) {
+  if (!x01Rules || !x01Truth?.active || !x01Truth.actionable) {
     resetZoomIntentForInactiveVariant(state);
     return false;
   }
-
-  const active = gameState.isX01Variant({
-    allowMissing: false,
-    allowEmpty: false,
-    allowNumeric: true,
-  });
-  if (!active) {
-    resetZoomIntentForInactiveVariant(state);
-  }
-  return active;
+  return true;
 }
 
 export function computeZoomIntent(options = {}) {
   const matchSurface = options.matchSurface || readModernMatchSurface(options.documentRef, options.windowRef);
   const {
     gameState,
+    x01Truth,
     x01Rules,
     state,
     documentRef,
-    windowRef,
     config,
     nowTs,
     outMode,
@@ -1831,11 +1729,11 @@ export function computeZoomIntent(options = {}) {
     finishOnlyCheckoutZoom,
   } = resolveZoomIntentSettings({ ...options, matchSurface });
 
-  if (!hasActiveX01ZoomContext({ gameState, x01Rules, state, documentRef, matchSurface })) {
+  if (!hasActiveX01ZoomContext({ x01Truth, x01Rules, state })) {
     return null;
   }
 
-  syncBoundaryTokenState(state, resolveGameBoundaryToken(gameState));
+  syncBoundaryTokenState(state, x01Truth.gameBoundaryToken);
 
   const turnProgress = resolveTurnProgressState(state, gameState);
   if (!turnProgress) {
@@ -1844,11 +1742,8 @@ export function computeZoomIntent(options = {}) {
       return null;
     }
     return resolveHydrationCheckoutIntent({
-      gameState,
-      x01Rules,
+      checkoutContext: x01Truth,
       state,
-      documentRef,
-      windowRef,
       config,
     });
   }
@@ -1860,9 +1755,7 @@ export function computeZoomIntent(options = {}) {
   }
 
   const checkoutContext = resolveIntentCheckoutContext({
-    gameState,
-    documentRef,
-    windowRef,
+    x01CheckoutContext: x01Truth,
     outMode,
     throwCount,
     x01Rules,

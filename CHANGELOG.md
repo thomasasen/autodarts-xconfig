@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.3.2] - 2026-10-07
+
+### Fixed
+
+- Nutzerwirkung: Checkout-Score, Zielhervorhebung und TV-Board-Zoom bleiben bei schnellen Match-, Modus-, Spieler- und Wurfwechseln synchron. Veraltete Werte aus einem vorherigen Match oder einem kurz nachlaufenden Datenkanal werden nicht mehr gemischt.
+  Technik: Eine gemeinsame atomare X01-State-Arbitration vergleicht Match, Variante, Out-Modus, aktiven Spieler, Score und Wurffortschritt aus Game-State und sichtbarer DOM-Fläche. Abweichende Quellen werden anhand der letzten kohärenten Wahrheit gewählt oder bis zur eindeutigen Auflösung verworfen; Match- und Turn-Grenzen beenden außerdem gehaltene Checkout-Ziele.
+
 ## [3.3.1] - 2026-10-02
 
 ### Changed
@@ -2302,6 +2309,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.3.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.3.1...v3.3.2
 [3.3.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.3.0...v3.3.1
 [3.3.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.2.2...v3.3.0
 [3.2.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.2.1...v3.2.2

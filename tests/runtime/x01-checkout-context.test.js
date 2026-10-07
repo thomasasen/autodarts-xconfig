@@ -8,6 +8,7 @@ import {
   resolveX01CheckoutContext,
 } from "../../src/features/x01-checkout-context.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
+import { createModernX01Fixture } from "./modern-x01-fixture.js";
 
 function createX01GameState(overrides = {}) {
   const outMode = String(overrides.outMode || "");
@@ -242,33 +243,59 @@ test("x01 checkout context ignores stale game-state from another match route", (
   assert.equal(resolved.scoreAgreement, "dom-only");
 });
 
-test("x01 checkout context prefers the visible DOM score when the game-state lags", () => {
-  const documentRef = new FakeDocument();
-  const windowRef = createFakeWindow({ documentRef });
-  documentRef.activeScoreElement.textContent = "121";
-  documentRef.suggestionElement.textContent = "T20";
-  documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
-  appendSuggestion(documentRef, "25", 520, 16);
-  appendSuggestion(documentRef, "D18", 720, 16);
-
-  const resolved = resolveX01CheckoutContext({
-    documentRef,
-    windowRef,
-    gameState: createX01GameState({
-      activeScore: 36,
-      outMode: "Double Out",
-    }),
-    x01Rules,
+test("x01 checkout context prefers DOM only after its progress diverges from a coherent baseline", () => {
+  const fixture = createModernX01Fixture({ score: 60, throws: [], route: ["S20", "D20"] });
+  const state = { score: 60, throws: [] };
+  const gameState = createX01GameState({
+    activeScore: 60,
+    outMode: "Double Out",
+    snapshot: { match: { id: "modern-match", variant: "X01" } },
   });
+  gameState.getActiveScore = () => state.score;
+  gameState.getActiveThrows = () => state.throws;
+  gameState.getActiveTurn = () => ({ id: "turn-1", playerId: "player-1", throws: state.throws });
+  gameState.getActivePlayerIndex = () => 0;
 
-  assert.equal(resolved.activeScore, 121);
-  assert.equal(resolved.domScore, 121);
-  assert.equal(resolved.gameStateScore, 36);
+  const baseline = resolveX01CheckoutContext({ ...fixture, gameState, x01Rules });
+  assert.equal(baseline.coherence, "coherent");
+
+  fixture.score.textContent = "40";
+  fixture.setVisit(["S20"], ["D20"]);
+  const resolved = resolveX01CheckoutContext({ ...fixture, gameState, x01Rules });
+
+  assert.equal(resolved.activeScore, 40);
+  assert.equal(resolved.domScore, 40);
+  assert.equal(resolved.gameStateScore, 60);
   assert.equal(resolved.scoreSource, "dom-preferred");
   assert.equal(resolved.scoreAgreement, "mismatch");
-  assert.deepEqual(resolved.routeSegments, ["T20", "S25", "D18"]);
+  assert.equal(resolved.coherence, "dom-preferred");
+  assert.deepEqual(resolved.routeSegments, ["D20"]);
   assert.equal(resolved.checkoutSurface.selectionSource, "validated-visible-route");
-  assert.deepEqual(resolved.checkoutSurface.authoritativeRouteSegments, ["T20", "S25", "D18"]);
+  assert.deepEqual(resolved.checkoutSurface.authoritativeRouteSegments, ["D20"]);
+});
+
+test("x01 checkout context rejects a lagging DOM route after state progress", () => {
+  const fixture = createModernX01Fixture({ score: 100, throws: [], route: ["T20", "D20"] });
+  const state = { score: 100, throws: [] };
+  const gameState = createX01GameState({
+    activeScore: 100,
+    outMode: "Double Out",
+    snapshot: { match: { id: "modern-match", variant: "X01" } },
+  });
+  gameState.getActiveScore = () => state.score;
+  gameState.getActiveThrows = () => state.throws;
+  gameState.getActiveTurn = () => ({ id: "turn-1", playerId: "player-1", throws: state.throws });
+
+  resolveX01CheckoutContext({ ...fixture, gameState, x01Rules });
+  state.score = 40;
+  state.throws = [{ segment: { name: "T20" }, score: 60 }];
+  const resolved = resolveX01CheckoutContext({ ...fixture, gameState, x01Rules });
+
+  assert.equal(resolved.coherence, "state-preferred");
+  assert.equal(resolved.activeScore, 40);
+  assert.equal(resolved.throwCount, 1);
+  assert.deepEqual(resolved.checkoutSurface.authoritativeRouteSegments, ["D20"]);
+  assert.notDeepEqual(resolved.checkoutSurface.authoritativeRouteSegments, ["T20", "D20"]);
 });
 
 test("x01 checkout context falls back to DOM-only score truth when no game-state score exists", () => {

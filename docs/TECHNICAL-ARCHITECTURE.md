@@ -39,6 +39,29 @@ Neue reine Helfer in `v1.1.0`:
 - `applyX01ThrowsToState({ scoreBefore, outMode, throws })`
 - `evaluateCricketWinState({ marksByLabel, scoresByPlayer, scoringMode, targetOrder })`
 
+## Gemeinsame X01-Matchwahrheit
+
+`src/features/x01-checkout-context.js` löst den aktuellen X01-Zustand atomar aus
+Game-State und sichtbarer Match-Oberfläche auf. Match, Variante, Out-Modus, Score,
+aktiver Spieler, Turn und Wurffortschritt werden immer als zusammengehöriger
+Kandidat bewertet; ein als fremd erkannter Snapshot liefert keine einzelnen
+Ersatzwerte für das aktuelle Match.
+
+Eindeutig sichtbare Non-X01-Varianten deaktivieren X01-Verbraucher sofort. Bei
+abweichenden aktuellen Quellen entscheidet die letzte kohärente State- und
+DOM-Signatur über die Fortschrittsrichtung. Nicht auflösbare Erstkonflikte bleiben
+`pending` beziehungsweise `conflict` und lösen keine automatische Darstellung aus.
+
+Diese Wahrheit verwenden gemeinsam:
+
+- `checkout-score-highlight`
+- `checkout-target-highlights`
+- `tv-board-zoom`
+
+Checkout-Target-Retention ist zusätzlich an Match-/Game- und Turn-Grenzen gebunden.
+Damit können weder gehaltene Ziele noch Zoom- oder Score-Zustände eine eindeutige
+Match- oder Variantengrenze überschreiten.
+
 ## Feature-Modell
 
 Jedes Feature exportiert mindestens eine Mount-Funktion und optional eine Action-Funktion.

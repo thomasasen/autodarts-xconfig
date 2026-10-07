@@ -3,6 +3,7 @@ import {
   computeZoomIntent,
   markManualZoomPause,
   resetZoom,
+  resolveTvBoardZoomTruth,
   resolveZoomHost,
   resolveZoomTarget,
   syncGifOverlayContainment,
@@ -446,6 +447,11 @@ function buildDebugSignature(payload = {}) {
     payload.targetRect?.top ?? "null",
     payload.viewportRect?.left ?? "null",
     payload.viewportRect?.top ?? "null",
+    payload.coherence || "",
+    payload.matchId || "",
+    payload.routeMatchId || "",
+    payload.snapshotMatchIds?.join(",") || "",
+    payload.arbitrationReason || "",
   ].join("|");
 }
 
@@ -454,7 +460,36 @@ function buildDebugSummary(payload = {}) {
     payload.segment || "-"
   }" target="${payload.targetClassName || "-"}" host="${payload.hostClassName || "-"}" tx="${
     payload.tx ?? "-"
-  }" ty="${payload.ty ?? "-"}" anchor="${payload.anchorX ?? "-"},${payload.anchorY ?? "-"}"`;
+  }" ty="${payload.ty ?? "-"}" anchor="${payload.anchorX ?? "-"},${payload.anchorY ?? "-"}" coherence="${
+    payload.coherence || "-"
+  }" match="${payload.matchId || "-"}" routeMatch="${payload.routeMatchId || "-"}" snapshotMatch="${
+    payload.snapshotMatchIds?.join(",") || "-"
+  }" domScore="${payload.domScore ?? "-"}" stateScore="${payload.stateScore ?? "-"}" domOut="${
+    payload.domOutMode || "-"
+  }" stateOut="${payload.stateOutMode || "-"}" throws="${payload.domThrowCount ?? "-"}/${
+    payload.stateThrowCount ?? "-"
+  }" source="${payload.truthSource || "-"}" arbitration="${payload.arbitrationReason || "-"}"`;
+}
+
+function withTruthDebug(payload, x01Truth) {
+  const diagnostics = x01Truth?.diagnostics || {};
+  return {
+    ...payload,
+    coherence: String(x01Truth?.coherence || ""),
+    matchId: String(x01Truth?.matchId || ""),
+    routeMatchId: String(diagnostics.routeMatchId || ""),
+    snapshotMatchIds: Array.isArray(diagnostics.snapshotMatchIds)
+      ? diagnostics.snapshotMatchIds.slice()
+      : [],
+    domScore: Number.isFinite(diagnostics.domScore) ? diagnostics.domScore : null,
+    stateScore: Number.isFinite(diagnostics.stateScore) ? diagnostics.stateScore : null,
+    domOutMode: String(diagnostics.domOutMode || ""),
+    stateOutMode: String(diagnostics.stateOutMode || ""),
+    domThrowCount: Number.isFinite(diagnostics.domThrowCount) ? diagnostics.domThrowCount : null,
+    stateThrowCount: Number.isFinite(diagnostics.stateThrowCount) ? diagnostics.stateThrowCount : null,
+    truthSource: String(x01Truth?.source || ""),
+    arbitrationReason: String(diagnostics.reason || ""),
+  };
 }
 
 function resolveFeatureDebugLogger(featureDebug, level) {
@@ -700,10 +735,10 @@ export function initializeTvBoardZoom(context = {}) {
       resetZoom(speedConfig, zoomState, Boolean(options.immediate), {
         preserveGifContainment: Boolean(options.preserveGifContainment),
       });
-      emitDebugEvent(debugState, reason === "board-missing" || reason === "target-missing" ? "warn" : "log", {
+      emitDebugEvent(debugState, reason === "board-missing" || reason === "target-missing" ? "warn" : "log", withTruthDebug({
         status: "reset",
         reason,
-      });
+      }, zoomState.x01TruthDebug));
       return;
     }
 
@@ -724,10 +759,10 @@ export function initializeTvBoardZoom(context = {}) {
     resetZoom(speedConfig, zoomState, false, {
       preserveGifContainment: Boolean(options.preserveGifContainment),
     });
-    emitDebugEvent(debugState, reason === "board-missing" || reason === "target-missing" ? "warn" : "log", {
+    emitDebugEvent(debugState, reason === "board-missing" || reason === "target-missing" ? "warn" : "log", withTruthDebug({
       status: "reset",
       reason,
-    });
+    }, zoomState.x01TruthDebug));
   }
 
   function ensureGifOverlayObserver() {
@@ -765,6 +800,13 @@ export function initializeTvBoardZoom(context = {}) {
     clearIntegrityTimer();
     ensureGifOverlayObserver();
     const matchSurface = readModernMatchSurface(documentRef, windowRef);
+    const x01Truth = resolveTvBoardZoomTruth({
+      gameState,
+      documentRef,
+      windowRef,
+      x01Rules,
+    });
+    zoomState.x01TruthDebug = x01Truth;
     lastMatchSurface = matchSurface;
     if (!hasActiveTurnSurface(documentRef, matchSurface)) {
       disconnectResizeObserver();
@@ -816,6 +858,7 @@ export function initializeTvBoardZoom(context = {}) {
       windowRef,
       featureConfig,
       matchSurface,
+      x01Truth,
     });
     if (zoomState.holdUntilTs > Date.now()) {
       holdTimerId = windowRef.setTimeout(() => {
@@ -850,10 +893,10 @@ export function initializeTvBoardZoom(context = {}) {
       resetZoom(speedConfig, zoomState, true, {
         preserveGifContainment: true,
       });
-      emitDebugEvent(debugState, "log", {
+      emitDebugEvent(debugState, "log", withTruthDebug({
         status: "reset",
         reason: lifecycleResetReason,
-      });
+      }, x01Truth));
     }
 
     const zoomData = applyZoom(
@@ -872,7 +915,7 @@ export function initializeTvBoardZoom(context = {}) {
     if (zoomData) {
       scheduleIntegrityCheck();
     }
-    emitDebugEvent(debugState, "log", {
+    emitDebugEvent(debugState, "log", withTruthDebug({
       status: zoomData ? "apply" : "apply-missing-transform",
       reason: String(intent?.reason || ""),
       segment: String(intent?.segment || ""),
@@ -884,7 +927,7 @@ export function initializeTvBoardZoom(context = {}) {
       anchorY: Number.isFinite(zoomData?.anchor?.y) ? Number(zoomData.anchor.y.toFixed(4)) : null,
       targetRect: mapRect(zoomData?.targetRect || targetNode.getBoundingClientRect?.()),
       viewportRect: mapRect(zoomData?.viewportRect || hostNode?.getBoundingClientRect?.()),
-    });
+    }, x01Truth));
   }, { windowRef });
   const isManagedNode = createManagedNodeMatcher({
     classNames: [ZOOM_CLASS, ZOOM_HOST_CLASS],

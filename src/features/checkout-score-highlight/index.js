@@ -9,6 +9,7 @@ import {
   computeShouldHighlight,
   getAllScoreNodes,
   getScoreNodes,
+  resolveCheckoutScoreTruth,
 } from "./logic.js";
 import { STYLE_ID, buildStyleText } from "./style.js";
 
@@ -48,7 +49,13 @@ export function mountCheckoutScoreHighlight(context = {}) {
 
   let lastDebugSignature = "";
 
-  function emitDebugState(playerSurfaceSnapshot, allScoreNodes, scoreNodes, shouldHighlight) {
+  function emitDebugState(
+    playerSurfaceSnapshot,
+    allScoreNodes,
+    scoreNodes,
+    shouldHighlight,
+    x01Truth
+  ) {
     if (!featureDebug?.enabled || typeof featureDebug.log !== "function") {
       return;
     }
@@ -62,6 +69,9 @@ export function mountCheckoutScoreHighlight(context = {}) {
       scoreText,
       shouldHighlight ? 1 : 0,
       featureConfig.triggerSource,
+      x01Truth?.coherence || "none",
+      x01Truth?.matchId || "none",
+      x01Truth?.diagnostics?.reason || "none",
     ].join("::");
     if (signature === lastDebugSignature) {
       return;
@@ -69,27 +79,44 @@ export function mountCheckoutScoreHighlight(context = {}) {
 
     lastDebugSignature = signature;
     featureDebug.log(
-      `state surface="${playerSurfaceSnapshot?.source || "none"}" scores=${allScoreNodes.length} activeScore="${scoreText || "-"}" highlight=${shouldHighlight ? "yes" : "no"} trigger="${featureConfig.triggerSource}"`
+      `state surface="${playerSurfaceSnapshot?.source || "none"}" scores=${allScoreNodes.length} activeScore="${scoreText || "-"}" highlight=${shouldHighlight ? "yes" : "no"} trigger="${featureConfig.triggerSource}" coherence="${x01Truth?.coherence || "none"}" match="${x01Truth?.matchId || "-"}" routeMatch="${x01Truth?.diagnostics?.routeMatchId || "-"}" snapshotMatch="${x01Truth?.diagnostics?.snapshotMatchIds?.join(",") || "-"}" domScore="${x01Truth?.diagnostics?.domScore ?? "-"}" stateScore="${x01Truth?.diagnostics?.stateScore ?? "-"}" domOut="${x01Truth?.diagnostics?.domOutMode || "-"}" stateOut="${x01Truth?.diagnostics?.stateOutMode || "-"}" throws="${x01Truth?.diagnostics?.domThrowCount ?? "-"}/${x01Truth?.diagnostics?.stateThrowCount ?? "-"}" source="${x01Truth?.source || "none"}" arbitration="${x01Truth?.diagnostics?.reason || "-"}"`
     );
   }
 
   function update() {
+    const x01Truth = resolveCheckoutScoreTruth({
+      documentRef,
+      windowRef,
+      gameState,
+      variantRules: context.domain?.variantRules,
+      x01Rules: context.domain?.x01Rules,
+    });
     const playerSurfaceSnapshot = getX01PlayerSurfaceSnapshot(documentRef, {
       includeModern: true,
       windowRef,
     });
     const allScoreNodes = getAllScoreNodes(documentRef, { playerSurfaceSnapshot });
-    const scoreNodes = getScoreNodes(documentRef, gameState, { playerSurfaceSnapshot });
+    const scoreNodes = getScoreNodes(documentRef, gameState, {
+      playerSurfaceSnapshot,
+      activePlayerIndex: x01Truth.activePlayerIndex,
+    });
     const shouldHighlight = computeShouldHighlight({
       documentRef,
       windowRef,
       gameState,
       variantRules: context.domain?.variantRules,
       x01Rules: context.domain?.x01Rules,
+      x01Truth,
       triggerSource: featureConfig.triggerSource,
     });
 
-    emitDebugState(playerSurfaceSnapshot, allScoreNodes, scoreNodes, shouldHighlight);
+    emitDebugState(
+      playerSurfaceSnapshot,
+      allScoreNodes,
+      scoreNodes,
+      shouldHighlight,
+      x01Truth
+    );
 
     if (!shouldHighlight) {
       clearHighlightState(allScoreNodes);

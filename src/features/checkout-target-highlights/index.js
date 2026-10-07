@@ -7,7 +7,6 @@ import { OVERLAY_ID, STYLE_ID, buildStyleText, resolveBoardTargetVisualConfig } 
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 import {
   mapRouteSegmentsToBoardTargets,
-  MODERN_CHECKOUT_SUGGESTION_SELECTOR,
   SUGGESTION_SELECTOR,
 } from "../x01-checkout-route.js";
 import { resolveX01CheckoutContext } from "../x01-checkout-context.js";
@@ -188,15 +187,6 @@ export function resolveCheckoutBoardMutationReaction(mutations = [], context = {
   };
 }
 
-function resolveDartsRemaining(gameState) {
-  const throws = Array.isArray(gameState?.getActiveThrows?.()) ? gameState.getActiveThrows() : [];
-  const throwCount = Math.max(0, Math.min(3, throws.length));
-  return {
-    throwCount,
-    dartsRemaining: Math.max(0, 3 - throwCount),
-  };
-}
-
 function nowMs() {
   return Date.now();
 }
@@ -302,6 +292,8 @@ function buildDebugPayload(options = {}) {
   const documentRef = options.documentRef;
   const board = options.board || null;
   const windowRef = options.windowRef || null;
+  const x01Truth = options.x01Truth || null;
+  const truthDiagnostics = x01Truth?.diagnostics || {};
   return {
     status: String(options.status || "unknown"),
     active: options.active === true,
@@ -312,6 +304,22 @@ function buildDebugPayload(options = {}) {
     scoreAgreement: String(options.scoreAgreement || "none"),
     variantText: String(options.variantText || "").trim(),
     outMode: String(options.outMode || "").trim(),
+    coherence: String(x01Truth?.coherence || ""),
+    matchId: String(x01Truth?.matchId || ""),
+    routeMatchId: String(truthDiagnostics.routeMatchId || ""),
+    snapshotMatchIds: Array.isArray(truthDiagnostics.snapshotMatchIds)
+      ? truthDiagnostics.snapshotMatchIds.slice()
+      : [],
+    domOutMode: String(truthDiagnostics.domOutMode || ""),
+    stateOutMode: String(truthDiagnostics.stateOutMode || ""),
+    domThrowCount: Number.isFinite(truthDiagnostics.domThrowCount)
+      ? truthDiagnostics.domThrowCount
+      : null,
+    stateThrowCount: Number.isFinite(truthDiagnostics.stateThrowCount)
+      ? truthDiagnostics.stateThrowCount
+      : null,
+    discardedSource: String(truthDiagnostics.discardedSource || ""),
+    arbitrationReason: String(truthDiagnostics.reason || ""),
     targetSelectionMode: String(options.targetSelectionMode || "next"),
     selectionSource: String(options.selectionSource || "none"),
     suggestionCount:
@@ -360,6 +368,16 @@ function buildDebugSignature(payload = {}) {
     payload.scoreAgreement || "none",
     payload.variantText || "-",
     payload.outMode || "-",
+    payload.coherence || "-",
+    payload.matchId || "-",
+    payload.routeMatchId || "-",
+    payload.snapshotMatchIds.join(","),
+    payload.domOutMode || "-",
+    payload.stateOutMode || "-",
+    payload.domThrowCount ?? "null",
+    payload.stateThrowCount ?? "null",
+    payload.discardedSource || "-",
+    payload.arbitrationReason || "-",
     payload.targetSelectionMode || "next",
     payload.selectionSource || "none",
     Number(payload.suggestionCount) || 0,
@@ -395,6 +413,13 @@ function buildDebugSummary(payload = {}) {
     payload.gameStateScore ?? "-"
   }" scoreSource="${payload.scoreSource || "none"}" scoreAgreement="${payload.scoreAgreement || "none"}" outMode="${
     payload.outMode || "-"
+  }" coherence="${payload.coherence || "-"}" match="${payload.matchId || "-"}" routeMatch="${
+    payload.routeMatchId || "-"
+  }" snapshotMatch="${payload.snapshotMatchIds.join(",") || "-"}" domOut="${
+    payload.domOutMode || "-"
+  }" stateOut="${payload.stateOutMode || "-"}" throws="${payload.domThrowCount ?? "-"}/${
+    payload.stateThrowCount ?? "-"
+  }" discarded="${payload.discardedSource || "-"}" arbitration="${payload.arbitrationReason || "-"
   }" selection="${
     payload.targetSelectionMode || "next"
   }" source="${payload.selectionSource || "none"}" suggestions=${
@@ -414,39 +439,8 @@ function buildDebugSummary(payload = {}) {
   }`;
 }
 
-function isX01Active({ gameState, documentRef, windowRef, variantRules }) {
-  if (gameState && typeof gameState.isX01Variant === "function") {
-    const gameStateIsX01 = gameState.isX01Variant({
-      allowMissing: false,
-      allowEmpty: false,
-      allowNumeric: true,
-    });
-    if (gameStateIsX01) {
-      return true;
-    }
-  }
-
-  if (!documentRef || typeof documentRef.getElementById !== "function") {
-    return false;
-  }
-  if (!variantRules || typeof variantRules.isX01VariantText !== "function") {
-    return false;
-  }
-
-  const variantNode = documentRef.getElementById("ad-ext-game-variant");
-  if (
-    variantRules.isX01VariantText(variantNode?.textContent || "", {
-      allowMissing: false,
-      allowEmpty: false,
-      allowNumeric: true,
-    })
-  ) {
-    return true;
-  }
-
-  return Array.from(
-    documentRef.querySelectorAll?.(MODERN_CHECKOUT_SUGGESTION_SELECTOR) || []
-  ).some((node) => isDebugNodeVisible(node, windowRef));
+export function resolveCheckoutTargetTruth(context = {}) {
+  return context.x01Truth || resolveX01CheckoutContext(context);
 }
 
 function buildRenderSignature({
@@ -457,6 +451,9 @@ function buildRenderSignature({
   gameStateScore,
   outMode,
   dartsRemaining,
+  coherence,
+  boundaryToken,
+  activeTurnId,
 }) {
   return [
     active ? "x01" : "other",
@@ -466,6 +463,9 @@ function buildRenderSignature({
     Number.isFinite(gameStateScore) ? gameStateScore : "null",
     outMode,
     dartsRemaining,
+    coherence,
+    boundaryToken,
+    activeTurnId,
   ].join("|");
 }
 
@@ -534,9 +534,11 @@ export function initializeCheckoutTargetHighlights(context = {}) {
     targets: [],
     activeScore: Number.NaN,
     outMode: "",
+    contextKey: "",
     validUntilMs: 0,
   };
   let retainExpiryTimer = 0;
+  let activeRetentionContextKey = "";
 
   function clearRetainExpiryTimer() {
     if (!retainExpiryTimer) {
@@ -556,11 +558,12 @@ export function initializeCheckoutTargetHighlights(context = {}) {
     retainedRenderState.targets = [];
     retainedRenderState.activeScore = Number.NaN;
     retainedRenderState.outMode = "";
+    retainedRenderState.contextKey = "";
     retainedRenderState.validUntilMs = 0;
     clearRetainExpiryTimer();
   }
 
-  function rememberRetainedRenderState(selectedSegments, targets, activeScore, outMode) {
+  function rememberRetainedRenderState(selectedSegments, targets, activeScore, outMode, contextKey) {
     retainedRenderState.selectedSegments = Array.isArray(selectedSegments)
       ? selectedSegments.slice()
       : [];
@@ -569,6 +572,7 @@ export function initializeCheckoutTargetHighlights(context = {}) {
       : [];
     retainedRenderState.activeScore = Number.isFinite(activeScore) ? activeScore : Number.NaN;
     retainedRenderState.outMode = String(outMode || "");
+    retainedRenderState.contextKey = String(contextKey || "");
     retainedRenderState.validUntilMs = nowMs() + TRANSIENT_ROUTE_RETENTION_MS;
     clearRetainExpiryTimer();
   }
@@ -586,8 +590,12 @@ export function initializeCheckoutTargetHighlights(context = {}) {
     }, delayMs + 25);
   }
 
-  function getRetainedRender(activeScore, outMode) {
+  function getRetainedRender(activeScore, outMode, contextKey) {
     if (!retainedRenderState.targets.length || nowMs() > retainedRenderState.validUntilMs) {
+      return null;
+    }
+
+    if (!contextKey || retainedRenderState.contextKey !== contextKey) {
       return null;
     }
 
@@ -672,7 +680,13 @@ export function initializeCheckoutTargetHighlights(context = {}) {
     };
   }
 
-  function resolveActiveRenderPlan({ checkoutContext, selectedSegments, activeScore, outMode }) {
+  function resolveActiveRenderPlan({
+    checkoutContext,
+    selectedSegments,
+    activeScore,
+    outMode,
+    retentionContextKey,
+  }) {
     const routeSegments = Array.isArray(checkoutContext.routeSegments)
       ? checkoutContext.routeSegments
       : [];
@@ -687,7 +701,13 @@ export function initializeCheckoutTargetHighlights(context = {}) {
     });
 
     if (status === "render") {
-      rememberRetainedRenderState(selectedSegments, targets, activeScore, outMode);
+      rememberRetainedRenderState(
+        selectedSegments,
+        targets,
+        activeScore,
+        outMode,
+        retentionContextKey
+      );
       return {
         board,
         status,
@@ -698,7 +718,7 @@ export function initializeCheckoutTargetHighlights(context = {}) {
     }
 
     if (board && shouldUseRetainedRender(status)) {
-      const retainedRender = getRetainedRender(activeScore, outMode);
+      const retainedRender = getRetainedRender(activeScore, outMode, retentionContextKey);
       if (retainedRender) {
         scheduleRetainedRenderExpiry();
         return {
@@ -722,12 +742,16 @@ export function initializeCheckoutTargetHighlights(context = {}) {
   }
 
   function update() {
-    const active = isX01Active({
+    const x01CheckoutContext = resolveCheckoutTargetTruth({
       gameState,
       documentRef,
       windowRef,
       variantRules,
+      x01Rules,
+      domOutMode: context.domOutMode,
+      dartsRemaining: context.dartsRemaining,
     });
+    const active = x01CheckoutContext.active && x01CheckoutContext.actionable;
     const variantText = String(
       documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || ""
     ).trim();
@@ -740,6 +764,9 @@ export function initializeCheckoutTargetHighlights(context = {}) {
         gameStateScore: null,
         outMode: "",
         dartsRemaining: null,
+        coherence: x01CheckoutContext.coherence,
+        boundaryToken: x01CheckoutContext.gameBoundaryToken,
+        activeTurnId: x01CheckoutContext.activeTurnId,
       });
 
       if (signature === lastRenderSignature) {
@@ -748,8 +775,9 @@ export function initializeCheckoutTargetHighlights(context = {}) {
       lastRenderSignature = signature;
 
       resetRetainedRenderState();
+      activeRetentionContextKey = "";
       const payload = buildDebugPayload({
-        status: "inactive",
+        status: x01CheckoutContext.active ? x01CheckoutContext.coherence : "inactive",
         active: false,
         activeScore: null,
         domScore: null,
@@ -767,20 +795,26 @@ export function initializeCheckoutTargetHighlights(context = {}) {
         selectedSegments: [],
         targets: [],
         board: null,
+        x01Truth: x01CheckoutContext,
       });
       emitDebugEvent(debugState, "log", buildDebugSignature(payload), buildDebugSummary(payload), payload);
       clearCurrentOverlay();
+      domGuards.removeNodeById(OVERLAY_ID);
+      boardCache.value = null;
       return;
     }
 
-    const { dartsRemaining } = resolveDartsRemaining(gameState);
-    const x01CheckoutContext = resolveX01CheckoutContext({
-      gameState,
-      documentRef,
-      windowRef,
-      dartsRemaining,
-      x01Rules,
-    });
+    const dartsRemaining = x01CheckoutContext.dartsRemaining;
+    const retentionContextKey = x01CheckoutContext.gameBoundaryToken &&
+      x01CheckoutContext.activeTurnId
+      ? `${x01CheckoutContext.gameBoundaryToken}|turn:${x01CheckoutContext.activeTurnId}`
+      : "";
+    if (!retentionContextKey || (
+      activeRetentionContextKey && activeRetentionContextKey !== retentionContextKey
+    )) {
+      resetRetainedRenderState();
+    }
+    activeRetentionContextKey = retentionContextKey;
     const routeEntries = x01CheckoutContext.routeEntries;
     const routeSegments = x01CheckoutContext.routeSegments;
     const outMode = x01CheckoutContext.outMode;
@@ -793,6 +827,9 @@ export function initializeCheckoutTargetHighlights(context = {}) {
       gameStateScore: x01CheckoutContext.gameStateScore,
       outMode,
       dartsRemaining,
+      coherence: x01CheckoutContext.coherence,
+      boundaryToken: x01CheckoutContext.gameBoundaryToken,
+      activeTurnId: x01CheckoutContext.activeTurnId,
     });
 
     if (signature === lastRenderSignature) {
@@ -807,6 +844,7 @@ export function initializeCheckoutTargetHighlights(context = {}) {
       selectedSegments,
       activeScore,
       outMode,
+      retentionContextKey,
     });
 
     const payload = buildDebugPayload({
@@ -828,6 +866,7 @@ export function initializeCheckoutTargetHighlights(context = {}) {
       selectedSegments: renderPlan.selectedSegments,
       targets: renderPlan.targets,
       board: renderPlan.board,
+      x01Truth: x01CheckoutContext,
     });
     emitDebugEvent(
       debugState,
@@ -892,6 +931,7 @@ export function initializeCheckoutTargetHighlights(context = {}) {
 
     scheduler.cancel();
     resetRetainedRenderState();
+    activeRetentionContextKey = "";
     try {
       unsubscribeGameState();
     } catch (_) {

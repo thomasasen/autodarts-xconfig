@@ -205,7 +205,19 @@ function installBoardInputModeControls(fixture, activeMode = "live") {
 }
 
 function startModernZoom(options = {}) {
-  const fixture = createModernX01Fixture(options);
+  const stateScore = options.gameState?.getActiveScore?.();
+  const stateThrows = options.gameState?.getActiveThrows?.();
+  const fixture = createModernX01Fixture({
+    ...options,
+    score: Object.hasOwn(options, "score")
+      ? options.score
+      : Number.isFinite(stateScore) ? stateScore : undefined,
+    throws: Object.hasOwn(options, "throws")
+      ? options.throws
+      : Array.isArray(stateThrows)
+        ? stateThrows.map((entry) => String(entry?.segment?.name || "")).filter(Boolean)
+        : undefined,
+  });
   if (Object.hasOwn(options, "selectedBoard")) {
     fixture.windowRef.localStorage.setItem("selectedBoard", options.selectedBoard);
   }

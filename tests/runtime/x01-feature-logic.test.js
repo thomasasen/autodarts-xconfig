@@ -744,7 +744,7 @@ test("tv-board-zoom finish-only mode falls back to BULL at 50 when no authoritat
   });
 });
 
-test("tv-board-zoom finish-only mode prefers the visible DOM score over a stale gameState score", () => {
+test("tv-board-zoom does not treat a visible route as proof that DOM is fresher than game state", () => {
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "121";
   documentRef.suggestionElement.textContent = "T20";
@@ -778,7 +778,7 @@ test("tv-board-zoom finish-only mode prefers the visible DOM score over a stale 
     nowTs: 3430,
   });
 
-  assert.equal(intent, null);
+  assert.deepEqual(intent, { reason: "checkout", segment: "D18" });
 });
 
 test("tv-board-zoom route-first mode keeps the first visible checkout route field", () => {

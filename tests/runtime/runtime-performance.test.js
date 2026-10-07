@@ -9,6 +9,7 @@ import { createListenerRegistry } from "../../src/core/listener-registry.js";
 import {
   initializeCheckoutTargetHighlights,
   resolveCheckoutBoardMutationReaction,
+  resolveCheckoutTargetTruth,
 } from "../../src/features/checkout-target-highlights/index.js";
 import { renderCheckoutTargets } from "../../src/features/checkout-target-highlights/logic.js";
 import { initializeCricketTargetHighlighter } from "../../src/features/cricket-target-highlighter/index.js";
@@ -218,7 +219,8 @@ test("checkout-target-highlights renders the modern checkout surface in the top 
       observers: createObserverRegistry(),
     },
     gameState: {
-      isX01Variant: () => false,
+      isX01Variant: () => true,
+      getActiveScore: () => 121,
       getActiveThrows: () => [],
       getOutMode: () => "Double Out",
       subscribe() {
@@ -1559,7 +1561,7 @@ test("checkout-target-highlights finish mode stays empty for a valid visible S10
 
 test("checkout-target-highlights next mode keeps the visible route-first target when the game state score lags behind the DOM", () => {
   const documentRef = new FakeDocument();
-  documentRef.activeScoreElement.textContent = "61";
+  documentRef.activeScoreElement.textContent = "36";
   documentRef.suggestionElement.textContent = "25";
   documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
   const secondSuggestion = documentRef.createElement("div");
@@ -1568,24 +1570,39 @@ test("checkout-target-highlights next mode keeps the visible route-first target 
   secondSuggestion.__rect = { left: 520, top: 16, width: 180, height: 48 };
   documentRef.main.appendChild(secondSuggestion);
   appendBoardFixture(documentRef);
+  const windowRef = createFakeWindow({
+    documentRef,
+    href: "https://play.autodarts.com/matches/current-match",
+  });
+  const gameState = {
+    isX01Variant: () => true,
+    getActiveScore: () => 36,
+    getActiveThrows: () => [{ segment: { name: "T20" }, score: 60 }],
+    getOutMode: () => "Double Out",
+    getSnapshot: () => ({ match: { id: "current-match" } }),
+    subscribe() {
+      return () => {};
+    },
+  };
+  resolveCheckoutTargetTruth({
+    documentRef,
+    windowRef,
+    gameState,
+    variantRules,
+    x01Rules,
+  });
+  documentRef.activeScoreElement.textContent = "61";
 
   const logs = [];
   const warnings = [];
   const cleanup = initializeCheckoutTargetHighlights({
     documentRef,
-    windowRef: createFakeWindow({ documentRef }),
+    windowRef,
     domGuards: createDomGuards({ documentRef }),
     registries: {
       observers: createObserverRegistry(),
     },
-    gameState: {
-      isX01Variant: () => true,
-      getActiveScore: () => 36,
-      getOutMode: () => "Double Out",
-      subscribe() {
-        return () => {};
-      },
-    },
+    gameState,
     domain: {
       x01Rules,
       variantRules: {
@@ -1665,7 +1682,7 @@ test("checkout-target-highlights ignores prior throw suggestions and targets vis
     },
     gameState: {
       isX01Variant: () => true,
-      getActiveScore: () => 32,
+      getActiveScore: () => 82,
       getOutMode: () => "Double Out",
       subscribe() {
         return () => {};
@@ -1717,7 +1734,7 @@ test("checkout-target-highlights ignores prior throw suggestions and targets vis
     assert.equal(logs.length, 1);
     assert.equal(logs[0][1]?.status, "render");
     assert.equal(logs[0][1]?.activeScore, 82);
-    assert.equal(logs[0][1]?.scoreSource, "dom-preferred");
+    assert.equal(logs[0][1]?.scoreSource, "game-state+dom");
     assert.equal(logs[0][1]?.selectionSource, "validated-visible-route");
     assert.deepEqual(logs[0][1]?.routeSegments, ["BULL", "D16"]);
     assert.deepEqual(logs[0][1]?.selectedSegments, ["BULL"]);
@@ -1765,6 +1782,8 @@ test("checkout-target-highlights ignores a direct finish from a stale previous m
         return () => {};
       },
     },
+    domOutMode: "Double Out",
+    dartsRemaining: 3,
     domain: {
       x01Rules,
       variantRules: {
@@ -2069,7 +2088,10 @@ test("checkout-target-highlights keeps the last drawable target during a transie
     gameState: {
       isX01Variant: () => true,
       getActiveScore: () => 181,
+      getActiveThrows: () => [],
+      getActiveTurn: () => ({ id: "turn-1", playerId: "player-1", throws: [] }),
       getOutMode: () => "Double Out",
+      getSnapshot: () => ({ match: { id: "current-match" } }),
       subscribe() {
         return () => {};
       },

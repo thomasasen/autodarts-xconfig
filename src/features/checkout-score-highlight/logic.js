@@ -17,21 +17,25 @@ export const ACTIVE_SCORE_SELECTOR =
 export const SUGGESTION_SELECTOR = CHECKOUT_ROUTE_SUGGESTION_SELECTOR;
 export const VARIANT_ELEMENT_ID = "ad-ext-game-variant";
 
-export function getCheckoutSuggestionState(context = {}) {
-  const checkoutContext = resolveX01CheckoutContext({
+export function resolveCheckoutScoreTruth(context = {}) {
+  return context.x01Truth || resolveX01CheckoutContext({
     ...context,
     x01Rules: context.x01Rules,
   });
-  const outMode =
-    context.gameState && typeof context.gameState.getOutMode === "function"
-      ? String(context.gameState.getOutMode() || "")
-      : String(context.outMode || "");
-  const dartsRemaining = getReliableDartsRemaining(context);
+}
+
+export function getCheckoutSuggestionState(context = {}) {
+  const checkoutContext = resolveCheckoutScoreTruth(context);
+  if (!checkoutContext.actionable) {
+    return false;
+  }
   const suggestionSignal = resolveCheckoutSuggestionSignal({
     ...context,
-    outMode,
+    routeEntries: checkoutContext.routeUsable ? checkoutContext.routeEntries : [],
+    ignoreVisibleRoute: !checkoutContext.routeUsable,
+    outMode: checkoutContext.outMode,
     activeScore: checkoutContext.activeScore,
-    dartsRemaining,
+    dartsRemaining: checkoutContext.dartsRemaining,
   });
   if (!suggestionSignal) {
     return null;
@@ -105,8 +109,13 @@ function resolveCheckoutSuggestionSignal(context = {}) {
   if (!documentRef || typeof documentRef.querySelector !== "function") {
     return null;
   }
+  if (context.ignoreVisibleRoute) {
+    return null;
+  }
 
-  const routeEntries = collectVisibleCheckoutRouteEntries(documentRef, windowRef, x01Rules);
+  const routeEntries = Array.isArray(context.routeEntries)
+    ? context.routeEntries
+    : collectVisibleCheckoutRouteEntries(documentRef, windowRef, x01Rules);
   const suggestionNode = routeEntries[0]?.node || documentRef.querySelector(SUGGESTION_SELECTOR);
   if (!suggestionNode) {
     return null;
@@ -229,13 +238,16 @@ export function getAllScoreNodes(documentRef, options = {}) {
   return queryAll(rootNode, SCORE_SELECTOR);
 }
 
-function resolveActivePlayerIndex(gameState) {
+function resolveActivePlayerIndex(gameState, options = {}) {
+  if (Object.hasOwn(options, "activePlayerIndex")) {
+    return Number(options.activePlayerIndex);
+  }
   return gameState && typeof gameState.getActivePlayerIndex === "function"
     ? Number(gameState.getActivePlayerIndex())
     : Number.NaN;
 }
 
-function getModernScoreNodes(documentRef, gameState, playerSurfaceSnapshot) {
+function getModernScoreNodes(documentRef, gameState, playerSurfaceSnapshot, options = {}) {
   const activeScores = playerSurfaceSnapshot.players
     .filter((player) => player?.isActive)
     .map((player) => player?.scoreNode || null)
@@ -244,7 +256,7 @@ function getModernScoreNodes(documentRef, gameState, playerSurfaceSnapshot) {
     return activeScores;
   }
 
-  const activePlayerIndex = resolveActivePlayerIndex(gameState);
+  const activePlayerIndex = resolveActivePlayerIndex(gameState, options);
   if (Number.isFinite(activePlayerIndex) && activePlayerIndex >= 0) {
     const activeScore = playerSurfaceSnapshot.players[activePlayerIndex]?.scoreNode || null;
     return activeScore ? [activeScore] : [];
@@ -261,7 +273,7 @@ export function getScoreNodes(documentRef, gameState = null, options = {}) {
   }
 
   if (playerSurfaceSnapshot?.source === X01_PLAYER_SURFACE_SOURCE_MODERN) {
-    return getModernScoreNodes(documentRef, gameState, playerSurfaceSnapshot);
+    return getModernScoreNodes(documentRef, gameState, playerSurfaceSnapshot, options);
   }
 
   const activeScores = queryAll(rootNode, ACTIVE_SCORE_SELECTOR);
@@ -270,7 +282,7 @@ export function getScoreNodes(documentRef, gameState = null, options = {}) {
   }
 
   const allScores = getAllScoreNodes(documentRef, { playerSurfaceSnapshot });
-  const activePlayerIndex = resolveActivePlayerIndex(gameState);
+  const activePlayerIndex = resolveActivePlayerIndex(gameState, options);
   if (Number.isFinite(activePlayerIndex) && activePlayerIndex >= 0) {
     const playerRows = playerSurfaceSnapshot?.playerDisplayRoot
       ? playerSurfaceSnapshot.playerCards.filter((rowNode) =>
@@ -290,56 +302,23 @@ export function getScoreNodes(documentRef, gameState = null, options = {}) {
 }
 
 export function isX01Active(context = {}) {
-  const gameState = context.gameState;
-  const documentRef = context.documentRef;
-  const variantRules = context.variantRules;
-
-  if (gameState && typeof gameState.isX01Variant === "function") {
-    return gameState.isX01Variant({
-      allowMissing: false,
-      allowEmpty: false,
-      allowNumeric: true,
-    });
-  }
-
-  if (!documentRef || !variantRules || typeof variantRules.isX01VariantText !== "function") {
-    return false;
-  }
-
-  const variantElement =
-    typeof documentRef.getElementById === "function"
-      ? documentRef.getElementById(VARIANT_ELEMENT_ID)
-      : null;
-
-  const variantText = String(variantElement?.textContent || "");
-  return variantRules.isX01VariantText(variantText, {
-    allowMissing: false,
-    allowEmpty: false,
-    allowNumeric: true,
-  });
+  return resolveCheckoutScoreTruth(context).active === true;
 }
 
 export function computeShouldHighlight(context = {}) {
   const triggerSource = String(context.triggerSource || "suggestion-first");
   const x01Rules = context.x01Rules;
-  const outMode =
-    context.gameState && typeof context.gameState.getOutMode === "function"
-      ? String(context.gameState.getOutMode() || "")
-      : String(context.outMode || "");
-
-  if (!isX01Active(context)) {
+  const checkoutContext = resolveCheckoutScoreTruth(context);
+  if (!checkoutContext.active || !checkoutContext.actionable) {
     return false;
   }
-
-  const activeScore = resolveX01CheckoutContext({
-    ...context,
-    outMode,
-    dartsRemaining: getReliableDartsRemaining(context),
-    x01Rules,
-  }).activeScore;
-  const dartsRemaining = getReliableDartsRemaining(context);
+  const activeScore = checkoutContext.activeScore;
+  const outMode = checkoutContext.outMode;
+  const dartsRemaining = checkoutContext.dartsRemaining;
   const suggestionSignal = resolveCheckoutSuggestionSignal({
     ...context,
+    routeEntries: checkoutContext.routeUsable ? checkoutContext.routeEntries : [],
+    ignoreVisibleRoute: !checkoutContext.routeUsable,
     outMode,
     activeScore,
     dartsRemaining,
