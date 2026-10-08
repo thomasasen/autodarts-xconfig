@@ -67,6 +67,7 @@ export function mountTurnDartDisplay(context = {}) {
     domGuards.removeNodeById(TURN_DART_DISPLAY_STYLE_ID);
   };
   const harness = createFeatureMountHarness(context, {
+    resetTurn: resetModernSurface,
     isSupported: () => true,
     update: () => {
       const featureConfig = typeof config?.getFeatureConfig === "function"

@@ -49,6 +49,10 @@ export function initializeTakeOutDartsAlert(context = {}) {
   }
 
   const harness = createFeatureMountHarness(context, {
+    resetTurn() {
+      clearTakeOutDartsAlertState(state);
+      requestImmediateFallbackScan(state);
+    },
     isSupported: ({ documentRef: nextDocumentRef }) => Boolean(nextDocumentRef && domGuards),
     update,
   });

@@ -844,6 +844,8 @@ export function getPlayerCards(documentRef) {
 
 export function clearAllScoreProgress(documentRef) {
   getRuntimeProgressHosts(documentRef).forEach((node) => {
+    Array.from(node.querySelectorAll?.(`.${FILL_CLASS}`) || []).forEach(cancelEffectAnimation);
+    Array.from(node.querySelectorAll?.(`.${TRAIL_CLASS}`) || []).forEach((trail) => clearTrailState(trail));
     node.remove?.();
   });
   cleanupStackMarkers(documentRef);

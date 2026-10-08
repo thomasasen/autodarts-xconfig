@@ -1,4 +1,4 @@
-import { createRafScheduler } from "../../shared/raf-scheduler.js";
+import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
 import {
   createX01PlayerSurfaceObserverController,
   getX01PlayerSurfaceSnapshot,
@@ -130,7 +130,11 @@ export function mountCheckoutScoreHighlight(context = {}) {
     });
   }
 
-  const scheduler = createRafScheduler(update, { windowRef });
+  const scheduler = createTurnScopedScheduler(context, update, { windowRef, resetTurn() {
+    const surface = getX01PlayerSurfaceSnapshot(documentRef, { includeModern: true, windowRef });
+    clearHighlightState(getAllScoreNodes(documentRef, { playerSurfaceSnapshot: surface }));
+    lastDebugSignature = "";
+  } });
 
   const cleanupSurfaceObserver = createX01PlayerSurfaceObserverController({
     documentRef,

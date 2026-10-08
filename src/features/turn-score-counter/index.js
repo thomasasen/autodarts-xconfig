@@ -1,3 +1,4 @@
+import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
 import {
   ensureAnimeLoaded,
   ensureOdometerLoaded,
@@ -123,7 +124,17 @@ export function initializeTurnScoreCounter(context = {}) {
     }
   }
 
-  const scheduler = schedulerFactory(update, { windowRef });
+  const scheduler = createTurnScopedScheduler(context, update, { windowRef, resetTurn() {
+    const nodes = new Set([
+      ...state.scoreNodeCache, ...state.lastValueByNode.keys(),
+      ...state.activeRafByNode.keys(), ...state.activeAnimeByNode.keys(),
+      ...state.activeCountUpByNode.keys(), ...state.flashTimeoutByNode.keys(),
+    ]);
+    nodes.forEach((node) => stopAnimation(node, state, windowRef));
+    releaseManagedScoreNodes(state);
+    Object.values(state).forEach((value) => { if (value instanceof Map) value.clear(); });
+    observedModernTurn = null;
+  } }, schedulerFactory);
 
   function resolveObserverSurface() {
     const modernTurn = findModernTurnSurface(documentRef, windowRef)?.turnContainer || null;

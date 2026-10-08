@@ -9,11 +9,13 @@ import { createRafScheduler } from "../shared/raf-scheduler.js";
 import { createDomGuards } from "./dom-guards.js";
 import { createEventBus } from "./event-bus.js";
 import { createGameStateStore } from "./game-state-store.js";
+import { createFeatureWatchdog } from "./feature-watchdog.js";
+import { createTurnLifecycle } from "../features/shared/turn-lifecycle.js";
 import { createListenerRegistry } from "./listener-registry.js";
 import { createObserverRegistry } from "./observer-registry.js";
 
 const GLOBAL_NAMESPACE_KEY = "__adXConfig";
-export const API_VERSION = "3.3.2";
+export const API_VERSION = "3.4.0";
 const STARTUP_DEFER_INTERVAL_MS = 16;
 
 function getWindowTimerApi(windowRef) {
@@ -210,6 +212,23 @@ export function createBootstrap(options = {}) {
     windowRef,
     documentRef,
   };
+  context.turnLifecycle = createTurnLifecycle({ ...context, x01Rules: dartRules.x01Rules, logger });
+  const watchdog = createFeatureWatchdog(context);
+  featureDefinitions.forEach((definition) => watchdog.registerFeature(definition.featureKey, {
+    readStatus: () => ({
+      enabled: config.isFeatureEnabled(definition.configKey),
+      mounted: featureCleanups.has(definition.featureKey),
+      scheduled: deferredFeatureMounts.has(definition.featureKey),
+      failure: featureFailures.get(definition.featureKey),
+    }),
+    restart: () => {
+      unmountFeature(definition.featureKey);
+      if (featureFailures.get(definition.featureKey)?.phase === "cleanup") {
+        throw new Error("Feature cleanup failed; restart cancelled");
+      }
+      mountFeature(definition);
+    },
+  }));
 
   function reportFeatureFailure(definition, phase, error) {
     const message = String(error?.message || error || "Unknown feature error");
@@ -247,14 +266,19 @@ export function createBootstrap(options = {}) {
       return;
     }
 
+    const featureWatchdog = watchdog.forFeature(definition.featureKey);
     try {
-      const cleanup = definition.mount(context);
+      const cleanup = definition.mount({
+        ...context,
+        watchdog: featureWatchdog,
+      });
       featureCleanups.set(
         definition.featureKey,
         typeof cleanup === "function" ? cleanup : () => {}
       );
       featureFailures.delete(definition.featureKey);
     } catch (error) {
+      featureWatchdog.dispose();
       reportFeatureFailure(definition, "mount", error);
     }
   }
@@ -406,6 +430,7 @@ export function createBootstrap(options = {}) {
       ...getSnapshot(),
       observerCount: observers.size(),
       listenerCount: listeners.size(),
+      watchdog: watchdog.inspect(),
     };
   }
 
@@ -418,7 +443,10 @@ export function createBootstrap(options = {}) {
 
     started = true;
     gameState.start();
+    context.turnLifecycle.start();
     refreshFeatures({ deferNonCriticalMounts: true });
+    watchdog.start();
+    context.turnLifecycle.register({ schedule: () => watchdog.requestCheck() });
     eventBus.emit("runtime:started", getSnapshot());
     syncGlobalNamespace();
 
@@ -431,10 +459,12 @@ export function createBootstrap(options = {}) {
       return api;
     }
 
+    watchdog.stop();
     featureDefinitions.forEach((definition) => {
       unmountFeature(definition.featureKey);
     });
 
+    context.turnLifecycle.stop();
     observers.disconnectAll();
     listeners.removeAll();
     gameState.stop();

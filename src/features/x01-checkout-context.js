@@ -9,6 +9,7 @@ import {
 } from "./shared/x01-match-surface.js";
 import { collectTurnThrowRows } from "./shared/turn-surface-adapter.js";
 import { isX01VariantText } from "../domain/variant-rules.js";
+import { readModernCricketGrid } from "./cricket-surface/modern-grid.js";
 
 const ACTIVE_SCORE_SELECTORS = Object.freeze([
   ".ad-ext-player.ad-ext-player-active p.ad-ext-player-score",
@@ -519,6 +520,8 @@ function readDomThrows(documentRef, modernSurface, x01Rules) {
 }
 
 function readVisibleDomVariant(documentRef, windowRef, modernSurface) {
+  const cricketGrid = readModernCricketGrid(documentRef);
+  if (cricketGrid) return cricketGrid.labels.length > 7 ? "Tactics" : "Cricket";
   if (modernSurface?.variantNode && modernSurface.variant) {
     return normalizeVariantText(modernSurface.variant);
   }
@@ -650,9 +653,36 @@ function comparableCandidate(candidate) {
     outMode: String(candidate?.outModeNormalized || ""),
     throwCount: Number.isFinite(candidate?.throwCount) ? candidate.throwCount : null,
     throwSignature: String(candidate?.throwSignature || ""),
+    activeTurnId: String(candidate?.activeTurnId || ""),
+    activePlayerId: String(candidate?.activePlayerId || ""),
     activePlayerIndex: Number.isInteger(candidate?.activePlayerIndex)
       ? candidate.activePlayerIndex
       : null,
+  };
+}
+
+// A generation invalidates cached decisions, while the source baselines remain
+// available to recognize messages from the preceding visit during catch-up.
+export function advanceX01TurnGeneration(documentRef, generation) {
+  const history = getTruthHistory(documentRef);
+  if (history && history.turnGeneration !== generation) {
+    history.turnGeneration = generation;
+    history.observationSignature = "";
+    history.decision = "";
+  }
+}
+
+export function clearX01TurnHistory(documentRef) {
+  if (documentRef) truthHistoryByDocument.delete(documentRef);
+}
+
+export function readTurnLifecycleCandidates(context = {}) {
+  const surface = readModernMatchSurface(context.documentRef, context.windowRef);
+  const matchId = extractCurrentMatchRouteId(context.windowRef, context.documentRef);
+  const variant = readVisibleDomVariant(context.documentRef, context.windowRef, surface);
+  return {
+    state: createStateCandidate(context, matchId),
+    dom: createDomCandidate(context, matchId, surface, variant),
   };
 }
 

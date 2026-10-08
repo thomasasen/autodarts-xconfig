@@ -1158,6 +1158,31 @@ test("x01 bust sound uses Web Audio buffer playback when AudioContext is availab
   assert.deepEqual(startedSources, [0]);
 });
 
+test("a delayed BUST audio load cannot play after the visit was cleared", async () => {
+  let resolveLoad;
+  let plays = 0;
+  const state = createBustActivePlayerHighlightState();
+  state.audioUnlocked = true;
+  state.audioState = {
+    sourceType: "web-audio",
+    context: {
+      state: "running", destination: {},
+      createBufferSource() { return { connect() {}, start() { plays += 1; } }; },
+      createGain() { return { gain: {}, connect() {} }; },
+    },
+    loadPromise: new Promise((resolve) => { resolveLoad = resolve; }),
+  };
+  const audioState = state.audioState;
+  playBustGlassCrackSound({ state, soundEnabled: true });
+  clearBustActivePlayerHighlightState(state);
+  audioState.buffer = { duration: 1 };
+  resolveLoad(audioState.buffer);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(plays, 0);
+  assert.equal(state.audioState, audioState);
+  assert.equal(state.audioUnlocked, true);
+});
+
 test("x01 bust highlight immediately renders configured cracks at random card positions", () => {
   const { documentRef, activeCard } = setupBustDocument();
   activeCard.__rect = { width: 640, height: 180 };

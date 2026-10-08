@@ -1359,7 +1359,7 @@ export function applyHitDecoration(rowNode, options = {}) {
   const signature = [hitMeta.kind, hitMeta.segment, colorTheme, animationStyle].join("|");
   const burstKey = getRowBurstKey(rowNode, rowIndex) || `${rowIndex}|${rowText}`;
   const lastBurstKey = burstKeyBySlot?.get?.(rowIndex) || "";
-  const burst = Boolean(burstKey) && burstKey !== lastBurstKey;
+  const burst = options.suppressBurst !== true && Boolean(burstKey) && burstKey !== lastBurstKey;
 
   rowNode.classList.add(HIT_BASE_CLASS);
   rowNode.classList.toggle(HIT_MODERN_CLASS, options.modernSurface === true);
@@ -1588,6 +1588,7 @@ export function updateHitDecorations(options = {}) {
       animeRef,
       rowText,
       modernSurface: turnSurface.rowSource === "modern-turn-container",
+      suppressBurst: options.suppressBurst,
     });
 
     if (includeRowDebug) {

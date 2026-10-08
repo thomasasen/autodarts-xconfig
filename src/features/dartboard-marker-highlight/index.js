@@ -1,4 +1,5 @@
-﻿import {
+import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
+import {
   clearDartboardMarkerHighlight,
   createDartboardMarkerHighlightState,
   updateDartboardMarkerHighlight,
@@ -125,7 +126,9 @@ export function initializeDartboardMarkerHighlight(context = {}) {
     });
   }
 
-  const scheduler = schedulerFactory(update, { windowRef });
+  const scheduler = createTurnScopedScheduler(context, update, { windowRef, resetTurn() {
+    clearDartboardMarkerHighlight(state);
+  } }, schedulerFactory);
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
 
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {

@@ -1,3 +1,4 @@
+import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
 import { resolveBoardStyleDesignAsset } from "#feature-assets";
 import {
   clearBotBoardStyle,
@@ -96,7 +97,9 @@ export function initializeBotBoardStyle(context = {}) {
       assetResolver: resolveBoardStyleDesignAsset,
     });
   };
-  const scheduler = schedulerFactory(update, { windowRef });
+  const scheduler = createTurnScopedScheduler(context, update, { windowRef, resetTurn() {
+    clearBotBoardStyle(documentRef, state);
+  } }, schedulerFactory);
 
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
     observerRegistry.registerMutationObserver({

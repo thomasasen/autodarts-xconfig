@@ -601,6 +601,16 @@ function playBustAudioBuffer(audioState) {
     gain.gain.value = BUST_SOUND_VOLUME;
     source.connect(gain);
     gain.connect(context.destination);
+    audioState.activeSource = source;
+    audioState.activeGain = gain;
+    source.onended = () => {
+      source.disconnect?.();
+      gain.disconnect?.();
+      if (audioState.activeSource === source) {
+        audioState.activeSource = null;
+        audioState.activeGain = null;
+      }
+    };
     source.start(0);
     return true;
   } catch (_) {
@@ -690,9 +700,12 @@ export function playBustGlassCrackSound(options = {}) {
   }
 
   if (audioState.sourceType === BUST_AUDIO_WEB_SOURCE) {
+    const generation = audioState.playbackGeneration;
     resumeBustAudioContext(audioState)
       .then(() => loadBustAudioBuffer(audioState))
-      .then(() => playBustAudioBuffer(audioState));
+      .then(() => {
+        if (audioState.playbackGeneration === generation) playBustAudioBuffer(audioState);
+      });
     return {
       played: true,
       reason: "scheduled",
@@ -775,6 +788,21 @@ export function createBustActivePlayerHighlightState() {
 export function clearBustActivePlayerHighlightState(state) {
   if (!state) {
     return;
+  }
+
+  const audioState = state.audioState;
+  if (audioState) {
+    audioState.playbackGeneration = (audioState.playbackGeneration || 0) + 1;
+    try {
+      audioState.audio?.pause?.();
+      audioState.activeSource?.stop?.();
+      audioState.activeSource?.disconnect?.();
+      audioState.activeGain?.disconnect?.();
+    } catch (_) {
+      // A finished source may already have stopped.
+    }
+    audioState.activeSource = null;
+    audioState.activeGain = null;
   }
 
   if (state.activeNode) {

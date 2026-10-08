@@ -89,7 +89,8 @@ test("feature mount/unmount cycle does not leak DOM highlight artifacts", async 
 
   assert.equal(documentRef.activeScoreElement.classList.contains(HIGHLIGHT_CLASS), true);
   assert.equal(Boolean(documentRef.getElementById(STYLE_ID)), true);
-  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.observers.size(), 2);
+  assert.ok(runtime.context.registries.observers.get("turn-lifecycle:dom-observer"));
   assert.equal(
     runtime.context.registries.observers.get("checkout-score-highlight:dom-observer:surface"),
     null
@@ -141,7 +142,7 @@ test("config updates remount affected mounted features without duplicating obser
   );
 
   assert.equal(documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--grow-only"), true);
-  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.observers.size(), 2);
 
   runtime.updateConfig({
     features: {
@@ -157,8 +158,8 @@ test("config updates remount affected mounted features without duplicating obser
 
   assert.equal(documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--grow-only"), false);
   assert.equal(documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--fade-blink"), true);
-  assert.equal(runtime.context.registries.observers.size(), 1);
-  assert.equal(windowRef.__adXConfig.inspect().observerCount, 1);
+  assert.equal(runtime.context.registries.observers.size(), 2);
+  assert.equal(windowRef.__adXConfig.inspect().observerCount, 2);
 
   runtime.stop();
 });

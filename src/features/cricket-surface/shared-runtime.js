@@ -1,3 +1,4 @@
+import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
 import { buildCricketRenderState, CRICKET_SURFACE_STATUS } from "./pipeline.js";
 import { MODERN_CRICKET_GRID_SELECTOR } from "./modern-grid.js";
 import {
@@ -719,7 +720,9 @@ function createSharedCricketRuntime(context = {}) {
           invalidateRenderCache,
           scheduleUpdate: scheduleSharedRuntimeUpdate,
         });
-      } catch (_) {
+        subscriber.renderError = "";
+      } catch (error) {
+        subscriber.renderError = `render-failed: ${error?.message || error}`;
         // Feature-local render failures should not stop other cricket consumers.
       }
     });
@@ -782,9 +785,25 @@ function createSharedCricketRuntime(context = {}) {
     refreshTrackedSurfaceNodes(renderState);
   }
 
-  runtime.scheduler = schedulerFactory(updateSharedRuntime, {
+  // The shared scheduler belongs to every subscriber, including after the
+  // first feature is disabled. Register its health per subscriber below.
+  runtime.scheduler = createTurnScopedScheduler({ ...context, watchdog: null }, updateSharedRuntime, {
     windowRef: runtime.windowRef,
-  });
+    containRenderErrors: Boolean(context.watchdog),
+    resetTurn() {
+      clearPendingDegradedHostRecheck();
+      clearPendingRecoveryRearm();
+      clearPendingSurfaceAudit();
+      runtime.lastReadyTransitionSignature = "";
+      runtime.lastDegradedStatusSignature = "";
+      runtime.completedMissingBoardHoldKey = "";
+      setCricketSurfaceWatchNodes(runtime.surfaceWatchState, []);
+      runtime.subscribers.forEach((subscriber) => {
+        try { subscriber.onTurnReset?.(); } catch (_) { /* Isolate feature failures. */ }
+      });
+      invalidateRenderCache();
+    },
+  }, schedulerFactory);
 
   runtime.sharedMutationCallback = (mutations = []) => {
     if (runtime.subscribers.size === 0) {
@@ -897,6 +916,8 @@ function createSharedCricketRuntime(context = {}) {
 
     const subscriber = {
       featureKey,
+      renderError: "",
+      onTurnReset: options.onTurnReset,
       onRenderState:
         typeof options.onRenderState === "function" ? options.onRenderState : () => {},
       onInvalidateCache:
@@ -912,6 +933,15 @@ function createSharedCricketRuntime(context = {}) {
     };
 
     runtime.subscribers.set(featureKey, subscriber);
+    const unregisterHealth = options.watchdog?.register({
+      check(snapshot) {
+        if (subscriber.renderError) return subscriber.renderError;
+        const shared = runtime.scheduler.health?.check(snapshot);
+        if (shared !== true && shared != null) return shared;
+        return options.checkHealth?.(snapshot) ?? true;
+      },
+      repair: (snapshot) => runtime.scheduler.health?.repair(snapshot),
+    }) || (() => {});
     const aliasObserverKey = String(options.observerAliasKey || "").trim();
     registerRuntimeObserverAlias(runtime.observerRegistry, aliasObserverKey, runtime);
 
@@ -922,6 +952,7 @@ function createSharedCricketRuntime(context = {}) {
         return;
       }
       removed = true;
+      unregisterHealth();
 
       runtime.subscribers.delete(featureKey);
       unregisterRuntimeObserverAlias(runtime.observerRegistry, aliasObserverKey);

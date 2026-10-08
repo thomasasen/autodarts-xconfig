@@ -1,3 +1,4 @@
+import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
 import {
   clearOverlay,
   findBoard,
@@ -525,6 +526,8 @@ export function initializeCheckoutTargetHighlights(context = {}) {
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
 
   let lastRenderSignature = "";
+  let expectedOverlay = null;
+  let expectedTargets = [];
   const debugState = createDebugState(featureDebug);
   const boardCache = {
     value: null,
@@ -635,6 +638,8 @@ export function initializeCheckoutTargetHighlights(context = {}) {
   }
 
   function clearCurrentOverlay() {
+    expectedOverlay = null;
+    expectedTargets = [];
     const board = getBoard();
     const overlayGroup = board?.overlayGroup || board?.group;
     if (!overlayGroup) {
@@ -884,9 +889,35 @@ export function initializeCheckoutTargetHighlights(context = {}) {
       checkoutTargets: renderPlan.targets,
       visualConfig,
     });
+    expectedOverlay = renderPlan.targets.length ? renderPlan.board : null;
+    expectedTargets = renderPlan.targets.map((target) => `${target.ring}:${target.value}`);
   }
 
-  const scheduler = schedulerFactory(update, { windowRef });
+  const scheduler = createTurnScopedScheduler(context, update, { windowRef,
+    checkHealth() {
+      if (!expectedOverlay) return true;
+      if (!documentRef.getElementById(STYLE_ID)) return "checkout-style-missing";
+      const group = expectedOverlay.overlayGroup || expectedOverlay.group;
+      const overlay = group?.querySelector?.(`#${OVERLAY_ID}`);
+      if (group?.isConnected === false || !overlay?.children?.length) return "checkout-overlay-missing";
+      const keys = new Set(Array.from(overlay.children).map((node) =>
+        `${node.dataset?.targetRing}:${node.dataset?.targetValue}`));
+      return expectedTargets.every((key) => keys.has(key)) ? true : "checkout-targets-damaged";
+    },
+    repairHealth() {
+      domGuards.ensureStyle(STYLE_ID, buildStyleText());
+      domGuards.removeNodeById(OVERLAY_ID);
+      invalidateBoardCache();
+    },
+    // A remount would lose third-dart target retention within this visit.
+    watchdogRestartSafe: false,
+    resetTurn() {
+    expectedOverlay = null;
+    resetRetainedRenderState();
+    activeRetentionContextKey = "";
+    domGuards.removeNodeById(OVERLAY_ID);
+    invalidateBoardCache();
+  } }, schedulerFactory);
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
   const isManagedNode = createManagedNodeMatcher({
     ids: [OVERLAY_ID],

@@ -1,3 +1,4 @@
+import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
 import {
   clearDartMarkerReplacerState,
   createDartMarkerReplacerState,
@@ -325,7 +326,7 @@ export function initializeDartMarkerReplacer(context = {}) {
     scheduler?.schedule?.();
   }
 
-  function update() {
+  function update({ rehydrating = false } = {}) {
     updateDartMarkerReplacer({
       documentRef,
       state,
@@ -333,10 +334,16 @@ export function initializeDartMarkerReplacer(context = {}) {
       featureDebug,
       scheduleUpdate,
       updateMode: consumeUpdateMode(state),
+      suppressFlight: rehydrating,
     });
   }
 
-  scheduler = schedulerFactory(update, { windowRef });
+  scheduler = createTurnScopedScheduler(context, update, { windowRef, resetTurn() {
+    state.cancelZoomTransitionLoop?.();
+    clearDartMarkerReplacerState(state, { featureDebug, reason: "turn-change" });
+    state.gameStateSnapshot = gameState?.getSnapshot?.() || null;
+    scheduleStateUpdate(state, UPDATE_REASON.full);
+  } }, schedulerFactory);
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
   const isManagedNode = createManagedNodeMatcher({
     ids: [OVERLAY_ID],

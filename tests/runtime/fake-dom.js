@@ -1141,6 +1141,9 @@ function createFakeTimerHarness(options = {}) {
     installGlobals,
     runAll,
     restoreGlobals,
+    get pendingCount() {
+      return scheduledTasks.size;
+    },
     get now() {
       return now;
     },

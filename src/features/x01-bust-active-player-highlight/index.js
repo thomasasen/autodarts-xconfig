@@ -121,8 +121,8 @@ export function mountX01BustActivePlayerHighlight(context = {}) {
       impactTrackingFrameId = windowRef.requestAnimationFrame(trackImpactOrigin);
     }
   };
-  const update = () => {
-    const result = syncBustActivePlayerHighlight(syncContext, state);
+  const update = ({ rehydrating = false } = {}) => {
+    const result = syncBustActivePlayerHighlight({ ...syncContext, soundEnabled: !rehydrating && syncContext.soundEnabled }, state);
     if (result.isBust && result.activeNode && effectTarget === "impact") {
       startImpactOriginTracking();
     } else {
@@ -131,6 +131,10 @@ export function mountX01BustActivePlayerHighlight(context = {}) {
   };
 
   const harness = createFeatureMountHarness(context, {
+    resetTurn() {
+      stopImpactOriginTracking();
+      clearBustActivePlayerHighlightState(state);
+    },
     isSupported: ({ documentRef: nextDocumentRef }) => Boolean(nextDocumentRef && domGuards),
     update,
   });

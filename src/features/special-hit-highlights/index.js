@@ -1,3 +1,4 @@
+import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
 import { ensureAnimeLoaded, getAnime } from "../../vendors/index.js";
 import {
   releaseElectricFilterDefs,
@@ -145,7 +146,28 @@ export function initializeSpecialHitHighlights(context = {}) {
     electricFilterDefsRetained = true;
   }
 
-  const scheduler = schedulerFactory(() => {
+  function resetTurn() {
+    trackedRows.forEach((rowNode) => {
+      clearHitDecoration(rowNode, signatureByRow, {
+        activeAnimeByRow,
+        roleStateByRow,
+        replayTimersByRow,
+        triggerResetTimersByRow,
+        windowRef,
+        animeRef,
+      });
+    });
+    trackedRows.clear();
+    signatureByRow.clear();
+    burstKeyBySlot.clear();
+    slotStateByIndex.clear();
+    activeAnimeByRow.clear();
+    roleStateByRow.clear();
+    replayTimersByRow.clear();
+    triggerResetTimersByRow.clear();
+  }
+
+  const scheduler = createTurnScopedScheduler(context, ({ rehydrating = false } = {}) => {
     const stats = updateHitDecorations({
       documentRef,
       featureConfig,
@@ -161,6 +183,7 @@ export function initializeSpecialHitHighlights(context = {}) {
       windowRef,
       x01Rules,
       debugRows: Boolean(featureDebug?.enabled),
+      suppressBurst: rehydrating,
     });
 
     if (!featureDebug?.enabled || !stats) {
@@ -223,7 +246,7 @@ export function initializeSpecialHitHighlights(context = {}) {
         `warn keine Throw-Rows gefunden; fallback="${stats.rowSource}"`
       );
     }
-  }, { windowRef });
+  }, { windowRef, resetTurn }, schedulerFactory);
 
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
@@ -303,24 +326,7 @@ export function initializeSpecialHitHighlights(context = {}) {
       Object.values(LISTENER_KEYS).forEach((key) => listenerRegistry.remove(key));
     }
 
-    trackedRows.forEach((rowNode) => {
-      clearHitDecoration(rowNode, signatureByRow, {
-        activeAnimeByRow,
-        roleStateByRow,
-        replayTimersByRow,
-        triggerResetTimersByRow,
-        windowRef,
-        animeRef,
-      });
-    });
-    trackedRows.clear();
-    signatureByRow.clear();
-    burstKeyBySlot.clear();
-    slotStateByIndex.clear();
-    activeAnimeByRow.clear();
-    roleStateByRow.clear();
-    replayTimersByRow.clear();
-    triggerResetTimersByRow.clear();
+    resetTurn();
 
     domGuards.removeNodeById(STYLE_ID);
     if (electricFilterDefsRetained) {

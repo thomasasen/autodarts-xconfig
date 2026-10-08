@@ -1,5 +1,6 @@
 ﻿import {
   clearSingleBullHitSoundState,
+  resetSingleBullTurnState,
   createSingleBullHitSoundState,
   installSingleBullHitSoundPolling,
   playSingleBullHitSoundPreview,
@@ -45,17 +46,19 @@ export function initializeSingleBullHitSound(context = {}) {
   const soundConfig = resolveSingleBullHitSoundConfig(featureConfig);
   const state = createSingleBullHitSoundState(windowRef, soundConfig);
 
-  function update() {
+  function update({ rehydrating = false } = {}) {
     updateSingleBullHitSound({
       documentRef,
       gameState,
       x01Rules,
       state,
       config: soundConfig,
+      hydrate: rehydrating,
     });
   }
 
   const harness = createFeatureMountHarness(context, {
+    resetTurn: () => resetSingleBullTurnState(state),
     isSupported: ({ documentRef: nextDocumentRef, windowRef: nextWindowRef }) =>
       Boolean(nextDocumentRef && nextWindowRef && x01Rules),
     update,

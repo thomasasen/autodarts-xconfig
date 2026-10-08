@@ -121,6 +121,7 @@ function safePlayAudio(state, config, options = {}) {
     // fail-soft reset
   }
 
+  const playbackGeneration = state.playbackGeneration;
   const handlePlaybackFailure =
     typeof options.onPlaybackFailure === "function"
       ? options.onPlaybackFailure
@@ -140,6 +141,7 @@ function safePlayAudio(state, config, options = {}) {
 
   if (playResult && typeof playResult.catch === "function") {
     playResult.catch(() => {
+      if (state.playbackGeneration !== playbackGeneration) return;
       if (state.lastSignalPlayedAt === now) {
         state.lastSignalPlayedAt = previousSignalPlayedAt;
       }
@@ -420,9 +422,30 @@ export function clearSingleBullHitSoundState(state) {
   state.processedThrowKeys.clear();
 }
 
+export function resetSingleBullTurnState(state) {
+  state.playbackGeneration = (state.playbackGeneration || 0) + 1;
+  try { state.audio?.pause?.(); } catch (_) { /* Audio may already be stopped. */ }
+  state.lastProcessedTurnId = "";
+  state.modernThrows = null;
+  state.lastTextByNode.clear();
+  state.lastPlayedAtByNode.clear();
+  state.processedThrowKeys.clear();
+}
+
 export function updateSingleBullHitSound(options = {}) {
   const { documentRef, state, x01Rules, config } = options;
   if (!state || !x01Rules || !config) return;
+  if (options.hydrate) {
+    const activeTurn = options.gameState?.getActiveTurn?.() || null;
+    syncProcessedThrowScope(state, activeTurn);
+    (options.gameState?.getActiveThrows?.() || []).forEach((entry, index) => {
+      rememberProcessedThrow(state, buildThrowKeys(activeTurn, entry, index));
+    });
+    collectThrowTextNodes(documentRef).forEach((node) => {
+      state.lastTextByNode.set(node, normalizeText(node.textContent));
+    });
+    state.modernThrows = null;
+  }
   const surface = findModernTurnSurface(documentRef, state.windowRef || documentRef?.defaultView);
   if (surface) {
     const throws = readModernThrows(surface, x01Rules);

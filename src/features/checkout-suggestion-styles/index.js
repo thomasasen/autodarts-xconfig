@@ -1,3 +1,4 @@
+import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
 import {
   applySuggestionStyle,
   applySuggestionLayout,
@@ -99,7 +100,11 @@ export function initializeCheckoutSuggestionStyles(context = {}) {
     });
   }
 
-  const scheduler = schedulerFactory(update, { windowRef });
+  const scheduler = createTurnScopedScheduler(context, update, { windowRef, resetTurn() {
+    Array.from(documentRef.querySelectorAll?.(`.${BASE_CLASS}`) || []).forEach(resetSuggestionNode);
+    Array.from(documentRef.querySelectorAll?.(`.${LAYOUT_CLASS}`) || []).forEach(resetSuggestionLayout);
+    lastDebugSignature = "";
+  } }, schedulerFactory);
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
     observerRegistry.registerMutationObserver({

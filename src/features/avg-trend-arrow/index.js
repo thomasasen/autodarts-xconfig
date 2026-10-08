@@ -25,7 +25,7 @@ export function initializeAvgTrendArrow(context = {}) {
         };
 
   const lastValueByNode = new WeakMap();
-  const arrowByAverageNode = new WeakMap();
+  let arrowByAverageNode = new WeakMap();
   const timeoutByArrow = new WeakMap();
   const arrowNodes = new Set();
 
@@ -38,6 +38,15 @@ export function initializeAvgTrendArrow(context = {}) {
   );
 
   const harness = createFeatureMountHarness(context, {
+    resetTurn() {
+      arrowNodes.forEach((node) => {
+        const timeout = timeoutByArrow.get(node);
+        if (timeout) (windowRef?.clearTimeout?.bind(windowRef) || clearTimeout)(timeout);
+        node.remove?.();
+      });
+      arrowNodes.clear();
+      arrowByAverageNode = new WeakMap();
+    },
     isSupported: ({ documentRef: nextDocumentRef }) => Boolean(nextDocumentRef && domGuards),
     update: () => {
       updateAvgTrendArrows({

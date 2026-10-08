@@ -48,6 +48,21 @@ Check whether the feature change also needs updates in:
 
 ## 4. Protect the behavior
 
+- Every feature is automatically covered by the bootstrap watchdog for mount
+  failures. Use `createFeatureMountHarness` or `createTurnScopedScheduler` for
+  render-error, stalled-render and turn-generation monitoring. For features
+  with persistent DOM output, provide synchronous `checkHealth` and
+  `repairHealth` hooks that compare expected output with live owned nodes.
+- Shared Cricket consumers pass their scoped `context.watchdog` to
+  `runtime.subscribe`; monitoring must survive disabling another consumer.
+  `__adXConfig.inspect().watchdog` exposes coverage, repair budgets and the
+  bounded local diagnostic log. Do not treat mount-only coverage as proof of
+  correct rendering.
+- Health checks must accept intentionally absent output, inactive modes and
+  pending identities. Repairs must preserve game/config state and must not
+  replay sounds or transient effects. Enable `watchdogRestartSafe` only when a
+  remount preserves feature-specific user/hold state. Test recovery and budget
+  exhaustion; never add a feature-local automatic restart/retry loop.
 - add or update the closest meaningful tests
 - leave final validation selection to `$validate-repo-change`
 - leave release packaging to `$package-userscript-release` when explicitly requested

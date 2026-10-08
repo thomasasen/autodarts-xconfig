@@ -1,4 +1,5 @@
 import { createRafScheduler } from "../../shared/raf-scheduler.js";
+import { createTurnScopedScheduler } from "./turn-lifecycle.js";
 
 function resolveSchedulerFactory(context, windowRef) {
   const factory = context?.helpers?.createRafScheduler;
@@ -64,9 +65,12 @@ export function createFeatureMountHarness(context = {}, options = {}) {
     return null;
   }
 
-  const scheduler = schedulerFactory(
+  const scheduler = createTurnScopedScheduler(context,
     typeof options.update === "function" ? options.update : () => {},
-    options.schedulerOptions || {}
+    { windowRef, ...options.schedulerOptions, resetTurn: options.resetTurn, suspendTurn: options.suspendTurn,
+      checkHealth: options.checkHealth, repairHealth: options.repairHealth,
+      watchdogRestartSafe: options.watchdogRestartSafe },
+    schedulerFactory
   );
   const cleanupStack = createCleanupStack();
 

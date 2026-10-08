@@ -1893,7 +1893,7 @@ export function updateDartMarkerReplacer(options = {}) {
       emitDebug(state, featureDebug, "geometry-apply", geometryPayload);
     }
 
-    if (isNew) {
+    if (isNew && !options.suppressFlight) {
       triggerFlightAnimation(
         entry,
         state,

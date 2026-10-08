@@ -1,3 +1,4 @@
+import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
 import {
   applyZoom,
   computeZoomIntent,
@@ -584,6 +585,7 @@ export function initializeTvBoardZoom(context = {}) {
     surface: null,
   };
   let lastMatchSurface = null;
+  let expectedZoomTarget = null;
   const debugState = createDebugState(featureDebug);
 
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
@@ -724,6 +726,7 @@ export function initializeTvBoardZoom(context = {}) {
   }
 
   function requestZoomReset(reason, options = {}) {
+    expectedZoomTarget = null;
     let forceReset = Boolean(options.force);
     if (!forceReset && reason === "intent-missing" && zoomState.manualPause) {
       forceReset = true;
@@ -795,7 +798,7 @@ export function initializeTvBoardZoom(context = {}) {
     });
   }
 
-  scheduler = schedulerFactory(() => {
+  scheduler = createTurnScopedScheduler(context, () => {
     clearHoldTimer();
     clearIntegrityTimer();
     ensureGifOverlayObserver();
@@ -912,6 +915,7 @@ export function initializeTvBoardZoom(context = {}) {
         syncGifOverlayContainment: false,
       }
     );
+    expectedZoomTarget = targetNode;
     if (zoomData) {
       scheduleIntegrityCheck();
     }
@@ -928,7 +932,56 @@ export function initializeTvBoardZoom(context = {}) {
       targetRect: mapRect(zoomData?.targetRect || targetNode.getBoundingClientRect?.()),
       viewportRect: mapRect(zoomData?.viewportRect || hostNode?.getBoundingClientRect?.()),
     }, x01Truth));
-  }, { windowRef });
+  }, { windowRef,
+    checkHealth() {
+      if (zoomState.manualPause) return true;
+      const node = expectedZoomTarget || zoomState.zoomedElement;
+      if (!node) return true;
+      if (!documentRef.getElementById(STYLE_ID)) return "zoom-style-missing";
+      return node.isConnected !== false && node.classList.contains(ZOOM_CLASS) &&
+        String(node.style.transform || "").includes("scale(") &&
+        (!zoomState.zoomHost || (zoomState.zoomHost.isConnected !== false &&
+          zoomState.zoomHost.classList.contains(ZOOM_HOST_CLASS)))
+        ? true : "zoom-surface-damaged";
+    },
+    repairHealth() {
+      domGuards.ensureStyle(STYLE_ID, buildStyleText());
+      // Preserve manual pause, BUST/third-dart holds and the current intent.
+      invalidateBoardCache();
+      markGifContainmentDirty();
+    },
+    watchdogRestartSafe: false,
+    resetTurn() {
+    expectedZoomTarget = null;
+    clearHoldTimer();
+    clearIntegrityTimer();
+    clearTransientResetState();
+    disconnectResizeObserver();
+    resetZoom(speedConfig, zoomState, true);
+    zoomState.holdUntilTs = 0;
+    zoomState.activeIntent = null;
+    zoomState.stickyUntilTurnChange = false;
+    zoomState.stickyUntilLegEnd = false;
+    zoomState.manualPause = false;
+    zoomState.manualPauseThrowCount = -1;
+    zoomState.manualPauseProgressSignature = "";
+    zoomState.lastTurnId = "";
+    zoomState.lastThrowCount = -1;
+    zoomState.lastActiveScore = Number.NaN;
+    zoomState.lastTurnProgressSignature = "";
+    zoomState.pendingLifecycleResetReason = "";
+    invalidateBoardCache();
+    markGifContainmentDirty();
+  }, suspendTurn() {
+    expectedZoomTarget = null;
+    clearHoldTimer();
+    clearIntegrityTimer();
+    clearTransientResetState();
+    disconnectResizeObserver();
+    resetZoom(speedConfig, zoomState, true);
+    invalidateBoardCache();
+    markGifContainmentDirty();
+  } }, schedulerFactory);
   const isManagedNode = createManagedNodeMatcher({
     classNames: [ZOOM_CLASS, ZOOM_HOST_CLASS],
     predicates: [
@@ -1030,6 +1083,7 @@ export function initializeTvBoardZoom(context = {}) {
           return;
         }
         markManualZoomPause(zoomState);
+        expectedZoomTarget = null;
         clearHoldTimer();
         clearIntegrityTimer();
         clearTransientResetState();

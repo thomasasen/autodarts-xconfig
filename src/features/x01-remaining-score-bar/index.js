@@ -1,3 +1,4 @@
+import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
 import { createRafScheduler } from "../../shared/raf-scheduler.js";
 import {
   clearAllScoreProgress,
@@ -317,7 +318,10 @@ export function mountX01RemainingScoreBar(context = {}) {
     emitDebugLog(debugState, signature, message, debugInfo);
   };
 
-  const scheduler = schedulerFactory(update, { windowRef });
+  const scheduler = createTurnScopedScheduler(context, update, { windowRef, resetTurn() {
+    clearAllScoreProgress(documentRef);
+    Object.assign(featureState, createScoreProgressState());
+  } }, schedulerFactory);
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
 
   if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {

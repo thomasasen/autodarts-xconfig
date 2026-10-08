@@ -277,6 +277,8 @@ export function initializeCricketTargetHighlighter(context = {}) {
   }
 
   const unsubscribeRuntime = runtime.subscribe({
+    watchdog: context.watchdog,
+    onTurnReset: clearAndReset,
     featureKey: FEATURE_KEY,
     observerAliasKey: OBSERVER_KEY,
     isManagedNode: managedNodeMatcher,
