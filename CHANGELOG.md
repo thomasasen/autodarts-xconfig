@@ -12,7 +12,7 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
-## [3.4.0] - 2026-10-08
+## [3.4.1] - 2026-10-08
 
 ### Added
 
@@ -2321,7 +2321,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
-[3.4.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.3.2...v3.4.0
+[3.4.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.3.2...v3.4.1
 [3.3.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.3.1...v3.3.2
 [3.3.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.3.0...v3.3.1
 [3.3.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.2.2...v3.3.0

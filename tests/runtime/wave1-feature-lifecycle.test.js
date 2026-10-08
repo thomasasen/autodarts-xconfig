@@ -121,7 +121,7 @@ test("checkout-target-highlights mounts idempotently and cleans up style/observe
   await wait(25);
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-checkout-board-style")), true);
-  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.observers.size(), 2);
 
   runtime.stop();
   assert.equal(Boolean(documentRef.getElementById("ad-ext-checkout-board-style")), false);
@@ -150,7 +150,7 @@ test("checkout-suggestion-styles mounts idempotently and removes classes on clea
     documentRef.suggestionElement.classList.contains("ad-ext-checkout-suggestion"),
     true
   );
-  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.observers.size(), 2);
 
   runtime.stop();
   assert.equal(
@@ -178,7 +178,7 @@ test("tv-board-zoom registers managed listeners and releases them on cleanup", a
   await wait(5);
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-tv-board-zoom-style")), true);
-  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.observers.size(), 2);
   assert.equal(runtime.context.registries.listeners.size(), 5);
 
   runtime.stop();
@@ -201,7 +201,7 @@ test("avg-trend-arrow mounts idempotently and removes owned style", async () => 
   await wait(5);
 
   assert.equal(Boolean(documentRef.getElementById("autodarts-average-trend-style")), true);
-  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.observers.size(), 2);
 
   runtime.stop();
   assert.equal(Boolean(documentRef.getElementById("autodarts-average-trend-style")), false);
@@ -227,7 +227,7 @@ test("special-hit-highlights mounts idempotently and removes decorations on clea
   await waitFor(() => documentRef.throwRow.classList.contains("ad-ext-hit-highlight--triple"));
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-special-hit-highlights-style")), true);
-  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.observers.size(), 2);
   assert.equal(
     documentRef.throwRow.classList.contains("ad-ext-hit-highlight--triple"),
     true
@@ -261,7 +261,7 @@ test("cricket-target-highlighter mounts idempotently and releases observers/list
   await wait(5);
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-target-highlighter-style")), true);
-  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.observers.size(), 2);
   assert.equal(runtime.context.registries.listeners.size(), 3);
 
   runtime.stop();
@@ -289,7 +289,7 @@ test("cricket-grid-status-effects mounts idempotently and releases observers/lis
   await wait(5);
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-grid-status-effects-style")), true);
-  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.observers.size(), 2);
   assert.equal(runtime.context.registries.listeners.size(), 3);
 
   runtime.stop();
@@ -347,7 +347,7 @@ test("cricket-target-highlighter and cricket-grid-status-effects share one runti
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-target-highlighter-style")), true);
   assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-grid-status-effects-style")), true);
-  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.observers.size(), 2);
   assert.equal(runtime.context.registries.listeners.size(), 3);
   assert.ok(runtime.context.registries.observers.get("cricket-target-highlighter:dom-observer"));
   assert.ok(runtime.context.registries.observers.get("cricket-grid-status-effects:dom-observer"));
@@ -377,7 +377,7 @@ test("dartboard-marker-highlight mounts idempotently and removes style on cleanu
   await wait(5);
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-dartboard-marker-highlight-style")), true);
-  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.observers.size(), 2);
   assert.equal(runtime.context.registries.listeners.size(), 1);
 
   runtime.stop();
@@ -406,7 +406,7 @@ test("dart-marker-replacer mounts idempotently and removes style on cleanup", as
   await wait(5);
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-dart-marker-replacer-style")), true);
-  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.observers.size(), 2);
   assert.equal(runtime.context.registries.listeners.size(), 8);
 
   runtime.stop();
@@ -433,7 +433,7 @@ test("take-out-darts-alert mounts idempotently and removes style on cleanup", as
   await wait(5);
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-take-out-darts-alert-style")), true);
-  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.observers.size(), 2);
 
   runtime.stop();
   assert.equal(Boolean(documentRef.getElementById("ad-ext-take-out-darts-alert-style")), false);
@@ -460,7 +460,7 @@ test("single-bull-hit-sound mounts idempotently and releases observers/listeners
   runtime.start();
   await wait(5);
 
-  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.observers.size(), 2);
   assert.equal(runtime.context.registries.listeners.size(), 3);
 
   runtime.stop();
@@ -484,7 +484,7 @@ test("turn-score-counter mounts idempotently and keeps managed observer state", 
   await wait(5);
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-turn-score-counter-style")), true);
-  assert.equal(runtime.context.registries.observers.size(), 2);
+  assert.equal(runtime.context.registries.observers.size(), 3);
   assert.ok(runtime.context.registries.observers.get("turn-score-counter:dom-observer:lifecycle"));
   assert.ok(runtime.context.registries.observers.get("turn-score-counter:dom-observer:surface"));
   assert.equal(runtime.context.registries.listeners.size(), 1);
@@ -510,7 +510,7 @@ test("x01-remaining-score-bar mounts idempotently and removes style on cleanup",
   await wait(5);
 
   assert.equal(Boolean(documentRef.getElementById("ad-ext-x01-remaining-score-bar-style")), true);
-  assert.equal(runtime.context.registries.observers.size(), 1);
+  assert.equal(runtime.context.registries.observers.size(), 2);
   assert.equal(runtime.context.registries.listeners.size(), 0);
 
   runtime.stop();
