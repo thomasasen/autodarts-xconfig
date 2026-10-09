@@ -10,6 +10,7 @@ import { resolveCheckoutScoreTruth } from "../../src/features/checkout-score-hig
 import { HIGHLIGHT_CLASS } from "../../src/features/checkout-score-highlight/style.js";
 import {
   initializeCheckoutTargetHighlights,
+  resolveCheckoutBoardMutationReaction,
   resolveCheckoutTargetTruth,
 } from "../../src/features/checkout-target-highlights/index.js";
 import { OVERLAY_ID } from "../../src/features/checkout-target-highlights/style.js";
@@ -118,6 +119,83 @@ function semanticTruth(truth) {
     coherence: truth.coherence,
     matchId: truth.matchId,
   };
+}
+
+test("checkout targets observe native score, turn and header changes including text nodes", () => {
+  const scenario = createScenario();
+  const mutations = [
+    { type: "characterData", target: { nodeType: 3, parentNode: scenario.score } },
+    { type: "characterData", target: { nodeType: 3, parentNode: scenario.total } },
+    { type: "characterData", target: { nodeType: 3, parentNode: scenario.variant } },
+    { type: "attributes", target: scenario.card, attributeName: "class" },
+    { type: "attributes", target: scenario.rows[0].row, attributeName: "class" },
+    { type: "childList", target: scenario.score, addedNodes: [], removedNodes: [] },
+    { type: "childList", target: scenario.slots, addedNodes: [], removedNodes: [] },
+  ];
+  for (const mutation of mutations) {
+    assert.deepEqual(resolveCheckoutBoardMutationReaction([mutation]), {
+      shouldSchedule: true,
+      shouldInvalidateBoardCache: false,
+    }, `${mutation.type} on native match surface`);
+  }
+  const unrelated = scenario.node(scenario.documentRef.main, "div", "", "unrelated");
+  assert.equal(resolveCheckoutBoardMutationReaction([
+    { type: "characterData", target: { nodeType: 3, parentNode: unrelated } },
+  ]).shouldSchedule, false);
+});
+
+for (const mutationType of ["characterData", "childList", "attributes"]) {
+  test(`checkout targets recover for darts two and three when native ${mutationType} updates complete a partial render`, () => {
+    const scenario = createScenario({
+      score: 121, throws: [], route: ["T20", "S25", "D18"], outMode: "Double Out",
+    });
+    const observers = createObserverRegistry();
+    const cleanup = initializeCheckoutTargetHighlights({
+      ...scenario,
+      domGuards: createDomGuards({ documentRef: scenario.documentRef }),
+      registries: { observers },
+      domain: { x01Rules },
+      config: { getFeatureConfig: () => ({ targetSelectionMode: "next" }) },
+      helpers: { createRafScheduler: (callback) => ({ schedule: callback, cancel() {} }) },
+    });
+    function assertTarget(ring, value) {
+      const overlay = scenario.documentRef.getElementById(OVERLAY_ID);
+      assert.ok(overlay?.children.length, "checkout overlay is visible");
+      assert.equal(overlay.children[0].dataset.targetRing, ring);
+      assert.equal(overlay.children[0].dataset.targetValue, value === undefined ? undefined : String(value));
+    }
+    function updateVisit(score, throws, route) {
+      scenario.score.textContent = String(score);
+      scenario.setVisit(throws, route);
+      const target = mutationType === "characterData"
+        ? { nodeType: 3, parentNode: scenario.score }
+        : mutationType === "attributes" ? scenario.rows[0].row : scenario.slots;
+      observers.get("checkout-target-highlights:dom-observer").callback([
+        { type: mutationType, target, attributeName: mutationType === "attributes" ? "class" : undefined },
+      ]);
+    }
+    function startPartialVisit(score, throws, route) {
+      scenario.state.score = score;
+      scenario.state.throws = throws.map(toThrow);
+      // The throw slots arrive before the DOM score. Both sources have changed,
+      // so the shared resolver must temporarily suppress ambiguous targets.
+      scenario.setVisit(throws, route);
+      scenario.game.notify();
+      assert.equal(scenario.documentRef.getElementById(OVERLAY_ID), null);
+    }
+    try {
+      assertTarget("T", 20);
+      startPartialVisit(61, ["T20"], ["S25", "D18"]);
+      // Score catch-up has no additional game-state notification.
+      updateVisit(61, ["T20"], ["S25", "D18"]);
+      assertTarget("SB");
+      startPartialVisit(36, ["T20", "S25"], ["D18"]);
+      updateVisit(36, ["T20", "S25"], ["D18"]);
+      assertTarget("D", 18);
+    } finally {
+      cleanup();
+    }
+  });
 }
 
 test("P0 state-first DOM-lag never reactivates the old multi-dart route", () => {

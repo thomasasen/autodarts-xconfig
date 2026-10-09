@@ -12,11 +12,13 @@ import {
 } from "../x01-checkout-route.js";
 import { resolveX01CheckoutContext } from "../x01-checkout-context.js";
 import { createTurnSurfaceObserveOptions } from "../shared/turn-surface-adapter.js";
+import { MODERN_MATCH_SEMANTIC_SELECTORS } from "../shared/x01-match-surface.js";
 
 const FEATURE_KEY = "checkout-target-highlights";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
 const TRANSIENT_ROUTE_RETENTION_MS = 1500;
 const CHECKOUT_SEMANTIC_ATTRIBUTE_SELECTORS = Object.freeze([
+  ...MODERN_MATCH_SEMANTIC_SELECTORS,
   "#ad-ext-game-variant",
   SUGGESTION_SELECTOR,
   "#ad-ext-turn",
@@ -74,9 +76,10 @@ function nodeOrAncestorMatchesAnySelector(node, selectors = []) {
     return false;
   }
 
+  const elementNode = node.nodeType === 3 ? node.parentNode : node;
   return selectors.some((selector) => {
     try {
-      return Boolean(node.closest?.(selector));
+      return Boolean(elementNode?.closest?.(selector));
     } catch (_) {
       return false;
     }
