@@ -1,9 +1,10 @@
 import { createRafScheduler } from "../../shared/raf-scheduler.js";
-import { readModernCricketGrid } from "../cricket-surface/modern-grid.js";
 import {
   advanceX01TurnGeneration,
   clearX01TurnHistory,
+  createX01ReadContext,
   readTurnLifecycleCandidates,
+  readX01CricketGrid,
   resolveX01CheckoutContext,
 } from "../x01-checkout-context.js";
 
@@ -30,12 +31,34 @@ function sameSurface(left, right) {
     (!left?.variant || !right?.variant || variantKey(left.variant) === variantKey(right.variant));
 }
 
+const DECORATIVE_ROOT_IDS = new Set([
+  "ad-xconfig-panel-host", "ad-ext-dart-image-overlay", "ad-ext-checkout-targets",
+]);
+
+function isKnownIrrelevantMutation(mutation) {
+  if (!mutation?.target || !["attributes", "characterData", "childList"].includes(mutation.type)) return false;
+  if (mutation.type === "attributes" && !mutation.attributeName) return false;
+  let root = mutation.target;
+  while (root && !DECORATIVE_ROOT_IDS.has(root.id)) root = root.parentNode;
+  if (!root) return false;
+  if (mutation.type !== "childList") return true;
+  // A missing list is an incomplete record, not evidence of an irrelevant change.
+  return [mutation.addedNodes, mutation.removedNodes].every((nodes) =>
+    nodes && typeof nodes[Symbol.iterator] === "function" &&
+    Array.from(nodes).every((node) => node && typeof node.nodeType === "number")
+  );
+}
+
+function shouldInvalidateForDomMutations(mutations) {
+  return !Array.isArray(mutations) || !mutations.length || !mutations.every(isKnownIrrelevantMutation);
+}
+
 // One controller per runtime. All resets finish before any feature is scheduled.
 export function createTurnLifecycle(context = {}, options = {}) {
   const entries = new Set();
-  const read = options.readCandidates || (() => {
-    const candidates = readTurnLifecycleCandidates(context);
-    const grid = readModernCricketGrid(context.documentRef);
+  const read = options.readCandidates || ((readContext) => {
+    const candidates = readTurnLifecycleCandidates(readContext);
+    const grid = readX01CricketGrid(readContext);
     if (grid) {
       const stateVariant = String(candidates.state.variant || "");
       candidates.dom = {
@@ -47,7 +70,7 @@ export function createTurnLifecycle(context = {}, options = {}) {
     }
     return candidates;
   });
-  const resolveTruth = options.resolveTruth || (() => resolveX01CheckoutContext(context));
+  const resolveTruth = options.resolveTruth || ((readContext) => resolveX01CheckoutContext(readContext));
   let snapshot = Object.freeze({ generation: 0, phase: "idle" });
   let accepted = null;
   let previousVisit = null;
@@ -71,13 +94,14 @@ export function createTurnLifecycle(context = {}, options = {}) {
     refreshing = true;
     dirty = false;
     try {
-      const candidates = read();
+      const readContext = createX01ReadContext(context);
+      const candidates = read(readContext);
       let state = hasIdentity(candidates.state) ? candidates.state : null;
       const dom = hasIdentity(candidates.dom) ? candidates.dom : null;
       if (dom?.variant && state?.variant && !sameSurface(state, dom)) state = null;
       const agree = state && dom && sameSurface(state, dom) && samePlayer(state, dom);
       const truth = variantKey(dom?.variant || state?.variant) === "x01"
-        ? resolveTruth() : { active: false, actionable: false };
+        ? resolveTruth(readContext) : { active: false, actionable: false };
       let selected = null;
       if (agree) {
         selected = state;
@@ -162,7 +186,9 @@ export function createTurnLifecycle(context = {}, options = {}) {
       key: "turn-lifecycle:dom-observer",
       target: context.documentRef?.documentElement || context.documentRef?.body,
       MutationObserverRef: context.windowRef?.MutationObserver,
-      callback: invalidate,
+      callback: (mutations) => {
+        if (shouldInvalidateForDomMutations(mutations)) invalidate();
+      },
       observeOptions: {
         subtree: true, childList: true, characterData: true, attributes: true,
         attributeFilter: ["class", "hidden", "aria-hidden", "data-state", "aria-selected"],

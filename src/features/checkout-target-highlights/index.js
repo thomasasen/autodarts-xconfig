@@ -16,7 +16,7 @@ import {
   mapRouteSegmentsToBoardTargets,
   SUGGESTION_SELECTOR,
 } from "../x01-checkout-route.js";
-import { resolveX01CheckoutContext } from "../x01-checkout-context.js";
+import { createX01ReadContext, resolveX01CheckoutContext } from "../x01-checkout-context.js";
 import { createTurnSurfaceObserveOptions } from "../shared/turn-surface-adapter.js";
 import { MODERN_MATCH_SEMANTIC_SELECTORS } from "../shared/x01-match-surface.js";
 
@@ -723,7 +723,7 @@ export function initializeCheckoutTargetHighlights(context = {}) {
   }
 
   function update() {
-    const x01CheckoutContext = resolveCheckoutTargetTruth({
+    const x01CheckoutContext = resolveCheckoutTargetTruth(createX01ReadContext({
       gameState,
       documentRef,
       windowRef,
@@ -731,7 +731,7 @@ export function initializeCheckoutTargetHighlights(context = {}) {
       x01Rules,
       domOutMode: context.domOutMode,
       dartsRemaining: context.dartsRemaining,
-    });
+    }));
     const active = x01CheckoutContext.active && x01CheckoutContext.actionable;
     const variantText = String(
       documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || ""

@@ -1,4 +1,5 @@
 import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
+import { createX01ReadContext, readX01MatchSurface } from "../x01-checkout-context.js";
 import {
   createX01PlayerSurfaceObserverController,
   getX01PlayerSurfaceSnapshot,
@@ -84,16 +85,18 @@ export function mountCheckoutScoreHighlight(context = {}) {
   }
 
   function update() {
-    const x01Truth = resolveCheckoutScoreTruth({
+    const readContext = createX01ReadContext({
       documentRef,
       windowRef,
       gameState,
       variantRules: context.domain?.variantRules,
       x01Rules: context.domain?.x01Rules,
     });
+    const x01Truth = resolveCheckoutScoreTruth(readContext);
     const playerSurfaceSnapshot = getX01PlayerSurfaceSnapshot(documentRef, {
       includeModern: true,
       windowRef,
+      modernPlayers: readX01MatchSurface(readContext).players,
     });
     const allScoreNodes = getAllScoreNodes(documentRef, { playerSurfaceSnapshot });
     const scoreNodes = getScoreNodes(documentRef, gameState, {

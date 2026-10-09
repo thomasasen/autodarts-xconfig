@@ -34,8 +34,8 @@ import {
 import {
   MODERN_MATCH_SEMANTIC_SELECTORS,
   findModernTurnSurface,
-  readModernMatchSurface,
 } from "../shared/x01-match-surface.js";
+import { createX01ReadContext, readX01MatchSurface } from "../x01-checkout-context.js";
 
 const FEATURE_KEY = "tv-board-zoom";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -480,11 +480,12 @@ function resolveFeatureDebugLogger(featureDebug, level) {
   return null;
 }
 
-function emitDebugEvent(debugState, level, payload = {}) {
+function emitDebugEvent(debugState, level, createPayload) {
   if (!debugState?.featureDebug?.enabled) {
     return;
   }
 
+  const payload = createPayload();
   const signature = buildDebugSignature(payload);
   if (debugState.lastSignature === signature) {
     return;
@@ -715,7 +716,7 @@ export function initializeTvBoardZoom(context = {}) {
       resetZoom(speedConfig, zoomState, Boolean(options.immediate), {
         preserveGifContainment: Boolean(options.preserveGifContainment),
       });
-      emitDebugEvent(debugState, reason === "board-missing" || reason === "target-missing" ? "warn" : "log", withTruthDebug({
+      emitDebugEvent(debugState, reason === "board-missing" || reason === "target-missing" ? "warn" : "log", () => withTruthDebug({
         status: "reset",
         reason,
       }, zoomState.x01TruthDebug));
@@ -739,7 +740,7 @@ export function initializeTvBoardZoom(context = {}) {
     resetZoom(speedConfig, zoomState, false, {
       preserveGifContainment: Boolean(options.preserveGifContainment),
     });
-    emitDebugEvent(debugState, reason === "board-missing" || reason === "target-missing" ? "warn" : "log", withTruthDebug({
+    emitDebugEvent(debugState, reason === "board-missing" || reason === "target-missing" ? "warn" : "log", () => withTruthDebug({
       status: "reset",
       reason,
     }, zoomState.x01TruthDebug));
@@ -779,13 +780,14 @@ export function initializeTvBoardZoom(context = {}) {
     clearHoldTimer();
     clearIntegrityTimer();
     ensureGifOverlayObserver();
-    const matchSurface = readModernMatchSurface(documentRef, windowRef);
-    const x01Truth = resolveTvBoardZoomTruth({
+    const readContext = createX01ReadContext({
       gameState,
       documentRef,
       windowRef,
       x01Rules,
     });
+    const matchSurface = readX01MatchSurface(readContext);
+    const x01Truth = resolveTvBoardZoomTruth(readContext);
     zoomState.x01TruthDebug = x01Truth;
     lastMatchSurface = matchSurface;
     if (!hasActiveTurnSurface(documentRef, matchSurface)) {
@@ -873,7 +875,7 @@ export function initializeTvBoardZoom(context = {}) {
       resetZoom(speedConfig, zoomState, true, {
         preserveGifContainment: true,
       });
-      emitDebugEvent(debugState, "log", withTruthDebug({
+      emitDebugEvent(debugState, "log", () => withTruthDebug({
         status: "reset",
         reason: lifecycleResetReason,
       }, x01Truth));
@@ -896,7 +898,7 @@ export function initializeTvBoardZoom(context = {}) {
     if (zoomData) {
       scheduleIntegrityCheck();
     }
-    emitDebugEvent(debugState, "log", withTruthDebug({
+    emitDebugEvent(debugState, "log", () => withTruthDebug({
       status: zoomData ? "apply" : "apply-missing-transform",
       reason: String(intent?.reason || ""),
       segment: String(intent?.segment || ""),

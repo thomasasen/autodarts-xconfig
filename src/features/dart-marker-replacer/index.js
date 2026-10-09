@@ -16,6 +16,7 @@ import {
   resolveDartMarkerReplacerConfig,
 } from "./style.js";
 import { runDartMarkerReplacerPreview } from "./preview.js";
+import { createZoomTransitionTracker } from "./zoom-transition-tracker.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 
 const FEATURE_KEY = "dart-marker-replacer";
@@ -371,39 +372,14 @@ export function initializeDartMarkerReplacer(context = {}) {
   }
 
   if (listenerRegistry && typeof listenerRegistry.register === "function") {
-    let zoomTransitionFrame = 0;
-    let zoomTransitionActive = false;
-    const cancelZoomTransitionLoop = () => {
-      zoomTransitionActive = false;
-      if (!zoomTransitionFrame) {
-        return;
-      }
-      windowRef?.cancelAnimationFrame?.(zoomTransitionFrame);
-      zoomTransitionFrame = 0;
-    };
-    const runZoomTransitionFrame = () => {
-      zoomTransitionFrame = 0;
-      scheduleUpdate(UPDATE_REASON.reposition);
-      if (zoomTransitionActive) {
-        zoomTransitionFrame = windowRef?.requestAnimationFrame?.(runZoomTransitionFrame) || 0;
-      }
-    };
+    const transitionTracker = createZoomTransitionTracker({
+      documentRef, windowRef, scheduleUpdate: () => scheduleUpdate(UPDATE_REASON.reposition),
+    });
     const startZoomTransitionLoop = (event) => {
-      if (!isZoomTransformTransition(event) || zoomTransitionFrame) {
-        return;
-      }
-      zoomTransitionActive = true;
-      scheduleUpdate(UPDATE_REASON.reposition);
-      zoomTransitionFrame = windowRef?.requestAnimationFrame?.(runZoomTransitionFrame) || 0;
+      if (isZoomTransformTransition(event)) transitionTracker.start(event);
     };
-    const stopZoomTransitionLoop = (event) => {
-      if (!isZoomTransformTransition(event)) {
-        return;
-      }
-      cancelZoomTransitionLoop();
-      scheduleUpdate(UPDATE_REASON.reposition);
-    };
-    state.cancelZoomTransitionLoop = cancelZoomTransitionLoop;
+    const stopZoomTransitionLoop = (event) => transitionTracker.finish(event);
+    state.cancelZoomTransitionLoop = () => transitionTracker.cancel();
     listenerRegistry.register({ key: LISTENER_KEYS.transitionRun, target: documentRef, type: "transitionrun", handler: startZoomTransitionLoop });
     listenerRegistry.register({ key: LISTENER_KEYS.transitionEnd, target: documentRef, type: "transitionend", handler: stopZoomTransitionLoop });
     listenerRegistry.register({ key: LISTENER_KEYS.transitionCancel, target: documentRef, type: "transitioncancel", handler: stopZoomTransitionLoop });
@@ -411,7 +387,7 @@ export function initializeDartMarkerReplacer(context = {}) {
       key: LISTENER_KEYS.visibility,
       target: documentRef,
       type: "visibilitychange",
-      handler: () => scheduleUpdate(UPDATE_REASON.reposition),
+      handler: () => transitionTracker.visibilityChanged(),
     });
     listenerRegistry.register({
       key: LISTENER_KEYS.resize,

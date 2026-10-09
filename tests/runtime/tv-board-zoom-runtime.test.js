@@ -174,6 +174,58 @@ function installResizeObserverHarness(windowRef) {
   };
 }
 
+test("tv-board-zoom skips diagnostic layout reads when debugging is disabled", () => {
+  function run(enabled) {
+    const documentRef = new FakeDocument();
+    const windowRef = createFakeWindow({ documentRef });
+    const timers = createFakeTimerHarness();
+    timers.installOnWindow(windowRef);
+    timers.installGlobals();
+    const gameState = createMutableX01GameState({ activeScore: 10 });
+    const { targetNode, hostNode } = installZoomFixture(documentRef);
+    // A temporarily unmeasurable viewport reaches the diagnostic fallback.
+    let viewportUnavailable = false;
+    const reads = { target: 0, host: 0 };
+    for (const [key, node] of [["target", targetNode], ["host", hostNode]]) {
+      const read = node.getBoundingClientRect.bind(node);
+      node.getBoundingClientRect = () => {
+        reads[key] += 1;
+        return key === "host" && viewportUnavailable ? { ...read(), width: 0 } : read();
+      };
+    }
+    const events = [];
+    const cleanup = startTvBoardZoom({ documentRef, windowRef, gameState: gameState.api,
+      featureDebug: { enabled, log: (summary, event) => events.push({ summary, event }), warn: () => {} },
+    });
+    try {
+      timers.advance(25);
+      viewportUnavailable = true;
+      reads.target = 0;
+      reads.host = 0;
+      events.length = 0;
+      gameState.notify();
+      timers.advance(25);
+      const result = { reads: { ...reads }, transform: targetNode.style.transform || "", events: [...events] };
+      gameState.notify();
+      timers.advance(25);
+      assert.equal(events.length, result.events.length, "unchanged diagnostics remain deduplicated");
+      return result;
+    } finally {
+      cleanup();
+      timers.restoreGlobals();
+    }
+  }
+  const disabled = run(false);
+  const enabled = run(true);
+  assert.equal(disabled.events.length, 0);
+  assert.equal(enabled.events[0]?.event.status, "apply-missing-transform");
+  assert.equal(enabled.events[0]?.event.segment, "D5");
+  assert.match(enabled.events[0]?.summary || "", /status="apply-missing-transform"/);
+  assert.equal(disabled.transform, enabled.transform);
+  assert.equal(enabled.reads.target, disabled.reads.target + 1);
+  assert.equal(enabled.reads.host, disabled.reads.host + 1);
+});
+
 function installBoardInputModeControls(fixture, activeMode = "live") {
   const createControl = (mode, label) => {
     const control = fixture.node(fixture.documentRef.main, "button", "", label);

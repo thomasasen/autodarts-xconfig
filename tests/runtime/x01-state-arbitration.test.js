@@ -17,7 +17,7 @@ import { OVERLAY_ID } from "../../src/features/checkout-target-highlights/style.
 import { initializeTvBoardZoom, resolveTvBoardZoomMutationReaction } from "../../src/features/tv-board-zoom/index.js";
 import { resolveTvBoardZoomTruth } from "../../src/features/tv-board-zoom/logic.js";
 import { ZOOM_CLASS } from "../../src/features/tv-board-zoom/style.js";
-import { resolveX01CheckoutContext } from "../../src/features/x01-checkout-context.js";
+import { createX01ReadContext, readTurnLifecycleCandidates, resolveX01CheckoutContext } from "../../src/features/x01-checkout-context.js";
 import { createRafScheduler } from "../../src/shared/raf-scheduler.js";
 import { createFakeTimerHarness } from "./fake-dom.js";
 import { createModernX01Fixture } from "./modern-x01-fixture.js";
@@ -120,6 +120,47 @@ function semanticTruth(truth) {
     matchId: truth.matchId,
   };
 }
+
+test("fresh X01 read scopes preserve arbitration history through DOM/state races, undo, correction and match changes", () => {
+  const plain = createScenario({ score: 100, throws: [], route: ["T20", "D20"], outMode: "Double Out" });
+  const scoped = createScenario({ score: 100, throws: [], route: ["T20", "D20"], outMode: "Double Out" });
+  function compare(label) {
+    const expected = resolveX01CheckoutContext(plain);
+    const context = createX01ReadContext(scoped);
+    readTurnLifecycleCandidates(context);
+    const actual = resolveX01CheckoutContext(context);
+    const project = (truth) => ({
+      ...semanticTruth(truth), source: truth.source, routeUsable: truth.routeUsable,
+      routeSegments: truth.routeSegments, checkoutSurface: truth.checkoutSurface,
+      activeThrows: truth.activeThrows, throwCount: truth.throwCount,
+      activeTurnId: truth.activeTurnId, activePlayerId: truth.activePlayerId,
+      activePlayerIndex: truth.activePlayerIndex, gameBoundaryToken: truth.gameBoundaryToken,
+      diagnostics: truth.diagnostics,
+    });
+    assert.deepEqual(project(actual), project(expected), label);
+  }
+  function change(label, mutate) {
+    mutate(plain);
+    mutate(scoped);
+    compare(label);
+  }
+  compare("initial coherent visit");
+  change("state first", (s) => { s.state.score = 40; s.state.throws = [toThrow("T20")]; });
+  change("DOM catches up", (s) => { s.score.textContent = "40"; s.setVisit(["T20"], ["D20"]); });
+  change("DOM first", (s) => { s.score.textContent = "20"; s.setVisit(["T20", "S20"], ["D10"]); });
+  change("state catches up", (s) => { s.state.score = 20; s.state.throws = [toThrow("T20"), toThrow("S20")]; });
+  change("undo in state", (s) => { s.state.score = 40; s.state.throws = [toThrow("T20")]; });
+  change("undo in DOM", (s) => { s.score.textContent = "40"; s.setVisit(["T20"], ["D20"]); });
+  change("correction in state", (s) => { s.state.score = 80; s.state.throws = [toThrow("S20")]; });
+  change("correction in DOM", (s) => { s.score.textContent = "80"; s.setVisit(["S20"], ["T20", "D10"]); });
+  change("BUST visit", (s) => { s.total.textContent = "BUST"; s.state.score = 100; s.state.throws = [toThrow("T20"), toThrow("T20")]; });
+  change("new visit by the same player", (s) => { s.state.turnId = "turn-2"; s.state.throws = []; s.total.textContent = "0"; s.score.textContent = "100"; s.setVisit([], ["T20", "D20"]); });
+  change("new leg", (s) => { s.state.gameId = "game-2"; });
+  change("foreign snapshot with equal score", (s) => { s.state.matchId = "foreign-match"; s.state.outMode = "Master Out"; });
+  change("DOM changes match before state", (s) => { s.windowRef.location.pathname = "/matches/next-match"; });
+  change("new match catches up", (s) => { s.state.matchId = "next-match"; s.state.outMode = "Double Out"; });
+  change("leaving X01", (s) => { s.variant.textContent = "Cricket"; s.state.variant = "Cricket"; });
+});
 
 test("checkout diagnostics preserve targets, cleanup and deduplicated active/inactive payloads", () => {
   function run(debugEnabled) {

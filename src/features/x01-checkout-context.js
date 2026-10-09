@@ -18,6 +18,34 @@ const ACTIVE_SCORE_SELECTORS = Object.freeze([
 ]);
 const MATCH_ROUTE_PATTERN = /^\/matches\/([^/]+)$/i;
 const truthHistoryByDocument = new WeakMap();
+const readScopeOwners = new WeakMap();
+const READ_CONTEXT_KEYS = [
+  "documentRef", "windowRef", "gameState", "x01Rules", "domOutMode", "outMode", "dartsRemaining",
+];
+
+// Allocate locally for one synchronous read/render. Never retain this context in state.
+export function createX01ReadContext(context = {}) {
+  const x01ReadScope = new Map();
+  readScopeOwners.set(x01ReadScope, { ...context });
+  return { ...context, x01ReadScope };
+}
+
+function readScoped(context, key, read) {
+  const scope = context.x01ReadScope;
+  const owner = scope && readScopeOwners.get(scope);
+  if (!owner || READ_CONTEXT_KEYS.some((name) => owner[name] !== context[name])) return read();
+  if (!scope.has(key)) scope.set(key, read());
+  return scope.get(key);
+}
+
+export function readX01MatchSurface(context = {}) {
+  return readScoped(context, "modernSurface", () =>
+    readModernMatchSurface(context.documentRef, context.windowRef));
+}
+
+export function readX01CricketGrid(context = {}) {
+  return readScoped(context, "cricketGrid", () => readModernCricketGrid(context.documentRef));
+}
 
 export function parseScore(text) {
   const match = /-?\d+/.exec(String(text || ""));
@@ -262,8 +290,8 @@ function collectScoreCandidates(documentRef, windowRef) {
   return Array.from(candidateMap.values()).sort(compareScoreCandidates);
 }
 
-export function readDomActiveScore(documentRef, windowRef) {
-  const modernSurface = readModernMatchSurface(documentRef, windowRef);
+export function readDomActiveScore(documentRef, windowRef, context = {}) {
+  const modernSurface = readX01MatchSurface({ ...context, documentRef, windowRef });
   if (modernSurface.turnContainer) {
     return modernSurface.activeScore;
   }
@@ -519,8 +547,8 @@ function readDomThrows(documentRef, modernSurface, x01Rules) {
   return { known: true, throws, source: "legacy-turn" };
 }
 
-function readVisibleDomVariant(documentRef, windowRef, modernSurface) {
-  const cricketGrid = readModernCricketGrid(documentRef);
+function readVisibleDomVariant(documentRef, windowRef, modernSurface, context = {}) {
+  const cricketGrid = readX01CricketGrid({ ...context, documentRef, windowRef });
   if (cricketGrid) return cricketGrid.labels.length > 7 ? "Tactics" : "Cricket";
   if (modernSurface?.variantNode && modernSurface.variant) {
     return normalizeVariantText(modernSurface.variant);
@@ -542,6 +570,10 @@ function readLegacyActivePlayerIndex(documentRef) {
 }
 
 function createStateCandidate(context, routeMatchId) {
+  return readScoped(context, `stateCandidate:${routeMatchId}`, () => readStateCandidate(context, routeMatchId));
+}
+
+function readStateCandidate(context, routeMatchId) {
   const gameState = context.gameState;
   const snapshot = safeGetSnapshot(gameState);
   const snapshotMatchIds = collectSnapshotMatchIds(snapshot);
@@ -593,6 +625,11 @@ function createStateCandidate(context, routeMatchId) {
 }
 
 function createDomCandidate(context, routeMatchId, modernSurface, domVariant) {
+  return readScoped(context, `domCandidate:${routeMatchId}:${domVariant}`, () =>
+    readDomCandidate(context, routeMatchId, modernSurface, domVariant));
+}
+
+function readDomCandidate(context, routeMatchId, modernSurface, domVariant) {
   const domThrowsState = readDomThrows(context.documentRef, modernSurface, context.x01Rules);
   const activeThrows = domThrowsState.throws;
   const activePlayerIndex = modernSurface?.players?.length
@@ -601,7 +638,7 @@ function createDomCandidate(context, routeMatchId, modernSurface, domVariant) {
   const normalizedActivePlayerIndex = activePlayerIndex >= 0 ? activePlayerIndex : null;
   const activePlayerId = normalizeIdentity(modernSurface?.playerKey) ||
     (Number.isInteger(normalizedActivePlayerIndex) ? `index:${normalizedActivePlayerIndex}` : "");
-  const activeScore = normalizeScore(readDomActiveScore(context.documentRef, context.windowRef));
+  const activeScore = normalizeScore(readDomActiveScore(context.documentRef, context.windowRef, context));
   const outMode = normalizeOutMode(modernSurface?.outMode || context.domOutMode || context.outMode);
   const visitStartScore = Number.isFinite(activeScore) && domThrowsState.known
     ? activeScore + activeThrows.reduce((sum, entry) => sum + (Number(entry?.score) || 0), 0)
@@ -677,9 +714,10 @@ export function clearX01TurnHistory(documentRef) {
 }
 
 export function readTurnLifecycleCandidates(context = {}) {
-  const surface = readModernMatchSurface(context.documentRef, context.windowRef);
+  const surface = readX01MatchSurface(context);
   const matchId = extractCurrentMatchRouteId(context.windowRef, context.documentRef);
-  const variant = readVisibleDomVariant(context.documentRef, context.windowRef, surface);
+  const variant = readScoped(context, "domVariant", () =>
+    readVisibleDomVariant(context.documentRef, context.windowRef, surface, context));
   return {
     state: createStateCandidate(context, matchId),
     dom: createDomCandidate(context, matchId, surface, variant),
@@ -1131,9 +1169,10 @@ export function resolveX01CheckoutContext(context = {}) {
   const documentRef = context.documentRef;
   const windowRef = context.windowRef;
   const x01Rules = context.x01Rules;
-  const modernSurface = readModernMatchSurface(documentRef, windowRef);
+  const modernSurface = readX01MatchSurface(context);
   const routeMatchId = extractCurrentMatchRouteId(windowRef, documentRef);
-  const domVariant = readVisibleDomVariant(documentRef, windowRef, modernSurface);
+  const domVariant = readScoped(context, "domVariant", () =>
+    readVisibleDomVariant(documentRef, windowRef, modernSurface, context));
   const explicitVisibleNonX01 = Boolean(domVariant) && !isX01VariantText(domVariant, {
     allowMissing: false,
     allowEmpty: false,
@@ -1151,7 +1190,10 @@ export function resolveX01CheckoutContext(context = {}) {
     });
   }
 
-  const routeEntries = collectVisibleCheckoutRouteEntries(documentRef, windowRef, x01Rules);
+  const routeOptions = context.x01ReadScope
+    ? { modernTurnSurface: modernSurface.turnContainer ? modernSurface : null }
+    : {};
+  const routeEntries = collectVisibleCheckoutRouteEntries(documentRef, windowRef, x01Rules, routeOptions);
   const routeSegments = routeEntries.flatMap((entry) =>
     Array.isArray(entry?.segments) ? entry.segments : []
   );

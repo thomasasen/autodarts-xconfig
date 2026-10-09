@@ -90,10 +90,12 @@ export function initializeTurnScoreCounter(context = {}) {
   }
 
   function update() {
-    bindSurfaceObserver();
+    const surface = resolveObserverSurface();
+    bindSurfaceObserver(surface);
     updateTurnScore({
       documentRef,
       state,
+      scoreNodes: surface.scoreNodes,
       durationMs: featureConfig.durationMs,
       flashEnabled: featureConfig.flashOnChange !== false,
       flashMode: featureConfig.flashMode,
@@ -137,8 +139,10 @@ export function initializeTurnScoreCounter(context = {}) {
   } }, schedulerFactory);
 
   function resolveObserverSurface() {
-    const modernTurn = findModernTurnSurface(documentRef, windowRef)?.turnContainer || null;
-    const initialScoreNode = collectScoreNodes(documentRef, state, { windowRef })[0] || null;
+    const modernTurnSurface = findModernTurnSurface(documentRef, windowRef);
+    const modernTurn = modernTurnSurface?.turnContainer || null;
+    const scoreNodes = collectScoreNodes(documentRef, state, { windowRef, modernTurnSurface });
+    const initialScoreNode = scoreNodes[0] || null;
     const scoreContainer = initialScoreNode?.closest?.("#ad-ext-turn")
       ? initialScoreNode.parentElement || null
       : null;
@@ -151,6 +155,7 @@ export function initializeTurnScoreCounter(context = {}) {
       documentRef;
     return {
       modernTurn,
+      scoreNodes,
       rootNode,
       usesModernRoot: Boolean(modernTurn && !scoreContainer),
       usesScoreContainer: Boolean(scoreContainer && rootNode === scoreContainer),
@@ -241,8 +246,7 @@ export function initializeTurnScoreCounter(context = {}) {
     }
   }
 
-  function bindSurfaceObserver() {
-    const nextSurface = resolveObserverSurface();
+  function bindSurfaceObserver(nextSurface = resolveObserverSurface()) {
     observedModernTurn = nextSurface.modernTurn;
     observerUsesScoreContainer = nextSurface.usesScoreContainer;
     observerUsesModernRoot = nextSurface.usesModernRoot;
@@ -273,6 +277,15 @@ export function initializeTurnScoreCounter(context = {}) {
       key: OBSERVER_KEYS.lifecycle,
       target: lifecycleRoot,
       callback: (mutations = []) => {
+        // Changes wholly inside the admin UI cannot replace the live turn root.
+        if (Array.isArray(mutations) && mutations.length && mutations.every((mutation) =>
+          mutation?.type === "childList" &&
+          mutation.target?.closest?.("#ad-xconfig-panel-host") &&
+          [mutation.addedNodes, mutation.removedNodes].every((nodes) =>
+            nodes && typeof nodes[Symbol.iterator] === "function" &&
+            Array.from(nodes).every((node) => node && typeof node.nodeType === "number")
+          )
+        )) return;
         const hasChildListMutation =
           !Array.isArray(mutations) ||
           mutations.length === 0 ||

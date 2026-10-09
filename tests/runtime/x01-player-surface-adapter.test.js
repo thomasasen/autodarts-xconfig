@@ -13,6 +13,27 @@ import {
 } from "../../src/features/shared/x01-player-surface-adapter.js";
 import { FakeDocument } from "./fake-dom.js";
 import { createModernX01Fixture } from "./modern-x01-fixture.js";
+import { readModernMatchSurface } from "../../src/features/shared/x01-match-surface.js";
+
+test("player adapter accepts same-pass modern players without another discovery and preserves legacy fallback", () => {
+  const fixture = createModernX01Fixture();
+  const options = { includeModern: true, windowRef: fixture.windowRef };
+  const expected = getX01PlayerSurfaceSnapshot(fixture.documentRef, options);
+  const modernPlayers = readModernMatchSurface(fixture.documentRef, fixture.windowRef).players;
+  let playerQueries = 0;
+  const query = fixture.documentRef.querySelectorAll.bind(fixture.documentRef);
+  fixture.documentRef.querySelectorAll = (selector) => {
+    if (selector === "main .overflow-clip") playerQueries += 1;
+    return query(selector);
+  };
+  assert.deepEqual(getX01PlayerSurfaceSnapshot(fixture.documentRef, { ...options, modernPlayers }), expected);
+  assert.equal(playerQueries, 0);
+  const legacy = new FakeDocument();
+  assert.deepEqual(
+    getX01PlayerSurfaceSnapshot(legacy, { includeModern: true, modernPlayers: [] }),
+    getX01PlayerSurfaceSnapshot(legacy, { includeModern: true })
+  );
+});
 
 function removeDefaultPlayerNodes(documentRef) {
   documentRef.activePlayerRow.remove();

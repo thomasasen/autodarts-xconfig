@@ -1000,6 +1000,58 @@ test("turn-score-counter animates modern turn totals and observes the stable mai
   assert.equal(scoreNode.classList.contains("ad-ext-turn-points"), false);
 });
 
+test("turn-score-counter reads the modern surface once per update and preserves animation targets", () => {
+  const fixture = createModernX01Fixture();
+  const scoreNode = appendModernTurnScoreText(fixture);
+  let surfaceReads = 0;
+  const query = fixture.documentRef.querySelectorAll.bind(fixture.documentRef);
+  fixture.documentRef.querySelectorAll = (selector) => {
+    if (selector === "main .bg-surface-surface") surfaceReads += 1;
+    return query(selector);
+  };
+  const harness = createMountHarness(fixture);
+  try {
+    surfaceReads = 0;
+    scoreNode.textContent = "145";
+    harness.gameStateListener();
+    assert.equal(surfaceReads, 1);
+    assert.equal(harness.animeRef.calls.length, 1);
+    assert.equal(scoreNode.classList.contains(SCORE_FLASH_CLASS), true);
+    assert.equal(fixture.total.classList.contains(SCORE_FRAME_CLASS), true);
+  } finally {
+    harness.cleanup();
+  }
+});
+
+test("turn-score-counter skips admin-only lifecycle churn but inspects mixed and incomplete records", () => {
+  const fixture = createModernX01Fixture();
+  appendModernTurnScoreText(fixture);
+  const panel = fixture.node(fixture.documentRef.body, "div");
+  panel.id = "ad-xconfig-panel-host";
+  let surfaceReads = 0;
+  const query = fixture.documentRef.querySelectorAll.bind(fixture.documentRef);
+  fixture.documentRef.querySelectorAll = (selector) => {
+    if (selector === "main .bg-surface-surface") surfaceReads += 1;
+    return query(selector);
+  };
+  const harness = createMountHarness(fixture);
+  const lifecycle = harness.observerProbe.state.registrations.get("turn-score-counter:dom-observer:lifecycle");
+  try {
+    surfaceReads = 0;
+    const adminMutation = { type: "childList", target: panel, addedNodes: [], removedNodes: [] };
+    lifecycle.callback([adminMutation]);
+    assert.equal(surfaceReads, 0);
+    lifecycle.callback([adminMutation, { type: "childList", target: fixture.documentRef.main, addedNodes: [], removedNodes: [] }]);
+    assert.equal(surfaceReads, 1);
+    lifecycle.callback([{ type: "childList", target: panel }]);
+    assert.equal(surfaceReads, 2, "incomplete records retain the fallback scan");
+    lifecycle.callback([{ type: "childList", target: panel, addedNodes: [null], removedNodes: [] }]);
+    assert.equal(surfaceReads, 3, "malformed node lists also retain the fallback scan");
+  } finally {
+    harness.cleanup();
+  }
+});
+
 test("turn-score-counter follows a replaced modern turn surface", () => {
   const fixture = createModernX01Fixture();
   const originalScoreNode = appendModernTurnScoreText(fixture);

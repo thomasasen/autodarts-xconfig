@@ -189,12 +189,14 @@ function preferCheckoutMarkedEntries(entries) {
   return checkoutMarkedEntries.length ? checkoutMarkedEntries : normalizedEntries;
 }
 
-export function collectVisibleCheckoutRouteEntries(documentRef, windowRef, x01Rules) {
+export function collectVisibleCheckoutRouteEntries(documentRef, windowRef, x01Rules, options = {}) {
   if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
     return [];
   }
 
-  const turn = findModernTurnSurface(documentRef, windowRef);
+  const turn = Object.hasOwn(options, "modernTurnSurface")
+    ? options.modernTurnSurface
+    : findModernTurnSurface(documentRef, windowRef);
   // The three slots are one route surface. A player-card copy is not another dart.
   const suggestionRoot = turn?.turnContainer || documentRef;
   const allSuggestionNodes = Array.from(suggestionRoot.querySelectorAll(SUGGESTION_SELECTOR))

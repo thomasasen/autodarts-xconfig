@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createTurnLifecycle, createTurnScopedScheduler } from "../../src/features/shared/turn-lifecycle.js";
+import { FakeDocument } from "./fake-dom.js";
 
 function candidate(player = 0, turn = "turn-1", source = "game-state") {
   return {
@@ -187,5 +188,57 @@ test("consumers share one observation until a state or DOM notification invalida
   mutate();
   lifecycle.ensureCurrent();
   assert.equal(reads, 3);
+  lifecycle.stop();
+});
+
+test("turn lifecycle ignores only complete admin and decorative batches, preserving all semantic invalidations", () => {
+  const documentRef = new FakeDocument();
+  let reads = 0;
+  let mutate;
+  const lifecycle = createTurnLifecycle({
+    documentRef,
+    windowRef: { requestAnimationFrame: () => 1, cancelAnimationFrame() {} },
+    registries: { observers: {
+      registerMutationObserver(options) { mutate = options.callback; }, disconnect() {},
+    } },
+  }, {
+    readCandidates() { reads += 1; return { state: candidate(), dom: candidate(0, "dom:40", "dom") }; },
+    resolveTruth: () => ({ active: true, actionable: true }),
+  });
+  lifecycle.start();
+  lifecycle.ensureCurrent();
+  const generation = lifecycle.getSnapshot().generation;
+  const owned = ["ad-xconfig-panel-host", "ad-ext-dart-image-overlay", "ad-ext-checkout-targets"].map((id) => {
+    const node = documentRef.createElement("div");
+    node.id = id;
+    documentRef.body.appendChild(node);
+    return node;
+  });
+  const ignored = owned.map((target) => ({ type: "attributes", attributeName: "class", target }));
+  ignored.push({ type: "characterData", target: { nodeType: 3, parentNode: owned[0] } });
+  const removedDecoration = documentRef.createElement("span");
+  ignored.push({ type: "childList", target: owned[1], addedNodes: [], removedNodes: [removedDecoration] });
+  mutate(ignored);
+  lifecycle.ensureCurrent();
+  assert.equal(reads, 1, "purely decorative batches do not reread game state");
+  const relevant = [
+    [{ type: "characterData", target: { nodeType: 3, parentNode: documentRef.turnScoreElement } }],
+    [{ type: "attributes", attributeName: "class", target: documentRef.main }],
+    [ignored[0], { type: "attributes", attributeName: "hidden", target: documentRef.turnContainer }],
+    [{ type: "childList", target: documentRef.body, addedNodes: [], removedNodes: [documentRef.main] }],
+    [{ type: "childList", target: documentRef.main, addedNodes: [owned[1]], removedNodes: [] }],
+    [{ type: "childList", target: owned[0] }],
+    [{ type: "attributes", target: owned[0] }],
+    [{ type: "unexpected", target: owned[0] }],
+    [{ type: "childList", target: owned[0], addedNodes: [null], removedNodes: [] }],
+    [], undefined,
+  ];
+  for (const batch of relevant) {
+    const previousReads = reads;
+    mutate(batch);
+    lifecycle.ensureCurrent();
+    assert.equal(reads, previousReads + 1, "unknown, mixed and semantic batches must invalidate");
+    assert.equal(lifecycle.getSnapshot().generation, generation, "extra reads cannot create a new visit");
+  }
   lifecycle.stop();
 });

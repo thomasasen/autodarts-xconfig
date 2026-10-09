@@ -3,10 +3,14 @@ import assert from "node:assert/strict";
 
 import * as x01Rules from "../../src/domain/x01-rules.js";
 import {
+  createX01ReadContext,
   readDomActiveScore,
+  readTurnLifecycleCandidates,
+  readX01MatchSurface,
   resolveX01ActiveScoreState,
   resolveX01CheckoutContext,
 } from "../../src/features/x01-checkout-context.js";
+import { createTurnLifecycle } from "../../src/features/shared/turn-lifecycle.js";
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 import { createModernX01Fixture } from "./modern-x01-fixture.js";
 
@@ -36,6 +40,73 @@ function createX01GameState(overrides = {}) {
 
   return gameState;
 }
+
+test("X01 read context reduces lifecycle and truth surface reads from five to one", () => {
+  const fixture = createModernX01Fixture({ score: 10, throws: [], route: ["D5"] });
+  let surfaceReads = 0;
+  let gridReads = 0;
+  const query = fixture.documentRef.querySelectorAll.bind(fixture.documentRef);
+  fixture.documentRef.querySelectorAll = (selector) => {
+    if (selector === "main .bg-surface-surface") surfaceReads += 1;
+    if (selector === "main .grid") gridReads += 1;
+    return query(selector);
+  };
+  const context = { ...fixture, x01Rules };
+  const plainCandidates = readTurnLifecycleCandidates(context);
+  const plainTruth = resolveX01CheckoutContext(context);
+  assert.equal(surfaceReads, 5);
+  surfaceReads = 0;
+  gridReads = 0;
+  const scoped = createX01ReadContext(context);
+  assert.deepEqual(readTurnLifecycleCandidates(scoped), plainCandidates);
+  assert.deepEqual(resolveX01CheckoutContext(scoped), plainTruth);
+  assert.equal(surfaceReads, 1);
+  assert.equal(gridReads, 1);
+  surfaceReads = 0;
+  gridReads = 0;
+  const lifecycle = createTurnLifecycle(context);
+  const snapshot = lifecycle.refresh();
+  assert.equal(snapshot.phase, "ready");
+  assert.equal(surfaceReads, 1, "the production lifecycle shares its local read context");
+  assert.equal(gridReads, 1);
+  lifecycle.stop();
+});
+
+test("X01 contexts are fresh per pass and reject reuse for another document or changed options", () => {
+  const first = createModernX01Fixture({ score: 10, throws: [], route: ["D5"] });
+  const firstContext = createX01ReadContext({ ...first, x01Rules });
+  assert.equal(readX01MatchSurface(firstContext).activeScore, 10);
+  first.score.textContent = "22";
+  const nextContext = createX01ReadContext(firstContext);
+  assert.equal(readX01MatchSurface(nextContext).activeScore, 22, "a later pass never inherits a populated scope");
+  first.score.textContent = "50";
+  assert.equal(readX01MatchSurface({ ...firstContext, dartsRemaining: 1 }).activeScore, 50,
+    "changed semantic options fall back to a fresh read");
+  const second = createModernX01Fixture({ score: 36 });
+  assert.equal(readX01MatchSurface({ ...firstContext, documentRef: second.documentRef, windowRef: second.windowRef }).activeScore, 36);
+  assert.equal(readX01MatchSurface({ ...firstContext, x01ReadScope: new Map() }).activeScore, 50,
+    "unowned scopes cannot provide cached values");
+});
+
+test("X01 scoped reads preserve legacy fallbacks and each caller's out-mode and darts options", () => {
+  for (const domOutMode of ["Straight Out", "Double Out", "Master Out"]) {
+    for (const dartsRemaining of [1, 2, 3]) {
+      function run(useScope) {
+        const documentRef = new FakeDocument();
+        const windowRef = createFakeWindow({ documentRef });
+        documentRef.activeScoreElement.textContent = "50";
+        documentRef.throwRow.remove();
+        documentRef.suggestionElement.textContent = "S10 D20";
+        const context = { documentRef, windowRef, x01Rules, domOutMode, dartsRemaining };
+        const readContext = useScope ? createX01ReadContext(context) : context;
+        readTurnLifecycleCandidates(readContext);
+        const { routeEntries, ...truth } = resolveX01CheckoutContext(readContext);
+        return { ...truth, routes: routeEntries.map((entry) => entry.segments) };
+      }
+      assert.deepEqual(run(true), run(false), `${domOutMode}, ${dartsRemaining} darts`);
+    }
+  }
+});
 
 function appendSuggestion(documentRef, text, left = 300, top = 10) {
   const node = documentRef.createElement("div");

@@ -1288,6 +1288,7 @@ export function resolveTvBoardZoomTruth(options = {}) {
     documentRef: options.documentRef,
     windowRef: options.windowRef,
     x01Rules: options.x01Rules,
+    x01ReadScope: options.x01ReadScope,
   });
 }
 

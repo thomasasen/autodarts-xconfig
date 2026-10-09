@@ -132,8 +132,10 @@ function toPlayerEntry(node, index) {
   };
 }
 
-function getModernPlayerSurfaceSnapshot(documentRef, windowRef) {
-  const modernPlayers = readModernPlayerSurfaces(documentRef, windowRef);
+function getModernPlayerSurfaceSnapshot(documentRef, windowRef, options) {
+  const modernPlayers = Array.isArray(options.modernPlayers)
+    ? options.modernPlayers
+    : readModernPlayerSurfaces(documentRef, windowRef);
   if (!modernPlayers.length) {
     return createEmptySnapshot();
   }
@@ -176,7 +178,8 @@ export function getX01PlayerSurfaceSnapshot(documentRef, options = {}) {
   if (options.includeModern) {
     const modernSnapshot = getModernPlayerSurfaceSnapshot(
       documentRef,
-      options.windowRef || documentRef?.defaultView
+      options.windowRef || documentRef?.defaultView,
+      options
     );
     if (modernSnapshot.playerDisplayRoot) {
       return modernSnapshot;

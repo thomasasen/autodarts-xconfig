@@ -71,8 +71,10 @@ function isValidCachedScoreNode(node) {
   return node.classList?.contains?.(SCORE_CLASS_NAME) === true;
 }
 
-function resolveModernScoreNode(documentRef, windowRef) {
-  const turnSurface = findModernTurnSurface(documentRef, windowRef);
+function resolveModernScoreNode(documentRef, options) {
+  const turnSurface = Object.hasOwn(options, "modernTurnSurface")
+    ? options.modernTurnSurface
+    : findModernTurnSurface(documentRef, options.windowRef || documentRef?.defaultView);
   const scoreFrameNode = turnSurface?.turnScoreNode || null;
   if (!scoreFrameNode) {
     return null;
@@ -84,12 +86,12 @@ function resolveModernScoreNode(documentRef, windowRef) {
   return directTextNode || scoreFrameNode;
 }
 
-function syncModernScoreNode(documentRef, state, windowRef) {
+function syncModernScoreNode(documentRef, state, options) {
   if (!state) {
     return null;
   }
 
-  const nextNode = resolveModernScoreNode(documentRef, windowRef);
+  const nextNode = resolveModernScoreNode(documentRef, options);
   const previousNode = state.modernScoreNode || null;
   if (previousNode && previousNode !== nextNode) {
     previousNode.classList?.remove?.(SCORE_CLASS_NAME);
@@ -105,7 +107,7 @@ export function collectScoreNodes(documentRef, state = null, options = {}) {
   const modernScoreNode = syncModernScoreNode(
     documentRef,
     state,
-    options.windowRef || documentRef?.defaultView
+    options
   );
   const cachedNodes = Array.isArray(state?.scoreNodeCache)
     ? state.scoreNodeCache
@@ -667,7 +669,9 @@ export function updateTurnScore(options = {}) {
     return;
   }
 
-  const scoreNodes = collectScoreNodes(documentRef, state, { windowRef });
+  const scoreNodes = Array.isArray(options.scoreNodes)
+    ? options.scoreNodes
+    : collectScoreNodes(documentRef, state, { windowRef });
   const nodeSet = new Set(scoreNodes);
 
   state.lastValueByNode.forEach((_value, node) => {
