@@ -35,6 +35,15 @@ const LISTENER_KEYS = Object.freeze({
   visibility: `${FEATURE_KEY}:document-visibility`,
 });
 
+function isAdminLifecycleMutation(mutation) {
+  return mutation?.type === "childList" &&
+    mutation.target?.closest?.("#ad-xconfig-panel-host") &&
+    [mutation.addedNodes, mutation.removedNodes].every((nodes) =>
+      nodes && typeof nodes[Symbol.iterator] === "function" &&
+      Array.from(nodes).every((node) => node && typeof node.nodeType === "number")
+    );
+}
+
 export function initializeTurnScoreCounter(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
@@ -278,14 +287,7 @@ export function initializeTurnScoreCounter(context = {}) {
       target: lifecycleRoot,
       callback: (mutations = []) => {
         // Changes wholly inside the admin UI cannot replace the live turn root.
-        if (Array.isArray(mutations) && mutations.length && mutations.every((mutation) =>
-          mutation?.type === "childList" &&
-          mutation.target?.closest?.("#ad-xconfig-panel-host") &&
-          [mutation.addedNodes, mutation.removedNodes].every((nodes) =>
-            nodes && typeof nodes[Symbol.iterator] === "function" &&
-            Array.from(nodes).every((node) => node && typeof node.nodeType === "number")
-          )
-        )) return;
+        if (Array.isArray(mutations) && mutations.length && mutations.every(isAdminLifecycleMutation)) return;
         const hasChildListMutation =
           !Array.isArray(mutations) ||
           mutations.length === 0 ||

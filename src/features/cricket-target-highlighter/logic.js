@@ -1,5 +1,5 @@
-import { RING_RATIOS, wedgePath, ringPath, segmentAngles } from "../../shared/dartboard-geometry.js";
-﻿import {
+import { SEGMENT_ORDER, RING_RATIOS, wedgePath, ringPath, segmentAngles } from "../../shared/dartboard-geometry.js";
+import {
   clearNodeChildren,
   ensureOverlayGroup,
   findBoardSvgGroup,

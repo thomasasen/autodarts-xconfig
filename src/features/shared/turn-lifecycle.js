@@ -89,46 +89,106 @@ export function createTurnLifecycle(context = {}, options = {}) {
     }
   }
 
+  function readObservation() {
+    const readContext = createX01ReadContext(context);
+    const candidates = read(readContext);
+    let state = hasIdentity(candidates.state) ? candidates.state : null;
+    const dom = hasIdentity(candidates.dom) ? candidates.dom : null;
+    if (dom?.variant && state?.variant && !sameSurface(state, dom)) state = null;
+    const agree = state && dom && sameSurface(state, dom) && samePlayer(state, dom);
+    const truth = variantKey(dom?.variant || state?.variant) === "x01"
+      ? resolveTruth(readContext) : { active: false, actionable: false };
+    return { candidates, state, dom, agree, truth };
+  }
+
+  function selectCandidate({ state, dom, agree, truth }) {
+    if (agree) {
+      waitingFor = "";
+      return state;
+    }
+    if (waitingFor === "dom" && state && accepted && sameSurface(state, accepted)) return state;
+    if (waitingFor === "state" && dom && accepted && sameSurface(dom, accepted)) return dom;
+    if (state && !dom) return state;
+    if (dom && !state) return dom;
+    if (truth.actionable) return truth.source === "dom" ? dom : state;
+    if (!previous) return null;
+    const stateChanged = state && identityKey(state) !== identityKey(previous.state);
+    const domChanged = dom && identityKey(dom) !== identityKey(previous.dom);
+    if (Boolean(stateChanged) !== Boolean(domChanged)) return stateChanged ? state : dom;
+    return null;
+  }
+
+  function isPrecedingVisit(selected, { agree, dom }) {
+    return !agree && selected && previousVisit && sameSurface(selected, previousVisit) &&
+      samePlayer(selected, previousVisit) &&
+      (selected === dom || (selected.activeTurnId && selected.activeTurnId === previousVisit.stateTurnId));
+  }
+
+  function resolveBoundary(selected, sourceIsState) {
+    if (sourceIsState) return selected.gameBoundaryToken || selected.matchId;
+    if (accepted && sameSurface(selected, accepted)) return accepted.gameBoundaryToken;
+    return selected.matchId;
+  }
+
+  function hasVisitChanged(selected, sourceIsState, boundary, stateTurnId) {
+    return !accepted || !sameSurface(selected, accepted) || !samePlayer(selected, accepted) ||
+      (sourceIsState && accepted.stateBoundaryKnown && boundary && accepted.gameBoundaryToken &&
+        boundary !== accepted.gameBoundaryToken) ||
+      (stateTurnId && accepted.stateTurnId && stateTurnId !== accepted.stateTurnId);
+  }
+
+  function notifySnapshotTransition(changed, previousPhase) {
+    if (changed) {
+      advanceX01TurnGeneration(context.documentRef, snapshot.generation);
+      entries.forEach((entry) => invoke(entry, "reset"));
+    } else if (previousPhase !== "pending" && snapshot.phase === "pending") {
+      entries.forEach((entry) => invoke(entry, "suspend"));
+    }
+    if (changed || (previousPhase !== "ready" && snapshot.phase === "ready")) {
+      entries.forEach((entry) => invoke(entry, "schedule"));
+    }
+  }
+
+  function acceptCandidate(selected, { state, dom, agree, truth }) {
+    const sourceIsState = selected === state;
+    const stateTurnId = sourceIsState && !String(selected.activeTurn?.finishedAt || "").trim()
+      ? selected.activeTurnId || "" : "";
+    const boundary = resolveBoundary(selected, sourceIsState);
+    const changed = hasVisitChanged(selected, sourceIsState, boundary, stateTurnId);
+    if (!agree && state && dom) waitingFor = sourceIsState ? "dom" : "state";
+    if (changed && accepted) previousVisit = accepted;
+    accepted = {
+      matchId: selected.matchId || "",
+      variant: variantKey(selected.variant),
+      gameBoundaryToken: boundary || "",
+      stateBoundaryKnown: sourceIsState || (!changed && accepted?.stateBoundaryKnown === true),
+      activePlayerIndex: selected.activePlayerIndex,
+      activePlayerId: selected.activePlayerId,
+      // Adopt the real turn ID when state catches up with a DOM-first switch.
+      stateTurnId: stateTurnId || (!changed ? accepted?.stateTurnId || "" : ""),
+    };
+    const previousPhase = snapshot.phase;
+    snapshot = Object.freeze({
+      ...accepted,
+      generation: snapshot.generation + (changed ? 1 : 0),
+      phase: (state && dom && !agree) || (truth.active && !truth.actionable) ? "pending" : "ready",
+    });
+    notifySnapshotTransition(changed, previousPhase);
+    return snapshot;
+  }
+
   function refresh() {
     if (refreshing) return snapshot;
     refreshing = true;
     dirty = false;
     try {
-      const readContext = createX01ReadContext(context);
-      const candidates = read(readContext);
-      let state = hasIdentity(candidates.state) ? candidates.state : null;
-      const dom = hasIdentity(candidates.dom) ? candidates.dom : null;
-      if (dom?.variant && state?.variant && !sameSurface(state, dom)) state = null;
-      const agree = state && dom && sameSurface(state, dom) && samePlayer(state, dom);
-      const truth = variantKey(dom?.variant || state?.variant) === "x01"
-        ? resolveTruth(readContext) : { active: false, actionable: false };
-      let selected = null;
-      if (agree) {
-        selected = state;
-        waitingFor = "";
-      } else if (waitingFor === "dom" && state && accepted && sameSurface(state, accepted)) {
-        selected = state;
-      } else if (waitingFor === "state" && dom && accepted && sameSurface(dom, accepted)) {
-        selected = dom;
-      } else if (state && !dom) {
-        selected = state;
-      } else if (dom && !state) {
-        selected = dom;
-      } else if (truth.actionable) {
-        selected = truth.source === "dom" ? dom : state;
-      } else if (previous) {
-        const stateChanged = state && identityKey(state) !== identityKey(previous.state);
-        const domChanged = dom && identityKey(dom) !== identityKey(previous.dom);
-        if (Boolean(stateChanged) !== Boolean(domChanged)) selected = stateChanged ? state : dom;
-      }
+      const observation = readObservation();
+      const { candidates, state, dom } = observation;
+      let selected = selectCandidate(observation);
       previous = candidates;
       // A lone return to the preceding identity could be either delayed data
       // or Undo. Wait for the other source rather than reversing the visit.
-      if (!agree && selected && previousVisit && sameSurface(selected, previousVisit) &&
-          samePlayer(selected, previousVisit) &&
-          (selected === dom || (selected.activeTurnId && selected.activeTurnId === previousVisit.stateTurnId))) {
-        selected = null;
-      }
+      if (isPrecedingVisit(selected, observation)) selected = null;
       if (!selected) {
         const phase = state || dom ? "pending" : "idle";
         const suspend = snapshot.phase !== phase;
@@ -136,43 +196,7 @@ export function createTurnLifecycle(context = {}, options = {}) {
         if (suspend) entries.forEach((entry) => invoke(entry, "suspend"));
         return snapshot;
       }
-      const sourceIsState = selected === state;
-      const stateTurnId = sourceIsState && !String(selected.activeTurn?.finishedAt || "").trim()
-        ? selected.activeTurnId || "" : "";
-      const boundary = sourceIsState ? selected.gameBoundaryToken || selected.matchId :
-        (accepted && sameSurface(selected, accepted) ? accepted.gameBoundaryToken : selected.matchId);
-      const changed = !accepted || !sameSurface(selected, accepted) || !samePlayer(selected, accepted) ||
-        (sourceIsState && accepted.stateBoundaryKnown && boundary && accepted.gameBoundaryToken &&
-          boundary !== accepted.gameBoundaryToken) ||
-        (stateTurnId && accepted.stateTurnId && stateTurnId !== accepted.stateTurnId);
-      if (!agree && state && dom) waitingFor = sourceIsState ? "dom" : "state";
-      if (changed && accepted) previousVisit = accepted;
-      accepted = {
-        matchId: selected.matchId || "",
-        variant: variantKey(selected.variant),
-        gameBoundaryToken: boundary || "",
-        stateBoundaryKnown: sourceIsState || (!changed && accepted?.stateBoundaryKnown === true),
-        activePlayerIndex: selected.activePlayerIndex,
-        activePlayerId: selected.activePlayerId,
-        // Adopt the real turn ID when state catches up with a DOM-first switch.
-        stateTurnId: stateTurnId || (!changed ? accepted?.stateTurnId || "" : ""),
-      };
-      const previousPhase = snapshot.phase;
-      snapshot = Object.freeze({
-        ...accepted,
-        generation: snapshot.generation + (changed ? 1 : 0),
-        phase: (state && dom && !agree) || (truth.active && !truth.actionable) ? "pending" : "ready",
-      });
-      if (changed) {
-        advanceX01TurnGeneration(context.documentRef, snapshot.generation);
-        entries.forEach((entry) => invoke(entry, "reset"));
-      } else if (previousPhase !== "pending" && snapshot.phase === "pending") {
-        entries.forEach((entry) => invoke(entry, "suspend"));
-      }
-      if (changed || (previousPhase !== "ready" && snapshot.phase === "ready")) {
-        entries.forEach((entry) => invoke(entry, "schedule"));
-      }
-      return snapshot;
+      return acceptCandidate(selected, observation);
     } finally {
       refreshing = false;
     }

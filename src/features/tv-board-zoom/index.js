@@ -913,15 +913,15 @@ export function initializeTvBoardZoom(context = {}) {
     }, x01Truth));
   }, { windowRef,
     checkHealth() {
-      if (zoomState.manualPause) return true;
+      if (zoomState.manualPause) return null;
       const node = expectedZoomTarget || zoomState.zoomedElement;
-      if (!node) return true;
+      if (!node) return null;
       if (!documentRef.getElementById(STYLE_ID)) return "zoom-style-missing";
       return node.isConnected !== false && node.classList.contains(ZOOM_CLASS) &&
         String(node.style.transform || "").includes("scale(") &&
         (!zoomState.zoomHost || (zoomState.zoomHost.isConnected !== false &&
           zoomState.zoomHost.classList.contains(ZOOM_HOST_CLASS)))
-        ? true : "zoom-surface-damaged";
+        ? null : "zoom-surface-damaged";
     },
     repairHealth() {
       domGuards.ensureStyle(STYLE_ID, buildStyleText());

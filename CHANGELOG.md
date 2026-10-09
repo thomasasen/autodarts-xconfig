@@ -12,6 +12,20 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.4.2] - 2026-10-10
+
+### Fixed
+
+- Nutzerwirkung: Checkout-Zielhervorhebungen aktualisieren sich auch auf der modernen Match-Fläche nach jedem Dart zuverlässig.
+  Technik: Der DOM-Observer berücksichtigt die gemeinsamen semantischen Match-Selektoren; Regressionen sichern native Score-, Wurf- und Spielerwechsel ab.
+
+### Changed
+
+- Nutzerwirkung: Checkout, Zoom, Dartdarstellung und Aufnahmezähler verursachen weniger wiederholte DOM-Abfragen. Dartspitzen bleiben während Zoomübergängen am Trefferpunkt ausgerichtet; ausgeblendete Tabs pausieren die Übergangsverfolgung.
+  Technik: Ein kurzlebiger X01-Lesekontext bündelt DOM-Snapshots je Aktualisierung, dekorative Mutationen lösen keine unnötigen Neuberechnungen aus und ein begrenzter Transition-Tracker behandelt Ende, Abbruch und fehlende Endereignisse.
+- Nutzerwirkung: Bestehende Board-, Cricket-/Tactics- und X01-Anzeigen behalten ihre Regeln bei vereinfachten internen Abläufen. Zusätzliche Regressionen sichern kombinierte Zoom-, Aufnahme- und Matchwechsel sowie das Aufräumen beim Abschalten ab.
+  Technik: Gemeinsame Hilfsfunktionen vereinheitlichen Board-Geometrie, Auswahl der neuesten Aufnahme, Routennormalisierung und DOM-Abfragen. Tests decken unter anderem BUST, Undo, Korrekturen, manuelle Zoompausen und nachlaufende Quellen ab.
+
 ## [3.4.1] - 2026-10-08
 
 ### Added
@@ -2321,6 +2335,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.4.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.4.1...v3.4.2
 [3.4.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.3.2...v3.4.1
 [3.3.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.3.1...v3.3.2
 [3.3.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.3.0...v3.3.1

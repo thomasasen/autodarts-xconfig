@@ -590,8 +590,8 @@ function ensureModernEffectLayers(rowNode) {
   }
 
   [HIT_EFFECT_LAYER_CLASS, HIT_FRAME_LAYER_CLASS].forEach((className) => {
-    const existingNode = getChildElements(rowNode).find((node) => node?.classList?.contains?.(className));
-    if (existingNode) {
+    const hasExistingLayer = getChildElements(rowNode).some((node) => node?.classList?.contains?.(className));
+    if (hasExistingLayer) {
       return;
     }
     const layerNode = rowNode.ownerDocument.createElement("span");

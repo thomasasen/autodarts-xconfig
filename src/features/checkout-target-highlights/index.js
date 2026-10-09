@@ -867,14 +867,14 @@ export function initializeCheckoutTargetHighlights(context = {}) {
 
   const scheduler = createTurnScopedScheduler(context, update, { windowRef,
     checkHealth() {
-      if (!expectedOverlay) return true;
+      if (!expectedOverlay) return null;
       if (!documentRef.getElementById(STYLE_ID)) return "checkout-style-missing";
       const group = expectedOverlay.overlayGroup || expectedOverlay.group;
       const overlay = group?.querySelector?.(`#${OVERLAY_ID}`);
       if (group?.isConnected === false || !overlay?.children?.length) return "checkout-overlay-missing";
       const keys = new Set(Array.from(overlay.children).map((node) =>
         `${node.dataset?.targetRing}:${node.dataset?.targetValue}`));
-      return expectedTargets.every((key) => keys.has(key)) ? true : "checkout-targets-damaged";
+      return expectedTargets.every((key) => keys.has(key)) ? null : "checkout-targets-damaged";
     },
     repairHealth() {
       domGuards.ensureStyle(STYLE_ID, buildStyleText());

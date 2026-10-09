@@ -927,10 +927,8 @@ function isPlayerCardActive(cardNode, scoreNode, documentRef, activePlayerIndex,
   }
 
   for (const selector of ACTIVE_SCORE_SELECTORS) {
-    const matchedNode = Array.from(documentRef.querySelectorAll(selector)).find(
-      (node) => node === scoreNode
-    );
-    if (matchedNode) {
+    const hasMatchingNode = Array.from(documentRef.querySelectorAll(selector)).includes(scoreNode);
+    if (hasMatchingNode) {
       return true;
     }
   }
