@@ -79,7 +79,7 @@ function fixture(options = {}) {
       players: cards.map((_card, i) => ({ id: `player-${i}` })),
       gameScores: [score, score, score], settings: { outMode: "Double Out" },
       turns: [{ id: `visit-${visit}`, playerId: `player-${index}`, score,
-        throws: throws.map((name) => ({ segment: { name }, score: name === "25" ? 25 : 0 })) }],
+        throws: throws.map((name) => ({ segment: { name }, score: ({ S4: 4, "25": 25 })[name] || 0 })) }],
       ...extra,
     });
   }
@@ -95,6 +95,274 @@ function assertCheckout(f, player) {
   assert.equal(f.cards[player].querySelector(".font-number").classList.contains(HIGHLIGHT_CLASS), true);
   assert.ok(f.documentRef.getElementById(OVERLAY_ID));
   assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+}
+
+function notifyDom(f) {
+  f.documentRef.flushMutations([{ type: "characterData", target: f.total }]);
+}
+
+function assertDoubleTarget(f, double) {
+  const overlay = f.documentRef.getElementById(OVERLAY_ID);
+  assert.ok(overlay);
+  // The outline shares its segment with the filled target.
+  assert.deepEqual([...new Set(Array.from(overlay.children, (node) =>
+    `${node.dataset.targetRing}:${node.dataset.targetValue}`))], [`D:${double}`]);
+}
+
+function assertDirectCheckout(f, player, score, double, generation) {
+  assertCheckout(f, player);
+  assert.equal(f.cards[player].querySelector(".font-number").textContent, String(score));
+  f.cards.forEach((card, index) => {
+    assert.equal(card.querySelector(".font-number").classList.contains(HIGHLIGHT_CLASS), index === player);
+  });
+  assertDoubleTarget(f, double);
+  assert.equal(f.runtime.context.turnLifecycle.getSnapshot().generation, generation);
+}
+
+function assertSuspended(f, generation) {
+  const snapshot = f.runtime.context.turnLifecycle.getSnapshot();
+  assert.equal(snapshot.phase, "pending");
+  assert.equal(snapshot.generation, generation);
+  assert.equal(f.documentRef.getElementById(OVERLAY_ID), null);
+  assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+  f.cards.forEach((card) => {
+    assert.equal(card.querySelector(".font-number").classList.contains(HIGHLIGHT_CLASS), false);
+  });
+}
+
+function replaceBoard(f) {
+  const oldBoard = f.board;
+  const replacement = oldBoard.cloneNode(true);
+  replacement.classList.remove(ZOOM_CLASS);
+  replacement.style.transform = "";
+  replacement.__rect = { ...oldBoard.__rect };
+  replacement.offsetWidth = replacement.offsetHeight = 549;
+  replacement.offsetParent = f.host;
+  oldBoard.remove();
+  f.host.appendChild(replacement);
+  f.board = replacement;
+  f.documentRef.flushMutations([{ type: "childList", target: f.host,
+    removedNodes: [oldBoard], addedNodes: [replacement] }]);
+  return oldBoard;
+}
+
+for (const first of ["state", "dom"]) {
+  test(`${first}-first same-count correction and undo keep checkout consumers aligned without a new visit`, () => {
+    const f = fixture();
+    try {
+      const generation = f.runtime.context.turnLifecycle.getSnapshot().generation;
+      const initialTransform = f.board.style.transform;
+      f.showPlayer(0, 40, ["MISS"]);
+      f.setState(0, 0, ["MISS"]);
+      f.timers.advance(25);
+      assertDirectCheckout(f, 0, 40, 20, generation);
+      f.windowRef.dispatchEvent({ type: "pointerdown", target: f.rows[0].label });
+      f.timers.advance(300);
+      assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+      const oldBoard = replaceBoard(f);
+      f.timers.advance(12000);
+      assert.equal(f.board.classList.contains(ZOOM_CLASS), false, "board replacement must respect correction pause");
+      assert.equal(f.windowRef.__adXConfig.inspect().watchdog.features["tv-board-zoom"].attempts, 0);
+      f.plays.length = 0;
+
+      for (const [score, throws, route, double] of [[36, ["S4"], ["D18"], 18], [40, [], ["D20"], 20]]) {
+        const updates = {
+          state: () => f.setState(0, 0, throws, score),
+          dom: () => { f.showPlayer(0, score, throws, route); notifyDom(f); },
+        };
+        updates[first]();
+        f.timers.advance(25);
+        assertDoubleTarget(f, double);
+        assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+        assert.equal(f.runtime.context.turnLifecycle.getSnapshot().generation, generation);
+        const leadingTransform = f.board.style.transform;
+        if (double === 18) assert.notEqual(leadingTransform, initialTransform);
+        else assert.equal(leadingTransform, initialTransform);
+        updates[first]();
+        f.timers.advance(25);
+        assertDoubleTarget(f, double);
+        assert.equal(f.board.style.transform, leadingTransform);
+        updates[first === "state" ? "dom" : "state"]();
+        f.timers.advance(25);
+        assertDirectCheckout(f, 0, score, double, generation);
+        assert.equal(f.board.style.transform, leadingTransform);
+        f.timers.advance(2000);
+        assertDirectCheckout(f, 0, score, double, generation);
+        assert.equal(oldBoard.classList.contains(ZOOM_CLASS), false);
+      }
+      assert.equal(f.plays.length, 0);
+    } finally { f.close(); }
+  });
+
+  test(`${first}-first confirmed player undo recovers after duplicate old updates and board replacement`, () => {
+    const f = fixture();
+    try {
+      const generation = f.runtime.context.turnLifecycle.getSnapshot().generation + 1;
+      const forward = {
+        state: () => f.setState(1, 1),
+        dom: () => { f.showPlayer(1); notifyDom(f); },
+      };
+      forward[first]();
+      f.timers.advance(25);
+      assertSuspended(f, generation);
+      forward[first]();
+      f.timers.advance(25);
+      assertSuspended(f, generation);
+      if (first === "state") { f.showPlayer(0); notifyDom(f); }
+      else f.setState(0, 0);
+      f.timers.advance(25);
+      assertSuspended(f, generation);
+      forward[first === "state" ? "dom" : "state"]();
+      f.timers.advance(25);
+      assertDirectCheckout(f, 1, 40, 20, generation);
+      f.plays.length = 0;
+      const updates = {
+        state: () => f.setState(0, 0),
+        dom: () => { f.showPlayer(0); notifyDom(f); },
+      };
+      updates[first]();
+      f.timers.advance(25);
+      assertSuspended(f, generation);
+      const oldBoard = replaceBoard(f);
+      f.timers.advance(25);
+      assertSuspended(f, generation);
+      updates[first]();
+      f.timers.advance(12000);
+      assertSuspended(f, generation);
+      assert.equal(oldBoard.classList.contains(ZOOM_CLASS), false);
+      assert.ok(Object.values(f.windowRef.__adXConfig.inspect().watchdog.features)
+        .every((entry) => entry.attempts === 0), "the watchdog must not repair ambiguous identity");
+      updates[first === "state" ? "dom" : "state"]();
+      f.timers.advance(25);
+      assertDirectCheckout(f, 0, 40, 20, generation + 1);
+      updates.state();
+      updates.dom();
+      f.timers.advance(2000);
+      assertDirectCheckout(f, 0, 40, 20, generation + 1);
+      assert.equal(oldBoard.classList.contains(ZOOM_CLASS), false);
+      assert.equal(f.plays.length, 0);
+    } finally { f.close(); }
+  });
+}
+
+for (const count of [1, 2]) {
+  test(`dart-${count} BUST followed by same-player recovery and undo never preserves an obsolete hold`, () => {
+    const f = fixture();
+    try {
+      const generation = f.runtime.context.turnLifecycle.getSnapshot().generation;
+      const throws = Array(count).fill("MISS");
+      f.showPlayer(0, 40, throws, []);
+      f.total.textContent = "BUST";
+      notifyDom(f);
+      f.setState(0, 0, throws);
+      f.timers.advance(25);
+      assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+      assert.equal(f.runtime.context.turnLifecycle.getSnapshot().generation, generation);
+      f.timers.advance(2000);
+      assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+      f.showPlayer(0);
+      notifyDom(f);
+      f.setState(0, 1);
+      f.timers.advance(25);
+      assertDirectCheckout(f, 0, 40, 20, generation + 1);
+      f.showPlayer(0, 40, ["MISS"]);
+      notifyDom(f);
+      f.setState(0, 1, ["MISS"]);
+      f.timers.advance(25);
+      f.windowRef.dispatchEvent({ type: "pointerdown", target: f.rows[0].label });
+      f.timers.advance(300);
+      assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+      f.showPlayer(0);
+      notifyDom(f);
+      f.setState(0, 1);
+      f.timers.advance(25);
+      assertDirectCheckout(f, 0, 40, 20, generation + 1);
+    } finally { f.close(); }
+  });
+}
+
+for (const exit of ["disable", "stop"]) {
+  test(`${exit} cancels queued correction work and watchdog recovery without reviving the zoom`, () => {
+    const f = fixture();
+    try {
+      f.showPlayer(0, 40, ["MISS"]);
+      f.setState(0, 0, ["MISS"]);
+      f.timers.advance(25);
+      f.windowRef.dispatchEvent({ type: "pointerdown", target: f.rows[0].label });
+      f.showPlayer(0, 36, ["S4"], ["D18"]);
+      notifyDom(f);
+      f.setState(0, 0, ["S4"], 36);
+      f.plays.length = 0;
+      if (exit === "disable") f.runtime.setFeatureEnabled("tv-board-zoom", false);
+      else f.runtime.stop();
+      assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+      assert.equal(f.board.style.transform || "", "");
+      f.timers.advance(20000);
+      assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+      assert.equal(f.board.style.transform || "", "");
+      assert.equal(f.plays.length, 0);
+      if (exit === "disable") {
+        assert.equal(f.runtime.context.registries.observers.get("tv-board-zoom:dom-observer"), null);
+      }
+      f.runtime.stop();
+      assert.equal(f.runtime.context.registries.observers.size(), 0);
+      assert.equal(f.runtime.context.registries.listeners.size(), 0);
+      assert.equal(f.timers.pendingCount, 0);
+      f.timers.advance(20000);
+      assert.equal(f.timers.pendingCount, 0);
+      assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    } finally { f.close(); }
+  });
+}
+
+for (const boundary of ["player", "leg", "match", "variant"]) {
+  test(`third-dart BUST hold releases at a ${boundary} boundary despite queued integrity work`, () => {
+    const f = fixture();
+    try {
+      const generation = f.runtime.context.turnLifecycle.getSnapshot().generation;
+      f.showPlayer(0, 40, ["MISS", "MISS"]);
+      f.setState(0, 0, ["MISS", "MISS"]);
+      f.timers.advance(25);
+      f.showPlayer(0, 40, ["MISS", "MISS", "MISS"], []);
+      f.total.textContent = "BUST";
+      notifyDom(f);
+      f.setState(0, 0, ["MISS", "MISS", "MISS"]);
+      f.timers.advance(25);
+      assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+      assert.equal(f.runtime.context.turnLifecycle.getSnapshot().generation, generation);
+      f.plays.length = 0;
+      const oldTransform = f.board.style.transform;
+      // Queue structural and semantic work without letting its RAF run yet.
+      f.board.style.transform = "";
+      f.documentRef.flushMutations([{ type: "attributes", attributeName: "style", target: f.board }]);
+      const player = boundary === "player" ? 1 : 0;
+      f.showPlayer(player, 36, [], ["D18"]);
+      if (boundary === "match") f.windowRef.location.pathname = "/matches/next-match";
+      if (boundary === "variant") f.variant.textContent = "Bull-off";
+      notifyDom(f);
+      f.setState(player, 1, [], 36, {
+        ...(boundary === "leg" ? { currentGameId: "leg-2" } : {}),
+        ...(boundary === "match" ? { id: "next-match" } : {}),
+        ...(boundary === "variant" ? { variant: "Bull-off" } : {}),
+      });
+      f.timers.advance(25);
+      if (boundary === "variant") {
+        assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+        assert.equal(f.documentRef.getElementById(OVERLAY_ID), null);
+        f.cards.forEach((card) => assert.equal(card.querySelector(".font-number").classList.contains(HIGHLIGHT_CLASS), false));
+      } else {
+        assertDirectCheckout(f, player, 36, 18, generation + 1);
+        assert.notEqual(f.board.style.transform, oldTransform);
+      }
+      f.timers.advance(12000);
+      if (boundary === "variant") {
+        assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+        assert.equal(f.documentRef.getElementById(OVERLAY_ID), null);
+      } else assertDirectCheckout(f, player, 36, 18, generation + 1);
+      assert.equal(f.runtime.context.turnLifecycle.getSnapshot().generation, generation + 1);
+      assert.equal(f.plays.length, 0);
+    } finally { f.close(); }
+  });
 }
 
 test("watchdog restores a deleted checkout overlay and a zoom whose integrity render was lost", () => {
