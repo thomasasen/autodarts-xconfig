@@ -14,7 +14,7 @@ import {
   resolveCheckoutTargetTruth,
 } from "../../src/features/checkout-target-highlights/index.js";
 import { OVERLAY_ID } from "../../src/features/checkout-target-highlights/style.js";
-import { initializeTvBoardZoom } from "../../src/features/tv-board-zoom/index.js";
+import { initializeTvBoardZoom, resolveTvBoardZoomMutationReaction } from "../../src/features/tv-board-zoom/index.js";
 import { resolveTvBoardZoomTruth } from "../../src/features/tv-board-zoom/logic.js";
 import { ZOOM_CLASS } from "../../src/features/tv-board-zoom/style.js";
 import { resolveX01CheckoutContext } from "../../src/features/x01-checkout-context.js";
@@ -121,6 +121,67 @@ function semanticTruth(truth) {
   };
 }
 
+test("checkout diagnostics preserve targets, cleanup and deduplicated active/inactive payloads", () => {
+  function run(debugEnabled) {
+    const scenario = createScenario({ score: 40, route: ["D20"], outMode: "Double Out" });
+    const events = [];
+    let svgQueries = 0;
+    const queryAll = scenario.documentRef.querySelectorAll.bind(scenario.documentRef);
+    scenario.documentRef.querySelectorAll = (selector) => {
+      if (selector === "svg") svgQueries += 1;
+      return queryAll(selector);
+    };
+    const cleanup = initializeCheckoutTargetHighlights({
+      ...scenario,
+      domGuards: createDomGuards({ documentRef: scenario.documentRef }),
+      domain: { x01Rules },
+      config: { getFeatureConfig: () => ({ targetSelectionMode: "next" }) },
+      helpers: { createRafScheduler: (callback) => ({ schedule: callback, cancel() {} }) },
+      featureDebug: {
+        enabled: debugEnabled,
+        log: (summary, payload) => events.push({ level: "log", summary, payload }),
+        warn: (summary, payload) => events.push({ level: "warn", summary, payload }),
+      },
+    });
+    try {
+      const overlay = scenario.documentRef.getElementById(OVERLAY_ID);
+      const targets = overlay.children.map((node) => [node.dataset.targetRing, node.dataset.targetValue]);
+      const eventCount = events.length;
+      scenario.game.notify();
+      assert.equal(events.length, eventCount, "unchanged renders do not repeat diagnostics");
+      scenario.variant.textContent = "Cricket";
+      scenario.state.variant = "Cricket";
+      scenario.game.notify();
+      const cleared = scenario.documentRef.getElementById(OVERLAY_ID) === null;
+      return { targets, cleared, events, svgQueries };
+    } finally {
+      cleanup();
+    }
+  }
+  const enabled = run(true);
+  const disabled = run(false);
+  assert.deepEqual(disabled.targets, enabled.targets);
+  assert.deepEqual(enabled.targets, [["D", "20"], ["D", "20"]]);
+  assert.equal(enabled.cleared, true);
+  assert.equal(disabled.cleared, true);
+  assert.deepEqual(disabled.events, []);
+  assert.equal(enabled.svgQueries - disabled.svgQueries, 2,
+    "debug off skips the document-wide SVG counts for active and inactive diagnostics");
+  assert.equal(enabled.events.length, 2);
+  const [active, inactive] = enabled.events;
+  assert.equal(active.level, "log");
+  assert.equal(active.payload.status, "render");
+  assert.equal(active.payload.activeScore, 40);
+  assert.deepEqual(active.payload.selectedSegments, ["D20"]);
+  assert.deepEqual(active.payload.targets, [{ ring: "D", value: 20 }]);
+  assert.ok(active.summary.includes('status="render"'));
+  assert.equal(inactive.level, "log");
+  assert.equal(inactive.payload.status, "inactive");
+  assert.equal(inactive.payload.active, false);
+  assert.equal(inactive.payload.activeScore, null);
+  assert.deepEqual(inactive.payload.targets, []);
+});
+
 test("checkout targets observe native score, turn and header changes including text nodes", () => {
   const scenario = createScenario();
   const mutations = [
@@ -142,6 +203,25 @@ test("checkout targets observe native score, turn and header changes including t
   assert.equal(resolveCheckoutBoardMutationReaction([
     { type: "characterData", target: { nodeType: 3, parentNode: unrelated } },
   ]).shouldSchedule, false);
+});
+
+test("checkout and zoom mutation adapters retain their node normalization and inferred types", () => {
+  const scenario = createScenario();
+  const relevant = { shouldSchedule: true, shouldInvalidateBoardCache: false };
+  const irrelevant = { shouldSchedule: false, shouldInvalidateBoardCache: false };
+  const textNode = { nodeType: 3, parentNode: scenario.score };
+  for (const resolve of [resolveCheckoutBoardMutationReaction, resolveTvBoardZoomMutationReaction]) {
+    assert.deepEqual(resolve([{ attributeName: "class", target: textNode }]), relevant);
+    assert.deepEqual(resolve([{ addedNodes: [scenario.score] }]), relevant);
+    assert.deepEqual(resolve([{ removedNodes: new Set([scenario.score, null]) }]), relevant);
+    assert.deepEqual(resolve([null, {}, { type: "unknown", target: scenario.score }]), irrelevant);
+  }
+  const arrayLike = { 0: scenario.score, length: 1 };
+  assert.deepEqual(resolveCheckoutBoardMutationReaction([{ addedNodes: arrayLike }]), irrelevant);
+  assert.deepEqual(resolveTvBoardZoomMutationReaction([{ addedNodes: arrayLike }]), relevant);
+  const nestedText = { nodeType: 3, parentNode: { nodeType: 11, parentNode: scenario.score } };
+  assert.deepEqual(resolveCheckoutBoardMutationReaction([{ type: "characterData", target: nestedText }]), irrelevant);
+  assert.deepEqual(resolveTvBoardZoomMutationReaction([{ type: "characterData", target: nestedText }]), relevant);
 });
 
 for (const mutationType of ["characterData", "childList", "attributes"]) {

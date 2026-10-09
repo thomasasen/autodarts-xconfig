@@ -295,6 +295,36 @@ function createNestedScorePlayerCard(documentRef, score, { active = false } = {}
   };
 }
 
+test("score progress removes an invalid middle card without skipping later players or diagnostics", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, href: "https://play.autodarts.com/matches/demo" });
+  documentRef.variantElement.textContent = "501";
+  const display = documentRef.createElement("div");
+  display.id = "ad-ext-player-display";
+  documentRef.main.appendChild(display);
+  const players = [createPlayerCard(documentRef, 301, { active: true }),
+    createPlayerCard(documentRef, 251), createPlayerCard(documentRef, 170)];
+  players.forEach((player) => display.appendChild(player.cardNode));
+  const context = { documentRef, windowRef, featureConfig: { debug: true, effect: "off" } };
+  const state = createScoreProgressState();
+  assert.equal(syncScoreProgress(context, state).renderedCards, 3);
+  players[0].scoreNode.textContent = "201";
+  players[1].scoreNode.textContent = "?";
+  players[2].scoreNode.textContent = "100";
+  const result = syncScoreProgress(context, state);
+  assert.equal(result.renderedCards, 2);
+  assert.equal(result.debug.removedCardsMissingScore, 1);
+  assert.equal(result.debug.hostCountAfterCleanup, 2);
+  assert.equal(players[1].cardNode.querySelector(HOST_SELECTOR), null);
+  assert.deepEqual(result.debug.sampledCards.map((card) => [card.index, card.parsedScore, card.removed]),
+    [[0, 201, undefined], [1, null, "missing-score"], [2, 100, undefined]]);
+  assert.equal(players[2].cardNode.querySelector(HOST_SELECTOR).style.getPropertyValue(WIDTH_PROPERTY), "19.96%");
+  players[1].scoreNode.textContent = "200";
+  const recovered = syncScoreProgress(context, state);
+  assert.equal(recovered.renderedCards, 3);
+  assert.equal(recovered.debug.sampledCards[1].hostWidth, "39.92%");
+});
+
 test("resolveStartScore falls back to selected DOM controls on match routes", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({

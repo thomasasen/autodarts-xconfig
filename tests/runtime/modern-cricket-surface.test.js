@@ -168,6 +168,43 @@ function fixture(playerCount = 3, tactics = false) {
   return { documentRef, windowRef, root, cells, labelNodes, markers, read, cache };
 }
 
+test("modern grid repairs persistent cell classes without replaying effects for two to four players", () => {
+  for (const tactics of [false, true]) {
+    for (const playerCount of [2, 3, 4]) {
+      const host = fixture(playerCount, tactics);
+      host.cells.get("20")[0].dataset.marks = "3";
+      host.cells.get("19")[playerCount - 1].dataset.marks = "3";
+      host.cells.get("BULL")[0].dataset.marks = "3";
+      const renderState = host.read();
+      const state = createCricketGridStatusEffectsState(host.windowRef);
+      const visualConfig = resolveCricketGridStatusEffectsConfig({ rowWave: true,
+        badgeBeacon: true, deltaChips: true, hitSpark: true });
+      const debugStats = {};
+      const update = () => updateCricketGridStatusEffects({ documentRef: host.documentRef,
+        cricketRules, renderState, state, visualConfig, turnToken: "same-visit", debugStats });
+      try {
+        update();
+        const cell = host.cells.get("20")[0];
+        const transients = [...state.transientNodes];
+        const timers = [...state.timeoutHandles];
+        cell.classList.remove(CELL_CLASS);
+        update();
+        assert.equal(cell.classList.contains(CELL_CLASS), true);
+        assert.equal(cell.dataset.marks, "3");
+        assert.equal(debugStats.status, "ok");
+        assert.equal(debugStats.rowWaveDeltaCount, 0);
+        assert.equal(debugStats.rowWaveTacticalCount, 0);
+        assert.deepEqual([...state.transientNodes], transients);
+        assert.deepEqual([...state.timeoutHandles], timers);
+        assert.equal(host.root.querySelectorAll(`[${SYNTHETIC_BADGE_ATTRIBUTE}="true"]`).length, 0);
+        assert.equal(host.labelNodes.get("BULL").textContent, "B");
+      } finally {
+        clearCricketGridStatusEffectsState(state);
+      }
+    }
+  }
+});
+
 function appendBoardFixture(documentRef) {
   const svg = documentRef.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "0 0 1000 1000");

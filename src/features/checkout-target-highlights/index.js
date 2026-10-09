@@ -5,7 +5,13 @@ import {
   renderCheckoutTargets,
 } from "./logic.js";
 import { OVERLAY_ID, STYLE_ID, buildStyleText, resolveBoardTargetVisualConfig } from "./style.js";
-import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
+import {
+  createManagedNodeMatcher,
+  elementMatchesAncestorSelectors,
+  getTouchedMutationNodes,
+  hasExternalDomMutation,
+  resolveMutationType,
+} from "../../core/dom-mutation-filter.js";
 import {
   mapRouteSegmentsToBoardTargets,
   SUGGESTION_SELECTOR,
@@ -42,48 +48,13 @@ const BOARD_STRUCTURE_CHILDLIST_SELECTORS = Object.freeze([
   ".css-79elbk svg",
 ]);
 
-function resolveMutationType(mutation) {
-  if (mutation?.type) {
-    return String(mutation.type);
-  }
-  if (mutation?.attributeName) {
-    return "attributes";
-  }
-  if (mutation?.addedNodes || mutation?.removedNodes) {
-    return "childList";
-  }
-  return "";
-}
-
-function toNodeArray(value) {
-  if (!value || typeof value[Symbol.iterator] !== "function") {
-    return [];
-  }
-
-  return Array.from(value).filter(Boolean);
-}
-
-function getTouchedMutationNodes(mutation) {
-  return [
-    mutation?.target || null,
-    ...toNodeArray(mutation?.addedNodes),
-    ...toNodeArray(mutation?.removedNodes),
-  ].filter(Boolean);
-}
-
 function nodeOrAncestorMatchesAnySelector(node, selectors = []) {
   if (!node || !Array.isArray(selectors) || !selectors.length) {
     return false;
   }
 
   const elementNode = node.nodeType === 3 ? node.parentNode : node;
-  return selectors.some((selector) => {
-    try {
-      return Boolean(elementNode?.closest?.(selector));
-    } catch (_) {
-      return false;
-    }
-  });
+  return elementMatchesAncestorSelectors(elementNode, selectors);
 }
 
 function nodesAreRelated(leftNode, rightNode) {
@@ -224,11 +195,13 @@ function resolveFeatureDebugLogger(featureDebug, level) {
   return null;
 }
 
-function emitDebugEvent(debugState, level, signature, summary, payload) {
-  if (!debugState?.featureDebug?.enabled || !signature) {
+function emitDebugEvent(debugState, level, options) {
+  if (!debugState?.featureDebug?.enabled) {
     return;
   }
 
+  const payload = buildDebugPayload(options);
+  const signature = buildDebugSignature(payload);
   const signatureKey = level === "warn" ? "lastWarningSignature" : "lastLogSignature";
   if (debugState[signatureKey] === signature) {
     return;
@@ -240,7 +213,7 @@ function emitDebugEvent(debugState, level, signature, summary, payload) {
     return;
   }
 
-  logger(summary, payload);
+  logger(buildDebugSummary(payload), payload);
 }
 
 function mapRouteEntryForDebug(entry) {
@@ -784,7 +757,7 @@ export function initializeCheckoutTargetHighlights(context = {}) {
 
       resetRetainedRenderState();
       activeRetentionContextKey = "";
-      const payload = buildDebugPayload({
+      emitDebugEvent(debugState, "log", {
         status: x01CheckoutContext.active ? x01CheckoutContext.coherence : "inactive",
         active: false,
         activeScore: null,
@@ -805,7 +778,6 @@ export function initializeCheckoutTargetHighlights(context = {}) {
         board: null,
         x01Truth: x01CheckoutContext,
       });
-      emitDebugEvent(debugState, "log", buildDebugSignature(payload), buildDebugSummary(payload), payload);
       clearCurrentOverlay();
       domGuards.removeNodeById(OVERLAY_ID);
       boardCache.value = null;
@@ -855,33 +827,30 @@ export function initializeCheckoutTargetHighlights(context = {}) {
       retentionContextKey,
     });
 
-    const payload = buildDebugPayload({
-      status: renderPlan.status,
-      active,
-      activeScore,
-      domScore: x01CheckoutContext.domScore,
-      gameStateScore: x01CheckoutContext.gameStateScore,
-      scoreSource: x01CheckoutContext.scoreSource,
-      scoreAgreement: x01CheckoutContext.scoreAgreement,
-      variantText,
-      outMode,
-      targetSelectionMode,
-      selectionSource: renderPlan.selectionSource,
-      documentRef,
-      windowRef,
-      routeEntries,
-      routeSegments,
-      selectedSegments: renderPlan.selectedSegments,
-      targets: renderPlan.targets,
-      board: renderPlan.board,
-      x01Truth: x01CheckoutContext,
-    });
     emitDebugEvent(
       debugState,
       renderPlan.status === "render" || renderPlan.status === "render-retained" ? "log" : "warn",
-      buildDebugSignature(payload),
-      buildDebugSummary(payload),
-      payload
+      {
+        status: renderPlan.status,
+        active,
+        activeScore,
+        domScore: x01CheckoutContext.domScore,
+        gameStateScore: x01CheckoutContext.gameStateScore,
+        scoreSource: x01CheckoutContext.scoreSource,
+        scoreAgreement: x01CheckoutContext.scoreAgreement,
+        variantText,
+        outMode,
+        targetSelectionMode,
+        selectionSource: renderPlan.selectionSource,
+        documentRef,
+        windowRef,
+        routeEntries,
+        routeSegments,
+        selectedSegments: renderPlan.selectedSegments,
+        targets: renderPlan.targets,
+        board: renderPlan.board,
+        x01Truth: x01CheckoutContext,
+      }
     );
     if (!renderPlan.board) {
       return;

@@ -794,6 +794,29 @@ export function createCricketGridStatusEffectsState(windowRef = null) {
   };
 }
 
+const EMPTY_GRID_FX_ROW_COUNTS = Object.freeze({
+  scoringRowCount: 0,
+  pressureRowCount: 0,
+  scoreCellCount: 0,
+  rowsWithoutPlayerCells: 0,
+  activeColumnResolvedCount: 0,
+  activeColumnMissingCount: 0,
+  badgeCount: 0,
+  badgeFallbackCount: 0,
+  rowWaveDeltaCount: 0,
+  rowWaveTacticalCount: 0,
+});
+const GRID_FX_ROW_COUNT_KEYS = Object.freeze(Object.keys(EMPTY_GRID_FX_ROW_COUNTS));
+
+function createGridFxRowStats() {
+  return { ...EMPTY_GRID_FX_ROW_COUNTS, activeColumnMissingLabels: [] };
+}
+
+function accumulateGridFxRowStats(total, rowStats) {
+  for (const key of GRID_FX_ROW_COUNT_KEYS) total[key] += rowStats[key];
+  total.activeColumnMissingLabels.push(...rowStats.activeColumnMissingLabels);
+}
+
 function initializeCricketGridStatusEffectsDebugStats(debugStats) {
   if (!debugStats) {
     return;
@@ -803,19 +826,9 @@ function initializeCricketGridStatusEffectsDebugStats(debugStats) {
   debugStats.rowCount = 0;
   debugStats.stateTargetCount = 0;
   debugStats.labelCellCount = 0;
-  debugStats.badgeCount = 0;
-  debugStats.scoringRowCount = 0;
+  Object.assign(debugStats, createGridFxRowStats());
   debugStats.offenseRowCount = 0;
   debugStats.dangerRowCount = 0;
-  debugStats.pressureRowCount = 0;
-  debugStats.scoreCellCount = 0;
-  debugStats.rowsWithoutPlayerCells = 0;
-  debugStats.activeColumnResolvedCount = 0;
-  debugStats.activeColumnMissingCount = 0;
-  debugStats.activeColumnMissingLabels = [];
-  debugStats.rowWaveDeltaCount = 0;
-  debugStats.rowWaveTacticalCount = 0;
-  debugStats.badgeFallbackCount = 0;
   debugStats.turnTokenChanged = false;
 }
 
@@ -1670,14 +1683,7 @@ function applyGridFxResolvedCells(options = {}) {
   };
 }
 
-function applyGridFxRow(options = {}) {
-  const row = options.row || {};
-  const stateEntry = options.stateEntry || null;
-  const state = options.state || null;
-  const marksDiff = options.marksDiff || new Map();
-  const transitions = options.transitions || new Map();
-  const visualConfig = options.visualConfig || null;
-  const cricketRules = options.cricketRules || null;
+function prepareGridFxRow(row, stateEntry, cricketRules, stats) {
   const {
     cellDescriptors,
     labelCellNode,
@@ -1691,37 +1697,26 @@ function applyGridFxRow(options = {}) {
   });
   const resolvedPlayerCells = cellDescriptors.map((entry) => entry.cellNode);
   const hasPlayerCells = resolvedPlayerCells.length > 0;
-  const activeColumnMissingLabels = [];
-  let rowsWithoutPlayerCells = 0;
-  let activeColumnResolvedCount = 0;
-  let activeColumnMissingCount = 0;
-  let scoringRowCount = 0;
-  let pressureRowCount = 0;
-  let badgeCount = 0;
-  let badgeFallbackCount = 0;
-  let rowWaveDeltaCount = 0;
-  let rowWaveTacticalCount = 0;
-
   if (!hasPlayerCells) {
-    rowsWithoutPlayerCells += 1;
+    stats.rowsWithoutPlayerCells += 1;
   }
   if (hasPlayerCells) {
     const hasActiveColumn = cellDescriptors.some((entry) => {
       return entry.playerIndex === activePlayerIndex;
     });
     if (Number.isFinite(activePlayerIndex) && hasActiveColumn) {
-      activeColumnResolvedCount += 1;
+      stats.activeColumnResolvedCount += 1;
     } else {
-      activeColumnMissingCount += 1;
-      activeColumnMissingLabels.push(row.label);
+      stats.activeColumnMissingCount += 1;
+      stats.activeColumnMissingLabels.push(row.label);
     }
   }
 
   const presentation = resolveRowPresentation(stateEntry);
   if (presentation === "scoring") {
-    scoringRowCount += 1;
+    stats.scoringRowCount += 1;
   } else if (presentation === "pressure") {
-    pressureRowCount += 1;
+    stats.pressureRowCount += 1;
   }
 
   const labelCellDescriptor = cellDescriptors.find((entry) => {
@@ -1735,6 +1730,14 @@ function applyGridFxRow(options = {}) {
   const labelPresentation = normalizePresentationToken(
     labelCellState?.presentation || presentation
   );
+  return { row, cellDescriptors, labelCellNode, activePlayerIndex, playerStateCount,
+    resolvedRowNode, resolvedPlayerCells, presentation, labelPresentation };
+}
+
+function applyGridFxRowLabel(plan, options, stats) {
+  const { row, labelCellNode, labelPresentation } = plan;
+  const state = options.state || null;
+  const visualConfig = options.visualConfig || null;
   const {
     safeLabelCellNode,
     badgeNode,
@@ -1746,7 +1749,7 @@ function applyGridFxRow(options = {}) {
     state,
     preserveNativeLabel: options.preserveNativeLabel,
   });
-  badgeFallbackCount += rowBadgeFallbackCount;
+  stats.badgeFallbackCount += rowBadgeFallbackCount;
 
   if (safeLabelCellNode?.classList) {
     safeLabelCellNode.classList.add(LABEL_CLASS);
@@ -1772,9 +1775,19 @@ function applyGridFxRow(options = {}) {
         (labelPresentation === "scoring" || labelPresentation === "pressure")
     );
     state.trackedLabels.add(badgeNode);
-    badgeCount += 1;
+    stats.badgeCount += 1;
   }
 
+  return { safeLabelCellNode, badgeNode, useNativeLabel };
+}
+
+function applyGridFxRowTransitions(plan, binding, options, stats) {
+  const { row, resolvedPlayerCells } = plan;
+  const { safeLabelCellNode, badgeNode, useNativeLabel } = binding;
+  const state = options.state || null;
+  const visualConfig = options.visualConfig || null;
+  const marksDiff = options.marksDiff || new Map();
+  const transitions = options.transitions || new Map();
   const diffEntry = marksDiff.get(row.label) || null;
   const transition = transitions.get(row.label) || null;
   const hasIncrease = Boolean(diffEntry?.hasIncrease);
@@ -1785,9 +1798,9 @@ function applyGridFxRow(options = {}) {
   if (hasIncrease || becameTactical) {
     triggerRowWave(state, { ...row, playerCells: resolvedPlayerCells }, visualConfig);
     if (hasIncrease) {
-      rowWaveDeltaCount += 1;
+      stats.rowWaveDeltaCount += 1;
     } else {
-      rowWaveTacticalCount += 1;
+      stats.rowWaveTacticalCount += 1;
     }
   }
 
@@ -1796,6 +1809,20 @@ function applyGridFxRow(options = {}) {
     toggleTimedClass(state, burstNode, BADGE_BURST_CLASS, 700);
   }
 
+  return diffEntry;
+}
+
+function applyGridFxRow(options = {}) {
+  const stateEntry = options.stateEntry || null;
+  const state = options.state || null;
+  const visualConfig = options.visualConfig || null;
+  const stats = createGridFxRowStats();
+  const plan = prepareGridFxRow(options.row || {}, stateEntry, options.cricketRules || null, stats);
+  const { cellDescriptors, labelCellNode, activePlayerIndex, playerStateCount,
+    resolvedRowNode, presentation } = plan;
+  const binding = applyGridFxRowLabel(plan, options, stats);
+  const { safeLabelCellNode } = binding;
+  const diffEntry = applyGridFxRowTransitions(plan, binding, options, stats);
   const rowPresentation = normalizePresentationToken(presentation);
   const { mergedOwnerLabelColumn, resolvedCellDescriptors } = buildGridFxResolvedCellDescriptors({
     cellDescriptors,
@@ -1819,19 +1846,8 @@ function applyGridFxRow(options = {}) {
     overlayOnly: options.preserveNativeLabel,
   });
 
-  return {
-    scoringRowCount,
-    pressureRowCount,
-    scoreCellCount: cellResult.scoreCellCount,
-    rowsWithoutPlayerCells,
-    activeColumnResolvedCount,
-    activeColumnMissingCount,
-    activeColumnMissingLabels,
-    badgeCount,
-    badgeFallbackCount,
-    rowWaveDeltaCount,
-    rowWaveTacticalCount,
-  };
+  stats.scoreCellCount = cellResult.scoreCellCount;
+  return stats;
 }
 
 export function clearCricketGridStatusEffectsState(state) {
@@ -1982,17 +1998,7 @@ export function updateCricketGridStatusEffects(options = {}) {
     }
   }
 
-  let scoringRowCount = 0;
-  let pressureRowCount = 0;
-  let scoreCellCount = 0;
-  let rowsWithoutPlayerCells = 0;
-  let activeColumnResolvedCount = 0;
-  let activeColumnMissingCount = 0;
-  let badgeCount = 0;
-  let badgeFallbackCount = 0;
-  let rowWaveDeltaCount = 0;
-  let rowWaveTacticalCount = 0;
-  const activeColumnMissingLabels = [];
+  const stats = createGridFxRowStats();
   rows.forEach((row) => {
     const stateEntry = renderState.stateMap.get(row.label);
     if (!stateEntry) {
@@ -2009,17 +2015,7 @@ export function updateCricketGridStatusEffects(options = {}) {
       preserveNativeLabel: gridSnapshot.modern === true,
     });
 
-    scoringRowCount += rowResult.scoringRowCount;
-    pressureRowCount += rowResult.pressureRowCount;
-    scoreCellCount += rowResult.scoreCellCount;
-    rowsWithoutPlayerCells += rowResult.rowsWithoutPlayerCells;
-    activeColumnResolvedCount += rowResult.activeColumnResolvedCount;
-    activeColumnMissingCount += rowResult.activeColumnMissingCount;
-    activeColumnMissingLabels.push(...rowResult.activeColumnMissingLabels);
-    badgeCount += rowResult.badgeCount;
-    badgeFallbackCount += rowResult.badgeFallbackCount;
-    rowWaveDeltaCount += rowResult.rowWaveDeltaCount;
-    rowWaveTacticalCount += rowResult.rowWaveTacticalCount;
+    accumulateGridFxRowStats(stats, rowResult);
   });
 
   state.previousMarksByLabel = cloneMarksByLabel(renderState.marksByLabel);
@@ -2027,20 +2023,11 @@ export function updateCricketGridStatusEffects(options = {}) {
   state.previousActivePlayerIndex = Number(renderState.activePlayerIndex);
   state.previousTurnToken = roundTransitionToken;
   if (debugStats) {
-    debugStats.status = "ok";
-    debugStats.scoringRowCount = scoringRowCount;
-    // Legacy debug aliases remain populated for compatibility output.
-    debugStats.offenseRowCount = scoringRowCount;
-    debugStats.dangerRowCount = pressureRowCount;
-    debugStats.pressureRowCount = pressureRowCount;
-    debugStats.scoreCellCount = scoreCellCount;
-    debugStats.rowsWithoutPlayerCells = rowsWithoutPlayerCells;
-    debugStats.activeColumnResolvedCount = activeColumnResolvedCount;
-    debugStats.activeColumnMissingCount = activeColumnMissingCount;
-    debugStats.activeColumnMissingLabels = activeColumnMissingLabels;
-    debugStats.badgeCount = badgeCount;
-    debugStats.badgeFallbackCount = badgeFallbackCount;
-    debugStats.rowWaveDeltaCount = rowWaveDeltaCount;
-    debugStats.rowWaveTacticalCount = rowWaveTacticalCount;
+    Object.assign(debugStats, stats, {
+      status: "ok",
+      // Legacy debug aliases remain populated for compatibility output.
+      offenseRowCount: stats.scoringRowCount,
+      dangerRowCount: stats.pressureRowCount,
+    });
   }
 }

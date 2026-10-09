@@ -392,6 +392,24 @@ export function getTurnId(turn) {
   return `fallback:${round}:${turnNumber}:${playerId}`;
 }
 
+function clearManualZoomPause(state) {
+  state.manualPause = false;
+  state.manualPauseThrowCount = -1;
+  state.manualPauseProgressSignature = "";
+}
+
+function clearZoomIntentHold(state) {
+  state.holdUntilTs = 0;
+  state.activeIntent = null;
+  state.stickyUntilTurnChange = false;
+  state.stickyUntilLegEnd = false;
+}
+
+function clearZoomScoreHistory(state) {
+  state.lastActiveScore = Number.NaN;
+  state.lastTurnProgressSignature = "";
+}
+
 export function markManualZoomPause(
   state,
   throwCount = Number.NaN,
@@ -401,10 +419,7 @@ export function markManualZoomPause(
     return;
   }
 
-  state.holdUntilTs = 0;
-  state.activeIntent = null;
-  state.stickyUntilTurnChange = false;
-  state.stickyUntilLegEnd = false;
+  clearZoomIntentHold(state);
   state.manualPause = true;
   const baseline =
     Number.isFinite(throwCount) && throwCount >= 0
@@ -1333,44 +1348,26 @@ function resolveZoomIntentSettings(options = {}) {
 }
 
 function resetZoomIntentForBoundaryChange(state) {
-  state.holdUntilTs = 0;
-  state.activeIntent = null;
-  state.stickyUntilTurnChange = false;
-  state.stickyUntilLegEnd = false;
-  state.manualPause = false;
-  state.manualPauseThrowCount = -1;
-  state.manualPauseProgressSignature = "";
+  clearZoomIntentHold(state);
+  clearManualZoomPause(state);
   state.lastTurnId = "";
   state.lastThrowCount = -1;
-  state.lastActiveScore = Number.NaN;
-  state.lastTurnProgressSignature = "";
+  clearZoomScoreHistory(state);
   state.pendingLifecycleResetReason = "game-boundary";
 }
 
 function resetZoomIntentForInactiveVariant(state) {
-  state.holdUntilTs = 0;
-  state.activeIntent = null;
-  state.stickyUntilTurnChange = false;
-  state.stickyUntilLegEnd = false;
-  state.manualPause = false;
-  state.manualPauseThrowCount = -1;
-  state.manualPauseProgressSignature = "";
-  state.lastActiveScore = Number.NaN;
-  state.lastTurnProgressSignature = "";
+  clearZoomIntentHold(state);
+  clearManualZoomPause(state);
+  clearZoomScoreHistory(state);
   state.pendingLifecycleResetReason = "variant-inactive";
 }
 
 function resetZoomIntentForBust(state) {
-  state.holdUntilTs = 0;
-  state.activeIntent = null;
-  state.stickyUntilTurnChange = false;
-  state.stickyUntilLegEnd = false;
-  state.manualPause = false;
-  state.manualPauseThrowCount = -1;
-  state.manualPauseProgressSignature = "";
+  clearZoomIntentHold(state);
+  clearManualZoomPause(state);
   state.lastThrowCount = -1;
-  state.lastActiveScore = Number.NaN;
-  state.lastTurnProgressSignature = "";
+  clearZoomScoreHistory(state);
   state.pendingLifecycleResetReason = "bust";
 }
 
@@ -1441,9 +1438,7 @@ function resetZoomIntentForTurnChange(state) {
     state.activeIntent = null;
   }
   state.stickyUntilTurnChange = false;
-  state.manualPause = false;
-  state.manualPauseThrowCount = -1;
-  state.manualPauseProgressSignature = "";
+  clearManualZoomPause(state);
 }
 
 function getPersistedActiveScore(state) {
@@ -1560,9 +1555,7 @@ function isManualPauseStillActive(state, throwCount, progressSignature) {
     return true;
   }
 
-  state.manualPause = false;
-  state.manualPauseThrowCount = -1;
-  state.manualPauseProgressSignature = "";
+  clearManualZoomPause(state);
   return false;
 }
 
@@ -1713,6 +1706,91 @@ function hasActiveX01ZoomContext({ x01Truth, x01Rules, state }) {
   return true;
 }
 
+function updateZoomTurnProgress(state, turnProgress, checkoutContext, x01Rules) {
+  const { throws, turnId, throwCount, previousThrowCount } = turnProgress;
+  let turnChanged = turnProgress.turnChanged;
+  const progressSignature = buildTurnProgressSignature(
+    throws,
+    checkoutContext.activeScore,
+    x01Rules
+  );
+
+  if (!turnChanged && previousThrowCount >= 0 && throwCount < previousThrowCount) {
+    if (
+      shouldTreatThrowCountDecreaseAsTurnReset({
+        previousThrowCount,
+        throwCount,
+        previousActiveScore: getPersistedActiveScore(state),
+        activeScore: checkoutContext.activeScore,
+      })
+    ) {
+      resetZoomIntentForTurnChange(state);
+      turnChanged = true;
+    } else {
+      // Keep the pre-undo baseline so the changed visit can release the pause
+      // and resolve its current target in this same scheduler pass.
+      markManualZoomPause(state, previousThrowCount);
+    }
+  }
+
+  persistTurnProgress(
+    state,
+    turnId,
+    throwCount,
+    checkoutContext.activeScore,
+    progressSignature
+  );
+  return { turnChanged, progressSignature };
+}
+
+function selectCurrentZoomIntent(options) {
+  const { state, config, throwCount, checkoutContext, checkoutZoomTarget, outMode,
+    x01Rules, finishOnlyCheckoutZoom, t20SetupZoomEnabled, canUseT20Setup, nowTs } = options;
+  const checkoutIntent = resolveCheckoutZoomIntent({
+    state,
+    config,
+    throwCount,
+    checkoutSurface: checkoutContext.checkoutSurface,
+    checkoutZoomTarget,
+    firstRouteSegment: checkoutContext.firstRouteSegment,
+    authoritativeRouteSegments: checkoutContext.authoritativeRouteSegments,
+    activeScore: checkoutContext.activeScore,
+    outMode,
+    x01Rules,
+    finishRouteSegment: checkoutContext.finishRouteSegment,
+    scoreCheckoutSegment: checkoutContext.scoreCheckoutSegment,
+  });
+  if (checkoutIntent) {
+    return checkoutIntent;
+  }
+
+  const setupIntent = resolveSetupZoomIntent({
+    state,
+    throwCount,
+    finishOnlyCheckoutZoom,
+    suggestionSegment: checkoutContext.suggestionSegment,
+    suggestionIsCheckout: checkoutContext.suggestionIsCheckout,
+    config,
+    t20SetupZoomEnabled,
+    canUseT20Setup,
+  });
+  if (setupIntent) {
+    return setupIntent;
+  }
+
+  const fallbackT20Intent = resolveFallbackT20SetupIntent(state, t20SetupZoomEnabled, canUseT20Setup);
+  if (fallbackT20Intent) {
+    return fallbackT20Intent;
+  }
+
+  if (state.holdUntilTs > nowTs && state.activeIntent) {
+    return state.activeIntent;
+  }
+
+  state.activeIntent = null;
+  return null;
+}
+
 export function computeZoomIntent(options = {}) {
   const matchSurface = options.matchSurface || readModernMatchSurface(options.documentRef, options.windowRef);
   const {
@@ -1748,9 +1826,8 @@ export function computeZoomIntent(options = {}) {
     });
   }
 
-  const { throws, turnId, throwCount, previousThrowCount } = turnProgress;
-  let turnChanged = turnProgress.turnChanged;
-  if (turnChanged) {
+  const { throws, throwCount, previousThrowCount } = turnProgress;
+  if (turnProgress.turnChanged) {
     resetZoomIntentForTurnChange(state);
   }
 
@@ -1761,36 +1838,8 @@ export function computeZoomIntent(options = {}) {
     x01Rules,
     state,
   });
-  const progressSignature = buildTurnProgressSignature(
-    throws,
-    checkoutContext.activeScore,
-    x01Rules
-  );
-
-  if (!turnChanged && previousThrowCount >= 0 && throwCount < previousThrowCount) {
-    if (
-      shouldTreatThrowCountDecreaseAsTurnReset({
-        previousThrowCount,
-        throwCount,
-        previousActiveScore: getPersistedActiveScore(state),
-        activeScore: checkoutContext.activeScore,
-      })
-    ) {
-      resetZoomIntentForTurnChange(state);
-      turnChanged = true;
-    } else {
-      // Keep the pre-undo baseline so the changed visit can release the pause
-      // and resolve its current target in this same scheduler pass.
-      markManualZoomPause(state, previousThrowCount);
-    }
-  }
-
-  persistTurnProgress(
-    state,
-    turnId,
-    throwCount,
-    checkoutContext.activeScore,
-    progressSignature
+  const { turnChanged, progressSignature } = updateZoomTurnProgress(
+    state, turnProgress, checkoutContext, x01Rules
   );
   clearDisabledSetupIntent(state, t20SetupZoomEnabled, finishOnlyCheckoutZoom);
 
@@ -1839,49 +1888,10 @@ export function computeZoomIntent(options = {}) {
     return finishedCheckoutStickyIntent;
   }
 
-  const checkoutIntent = resolveCheckoutZoomIntent({
-    state,
-    config,
-    throwCount,
-    checkoutSurface: checkoutContext.checkoutSurface,
-    checkoutZoomTarget,
-    firstRouteSegment: checkoutContext.firstRouteSegment,
-    authoritativeRouteSegments: checkoutContext.authoritativeRouteSegments,
-    activeScore: checkoutContext.activeScore,
-    outMode,
-    x01Rules,
-    finishRouteSegment: checkoutContext.finishRouteSegment,
-    scoreCheckoutSegment: checkoutContext.scoreCheckoutSegment,
+  return selectCurrentZoomIntent({
+    state, config, throwCount, checkoutContext, checkoutZoomTarget, outMode,
+    x01Rules, finishOnlyCheckoutZoom, t20SetupZoomEnabled, canUseT20Setup, nowTs,
   });
-  if (checkoutIntent) {
-    return checkoutIntent;
-  }
-
-  const setupIntent = resolveSetupZoomIntent({
-    state,
-    throwCount,
-    finishOnlyCheckoutZoom,
-    suggestionSegment: checkoutContext.suggestionSegment,
-    suggestionIsCheckout: checkoutContext.suggestionIsCheckout,
-    config,
-    t20SetupZoomEnabled,
-    canUseT20Setup,
-  });
-  if (setupIntent) {
-    return setupIntent;
-  }
-
-  const fallbackT20Intent = resolveFallbackT20SetupIntent(state, t20SetupZoomEnabled, canUseT20Setup);
-  if (fallbackT20Intent) {
-    return fallbackT20Intent;
-  }
-
-  if (state.holdUntilTs > nowTs && state.activeIntent) {
-    return state.activeIntent;
-  }
-
-  state.activeIntent = null;
-  return null;
 }
 
 function resolveApplyZoomNodes(zoomNodes) {

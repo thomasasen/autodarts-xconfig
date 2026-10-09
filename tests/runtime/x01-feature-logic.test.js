@@ -55,6 +55,41 @@ function createZoomState() {
   };
 }
 
+for (const reason of ["game-boundary", "variant-inactive", "bust"]) {
+  test(`zoom ${reason} clears holds and pauses while preserving its distinct visit history`, () => {
+    const state = Object.assign(createZoomState(), {
+      activeIntent: { reason: "checkout", segment: "D20" }, holdUntilTs: 99999,
+      stickyUntilTurnChange: true, stickyUntilLegEnd: true,
+      manualPause: true, manualPauseThrowCount: 2, manualPauseProgressSignature: "old",
+      lastTurnId: "previous-turn", lastThrowCount: 2, lastActiveScore: 40,
+      lastTurnProgressSignature: "40|D20", matchBoundaryToken: "previous-game",
+    });
+    const documentRef = new FakeDocument();
+    const active = reason !== "variant-inactive";
+    const intent = computeZoomIntent({
+      documentRef, x01Rules, state, featureConfig: { checkoutZoomEnabled: false },
+      matchSurface: { turnScoreToken: reason === "bust" ? "BUST" : "" },
+      x01Truth: {
+        active, actionable: active, activeTurn: null, activeThrows: [],
+        gameBoundaryToken: reason === "game-boundary" ? "next-game" : "previous-game",
+      },
+    });
+    assert.equal(intent, null);
+    assert.equal(state.activeIntent, null);
+    assert.equal(state.holdUntilTs, 0);
+    assert.equal(state.stickyUntilTurnChange, false);
+    assert.equal(state.stickyUntilLegEnd, false);
+    assert.equal(state.manualPause, false);
+    assert.equal(state.manualPauseThrowCount, -1);
+    assert.equal(state.manualPauseProgressSignature, "");
+    assert.equal(Number.isNaN(state.lastActiveScore), true);
+    assert.equal(state.lastTurnProgressSignature, "");
+    assert.equal(state.lastTurnId, reason === "game-boundary" ? "" : "previous-turn");
+    assert.equal(state.lastThrowCount, reason === "variant-inactive" ? 2 : -1);
+    assert.equal(state.pendingLifecycleResetReason, reason);
+  });
+}
+
 function appendSuggestion(documentRef, text, left = 300, top = 10) {
   const node = documentRef.createElement("div");
   node.classList.add("suggestion");

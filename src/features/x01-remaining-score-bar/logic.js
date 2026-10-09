@@ -1382,6 +1382,101 @@ function shouldRenderFeature(context = {}) {
   return isMatchRoute(context.windowRef);
 }
 
+function readScoreProgressCard(cardNode, cardIndex, modernPlayer) {
+  if (!modernPlayer) markPlayerCardParts(cardNode);
+  const stackNode = modernPlayer ? cardNode : getPlayerStack(cardNode) || cardNode;
+  const scoreNode = modernPlayer ? modernPlayer.scoreNode : getPlayerScoreNode(cardNode);
+  const scoreContainerNode = getPlayerScoreContainer(cardNode, scoreNode);
+  const scoreValue = parseDisplayedScore(scoreNode?.textContent || "");
+  return { cardNode, cardIndex, modernPlayer, stackNode, scoreNode, scoreContainerNode, scoreValue };
+}
+
+function updateScoreProgressCard(card, options) {
+  const { cardNode, cardIndex, modernPlayer, scoreNode, scoreValue } = card;
+  const { documentRef, windowRef, modernSurface, activePlayerIndex, state, startScore, visuals } = options;
+  if (!isFiniteNumber(scoreValue)) {
+    cardNode.querySelector?.(HOST_SELECTOR)?.remove?.();
+    card.removed = "missing-score";
+    return;
+  }
+  const hostNode = ensureProgressHost(cardNode, documentRef, modernPlayer);
+  if (!hostNode) {
+    card.removed = "missing-host";
+    return;
+  }
+  const ratio = scoreValue / startScore;
+  const cardIdentity = resolveCardIdentity(cardNode, scoreNode, cardIndex);
+  const previousHostScore = state.hostScores.get(hostNode);
+  const previousCardScore = state.cardScores.get(cardIdentity);
+  const previousScore =
+    isFiniteNumber(previousCardScore) && previousCardScore >= 0
+      ? previousCardScore
+      : previousHostScore;
+  const scoreChanged =
+    isFiniteNumber(previousScore) && previousScore !== scoreValue && scoreValue >= 0;
+  state.hostScores.set(hostNode, scoreValue);
+  state.cardScores.set(cardIdentity, scoreValue);
+  const isActive = modernPlayer ? modernSurface.playerCard === cardNode : isPlayerCardActive(
+    cardNode, scoreNode, documentRef, activePlayerIndex, cardIndex
+  );
+  updateProgressHost(hostNode, {
+    ratio,
+    previousRatio: isFiniteNumber(previousScore) ? previousScore / startScore : null,
+    score: scoreValue,
+    startScore,
+    scoreChanged,
+    active: isActive,
+    ...visuals,
+    windowRef,
+  });
+  Object.assign(card, { hostNode, ratio, cardIdentity, previousScore, isActive });
+}
+
+function sampleScoreProgressCard(card, windowRef) {
+  const { cardNode, cardIndex, stackNode, scoreNode, scoreContainerNode, scoreValue,
+    hostNode, ratio, cardIdentity, isActive, removed } = card;
+  const hostDisplay = removed ? null : readComputedDisplay(windowRef, hostNode);
+  const hostRect = removed ? null : readRect(hostNode);
+  const sample = {
+    index: cardIndex,
+    card: summarizeNode(cardNode),
+    stack: summarizeNode(stackNode),
+    scoreContainer: summarizeNode(scoreContainerNode),
+    scoreNodeFound: Boolean(scoreNode),
+    scoreText: toCompactText(scoreNode?.textContent || ""),
+    parsedScore: removed === "missing-score" ? null : scoreValue,
+  };
+  if (removed) return { ...sample, removed };
+  return {
+    ...sample,
+    ratio: Number(ratio.toFixed(4)),
+    cardIdentity,
+    cardActiveDetected: isActive,
+    host: summarizeNode(hostNode),
+    hostState: String(hostNode.getAttribute?.("data-ad-ext-x01-remaining-score-bar-state") || ""),
+    hostColorTheme: String(hostNode.getAttribute?.(COLOR_THEME_ATTRIBUTE) || ""),
+    hostSize: String(hostNode.getAttribute?.(SIZE_ATTRIBUTE) || ""),
+    hostEffect: String(hostNode.getAttribute?.(EFFECT_ATTRIBUTE) || ""),
+    hostWidth: String(hostNode.style?.getPropertyValue?.(WIDTH_PROPERTY) || ""),
+    hostDisplay,
+    hostRect,
+    hostParent: summarizeNode(hostNode.parentNode || null),
+    hostPrevious: summarizeNode(hostNode.previousElementSibling || null),
+  };
+}
+
+function cleanupScoreProgressHosts(documentRef, activeHosts) {
+  let staleHostsRemoved = 0;
+  getRuntimeProgressHosts(documentRef).forEach((hostNode) => {
+    if (!activeHosts.has(hostNode)) {
+      hostNode.remove?.();
+      staleHostsRemoved += 1;
+    }
+  });
+  cleanupStackMarkers(documentRef);
+  return staleHostsRemoved;
+}
+
 export function syncScoreProgress(context = {}, state = createScoreProgressState()) {
   const modernSurface = readModernMatchSurface(context.documentRef, context.windowRef);
   context = { ...context, modernSurface };
@@ -1501,118 +1596,24 @@ export function syncScoreProgress(context = {}, state = createScoreProgressState
     ? activePlayerIndex
     : null;
 
+  const cardOptions = {
+    documentRef, windowRef, modernSurface, activePlayerIndex, state, startScore,
+    visuals: { colorTheme: normalizedColorTheme, barSize: normalizedBarSize, effect: normalizedEffect },
+  };
   cards.forEach((cardNode, cardIndex) => {
-    const modernPlayer = modernPlayers[cardIndex] || null;
-    if (!modernPlayer) markPlayerCardParts(cardNode);
-    const stackNode = modernPlayer ? cardNode : getPlayerStack(cardNode) || cardNode;
-    const scoreNode = modernPlayer ? modernPlayer.scoreNode : getPlayerScoreNode(cardNode);
-    const scoreContainerNode = getPlayerScoreContainer(cardNode, scoreNode);
-    const scoreValue = parseDisplayedScore(scoreNode?.textContent || "");
-    if (!isFiniteNumber(scoreValue)) {
-      cardNode.querySelector?.(HOST_SELECTOR)?.remove?.();
-      removedCardsMissingScore += 1;
-      if (debugEnabled && sampledCards.length < DEBUG_MAX_CARD_SAMPLES) {
-        sampledCards.push({
-          index: cardIndex,
-          card: summarizeNode(cardNode),
-          stack: summarizeNode(stackNode),
-          scoreContainer: summarizeNode(scoreContainerNode),
-          scoreNodeFound: Boolean(scoreNode),
-          scoreText: toCompactText(scoreNode?.textContent || ""),
-          parsedScore: null,
-          removed: "missing-score",
-        });
-      }
-      return;
+    const card = readScoreProgressCard(cardNode, cardIndex, modernPlayers[cardIndex] || null);
+    updateScoreProgressCard(card, cardOptions);
+    if (card.removed === "missing-score") removedCardsMissingScore += 1;
+    if (card.hostNode) {
+      activeHosts.add(card.hostNode);
+      renderedCards += 1;
     }
-
-    const hostNode = ensureProgressHost(cardNode, documentRef, modernPlayer);
-    if (!hostNode) {
-      if (debugEnabled && sampledCards.length < DEBUG_MAX_CARD_SAMPLES) {
-        sampledCards.push({
-          index: cardIndex,
-          card: summarizeNode(cardNode),
-          stack: summarizeNode(stackNode),
-          scoreContainer: summarizeNode(scoreContainerNode),
-          scoreNodeFound: Boolean(scoreNode),
-          scoreText: toCompactText(scoreNode?.textContent || ""),
-          parsedScore: scoreValue,
-          removed: "missing-host",
-        });
-      }
-      return;
-    }
-
-    const ratio = scoreValue / startScore;
-    const cardIdentity = resolveCardIdentity(cardNode, scoreNode, cardIndex);
-    const previousHostScore = state.hostScores.get(hostNode);
-    const previousCardScore = state.cardScores.get(cardIdentity);
-    const previousScore =
-      isFiniteNumber(previousCardScore) && previousCardScore >= 0
-        ? previousCardScore
-        : previousHostScore;
-    const scoreChanged =
-      isFiniteNumber(previousScore) && previousScore !== scoreValue && scoreValue >= 0;
-    state.hostScores.set(hostNode, scoreValue);
-    state.cardScores.set(cardIdentity, scoreValue);
-    const isActive = modernPlayer ? modernSurface.playerCard === cardNode : isPlayerCardActive(
-      cardNode,
-      scoreNode,
-      documentRef,
-      activePlayerIndex,
-      cardIndex
-    );
-    updateProgressHost(hostNode, {
-      ratio,
-      previousRatio: isFiniteNumber(previousScore) ? previousScore / startScore : null,
-      score: scoreValue,
-      startScore,
-      scoreChanged,
-      active: isActive,
-      colorTheme: normalizedColorTheme,
-      barSize: normalizedBarSize,
-      effect: normalizedEffect,
-      windowRef,
-    });
-    activeHosts.add(hostNode);
-    renderedCards += 1;
-
     if (debugEnabled && sampledCards.length < DEBUG_MAX_CARD_SAMPLES) {
-      const hostDisplay = readComputedDisplay(windowRef, hostNode);
-      const hostRect = readRect(hostNode);
-      sampledCards.push({
-        index: cardIndex,
-        card: summarizeNode(cardNode),
-        stack: summarizeNode(stackNode),
-        scoreContainer: summarizeNode(scoreContainerNode),
-        scoreNodeFound: Boolean(scoreNode),
-        scoreText: toCompactText(scoreNode?.textContent || ""),
-        parsedScore: scoreValue,
-        ratio: Number(ratio.toFixed(4)),
-        cardIdentity,
-        cardActiveDetected: isActive,
-        host: summarizeNode(hostNode),
-        hostState: String(hostNode.getAttribute?.("data-ad-ext-x01-remaining-score-bar-state") || ""),
-        hostColorTheme: String(hostNode.getAttribute?.(COLOR_THEME_ATTRIBUTE) || ""),
-        hostSize: String(hostNode.getAttribute?.(SIZE_ATTRIBUTE) || ""),
-        hostEffect: String(hostNode.getAttribute?.(EFFECT_ATTRIBUTE) || ""),
-        hostWidth: String(hostNode.style?.getPropertyValue?.(WIDTH_PROPERTY) || ""),
-        hostDisplay,
-        hostRect,
-        hostParent: summarizeNode(hostNode.parentNode || null),
-        hostPrevious: summarizeNode(hostNode.previousElementSibling || null),
-      });
+      sampledCards.push(sampleScoreProgressCard(card, windowRef));
     }
   });
 
-  let staleHostsRemoved = 0;
-  getRuntimeProgressHosts(documentRef).forEach((hostNode) => {
-    if (!activeHosts.has(hostNode)) {
-      hostNode.remove?.();
-      staleHostsRemoved += 1;
-    }
-  });
-  cleanupStackMarkers(documentRef);
+  const staleHostsRemoved = cleanupScoreProgressHosts(documentRef, activeHosts);
 
   debugPayload.reason = renderedCards > 0 ? "rendered" : "no-rendered-cards";
   debugPayload.renderedCards = renderedCards;

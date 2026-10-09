@@ -16,7 +16,13 @@ import {
   buildStyleText,
   resolveZoomSpeedConfig,
 } from "./style.js";
-import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
+import {
+  createManagedNodeMatcher,
+  elementMatchesAncestorSelectors,
+  getTouchedMutationNodes as collectTouchedMutationNodes,
+  hasExternalDomMutation,
+  resolveMutationType,
+} from "../../core/dom-mutation-filter.js";
 import { NATIVE_BOARD_SELECTOR, resolveBoardRenderSurface } from "../../shared/dartboard-svg.js";
 import {
   BOARD_INPUT_MODE_ATTRIBUTE_FILTER,
@@ -193,27 +199,11 @@ function nodeOrAncestorMatchesAnySelector(node, selectors = []) {
     return false;
   }
 
-  return selectors.some((selector) => {
-    try {
-      return Boolean(elementNode.closest(selector));
-    } catch (_) {
-      return false;
-    }
-  });
+  return elementMatchesAncestorSelectors(elementNode, selectors);
 }
 
 function getTouchedMutationNodes(mutation) {
-  const nodes = [];
-  const pushNode = (node) => {
-    if (node) {
-      nodes.push(node);
-    }
-  };
-
-  pushNode(mutation?.target || null);
-  Array.from(mutation?.addedNodes || []).forEach(pushNode);
-  Array.from(mutation?.removedNodes || []).forEach(pushNode);
-  return nodes;
+  return collectTouchedMutationNodes(mutation, (value) => Array.from(value || []));
 }
 
 function containsMatchingDescendant(node, selectors) {
@@ -363,19 +353,6 @@ export function resolveTvBoardZoomMutationReaction(mutations = [], context = {})
 
 export function shouldScheduleTvBoardZoomMutation(mutations = [], context = {}) {
   return resolveTvBoardZoomMutationReaction(mutations, context).shouldSchedule;
-}
-
-function resolveMutationType(mutation) {
-  if (mutation?.type) {
-    return String(mutation.type);
-  }
-  if (mutation?.attributeName) {
-    return "attributes";
-  }
-  if (mutation?.addedNodes || mutation?.removedNodes) {
-    return "childList";
-  }
-  return "";
 }
 
 function getNodeClassName(node) {

@@ -967,6 +967,61 @@ test("cricket grid fx backfills missing snapshot rows from grid root in merged d
   clearCricketGridStatusEffectsState(state);
 });
 
+test("cricket diagnostics aggregate row counts and aliases without replaying passive effects", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  documentRef.variantElement.textContent = "Cricket";
+  createNumericCricketGrid(documentRef, {
+    "20": [3, 0], "19": [0, 3], "18": [3, 3], BULL: [3, 0],
+  });
+  const visualConfig = resolveCricketGridStatusEffectsConfig({ rowWave: true, badgeBeacon: true,
+    markProgress: true, deltaChips: true, hitSpark: true });
+  const state = createCricketGridStatusEffectsState(windowRef);
+  const renderState = buildCricketRenderState({ documentRef, gameState: createGameState(0),
+    cricketRules, variantRules, cache: state.renderCache });
+  const debugStats = {};
+  const update = () => updateCricketGridStatusEffects({ documentRef, cricketRules, renderState,
+    state, visualConfig, turnToken: "visit-1", debugStats });
+  try {
+    update();
+    assert.equal(debugStats.status, "ok");
+    assert.equal(debugStats.rowCount, 7);
+    assert.equal(debugStats.scoringRowCount, 3);
+    assert.equal(debugStats.pressureRowCount, 0);
+    assert.equal(debugStats.offenseRowCount, 3);
+    assert.equal(debugStats.dangerRowCount, 0);
+    assert.equal(debugStats.scoreCellCount, 3);
+    assert.equal(debugStats.badgeCount, 7);
+    assert.equal(debugStats.badgeFallbackCount, 7);
+    assert.equal(debugStats.activeColumnResolvedCount, 7);
+    assert.deepEqual(debugStats.activeColumnMissingLabels, []);
+    const transients = [...state.transientNodes];
+    const timers = [...state.timeoutHandles];
+    update();
+    assert.equal(debugStats.scoringRowCount, 3);
+    assert.equal(debugStats.offenseRowCount, 3);
+    assert.equal(debugStats.pressureRowCount, 0);
+    assert.equal(debugStats.dangerRowCount, 0);
+    assert.equal(debugStats.rowWaveDeltaCount, 0);
+    assert.equal(debugStats.rowWaveTacticalCount, 0);
+    assert.equal(debugStats.turnTokenChanged, false);
+    assert.deepEqual([...state.transientNodes], transients);
+    assert.deepEqual([...state.timeoutHandles], timers);
+    updateCricketGridStatusEffects({ documentRef, cricketRules, state, visualConfig,
+      renderState: { ...renderState, targetOrder: [] }, debugStats });
+    assert.equal(debugStats.status, "invalid-state");
+    assert.equal(debugStats.scoringRowCount, 0);
+    assert.equal(debugStats.offenseRowCount, 0);
+    assert.equal(debugStats.pressureRowCount, 0);
+    assert.equal(debugStats.dangerRowCount, 0);
+    assert.deepEqual(debugStats.activeColumnMissingLabels, []);
+    assert.equal(state.transientNodes.size, 0);
+    assert.equal(state.timeoutHandles.size, 0);
+  } finally {
+    clearCricketGridStatusEffectsState(state);
+  }
+});
+
 test("cricket grid fx pulses rows only for mark increases or tactical transitions", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });

@@ -90,6 +90,32 @@ function toNodeArray(value) {
   return Array.from(value).filter(Boolean);
 }
 
+export function resolveMutationType(mutation) {
+  if (mutation?.type) return String(mutation.type);
+  if (mutation?.attributeName) return "attributes";
+  if (mutation?.addedNodes || mutation?.removedNodes) return "childList";
+  return "";
+}
+
+export function getTouchedMutationNodes(mutation, toArray = toNodeArray) {
+  return [
+    mutation?.target || null,
+    ...toArray(mutation?.addedNodes),
+    ...toArray(mutation?.removedNodes),
+  ].filter(Boolean);
+}
+
+// Callers normalize text/fragment nodes according to their own surface contract.
+export function elementMatchesAncestorSelectors(elementNode, selectors) {
+  return selectors.some((selector) => {
+    try {
+      return Boolean(elementNode?.closest?.(selector));
+    } catch (_) {
+      return false;
+    }
+  });
+}
+
 export function hasExternalDomMutation(mutations = [], isManagedNode = null) {
   if (!Array.isArray(mutations) || !mutations.length || typeof isManagedNode !== "function") {
     return true;
