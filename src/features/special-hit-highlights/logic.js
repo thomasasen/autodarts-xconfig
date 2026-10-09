@@ -1,3 +1,4 @@
+import { queryAll as collectBySelector } from "../../shared/dom-query.js";
 import {
   HIT_ANIMATION_CLASS,
   HIT_ANIMATION_TRIGGER_CLASS,
@@ -67,18 +68,6 @@ const TRIPLE_PATTERN = /T\s*(\d{1,2})/gi;
 const DOUBLE_PATTERN = /D\s*(\d{1,2})/gi;
 const CORRECTION_CLASS_NAME = "correction-bg";
 const MANUAL_CORRECTION_ACTION_LABELS = new Set(["CANCEL", "OK"]);
-
-function collectBySelector(rootNode, selector) {
-  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
-    return [];
-  }
-
-  try {
-    return Array.from(rootNode.querySelectorAll(selector));
-  } catch (_) {
-    return [];
-  }
-}
 
 function isElementDisabled(node) {
   if (!node || typeof node !== "object") {

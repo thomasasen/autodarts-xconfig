@@ -2377,6 +2377,10 @@ test("xConfig checkout board targets renders board and segment previews", async 
   assert.equal(wholeBoards.length, 4);
   wholeBoards.forEach((boardNode) => {
     assert.equal(boardNode.getAttribute("viewBox"), "-82.2 -82.2 164.4 164.4");
+    assert.equal(
+      boardNode.querySelector(".ad-xconfig-checkout-board-preview-sector").getAttribute("d"),
+      "M -11.8195 -74.6254 A 75.5556 75.5556 0 0 1 11.8195 -74.6254 L 1.182 -7.4626 A 7.5556 7.5556 0 0 0 -1.182 -7.4626 Z"
+    );
     const rings = Array.from(boardNode.querySelectorAll(".ad-xconfig-checkout-board-preview-ring"));
     assert.equal(rings.some((ringNode) => Number(ringNode.getAttribute("r")) > 76.3), false);
   });

@@ -1,3 +1,4 @@
+import { queryAll } from "../../shared/dom-query.js";
 import { hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 
 export const TURN_SURFACE_SELECTOR = "#ad-ext-turn";
@@ -94,18 +95,6 @@ function normalizeText(value) {
     .replaceAll("\u00a0", " ")
     .replaceAll(/\s+/g, " ")
     .trim();
-}
-
-function queryAll(rootNode, selector) {
-  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
-    return [];
-  }
-
-  try {
-    return Array.from(rootNode.querySelectorAll(selector));
-  } catch (_) {
-    return [];
-  }
 }
 
 export function findTurnContainer(documentRef) {

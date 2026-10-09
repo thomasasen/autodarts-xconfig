@@ -1,27 +1,5 @@
-export function normalizeRoutePath(pathValue) {
-  let normalized = String(pathValue || "").trim().toLowerCase();
-  if (!normalized) {
-    return "";
-  }
-
-  if (!normalized.startsWith("/")) {
-    normalized = `/${normalized}`;
-  }
-
-  normalized = normalized.replace(/[?#].*$/, "").replaceAll(/\/{2,}/g, "/");
-  if (normalized.length > 1) {
-    normalized = normalized.replace(/\/+$/, "");
-  }
-  return normalized;
-}
-
-function normalizeHashValue(hashValue) {
-  const normalized = String(hashValue || "").trim().toLowerCase();
-  if (!normalized) {
-    return "";
-  }
-  return normalized.startsWith("#") ? normalized : `#${normalized}`;
-}
+import { normalizeRoutePath, normalizeHashValue } from "../../shared/route-normalization.js";
+export { normalizeRoutePath } from "../../shared/route-normalization.js";
 
 function normalizeSidebarRouteHints(values) {
   if (values instanceof Set) {

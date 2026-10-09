@@ -1,3 +1,5 @@
+import { queryAll } from "../../shared/dom-query.js";
+export { queryAll } from "../../shared/dom-query.js";
 import {
   collectTargetLabelsInNode as collectTargetLabelsInNodeLayout,
   hasExplicitMarkHints,
@@ -7,18 +9,6 @@ import {
 import { getClassTokens, normalizeCricketLabelNode } from "./label-utils.js";
 
 export const TURN_PREVIEW_ROOT_SELECTOR = "#ad-ext-turn";
-
-export function queryAll(rootNode, selector) {
-  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
-    return [];
-  }
-
-  try {
-    return Array.from(rootNode.querySelectorAll(selector));
-  } catch (_) {
-    return [];
-  }
-}
 
 export function isNodeVisible(node) {
   if (!node || typeof node !== "object") {

@@ -1,3 +1,4 @@
+import { queryAll } from "../../shared/dom-query.js";
 import {
   BUST_ACTIVE_CLASS,
   BUST_CARD_STYLE_PROPERTIES,
@@ -58,18 +59,6 @@ function queryOne(rootNode, selector) {
     return rootNode.querySelector(selector);
   } catch (_) {
     return null;
-  }
-}
-
-function queryAll(rootNode, selector) {
-  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
-    return [];
-  }
-
-  try {
-    return Array.from(rootNode.querySelectorAll(selector));
-  } catch (_) {
-    return [];
   }
 }
 

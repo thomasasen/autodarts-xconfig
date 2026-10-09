@@ -1,3 +1,4 @@
+import { queryAll } from "../../shared/dom-query.js";
 import { ZOOM_CLASS, ZOOM_HOST_CLASS } from "./style.js";
 import {
   getFirstCheckoutRouteSegment,
@@ -44,18 +45,6 @@ function normalizeText(value) {
     .replaceAll("\u00a0", " ")
     .replaceAll(/\s+/g, " ")
     .trim();
-}
-
-function queryAll(rootNode, selector) {
-  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
-    return [];
-  }
-
-  try {
-    return Array.from(rootNode.querySelectorAll(selector));
-  } catch (_) {
-    return [];
-  }
 }
 
 function parseViewBox(svgNode) {

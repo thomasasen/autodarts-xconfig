@@ -1,3 +1,4 @@
+import { queryAll } from "../../shared/dom-query.js";
 import { readModernPlayerSurfaces } from "./x01-match-surface.js";
 
 export const X01_PLAYER_DISPLAY_ROOT_SELECTOR = "#ad-ext-player-display";
@@ -26,18 +27,6 @@ function queryOne(rootNode, selector) {
     return rootNode.querySelector(selector);
   } catch (_) {
     return null;
-  }
-}
-
-function queryAll(rootNode, selector) {
-  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
-    return [];
-  }
-
-  try {
-    return Array.from(rootNode.querySelectorAll(selector));
-  } catch (_) {
-    return [];
   }
 }
 

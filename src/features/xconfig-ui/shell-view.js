@@ -1,3 +1,9 @@
+import {
+  SEGMENT_ORDER as CHECKOUT_BOARD_PREVIEW_SEGMENT_ORDER,
+  RING_RATIOS as CHECKOUT_BOARD_PREVIEW_RATIOS,
+  wedgePath as checkoutBoardPreviewWedgePath,
+  segmentAngles as resolveCheckoutBoardPreviewSegmentAngles,
+} from "../../shared/dartboard-geometry.js";
 import { getXConfigDescriptor, xconfigDescriptorOrder } from "./descriptors.js";
 import { getXConfigSectionMeta, XCONFIG_SECTION_DEFINITIONS } from "./sections.js";
 import { resolveDartDesignAsset, resolveTurnDartAsset } from "#feature-assets";
@@ -925,17 +931,6 @@ function buildCheckoutScoreHighlightOptionLayout(
   });
 }
 
-const CHECKOUT_BOARD_PREVIEW_SEGMENT_ORDER = Object.freeze([
-  20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
-]);
-const CHECKOUT_BOARD_PREVIEW_RATIOS = Object.freeze({
-  outerBullInner: 0.031112,
-  outerBullOuter: 0.075556,
-  tripleInner: 0.431112,
-  tripleOuter: 0.475556,
-  doubleInner: 0.711112,
-  doubleOuter: 0.755556,
-});
 const CHECKOUT_BOARD_PREVIEW_RADIUS = 100;
 const CHECKOUT_BOARD_PREVIEW_DOUBLE_OUTER_RADIUS = 76.2;
 
@@ -962,41 +957,6 @@ function resolveCheckoutBoardPreviewVisualConfig(featureConfig = {}, overrides =
   return {
     ...resolveBoardTargetVisualConfig(featureConfig),
     ...overrides,
-  };
-}
-
-function checkoutBoardPreviewPolar(radius, angleDeg) {
-  const radians = ((angleDeg - 90) * Math.PI) / 180;
-  return {
-    x: Number((radius * Math.cos(radians)).toFixed(4)),
-    y: Number((radius * Math.sin(radians)).toFixed(4)),
-  };
-}
-
-function checkoutBoardPreviewWedgePath(innerRadius, outerRadius, startDeg, endDeg) {
-  const p0 = checkoutBoardPreviewPolar(outerRadius, startDeg);
-  const p1 = checkoutBoardPreviewPolar(outerRadius, endDeg);
-  const p2 = checkoutBoardPreviewPolar(innerRadius, endDeg);
-  const p3 = checkoutBoardPreviewPolar(innerRadius, startDeg);
-  const largeArc = (endDeg - startDeg + 360) % 360 > 180 ? 1 : 0;
-  return [
-    `M ${p0.x} ${p0.y}`,
-    `A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${p1.x} ${p1.y}`,
-    `L ${p2.x} ${p2.y}`,
-    `A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${p3.x} ${p3.y}`,
-    "Z",
-  ].join(" ");
-}
-
-function resolveCheckoutBoardPreviewSegmentAngles(value) {
-  const index = CHECKOUT_BOARD_PREVIEW_SEGMENT_ORDER.indexOf(Number(value));
-  if (index < 0) {
-    return null;
-  }
-  const center = index * 18;
-  return {
-    start: center - 9,
-    end: center + 9,
   };
 }
 

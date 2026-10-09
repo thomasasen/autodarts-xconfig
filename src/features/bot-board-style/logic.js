@@ -1,3 +1,4 @@
+import { queryAll } from "../../shared/dom-query.js";
 import { isLikelyBoardMarker } from "../../shared/dartboard-markers.js";
 import { resolveBoardRenderSurface } from "../../shared/dartboard-svg.js";
 import {
@@ -14,18 +15,6 @@ const ACTIVE_CRICKET_ATTRIBUTE = "data-ad-ext-theme-cricket-active";
 const DEFAULT_DESIGN = "winmau-blade-6-tc";
 const DEFAULT_SCOPE = "bot-turns";
 const ALLOWED_SCOPES = new Set([DEFAULT_SCOPE, "all-match-boards"]);
-
-function queryAll(rootNode, selector) {
-  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
-    return [];
-  }
-
-  try {
-    return Array.from(rootNode.querySelectorAll(selector));
-  } catch (_) {
-    return [];
-  }
-}
 
 function queryOne(rootNode, selector) {
   return queryAll(rootNode, selector)[0] || null;

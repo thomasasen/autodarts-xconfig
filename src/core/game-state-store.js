@@ -1,3 +1,4 @@
+import { selectNewestTurn } from "../shared/turn-selection.js";
 import {
   classifyCricketGameMode,
   classifyCricketScoringMode,
@@ -50,42 +51,6 @@ function deepFreeze(value, seen = new WeakSet()) {
   seen.add(value);
   Object.values(value).forEach((entry) => deepFreeze(entry, seen));
   return Object.freeze(value);
-}
-
-function parseTimestamp(value) {
-  if (!value) {
-    return 0;
-  }
-  const timestamp = Date.parse(value);
-  return Number.isFinite(timestamp) ? timestamp : 0;
-}
-
-function selectNewestTurn(candidates) {
-  if (!Array.isArray(candidates) || !candidates.length) {
-    return null;
-  }
-
-  return candidates.reduce((best, candidate) => {
-    if (!best) {
-      return candidate;
-    }
-
-    const candidateRound = Number.isFinite(candidate?.round) ? candidate.round : -1;
-    const bestRound = Number.isFinite(best?.round) ? best.round : -1;
-    if (candidateRound !== bestRound) {
-      return candidateRound > bestRound ? candidate : best;
-    }
-
-    const candidateTurn = Number.isFinite(candidate?.turn) ? candidate.turn : -1;
-    const bestTurn = Number.isFinite(best?.turn) ? best.turn : -1;
-    if (candidateTurn !== bestTurn) {
-      return candidateTurn > bestTurn ? candidate : best;
-    }
-
-    const candidateTs = parseTimestamp(candidate?.createdAt);
-    const bestTs = parseTimestamp(best?.createdAt);
-    return candidateTs >= bestTs ? candidate : best;
-  }, null);
 }
 
 function classifyPayloadKind(payload) {

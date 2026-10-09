@@ -1,20 +1,9 @@
+import { queryAll as queryAllFallback } from "../../shared/dom-query.js";
 import {
   getClassTokens,
   normalizeCricketLabelNode,
   normalizeCricketLabelValue,
 } from "./label-utils.js";
-
-function queryAllFallback(rootNode, selector) {
-  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
-    return [];
-  }
-
-  try {
-    return Array.from(rootNode.querySelectorAll(selector));
-  } catch (_) {
-    return [];
-  }
-}
 
 function getElementRect(element) {
   if (!element || typeof element.getBoundingClientRect !== "function") {

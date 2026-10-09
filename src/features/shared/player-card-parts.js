@@ -1,3 +1,4 @@
+import { queryAll } from "../../shared/dom-query.js";
 export const PLAYER_CARD_PART_ATTRIBUTE = "data-ad-ext-player-card-part";
 
 export const PLAYER_CARD_PARTS = Object.freeze({
@@ -12,18 +13,6 @@ export const PLAYER_CARD_PARTS = Object.freeze({
 });
 
 const ROUND_BADGE_ANCESTOR_CLASSES = new Set(["css-1k3nd6z", "css-1cmgsw8"]);
-
-function queryAll(rootNode, selector) {
-  if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
-    return [];
-  }
-
-  try {
-    return Array.from(rootNode.querySelectorAll(selector));
-  } catch (_) {
-    return [];
-  }
-}
 
 function setPart(node, partName) {
   if (!node || !partName || typeof node.setAttribute !== "function") {

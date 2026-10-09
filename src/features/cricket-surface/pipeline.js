@@ -1,3 +1,4 @@
+import { normalizeRoutePath, normalizeHashValue } from "../../shared/route-normalization.js";
 import {
   buildPipelineSignature,
   buildRoundTransitionToken,
@@ -99,29 +100,6 @@ function isNodeVisible(node) {
 
 function queryAll(rootNode, selector) {
   return queryAllFromDiscovery(rootNode, selector);
-}
-
-function normalizeRoutePath(pathValue) {
-  let normalized = String(pathValue || "").trim().toLowerCase();
-  if (!normalized) {
-    return "";
-  }
-  if (!normalized.startsWith("/")) {
-    normalized = `/${normalized}`;
-  }
-  normalized = normalized.replace(/[?#].*$/, "").replaceAll(/\/{2,}/g, "/");
-  if (normalized.length > 1) {
-    normalized = normalized.replace(/\/+$/, "");
-  }
-  return normalized;
-}
-
-function normalizeHashValue(hashValue) {
-  const normalized = String(hashValue || "").trim().toLowerCase();
-  if (!normalized) {
-    return "";
-  }
-  return normalized.startsWith("#") ? normalized : `#${normalized}`;
 }
 
 export function extractMatchRouteId(windowRef, documentRef) {
