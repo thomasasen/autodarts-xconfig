@@ -1,3 +1,4 @@
+import { CHECKOUT_SCORE_OPTIONS, TV_ZOOM_OPTIONS } from "../../shared/checkout-zoom-options.js";
 import { getXConfigFeatureCopy, getXConfigFieldCopy, getXConfigFieldOptionCopy } from "./copy.js";
 import { buildFeatureIndex, buildFeatureMap, normalizeFeatureKey } from "../feature-metadata.js";
 import {
@@ -441,23 +442,15 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-animate-checkout-score-highlight",
     description: "Hebt finishfähige Restwerte in X01 sichtbar hervor.",
     fields: [
-      selectValueLabelField("effect", "Animation", [
-        ["grow-glow", "Vergrößern & leuchten"], ["glow-only", "Nur leuchten"],
-        ["grow-only", "Nur vergrößern"], ["fade-blink", "Sanft blinken"],
-      ]),
+      selectValueLabelField("effect", "Animation", CHECKOUT_SCORE_OPTIONS.effect),
       selectField("colorTheme", "Farbe", [
         colorPreviewOption("159, 219, 88", "Autodarts Grün", "checkout-score-autodarts-green"),
         colorPreviewOption("56, 189, 248", "Cyan", "checkout-score-cyan"),
         colorPreviewOption("245, 158, 11", "Amber", "checkout-score-amber"),
         colorPreviewOption("248, 113, 113", "Rot", "checkout-score-red"),
       ]),
-      selectValueLabelField("intensity", "Stärke", [
-        ["dezent", "Dezent"], ["standard", "Standard"], ["stark", "Stark"],
-      ]),
-      selectValueLabelField("triggerSource", "Finish-Erkennung", [
-        ["suggestion-first", "Vorschlag zuerst"], ["score-only", "Nur Score"],
-        ["suggestion-only", "Nur Vorschlag"],
-      ]),
+      selectValueLabelField("intensity", "Stärke", CHECKOUT_SCORE_OPTIONS.intensity),
+      selectValueLabelField("triggerSource", "Finish-Erkennung", CHECKOUT_SCORE_OPTIONS.triggerSource),
     ],
   }),
   animationDescriptorEntry({
@@ -522,19 +515,11 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "animation-autodarts-animate-tv-board-zoom",
     description: "Zoomt bei klaren Checkout- und Setup-Situationen TV-artig auf Zielbereiche.",
     fields: [
-      selectValueLabelField("zoomLevel", "Zoomstärke", [
-        [2.35, "Leicht"], [2.75, "Mittel"], [3.15, "Stark"],
-      ]),
-      selectValueLabelField("zoomStyle", "Zoom-Stil", [
-        ["standard", "Standard"], ["cinematic", "Cinematic"],
-      ]),
-      selectValueLabelField("zoomSpeed", "Zoom-Geschwindigkeit", [
-        ["schnell", "Schnell"], ["mittel", "Mittel"], ["langsam", "Langsam"],
-      ]),
+      selectValueLabelField("zoomLevel", "Zoomstärke", TV_ZOOM_OPTIONS.zoomLevel),
+      selectValueLabelField("zoomStyle", "Zoom-Stil", TV_ZOOM_OPTIONS.zoomStyle),
+      selectValueLabelField("zoomSpeed", "Zoom-Geschwindigkeit", TV_ZOOM_OPTIONS.zoomSpeed),
       checkboxField("checkoutZoomEnabled", "Checkout-Zoom"),
-      selectValueLabelField("checkoutZoomTarget", "Zoom auf", [
-        ["finish-only", "Nur Finish-Feld"], ["route-first", "Erstes Routenfeld"],
-      ]),
+      selectValueLabelField("checkoutZoomTarget", "Zoom auf", TV_ZOOM_OPTIONS.checkoutZoomTarget),
       checkboxField("t20SetupZoomEnabled", "Auch auf T20-Setup zoomen"),
     ],
   }),

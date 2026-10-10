@@ -104,81 +104,6 @@ export const SHARED_CRICKET_SURFACE_ATTRIBUTE_FILTER = Object.freeze([
 ]);
 const AUTODARTS_TOOLS_MENU_ID = "autodarts-tools-menu-item";
 
-function createRuntimeAliasObserver(runtime) {
-  return {
-    get callback() {
-      return runtime.sharedMutationCallback;
-    },
-    get observeCalls() {
-      return runtime.sharedObserver?.observeCalls || [];
-    },
-    observe() {},
-    disconnect() {},
-  };
-}
-
-function ensureObserverAliasSupport(observerRegistry) {
-  if (
-    !observerRegistry ||
-    typeof observerRegistry !== "object" ||
-    observerRegistry.__sharedCricketAliasSupport === true
-  ) {
-    return;
-  }
-
-  const aliasObservers = new Map();
-  const originalGet =
-    typeof observerRegistry.get === "function"
-      ? observerRegistry.get.bind(observerRegistry)
-      : () => null;
-  const originalDisconnect =
-    typeof observerRegistry.disconnect === "function"
-      ? observerRegistry.disconnect.bind(observerRegistry)
-      : () => false;
-
-  observerRegistry.__sharedCricketAliasStore = aliasObservers;
-  observerRegistry.__sharedCricketAliasSupport = true;
-  observerRegistry.get = function getObserverWithAliases(key) {
-    const normalizedKey = String(key || "");
-    return aliasObservers.get(normalizedKey) || originalGet(normalizedKey);
-  };
-  observerRegistry.disconnect = function disconnectObserverWithAliases(key) {
-    const normalizedKey = String(key || "");
-    if (aliasObservers.has(normalizedKey)) {
-      aliasObservers.delete(normalizedKey);
-      return true;
-    }
-    return originalDisconnect(normalizedKey);
-  };
-}
-
-function registerRuntimeObserverAlias(observerRegistry, aliasKey, runtime) {
-  const normalizedKey = String(aliasKey || "").trim();
-  const aliasStore = observerRegistry?.__sharedCricketAliasStore;
-  if (!normalizedKey || !(aliasStore instanceof Map)) {
-    return false;
-  }
-
-  aliasStore.set(normalizedKey, createRuntimeAliasObserver(runtime));
-  return true;
-}
-
-function unregisterRuntimeObserverAlias(observerRegistry, aliasKey) {
-  const normalizedKey = String(aliasKey || "").trim();
-  if (!normalizedKey || !observerRegistry || typeof observerRegistry !== "object") {
-    return false;
-  }
-
-  const aliasStore = observerRegistry.__sharedCricketAliasStore;
-  if (aliasStore instanceof Map && aliasStore.delete(normalizedKey)) {
-    return true;
-  }
-
-  return typeof observerRegistry.disconnect === "function"
-    ? observerRegistry.disconnect(normalizedKey)
-    : false;
-}
-
 function isSurfaceMutationNode(node) {
   if (!node || typeof node !== "object") {
     return false;
@@ -436,8 +361,6 @@ function createSharedCricketRuntime(context = {}) {
     sharedMutationCallback: null,
     sharedObserver: null,
   };
-
-  ensureObserverAliasSupport(runtime.observerRegistry);
 
   function invalidateRenderCache(options = {}) {
     if (options.preserveGrid !== true) {
@@ -942,8 +865,6 @@ function createSharedCricketRuntime(context = {}) {
       },
       repair: (snapshot) => runtime.scheduler.health?.repair(snapshot),
     }) || (() => {});
-    const aliasObserverKey = String(options.observerAliasKey || "").trim();
-    registerRuntimeObserverAlias(runtime.observerRegistry, aliasObserverKey, runtime);
 
     runtime.scheduler.schedule();
     let removed = false;
@@ -955,7 +876,6 @@ function createSharedCricketRuntime(context = {}) {
       unregisterHealth();
 
       runtime.subscribers.delete(featureKey);
-      unregisterRuntimeObserverAlias(runtime.observerRegistry, aliasObserverKey);
 
       if (runtime.subscribers.size === 0) {
         runtime.dispose();

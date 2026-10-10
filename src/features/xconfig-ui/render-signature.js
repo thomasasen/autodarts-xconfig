@@ -52,3 +52,33 @@ export function parseShellRenderSignature(signature) {
     return null;
   }
 }
+
+// Per shell and per current field, never a cache of game truth or exported config.
+export function createShellRenderSignatureBuilder() {
+  const assets = new Map();
+  let revision = 0;
+  return (state, features, routeActive) => {
+    const currentKeys = new Set();
+    const signatureFeatures = (Array.isArray(features) ? features : []).map((feature) => {
+      let config = feature.config;
+      for (const field of ["backgroundImageDataUrl", "turnDartImageDataUrl"]) {
+        const value = config?.[field];
+        if (typeof value !== "string" || !value.startsWith("data:image/")) continue;
+        const key = JSON.stringify([feature.featureKey, field]);
+        currentKeys.add(key);
+        let asset = assets.get(key);
+        if (asset?.value !== value) {
+          asset = { value, token: { assetRevision: ++revision } };
+          assets.set(key, asset);
+        }
+        if (config === feature.config) config = { ...config };
+        config[field] = asset.token;
+      }
+      return config === feature.config ? feature : { ...feature, config };
+    });
+    for (const key of assets.keys()) {
+      if (!currentKeys.has(key)) assets.delete(key);
+    }
+    return buildShellRenderSignature(state, signatureFeatures, routeActive);
+  };
+}

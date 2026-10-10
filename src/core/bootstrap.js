@@ -15,7 +15,7 @@ import { createListenerRegistry } from "./listener-registry.js";
 import { createObserverRegistry } from "./observer-registry.js";
 
 const GLOBAL_NAMESPACE_KEY = "__adXConfig";
-export const API_VERSION = "3.5.0";
+export const API_VERSION = "3.5.1";
 const STARTUP_DEFER_INTERVAL_MS = 16;
 
 function getWindowTimerApi(windowRef) {
@@ -128,41 +128,14 @@ function resolveFeatureDefinitionByRef(featureDefinitionIndex, featureRef) {
   );
 }
 
-function getAffectedFeatureDefinitions(featureDefinitions, partialConfig = {}) {
-  const configKeys = new Set();
-
-  function collectNestedConfigKeys(value, prefix = "") {
-    if (!value || typeof value !== "object" || Array.isArray(value)) {
-      return;
-    }
-
-    Object.keys(value).forEach((rawKey) => {
-      const key = String(rawKey || "").trim();
-      if (!key) {
-        return;
-      }
-
-      const nextPrefix = prefix ? `${prefix}.${key}` : key;
-      const entry = value[key];
-      const isObjectEntry =
-        Boolean(entry) && typeof entry === "object" && !Array.isArray(entry);
-
-      configKeys.add(nextPrefix);
-
-      if (isObjectEntry) {
-        collectNestedConfigKeys(entry, nextPrefix);
-      }
-    });
-  }
-
-  if (partialConfig && typeof partialConfig === "object") {
-    collectNestedConfigKeys(partialConfig.featureToggles || {});
-    collectNestedConfigKeys(partialConfig.features || {});
-  }
-
-  return featureDefinitions.filter((definition) => {
-    return configKeys.has(definition.configKey);
-  });
+// Config is plain stored data; object insertion order is not a semantic change.
+function equalConfigValues(previous, next) {
+  if (Object.is(previous, next)) return true;
+  if (!previous || !next || typeof previous !== "object" || typeof next !== "object") return false;
+  if (Array.isArray(previous) !== Array.isArray(next)) return false;
+  const keys = Object.keys(previous);
+  return keys.length === Object.keys(next).length &&
+    keys.every((key) => Object.hasOwn(next, key) && equalConfigValues(previous[key], next[key]));
 }
 
 export function createBootstrap(options = {}) {
@@ -222,11 +195,10 @@ export function createBootstrap(options = {}) {
       failure: featureFailures.get(definition.featureKey),
     }),
     restart: () => {
-      unmountFeature(definition.featureKey);
-      if (featureFailures.get(definition.featureKey)?.phase === "cleanup") {
-        throw new Error("Feature cleanup failed; restart cancelled");
+      remountFeature(definition);
+      if (featureFailures.has(definition.featureKey)) {
+        throw new Error("Feature restart failed; further mounts blocked");
       }
-      mountFeature(definition);
     },
   }));
 
@@ -262,7 +234,7 @@ export function createBootstrap(options = {}) {
   }
 
   function mountFeature(definition) {
-    if (!definition || featureCleanups.has(definition.featureKey)) {
+    if (!definition || featureCleanups.has(definition.featureKey) || featureFailures.has(definition.featureKey)) {
       return;
     }
 
@@ -373,7 +345,8 @@ export function createBootstrap(options = {}) {
         return;
       }
 
-      if (featureCleanups.has(definition.featureKey)) {
+      if (featureCleanups.has(definition.featureKey) || deferredFeatureMounts.has(definition.featureKey) ||
+          featureFailures.has(definition.featureKey)) {
         return;
       }
 
@@ -477,14 +450,16 @@ export function createBootstrap(options = {}) {
   }
 
   function updateConfig(partialConfig = {}) {
-    const affectedDefinitions = getAffectedFeatureDefinitions(
-      featureDefinitions,
-      partialConfig
-    );
+    const previous = featureDefinitions.map((definition) => ({
+      config: config.getFeatureConfig(definition.configKey),
+      enabled: config.isFeatureEnabled(definition.configKey),
+    }));
     config.update(partialConfig);
-    refreshFeatures({
-      remountFeatureKeys: affectedDefinitions.map((definition) => definition.featureKey),
-    });
+    const changed = featureDefinitions.filter((definition, index) =>
+      previous[index].enabled !== config.isFeatureEnabled(definition.configKey) ||
+      !equalConfigValues(previous[index].config, config.getFeatureConfig(definition.configKey))
+    );
+    refreshFeatures({ remountFeatureKeys: changed.map((definition) => definition.featureKey) });
     syncGlobalNamespace();
     eventBus.emit("runtime:config-updated", getSnapshot());
     return getSnapshot();

@@ -7,7 +7,6 @@ import {
   readDomActiveScore,
   readTurnLifecycleCandidates,
   readX01MatchSurface,
-  resolveX01ActiveScoreState,
   resolveX01CheckoutContext,
 } from "../../src/features/x01-checkout-context.js";
 import { createTurnLifecycle } from "../../src/features/shared/turn-lifecycle.js";
@@ -240,7 +239,7 @@ test("x01 checkout context reports matching DOM and game-state scores as a share
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "40";
 
-  const resolved = resolveX01ActiveScoreState({
+  const resolved = resolveX01CheckoutContext({
     documentRef,
     windowRef: createFakeWindow({ documentRef }),
     gameState: createX01GameState({
@@ -249,13 +248,11 @@ test("x01 checkout context reports matching DOM and game-state scores as a share
     }),
   });
 
-  assert.deepEqual(resolved, {
-    activeScore: 40,
-    domScore: 40,
-    gameStateScore: 40,
-    scoreSource: "game-state+dom",
-    scoreAgreement: "match",
-  });
+  assert.equal(resolved.activeScore, 40);
+  assert.equal(resolved.domScore, 40);
+  assert.equal(resolved.gameStateScore, 40);
+  assert.equal(resolved.actionable, true);
+  assert.equal(resolved.scoreAgreement, "match");
 });
 
 test("x01 checkout context reads duplicate active-score candidates once per priority winner", () => {
@@ -286,32 +283,19 @@ test("x01 checkout context reads duplicate active-score candidates once per prio
   assert.equal(styleReadCount, 1);
 });
 
-test("x01 checkout context ignores stale game-state from another match route", () => {
-  const documentRef = new FakeDocument();
-  documentRef.activeScoreElement.textContent = "121";
-  const windowRef = createFakeWindow({
-    documentRef,
-    href: "https://play.autodarts.com/matches/current-match",
-  });
-
-  const resolved = resolveX01ActiveScoreState({
-    documentRef,
-    windowRef,
-    gameState: createX01GameState({
-      activeScore: 16,
-      outMode: "Double Out",
-      snapshot: {
-        topic: "old-match.state",
-        match: { id: "old-match" },
-      },
+test("x01 checkout context quarantines foreign state and uses the current match DOM", () => {
+  const fixture = createModernX01Fixture({ score: 121 });
+  const resolved = resolveX01CheckoutContext({
+    ...fixture, x01Rules,
+    gameState: createX01GameState({ activeScore: 16, outMode: "Double Out",
+      snapshot: { topic: "old-match.state", match: { id: "old-match" } },
     }),
   });
-
   assert.equal(resolved.activeScore, 121);
   assert.equal(resolved.domScore, 121);
   assert.equal(Number.isNaN(resolved.gameStateScore), true);
-  assert.equal(resolved.scoreSource, "dom");
-  assert.equal(resolved.scoreAgreement, "dom-only");
+  assert.equal(resolved.actionable, true);
+  assert.equal(resolved.coherence, "dom-preferred");
 });
 
 test("x01 checkout context prefers DOM only after its progress diverges from a coherent baseline", () => {
@@ -373,19 +357,16 @@ test("x01 checkout context falls back to DOM-only score truth when no game-state
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "32";
 
-  const resolved = resolveX01ActiveScoreState({
+  const resolved = resolveX01CheckoutContext({
     documentRef,
     windowRef: createFakeWindow({ documentRef }),
     gameState: null,
   });
 
-  assert.deepEqual(resolved, {
-    activeScore: 32,
-    domScore: 32,
-    gameStateScore: Number.NaN,
-    scoreSource: "dom",
-    scoreAgreement: "dom-only",
-  });
+  assert.equal(resolved.activeScore, 32);
+  assert.equal(resolved.domScore, 32);
+  assert.equal(resolved.actionable, true);
+  assert.equal(resolved.coherence, "dom-preferred");
   assert.equal(Number.isNaN(resolved.gameStateScore), true);
 });
 
@@ -393,7 +374,7 @@ test("x01 checkout context falls back to game-state score truth when no DOM scor
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.remove();
 
-  const resolved = resolveX01ActiveScoreState({
+  const resolved = resolveX01CheckoutContext({
     documentRef,
     windowRef: createFakeWindow({ documentRef }),
     gameState: createX01GameState({
@@ -405,8 +386,8 @@ test("x01 checkout context falls back to game-state score truth when no DOM scor
   assert.equal(resolved.activeScore, 50);
   assert.equal(Number.isNaN(resolved.domScore), true);
   assert.equal(resolved.gameStateScore, 50);
-  assert.equal(resolved.scoreSource, "game-state");
-  assert.equal(resolved.scoreAgreement, "game-state-only");
+  assert.equal(resolved.actionable, true);
+  assert.equal(resolved.coherence, "state-preferred");
 });
 
 test("x01 checkout context keeps score-route fallback coherent for stale visible routes", () => {

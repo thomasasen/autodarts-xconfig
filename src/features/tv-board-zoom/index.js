@@ -1,3 +1,4 @@
+import { TV_ZOOM_OPTIONS } from "../../shared/checkout-zoom-options.js";
 import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
 import {
   applyZoom,
@@ -184,7 +185,7 @@ function isThrowHistoryClickTarget(targetNode) {
 
 function resolveZoomLevel(zoomLevel) {
   const numeric = Number(zoomLevel);
-  if ([2.35, 2.75, 3.15].includes(numeric)) {
+  if (TV_ZOOM_OPTIONS.zoomLevel.some(([value]) => value === numeric)) {
     return numeric;
   }
   return 2.75;

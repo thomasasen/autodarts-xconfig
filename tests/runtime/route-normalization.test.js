@@ -8,6 +8,7 @@ import {
   normalizeRoutePath as normalizeLayoutRoutePath, isLegacyConfigPath, isConfigHash,
 } from "../../src/features/xconfig-ui/layout-utils.js";
 import { extractMatchRouteId } from "../../src/features/cricket-surface/pipeline.js";
+import { isThemeGameContextActive } from "../../src/features/themes/shared/theme-utils.js";
 
 test("route normalization preserves slash, case, query and hash handling", () => {
   const cases = [
@@ -18,10 +19,22 @@ test("route normalization preserves slash, case, query and hash handling", () =>
     ["matches/ABC#detail?tab=board", "/matches/abc"],
     ["/matches/abc/", "/matches/abc"],
     ["/matches/%2FABC/", "/matches/%2fabc"],
+    ["/MATCHES//ABC///?line=one\ntwo#detail", "/matches/abc"],
   ];
   for (const [input, expected] of cases) {
     assert.equal(normalizeRoutePath(input), expected);
     assert.equal(normalizeRoutePath(expected), expected);
+  }
+});
+
+test("theme routes preserve game context and xConfig exclusions through shared normalization", () => {
+  for (const [pathname, hash, active] of [
+    [" MATCHES//ABC///?tab=board#detail ", "", true],
+    ["/matches/abc?line=one\ntwo", "", true],
+    ["/matches", "", true], ["/lobbies", "", false],
+    ["/ad-xconfig", "", false], ["/matches/abc", "#AD-XCONFIG", false],
+  ]) {
+    assert.equal(isThemeGameContextActive({ windowRef: { location: { pathname, hash } } }), active);
   }
 });
 

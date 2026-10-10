@@ -349,8 +349,7 @@ test("cricket-target-highlighter and cricket-grid-status-effects share one runti
   assert.equal(Boolean(documentRef.getElementById("ad-ext-cricket-grid-status-effects-style")), true);
   assert.equal(runtime.context.registries.observers.size(), 2);
   assert.equal(runtime.context.registries.listeners.size(), 3);
-  assert.ok(runtime.context.registries.observers.get("cricket-target-highlighter:dom-observer"));
-  assert.ok(runtime.context.registries.observers.get("cricket-grid-status-effects:dom-observer"));
+  assert.ok(runtime.context.registries.observers.get("cricket-surface:dom-observer"));
 
   runtime.stop();
   assert.equal(runtime.context.registries.observers.size(), 0);

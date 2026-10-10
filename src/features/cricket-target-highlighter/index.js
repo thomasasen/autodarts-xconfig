@@ -18,7 +18,6 @@ import { findBoardSvgGroup, isReusableBoardSnapshot } from "../../shared/dartboa
 import { createManagedNodeMatcher } from "../../core/dom-mutation-filter.js";
 
 const FEATURE_KEY = "cricket-target-highlighter";
-const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
 
 function readVariantText(documentRef) {
   return String(documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || "").trim();
@@ -280,7 +279,6 @@ export function initializeCricketTargetHighlighter(context = {}) {
     watchdog: context.watchdog,
     onTurnReset: clearAndReset,
     featureKey: FEATURE_KEY,
-    observerAliasKey: OBSERVER_KEY,
     isManagedNode: managedNodeMatcher,
     shouldScheduleMutation: hasOverlayRemovalMutation,
     collectWatchNodes: ({ renderState }) => collectRuntimeWatchNodes(documentRef, renderState),

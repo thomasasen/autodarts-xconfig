@@ -1,4 +1,4 @@
-import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
+import { createFeatureMountHarness } from "../shared/feature-mount-harness.js";
 import {
   applySuggestionStyle,
   applySuggestionLayout,
@@ -28,7 +28,6 @@ export function initializeCheckoutSuggestionStyles(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const domGuards = context.domGuards;
-  const observerRegistry = context.registries?.observers;
   const gameState = context.gameState;
   const variantRules = context.domain?.variantRules;
   const config = context.config;
@@ -100,66 +99,38 @@ export function initializeCheckoutSuggestionStyles(context = {}) {
     });
   }
 
-  const scheduler = createTurnScopedScheduler(context, update, { windowRef, resetTurn() {
+  const harness = createFeatureMountHarness(context, { update, resetTurn() {
     Array.from(documentRef.querySelectorAll?.(`.${BASE_CLASS}`) || []).forEach(resetSuggestionNode);
     Array.from(documentRef.querySelectorAll?.(`.${LAYOUT_CLASS}`) || []).forEach(resetSuggestionLayout);
     lastDebugSignature = "";
-  } }, schedulerFactory);
+  } });
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
-  if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
-    observerRegistry.registerMutationObserver({
-      key: OBSERVER_KEY,
-      target: rootNode,
-      callback: (mutations = []) => {
-        if (hasRelevantTurnSurfaceMutation(mutations, {
-          extraSelectors: [
-            ".suggestion",
-            MODERN_SUGGESTION_SELECTOR,
-            ".bg-surface-surface",
-            "#ad-ext-game-variant",
-          ],
-        })) {
-          scheduler.schedule();
-        }
-      },
-      observeOptions: createTurnSurfaceObserveOptions(),
-      MutationObserverRef: windowRef?.MutationObserver,
-    });
-  }
+  harness.registerObserver({
+    key: OBSERVER_KEY,
+    target: rootNode,
+    callback: (mutations = []) => {
+      if (hasRelevantTurnSurfaceMutation(mutations, {
+        extraSelectors: [
+          ".suggestion",
+          MODERN_SUGGESTION_SELECTOR,
+          ".bg-surface-surface",
+          "#ad-ext-game-variant",
+        ],
+      })) {
+        harness.schedule();
+      }
+    },
+    observeOptions: createTurnSurfaceObserveOptions(),
+    MutationObserverRef: windowRef?.MutationObserver,
+  });
 
-  const unsubscribeGameState =
-    gameState && typeof gameState.subscribe === "function"
-      ? gameState.subscribe(() => scheduler.schedule())
-      : () => {};
-
-  scheduler.schedule();
-  let cleanedUp = false;
-
-  return function cleanup() {
-    if (cleanedUp) {
-      return;
-    }
-    cleanedUp = true;
-
-    scheduler.cancel();
-    try {
-      unsubscribeGameState();
-    } catch (_) {
-      // Fail-soft cleanup.
-    }
-
-    if (observerRegistry && typeof observerRegistry.disconnect === "function") {
-      observerRegistry.disconnect(OBSERVER_KEY);
-    }
-
-    Array.from(documentRef.querySelectorAll?.(`.${BASE_CLASS}`) || []).forEach((node) => {
-      resetSuggestionNode(node);
-    });
-    Array.from(documentRef.querySelectorAll?.(`.${LAYOUT_CLASS}`) || []).forEach((node) => {
-      resetSuggestionLayout(node);
-    });
+  harness.subscribeToGameState();
+  harness.schedule();
+  return harness.createCleanup(() => {
+    Array.from(documentRef.querySelectorAll?.(`.${BASE_CLASS}`) || []).forEach(resetSuggestionNode);
+    Array.from(documentRef.querySelectorAll?.(`.${LAYOUT_CLASS}`) || []).forEach(resetSuggestionLayout);
     domGuards.removeNodeById(STYLE_ID);
-  };
+  });
 }
 
 export const mountCheckoutSuggestionStyles = initializeCheckoutSuggestionStyles;

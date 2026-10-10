@@ -1,4 +1,4 @@
-import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
+import { createFeatureMountHarness } from "../shared/feature-mount-harness.js";
 import { resolveBoardStyleDesignAsset } from "#feature-assets";
 import {
   clearBotBoardStyle,
@@ -68,7 +68,6 @@ export function initializeBotBoardStyle(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const domGuards = context.domGuards;
-  const observerRegistry = context.registries?.observers;
   const gameState = context.gameState;
   const config = context.config;
   const schedulerFactory = context.helpers?.createRafScheduler;
@@ -97,60 +96,41 @@ export function initializeBotBoardStyle(context = {}) {
       assetResolver: resolveBoardStyleDesignAsset,
     });
   };
-  const scheduler = createTurnScopedScheduler(context, update, { windowRef, resetTurn() {
+  const harness = createFeatureMountHarness(context, { update, resetTurn() {
     clearBotBoardStyle(documentRef, state);
-  } }, schedulerFactory);
+  } });
 
-  if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
-    observerRegistry.registerMutationObserver({
-      key: OBSERVER_KEY,
-      target: documentRef.documentElement || documentRef.body || documentRef,
-      callback: (mutations) => {
-        if (hasRelevantBotBoardStyleMutation(mutations, state)) {
-          scheduler.schedule();
-        }
-      },
-      observeOptions: {
-        childList: true,
-        subtree: true,
-        characterData: true,
-        attributes: true,
-        attributeFilter: [
-          "class",
-          "d",
-          "aria-label",
-          "viewBox",
-          "r",
-          "data-ad-ext-theme-cricket-active",
-        ],
-      },
-      MutationObserverRef: windowRef?.MutationObserver,
-    });
-  }
+  harness.registerObserver({
+    key: OBSERVER_KEY,
+    target: documentRef.documentElement || documentRef.body || documentRef,
+    callback: (mutations) => {
+      if (hasRelevantBotBoardStyleMutation(mutations, state)) {
+        harness.schedule();
+      }
+    },
+    observeOptions: {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: [
+        "class",
+        "d",
+        "aria-label",
+        "viewBox",
+        "r",
+        "data-ad-ext-theme-cricket-active",
+      ],
+    },
+    MutationObserverRef: windowRef?.MutationObserver,
+  });
 
-  const unsubscribeGameState =
-    gameState && typeof gameState.subscribe === "function"
-      ? gameState.subscribe(() => scheduler.schedule())
-      : () => {};
-
-  scheduler.schedule();
-  let cleanedUp = false;
-
-  return function cleanupBotBoardStyle() {
-    if (cleanedUp) {
-      return;
-    }
-    cleanedUp = true;
-    scheduler.cancel();
-    try {
-      unsubscribeGameState();
-    } catch (_) {
-      // fail-soft
-    }
-    observerRegistry?.disconnect?.(OBSERVER_KEY);
+  harness.subscribeToGameState();
+  harness.schedule();
+  return harness.createCleanup(() => {
     clearBotBoardStyle(documentRef, state);
     domGuards.removeNodeById(STYLE_ID);
-  };
+  });
 }
 
 export const mountBotBoardStyle = initializeBotBoardStyle;

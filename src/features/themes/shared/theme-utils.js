@@ -1,3 +1,5 @@
+import { normalizeRoutePath } from "../../../shared/route-normalization.js";
+
 const MATCH_ROUTE_PREFIX = "/matches";
 const XCONFIG_ROUTE_PATH = "/ad-xconfig";
 const XCONFIG_ROUTE_HASH = "#ad-xconfig";
@@ -9,29 +11,6 @@ export function clampNumber(value, minValue, maxValue, fallbackValue) {
     return Number(minValue);
   }
   return Math.min(Math.max(resolved, Number(minValue)), Number(maxValue));
-}
-
-function normalizeRoutePath(pathValue) {
-  let normalized = String(pathValue || "").trim().toLowerCase();
-  if (!normalized) {
-    return "";
-  }
-
-  if (!normalized.startsWith("/")) {
-    normalized = `/${normalized}`;
-  }
-
-  const suffixIndex = normalized.search(/[?#]/);
-  if (suffixIndex >= 0) {
-    normalized = normalized.slice(0, suffixIndex);
-  }
-  while (normalized.includes("//")) {
-    normalized = normalized.replaceAll("//", "/");
-  }
-  while (normalized.length > 1 && normalized.endsWith("/")) {
-    normalized = normalized.slice(0, -1);
-  }
-  return normalized;
 }
 
 function resolveRoutePath(windowRef, documentRef) {

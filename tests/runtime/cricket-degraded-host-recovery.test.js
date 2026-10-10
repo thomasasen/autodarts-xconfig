@@ -215,6 +215,41 @@ function createImmediateScheduler() {
   };
 }
 
+for (const firstToStop of [0, 1]) {
+  test(`shared Cricket observer and health subscription survive stopping consumer ${firstToStop}`, () => {
+    const documentRef = new FakeDocument();
+    documentRef.variantElement.textContent = "Cricket";
+    createHealthyMatchHostFixture(documentRef);
+    const observers = createObserverRegistry();
+    const listeners = createListenerRegistry();
+    const shared = acquireSharedCricketRuntime({ documentRef, windowRef: createFakeWindow({ documentRef }),
+      registries: { observers, listeners }, gameState: createGameState(),
+      domain: { cricketRules, variantRules }, helpers: createImmediateScheduler(),
+    });
+    const renders = [0, 0];
+    const checks = [null, null];
+    const releases = [0, 1].map((index) => shared.subscribe({ featureKey: `consumer-${index}`,
+      onRenderState() { renders[index]++; },
+      watchdog: { register(hooks) { checks[index] = hooks; return () => { checks[index] = null; }; } },
+    }));
+    const observer = observers.get("cricket-surface:dom-observer");
+    const remaining = 1 - firstToStop;
+    try {
+      releases[firstToStop]();
+      const previous = renders[remaining];
+      shared.scheduler.schedule();
+      assert.ok(renders[remaining] > previous);
+      assert.equal(observers.get("cricket-surface:dom-observer"), observer);
+      assert.equal(checks[firstToStop], null);
+      assert.equal(checks[remaining].check({}), true);
+      assert.equal(observers.size(), 1);
+      assert.equal(listeners.size(), 3);
+    } finally { releases.forEach((release) => release()); }
+    assert.equal(observers.size(), 0);
+    assert.equal(listeners.size(), 0);
+  });
+}
+
 function createFeatureConfig() {
   return {
     getFeatureConfig(featureKey) {
@@ -476,8 +511,8 @@ test("cricket highlighter and grid fx reload degraded match hosts once and stay 
       },
     ];
 
-    const highlighterObserver = observers.get("cricket-target-highlighter:dom-observer");
-    const gridFxObserver = observers.get("cricket-grid-status-effects:dom-observer");
+    const highlighterObserver = observers.get("cricket-surface:dom-observer");
+    const gridFxObserver = observers.get("cricket-surface:dom-observer");
     assert.ok(highlighterObserver);
     assert.ok(gridFxObserver);
 
@@ -619,8 +654,7 @@ test("cricket highlighter and grid fx watch last healthy surface nodes when degr
       },
     ];
 
-    observers.get("cricket-target-highlighter:dom-observer")?.callback(mutation);
-    observers.get("cricket-grid-status-effects:dom-observer")?.callback(mutation);
+    observers.get("cricket-surface:dom-observer")?.callback(mutation);
 
     assert.equal(countRecoveryNavigations(windowRef), 0);
 
@@ -957,8 +991,7 @@ test("cricket highlighter and grid fx re-arm degraded-host recovery after a stab
         removedNodes: [degradedFixture.host],
       },
     ];
-    observers.get("cricket-target-highlighter:dom-observer")?.callback(lifecycleMutation);
-    observers.get("cricket-grid-status-effects:dom-observer")?.callback(lifecycleMutation);
+    observers.get("cricket-surface:dom-observer")?.callback(lifecycleMutation);
 
     timerHarness.advance(999);
     assert.notEqual(
@@ -982,8 +1015,7 @@ test("cricket highlighter and grid fx re-arm degraded-host recovery after a stab
         removedNodes: [healthyFixture.host],
       },
     ];
-    observers.get("cricket-target-highlighter:dom-observer")?.callback(degradeAgainMutation);
-    observers.get("cricket-grid-status-effects:dom-observer")?.callback(degradeAgainMutation);
+    observers.get("cricket-surface:dom-observer")?.callback(degradeAgainMutation);
 
     assert.equal(countRecoveryNavigations(windowRef), 2);
   } finally {

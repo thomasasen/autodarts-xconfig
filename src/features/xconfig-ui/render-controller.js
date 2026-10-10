@@ -374,11 +374,11 @@ function ensurePanelHost(controller) {
   return host;
 }
 
-function shouldKeepModalStable(previousSignaturePayload, state, routeActive) {
-  return Boolean(previousSignaturePayload?.routeActive) &&
-    String(previousSignaturePayload?.activeSettingsFeatureKey || "") !== "" &&
+function shouldKeepModalStable(previousRenderState, state, routeActive) {
+  return Boolean(previousRenderState?.routeActive) &&
+    String(previousRenderState?.activeSettingsFeatureKey || "") !== "" &&
     String(state.activeSettingsFeatureKey || "") !== "theme-global-presets" &&
-    String(previousSignaturePayload?.activeSettingsFeatureKey || "") === String(state.activeSettingsFeatureKey || "") &&
+    String(previousRenderState?.activeSettingsFeatureKey || "") === String(state.activeSettingsFeatureKey || "") &&
     Boolean(routeActive);
 }
 
@@ -472,8 +472,6 @@ function renderShell(controller) {
   const features = controller.getFeatures();
   const routeActive = controller.isConfigRoute();
   const nextSignature = controller.buildShellRenderSignature(controller.state, features, routeActive);
-  const previousSignaturePayload = controller.parseShellRenderSignature(controller.state.renderSignature);
-  const keepModalStable = shouldKeepModalStable(previousSignaturePayload, controller.state, routeActive);
 
   if (
     controller.state.shellNode &&
@@ -482,6 +480,9 @@ function renderShell(controller) {
   ) {
     return;
   }
+
+  const keepModalStable = shouldKeepModalStable(controller.state.previousRenderState, controller.state, routeActive);
+  const nextRenderState = { routeActive, activeSettingsFeatureKey: controller.state.activeSettingsFeatureKey };
 
   const previousShellNode =
     controller.state.shellNode && controller.state.shellNode.parentNode === host ? controller.state.shellNode : null;
@@ -495,6 +496,7 @@ function renderShell(controller) {
   } else if (keepModalStable) {
     refreshStableModalContent(previousShellNode, nextShellNode);
     controller.state.renderSignature = nextSignature;
+    controller.state.previousRenderState = nextRenderState;
     host.scrollTop = modalScrollState.hostScrollTop;
     restoreModalScrollState(previousShellNode, modalScrollState);
     controller.onAfterRender();
@@ -510,6 +512,7 @@ function renderShell(controller) {
   }
 
   controller.state.renderSignature = nextSignature;
+  controller.state.previousRenderState = nextRenderState;
   host.scrollTop = modalScrollState.hostScrollTop;
   restoreModalScrollState(controller.state.shellNode, modalScrollState);
   controller.onAfterRender();
@@ -567,7 +570,6 @@ function buildShellRenderControllerContext(options = {}) {
     getSidebarElement: resolveOptionalFunction(options.getSidebarElement, () => null),
     isConfigRoute: resolveOptionalFunction(options.isConfigRoute, () => false),
     isNavigationElement: resolveOptionalFunction(options.isNavigationElement, () => false),
-    parseShellRenderSignature: resolveOptionalFunction(options.parseShellRenderSignature, () => null),
     buildShellRenderSignature: resolveOptionalFunction(options.buildShellRenderSignature, () => ""),
     toRoutePathname: resolveOptionalFunction(options.toRoutePathname, () => ""),
     getFeatures: resolveOptionalFunction(options.getFeatures, () => []),

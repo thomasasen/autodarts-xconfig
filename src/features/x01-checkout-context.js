@@ -1,3 +1,4 @@
+import { normalizeRoutePath } from "../shared/route-normalization.js";
 import {
   collectVisibleCheckoutRouteEntries,
   resolveCheckoutSurfaceSemantics,
@@ -70,61 +71,6 @@ function normalizeScore(value) {
   return Number.isFinite(numeric) && numeric >= 0 ? numeric : Number.NaN;
 }
 
-function normalizeRoutePath(pathValue) {
-  let normalized = String(pathValue || "").trim().toLowerCase();
-  if (!normalized) {
-    return "";
-  }
-  if (!normalized.startsWith("/")) {
-    normalized = `/${normalized}`;
-  }
-  normalized = collapseRepeatedSlashes(stripRouteSuffix(normalized));
-  if (normalized.length > 1) {
-    normalized = trimTrailingSlashes(normalized);
-  }
-  return normalized;
-}
-
-function stripRouteSuffix(pathValue) {
-  const queryIndex = pathValue.indexOf("?");
-  const hashIndex = pathValue.indexOf("#");
-  const suffixIndexes = [queryIndex, hashIndex].filter((index) => index >= 0);
-  if (!suffixIndexes.length) {
-    return pathValue;
-  }
-
-  return pathValue.slice(0, Math.min(...suffixIndexes));
-}
-
-function collapseRepeatedSlashes(pathValue) {
-  let collapsed = "";
-  let previousWasSlash = false;
-
-  for (const char of pathValue) {
-    if (char === "/") {
-      if (!previousWasSlash) {
-        collapsed += char;
-      }
-      previousWasSlash = true;
-      continue;
-    }
-
-    collapsed += char;
-    previousWasSlash = false;
-  }
-
-  return collapsed;
-}
-
-function trimTrailingSlashes(pathValue) {
-  let endIndex = pathValue.length;
-  while (endIndex > 1 && pathValue[endIndex - 1] === "/") {
-    endIndex -= 1;
-  }
-
-  return pathValue.slice(0, endIndex);
-}
-
 function normalizeMatchId(value) {
   return String(value || "").trim().toLowerCase();
 }
@@ -166,24 +112,6 @@ function collectSnapshotMatchIds(snapshot) {
   ]
     .map(normalizeMatchId)
     .filter(Boolean);
-}
-
-export function isGameStateStaleForCurrentMatchRoute(gameState, windowRef, documentRef) {
-  if (!gameState || typeof gameState.getSnapshot !== "function") {
-    return false;
-  }
-
-  const routeMatchId = extractCurrentMatchRouteId(windowRef, documentRef);
-  if (!routeMatchId) {
-    return false;
-  }
-
-  const snapshotMatchIds = collectSnapshotMatchIds(gameState.getSnapshot());
-  if (!snapshotMatchIds.length) {
-    return false;
-  }
-
-  return !snapshotMatchIds.includes(routeMatchId);
 }
 
 function analyzeScoreCandidateNode(node, windowRef) {
@@ -334,65 +262,6 @@ function normalizeDartsRemaining(value) {
     return 3;
   }
   return normalized;
-}
-
-export function resolveX01ActiveScoreState(context = {}) {
-  const gameStateScore = isGameStateStaleForCurrentMatchRoute(
-    context.gameState,
-    context.windowRef,
-    context.documentRef
-  )
-    ? Number.NaN
-    : readGameStateActiveScore(context.gameState);
-  const domScore = readDomActiveScore(context.documentRef, context.windowRef);
-
-  if (Number.isFinite(domScore) && Number.isFinite(gameStateScore)) {
-    if (domScore === gameStateScore) {
-      return {
-        activeScore: domScore,
-        domScore,
-        gameStateScore,
-        scoreSource: "game-state+dom",
-        scoreAgreement: "match",
-      };
-    }
-
-    return {
-      activeScore: gameStateScore,
-      domScore,
-      gameStateScore,
-      scoreSource: "game-state-preferred",
-      scoreAgreement: "mismatch",
-    };
-  }
-
-  if (Number.isFinite(domScore)) {
-    return {
-      activeScore: domScore,
-      domScore,
-      gameStateScore,
-      scoreSource: "dom",
-      scoreAgreement: "dom-only",
-    };
-  }
-
-  if (Number.isFinite(gameStateScore)) {
-    return {
-      activeScore: gameStateScore,
-      domScore,
-      gameStateScore,
-      scoreSource: "game-state",
-      scoreAgreement: "game-state-only",
-    };
-  }
-
-  return {
-    activeScore: Number.NaN,
-    domScore,
-    gameStateScore,
-    scoreSource: "none",
-    scoreAgreement: "none",
-  };
 }
 
 function safeGetSnapshot(gameState) {

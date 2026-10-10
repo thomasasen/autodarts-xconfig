@@ -12,6 +12,27 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.5.1] - 2026-10-10
+
+### Fixed
+
+- Nutzerwirkung: Das Speichern einer fremden Einstellung oder eines unveränderten Konfigurations-Snapshots erhält laufende Checkout-, Zoom- und Audiozustände. Unsichere Neustarts nach fehlgeschlagenem Mount oder Cleanup werden verhindert; der Fehler bleibt sichtbar.
+  Technik: Die Runtime vergleicht normalisierte Feature-Konfiguration und effektive Aktivierung vor und nach Updates. Reguläre Neustarts und Watchdog verwenden denselben abgesicherten Ablauf; Regressionen prüfen vollständige Snapshots, Legacy-Schlüssel, BUST-Hold und Audiohistorie.
+- Nutzerwirkung: Marker-Highlight und Dart-Replacer stellen Marker unabhängig von ihrer Start- und Abschaltreihenfolge richtig wieder her. Beim Austausch des nativen Boards wird keine Tools-Board-Kopie als Original ausgewählt.
+  Technik: Eine kleine gemeinsame Opacity-Zuständigkeit trennt Aussehen und Ausblenden; Cleanup berücksichtigt verbleibende Verbraucher und fremde Änderungen. Die zentrale Board-Auswahl schließt Tools-Zoom-Kopien aus. Kombinationstests prüfen Wiederherstellung und Klickgeometrie.
+
+### Changed
+
+- Nutzerwirkung: Bestehende Funktionen, Optionen und Vorschauen bleiben bei vereinfachten internen Abläufen erhalten. Einstellungsdialoge behalten Fokus und Scrollposition und vermeiden unnötigen Inhaltsaufbau.
+  Technik: Cricket nutzt den tatsächlichen gemeinsamen Observer ohne Registry-Aliase; drei Features verwenden den bestehenden Mount-Harness. Optionswerte, Routen und Vorschauprioritäten werden gemeinsam definiert; ungenutzte Resolver und Weiterleitungen entfallen. Browservergleiche bestätigen elf identische Dialogdarstellungen.
+- Nutzerwirkung: Große Bildkonfigurationen verursachen weniger wiederholte Arbeit bei der Aktualisierung der Verwaltungsoberfläche; gespeicherte Bilder und Export bleiben vollständig erhalten.
+  Technik: Pro UI-Shell begrenzte Bildkennungen verkürzen ausschließlich die interne Render-Signatur und ändern sich bei exakter Inhaltsänderung. Vergleichsmessungen und Regressionen sichern Gleichheit, Bildwechsel und getrennte Shells ab.
+
+### Known Issues
+
+- Nutzerwirkung: Der bestehende Tools-WebSocket-Konflikt kann bei „xConfig zuerst, Tools danach“ weiterhin zu abweichenden Team-Checkout-Scores führen. Eine uneingeschränkte Kompatibilität mit tatsächlich installierten Erweiterungen ist nicht durch isolierte Browsertests belegt.
+  Technik: Ein eigener Kombinationstest dokumentiert den erwarteten Unterschied zwischen Rohframe und dem von Tools umgeschriebenen Frame. Die Produktions-Interception bleibt unverändert, um doppelte Tools-Ereignisse und die Übernahme fremder Spielregeln zu vermeiden.
+
 ## [3.5.0] - 2026-10-10
 
 ### Added
@@ -2351,6 +2372,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.5.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.0...v3.5.1
 [3.5.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.4.2...v3.5.0
 [3.4.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.4.1...v3.4.2
 [3.4.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.3.2...v3.4.1

@@ -20,7 +20,6 @@ import {
 import { createManagedNodeMatcher } from "../../core/dom-mutation-filter.js";
 
 const FEATURE_KEY = "cricket-grid-status-effects";
-const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
 
 function readVariantText(documentRef) {
   return String(documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || "").trim();
@@ -241,7 +240,6 @@ export function initializeCricketGridStatusEffects(context = {}) {
     watchdog: context.watchdog,
     onTurnReset: clearAndReset,
     featureKey: FEATURE_KEY,
-    observerAliasKey: OBSERVER_KEY,
     isManagedNode: managedNodeMatcher,
     collectWatchNodes: ({ renderState }) => collectRuntimeWatchNodes(state, renderState, documentRef),
     onRenderState: ({ renderState, lifecycle }) => {

@@ -94,6 +94,32 @@ function zoomLayer(board) {
   return board.querySelector("svg");
 }
 
+test("a full config snapshot with a foreign color change preserves BUST zoom hold and audio history", () => {
+  const f = fixture();
+  try {
+    f.showPlayer(0, 40, ["MISS", "MISS"]);
+    f.setState(0, 0, ["MISS", "MISS"]);
+    f.timers.advance(25);
+    f.showPlayer(0, 40, ["MISS", "MISS", "MISS"], []);
+    f.total.textContent = "BUST";
+    f.setState(0, 0, ["MISS", "MISS", "MISS"]);
+    f.timers.advance(25);
+    assertBoardLayers(f.board, true);
+    const transform = zoomLayer(f.board).style.transform;
+    const observer = f.runtime.context.registries.observers.get("tv-board-zoom:dom-observer");
+    const plays = f.plays.length;
+    const config = f.runtime.context.config.getNormalized();
+    config.features.avgTrendArrow.colorUp = "#abcdef";
+    f.runtime.updateConfig(config);
+    f.runtime.updateConfig(config);
+    f.timers.advance(100);
+    assert.equal(f.runtime.context.registries.observers.get("tv-board-zoom:dom-observer"), observer);
+    assertBoardLayers(f.board, true);
+    assert.equal(zoomLayer(f.board).style.transform, transform);
+    assert.equal(f.plays.length, plays);
+  } finally { f.close(); }
+});
+
 function assertBoardLayers(board, zoomed) {
   assert.equal(board.style.transform || "", "", "Tools measurement frame stays untransformed");
   assert.equal(board.classList.contains(ZOOM_CLASS), false);

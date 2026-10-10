@@ -349,7 +349,7 @@ test("features enabled after startup mount immediately even when marked deferred
   runtime.stop();
 });
 
-test("bootstrap isolates feature mount failures and retries missing enabled features", () => {
+test("bootstrap isolates feature mount failures and blocks unsafe repeated initialization", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
   const calls = [];
@@ -399,9 +399,9 @@ test("bootstrap isolates feature mount failures and retries missing enabled feat
 
   runtime.start();
 
-  assert.deepEqual(calls, ["first", "failing-1", "last", "failing-2"]);
-  assert.equal(runtime.getSnapshot().features.failing.status, "mounted");
-  assert.equal(runtime.getSnapshot().features.failing.failure, null);
+  assert.deepEqual(calls, ["first", "failing-1", "last"]);
+  assert.equal(runtime.getSnapshot().features.failing.status, "mount-error");
+  assert.equal(runtime.getSnapshot().features.failing.failure.message, "broken mount");
   runtime.stop();
 });
 

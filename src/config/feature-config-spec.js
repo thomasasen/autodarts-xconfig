@@ -1,3 +1,4 @@
+import { CHECKOUT_SCORE_OPTIONS, CHECKOUT_EFFECT_ALIASES, TV_ZOOM_OPTIONS } from "../shared/checkout-zoom-options.js";
 import { setNestedValue, splitFeaturePath } from "./feature-path-utils.js";
 import { featureCatalog } from "../shared/feature-catalog.js";
 import {
@@ -17,19 +18,8 @@ import { normalizeAutodartsDartDesignerConfig } from "../shared/autodarts-dart-d
 import { DEFAULT_CRICKET_LAYOUT_CONFIG, normalizeCricketLayoutConfig } from "../shared/cricket-layout-config.js";
 import { CRICKET_BOARD_PROFILES, CRICKET_GRID_PROFILES, resolveCricketDisplayProfile, resolveCricketFeedback } from "../shared/cricket-display-config.js";
 
-const CHECKOUT_EFFECT_ALIASES = Object.freeze({
-  "": "grow-only",
-  pulse: "grow-glow",
-  "grow-glow": "grow-glow",
-  glow: "glow-only",
-  "glow-only": "glow-only",
-  scale: "grow-only",
-  "grow-only": "grow-only",
-  blink: "fade-blink",
-  "fade-blink": "fade-blink",
-});
-const CHECKOUT_INTENSITIES = new Set(["dezent", "standard", "stark"]);
-const CHECKOUT_TRIGGER_SOURCES = new Set(["suggestion-first", "score-only", "suggestion-only"]);
+const CHECKOUT_INTENSITIES = new Set(CHECKOUT_SCORE_OPTIONS.intensity.map(([value]) => value));
+const CHECKOUT_TRIGGER_SOURCES = new Set(CHECKOUT_SCORE_OPTIONS.triggerSource.map(([value]) => value));
 const BOARD_TARGET_VISUAL_PRESET_ALIASES = Object.freeze({
   "": "soft-pulse",
   focus: "soft-pulse",
@@ -42,10 +32,10 @@ const BOARD_TARGET_VISUAL_PRESET_ALIASES = Object.freeze({
 const BOARD_TARGET_SEGMENT_STYLES = new Set(["surface-outline", "surface-only"]);
 const BOARD_TARGET_SELECTION_MODES = new Set(["next", "all", "finish"]);
 const BOARD_TARGET_THEMES = new Set(["violet", "cyan", "amber", "lime", "rose", "white"]);
-const TV_ZOOM_LEVELS = new Set([2.35, 2.75, 3.15]);
-const TV_ZOOM_SPEEDS = new Set(["schnell", "mittel", "langsam"]);
-const TV_ZOOM_STYLES = new Set(["standard", "cinematic"]);
-const TV_ZOOM_TARGETS = new Set(["finish-only", "route-first"]);
+const TV_ZOOM_LEVELS = new Set(TV_ZOOM_OPTIONS.zoomLevel.map(([value]) => value));
+const TV_ZOOM_SPEEDS = new Set(TV_ZOOM_OPTIONS.zoomSpeed.map(([value]) => value));
+const TV_ZOOM_STYLES = new Set(TV_ZOOM_OPTIONS.zoomStyle.map(([value]) => value));
+const TV_ZOOM_TARGETS = new Set(TV_ZOOM_OPTIONS.checkoutZoomTarget.map(([value]) => value));
 const SUGGESTION_STYLES = new Set(["badge", "ribbon", "stripe", "ticket", "outline"]);
 const SUGGESTION_COLOR_THEMES = new Set(["amber", "cyan", "rose"]);
 const X01_BUST_EFFECT_TARGETS = new Set(["player-card", "board", "screen", "impact"]);

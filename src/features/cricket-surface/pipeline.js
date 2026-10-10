@@ -19,15 +19,12 @@ import { buildGridRowSnapshot } from "./row-repair.js";
 import {
   collectLabelNodes as collectLabelNodesFromDiscovery,
   collectSiblingPlayerCells as collectSiblingPlayerCellsFromDiscovery,
-  collectTargetLabelsInNode as collectTargetLabelsInNodeFromDiscovery,
-  filterAtomicLabelNodes as filterAtomicLabelNodesFromDiscovery,
-  hasAnyTargetDescendant as hasAnyTargetDescendantFromDiscovery,
-  isInsideTurnPreview as isInsideTurnPreviewFromDiscovery,
+  isInsideTurnPreview,
   isLikelyStructuralPlayerCell as isLikelyStructuralPlayerCellFromDiscovery,
-  isNodeVisible as isNodeVisibleFromDiscovery,
-  queryAll as queryAllFromDiscovery,
+  isNodeVisible,
+  queryAll,
   resolveBadgeNode as resolveBadgeNodeFromDiscovery,
-  resolveLabelCell as resolveLabelCellFromDiscovery,
+  resolveLabelCell,
 } from "./grid-discovery.js";
 import { isProtectedCricketGridRootCandidate } from "./protected-hosts.js";
 import { readModernCricketGrid } from "./modern-grid.js";
@@ -94,14 +91,6 @@ const KNOWN_SCORING_MODES = new Set(["standard", "cutthroat", "neutral", "unknow
 const TURN_PREVIEW_ROOT_SELECTOR = "#ad-ext-turn";
 const degradedHostDetectionByWindow = new WeakMap();
 
-function isNodeVisible(node) {
-  return isNodeVisibleFromDiscovery(node);
-}
-
-function queryAll(rootNode, selector) {
-  return queryAllFromDiscovery(rootNode, selector);
-}
-
 export function extractMatchRouteId(windowRef, documentRef) {
   const locationRef = windowRef?.location || documentRef?.defaultView?.location || null;
   const routePath = normalizeRoutePath(locationRef?.pathname || "");
@@ -157,10 +146,6 @@ function collectLabelNodes(rootNode, cricketRules, targetSet, diagnostics = null
   );
 }
 
-function filterAtomicLabelNodes(labelEntries, diagnostics = null) {
-  return filterAtomicLabelNodesFromDiscovery(labelEntries, diagnostics);
-}
-
 function isInsideXConfigPanel(node) {
   if (!node || typeof node.closest !== "function") {
     return false;
@@ -170,10 +155,6 @@ function isInsideXConfigPanel(node) {
       node.closest("[data-adxconfig-modal='true']") ||
       node.closest(".ad-xconfig-shell")
   );
-}
-
-function isInsideTurnPreview(node) {
-  return isInsideTurnPreviewFromDiscovery(node);
 }
 
 function isCandidateGridRoot(node) {
@@ -678,10 +659,6 @@ function isLikelyPlayerCell(node, cricketRules, targetSet) {
   return false;
 }
 
-function hasAnyTargetDescendant(node, cricketRules, targetSet) {
-  return hasAnyTargetDescendantFromDiscovery(node, cricketRules, targetSet);
-}
-
 function isLikelyStructuralPlayerCell(node, labelNode, cricketRules, targetSet) {
   if (!isLikelyStructuralPlayerCellFromDiscovery(node, labelNode, cricketRules, targetSet)) {
     return false;
@@ -737,14 +714,6 @@ function collectPlayerCellsForLabel(labelNode, cricketRules, targetSet) {
 
 function getRowNode(labelNode) {
   return labelNode?.closest?.("tr") || labelNode?.parentElement || labelNode || null;
-}
-
-function collectTargetLabelsInNode(node, cricketRules, targetSet, fallbackLabel = "") {
-  return collectTargetLabelsInNodeFromDiscovery(node, cricketRules, targetSet, fallbackLabel);
-}
-
-function resolveLabelCell(labelNode, cricketRules = null, targetSet = null, fallbackLabel = "") {
-  return resolveLabelCellFromDiscovery(labelNode, cricketRules, targetSet, fallbackLabel);
 }
 
 function resolveBadgeNode(labelNode, labelCell, cricketRules, label) {

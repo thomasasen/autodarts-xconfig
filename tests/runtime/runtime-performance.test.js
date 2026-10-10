@@ -2864,7 +2864,7 @@ test("cricket-target-highlighter rebuilds overlay after external overlay removal
 
   initialOverlay.remove();
 
-  const observer = observers.get("cricket-target-highlighter:dom-observer");
+  const observer = observers.get("cricket-surface:dom-observer");
   assert.ok(observer);
   observer.callback([
     {
@@ -2963,7 +2963,7 @@ test("cricket-target-highlighter ignores self-managed SVG pattern mutations", ()
     },
   });
 
-  const observer = observers.get("cricket-target-highlighter:dom-observer");
+  const observer = observers.get("cricket-surface:dom-observer");
   const scoringPattern = documentRef.getElementById(PRESENTATION_PATTERN_IDS.scoring);
   assert.ok(observer);
   assert.ok(scoringPattern);
@@ -3649,7 +3649,7 @@ test("cricket-target-highlighter reacts to attribute-only hydration updates for 
     },
   });
 
-  const observer = observers.get("cricket-target-highlighter:dom-observer");
+  const observer = observers.get("cricket-surface:dom-observer");
   assert.ok(observer);
   const observeOptions = observer.observeCalls?.[0]?.options || {};
   assert.equal(observeOptions.attributes, true);
@@ -3736,7 +3736,7 @@ test("cricket surface observer skips Autodarts tools menu churn before tracked-n
 
   const originalContains = board.svg.contains;
   try {
-    const observer = observers.get("cricket-target-highlighter:dom-observer");
+    const observer = observers.get("cricket-surface:dom-observer");
     assert.ok(observer);
     const scheduleCountAfterInit = scheduleCounter.count;
     board.svg.contains = () => {
@@ -3831,7 +3831,7 @@ test("cricket-target-highlighter emits missing-grid warning only once for unchan
     },
   });
 
-  const observer = observers.get("cricket-target-highlighter:dom-observer");
+  const observer = observers.get("cricket-surface:dom-observer");
   assert.ok(observer);
   observer.callback([
     {
@@ -3972,7 +3972,7 @@ test("cricket-grid-status-effects rerenders after grid DOM replacement even when
   initialGrid.remove();
   documentRef.main.appendChild(replacementGrid);
 
-  const observer = observers.get("cricket-grid-status-effects:dom-observer");
+  const observer = observers.get("cricket-surface:dom-observer");
   assert.ok(observer);
   observer.callback([
     {
@@ -4097,7 +4097,7 @@ test("cricket-grid-status-effects reacts to attribute-only mark updates and igno
     },
   });
 
-  const observer = observers.get("cricket-grid-status-effects:dom-observer");
+  const observer = observers.get("cricket-surface:dom-observer");
   assert.ok(observer);
   const observeOptions = observer.observeCalls?.[0]?.options || {};
   assert.equal(observeOptions.attributes, true);
@@ -4224,7 +4224,7 @@ test("cricket-grid-status-effects schedules for alt-attribute mutations on mark 
     },
   });
 
-  const observer = observers.get("cricket-grid-status-effects:dom-observer");
+  const observer = observers.get("cricket-surface:dom-observer");
   assert.ok(observer);
 
   const row18Icon = Array.from(table.querySelectorAll("tr")).find((row) => {
@@ -4349,7 +4349,7 @@ test("cricket-target-highlighter schedules for alt-attribute mutations on mark i
     },
   });
 
-  const observer = observers.get("cricket-target-highlighter:dom-observer");
+  const observer = observers.get("cricket-surface:dom-observer");
   assert.ok(observer);
   assert.equal(readPresentation("18"), "dead");
 

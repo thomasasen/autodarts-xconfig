@@ -1,3 +1,4 @@
+import { resolveSelectOptionLayoutType } from "./option-layout.js";
 import {
   SEGMENT_ORDER as CHECKOUT_BOARD_PREVIEW_SEGMENT_ORDER,
   RING_RATIOS as CHECKOUT_BOARD_PREVIEW_RATIOS,
@@ -2769,7 +2770,7 @@ function resolveSelectOptionPreviewState(feature, field, option) {
     resolveAvgTrendArrowPreviewEffect(feature, field, optionValue) ||
     resolveDartboardMarkerHighlightPreviewEffect(feature, field, optionValue);
 
-  return {
+  const state = {
     isDartDesignField: isDartDesignSelectField(feature, field),
     isTypographyFontField: isThemeGlobalTypographyFontField(feature, field),
     isCheckoutScoreHighlightPreviewSelectField: isCheckoutScoreHighlightPreviewField(feature, field),
@@ -2781,6 +2782,8 @@ function resolveSelectOptionPreviewState(feature, field, option) {
     hasAvgTrendArrowPreview: isAvgTrendArrowPreviewEffect(previewEffect),
     hasDartboardMarkerHighlightPreview: isDartboardMarkerHighlightPreviewEffect(previewEffect),
   };
+  state.layoutType = resolveSelectOptionLayoutType(state);
+  return state;
 }
 
 function buildSelectOptionClassName(state, previewColorTheme) {
@@ -2833,62 +2836,41 @@ function appendSelectOptionLayout(documentRef, optionButton, feature, field, opt
     ? ""
     : String(option?.description || "").trim();
 
-  if (state.isTypographyFontField) {
-    optionButton.appendChild(
-      buildThemeGlobalTypographyFontOptionLayout(documentRef, option, isActive)
-    );
-    return;
+  let layout;
+  switch (state.layoutType) {
+    case "typography":
+      layout = buildThemeGlobalTypographyFontOptionLayout(documentRef, option, isActive);
+      break;
+    case "dart-design":
+      layout = buildDartDesignOptionLayout(documentRef, option.label, optionDescription,
+        resolveFieldOptionPreview(feature, field, optionValue), isActive);
+      break;
+    case "turn-score":
+      layout = buildTurnScoreCounterOptionLayout(documentRef, option.label, optionDescription, isActive);
+      break;
+    case "avg-trend":
+      layout = buildAvgTrendArrowOptionLayout(documentRef, field, optionValue, option.label, optionDescription, isActive);
+      break;
+    case "marker":
+      layout = buildDartboardMarkerHighlightOptionLayout(documentRef, feature, field, optionValue, option.label, optionDescription, isActive);
+      break;
+    case "checkout-score":
+      layout = buildCheckoutScoreHighlightOptionLayout(documentRef, feature, field, optionValue, option.label, optionDescription, isActive);
+      break;
+    case "checkout-targets":
+      layout = buildCheckoutTargetHighlightsOptionLayout(documentRef, feature, field, optionValue, option.label, optionDescription, isActive);
+      break;
+    case "remaining-score":
+      layout = buildX01RemainingScoreBarOptionLayout(documentRef, feature, field, optionValue, option.label, optionDescription, isActive);
+      break;
+    case "suggestion":
+      layout = buildCheckoutSuggestionStyleOptionLayout(documentRef, feature, optionValue, option.label, optionDescription, isActive);
+      break;
+    default:
+      appendDefaultSelectOptionLayout(documentRef, optionButton, option, optionDescription, state, isActive);
+      return;
   }
-  if (state.isDartDesignField) {
-    const optionPreviewUrl = resolveFieldOptionPreview(feature, field, optionValue);
-    optionButton.appendChild(
-      buildDartDesignOptionLayout(documentRef, option.label, optionDescription, optionPreviewUrl, isActive)
-    );
-    return;
-  }
-  if (state.hasTurnScoreCounterPreview) {
-    optionButton.appendChild(
-      buildTurnScoreCounterOptionLayout(documentRef, option.label, optionDescription, isActive)
-    );
-    return;
-  }
-  if (state.hasAvgTrendArrowPreview) {
-    optionButton.appendChild(
-      buildAvgTrendArrowOptionLayout(documentRef, field, optionValue, option.label, optionDescription, isActive)
-    );
-    return;
-  }
-  if (state.hasDartboardMarkerHighlightPreview) {
-    optionButton.appendChild(
-      buildDartboardMarkerHighlightOptionLayout(documentRef, feature, field, optionValue, option.label, optionDescription, isActive)
-    );
-    return;
-  }
-  if (state.isCheckoutScoreHighlightPreviewSelectField) {
-    optionButton.appendChild(
-      buildCheckoutScoreHighlightOptionLayout(documentRef, feature, field, optionValue, option.label, optionDescription, isActive)
-    );
-    return;
-  }
-  if (state.isCheckoutTargetHighlightsPreviewSelectField) {
-    optionButton.appendChild(
-      buildCheckoutTargetHighlightsOptionLayout(documentRef, feature, field, optionValue, option.label, optionDescription, isActive)
-    );
-    return;
-  }
-  if (state.isX01RemainingScoreBarPreviewSelectField) {
-    optionButton.appendChild(
-      buildX01RemainingScoreBarOptionLayout(documentRef, feature, field, optionValue, option.label, optionDescription, isActive)
-    );
-    return;
-  }
-  if (state.isCheckoutSuggestionStyleField) {
-    optionButton.appendChild(
-      buildCheckoutSuggestionStyleOptionLayout(documentRef, feature, optionValue, option.label, optionDescription, isActive)
-    );
-    return;
-  }
-  appendDefaultSelectOptionLayout(documentRef, optionButton, option, optionDescription, state, isActive);
+  optionButton.appendChild(layout);
 }
 
 function buildFeatureSelectField(documentRef, feature, field, fieldId) {
@@ -2960,136 +2942,139 @@ function buildFeatureSelectField(documentRef, feature, field, fieldId) {
 function buildFeatureField(documentRef, feature, field, features = []) {
   const fieldId = `ad-xconfig-field-${feature.featureKey}-${field.key || field.action}`;
 
-  if (field.control === "action") {
-    return buildFeatureActionField(documentRef, feature, field, fieldId, features);
+  switch (field.control) {
+    case "action":
+      return buildFeatureActionField(documentRef, feature, field, fieldId, features);
+
+    case "checkbox": {
+      const input = createElement(documentRef, "input", {
+        id: fieldId,
+        type: "checkbox",
+        attributes: {
+          "data-adxconfig-setting": "true",
+          "data-feature-key": feature.featureKey,
+          "data-config-key": feature.configKey,
+          "data-setting-key": field.key,
+          "data-setting-control": field.control,
+        },
+      });
+      input.checked = Boolean(feature.config?.[field.key]);
+      return buildSwitch(documentRef, input, field.label);
+    }
+
+    case "color": {
+      const colorValue = getColorFieldValue(feature, field);
+      const wrapper = createElement(documentRef, "div", {
+        className: "ad-xconfig-color-field",
+        attributes: {
+          "data-adxconfig-color-field": "true",
+          "data-feature-key": feature.featureKey,
+          "data-config-key": feature.configKey,
+          "data-setting-key": field.key,
+          "data-invalid": "false",
+          "data-has-custom-value": colorValue ? "true" : "false",
+          "data-color-value": colorValue,
+        },
+      });
+      const controls = createElement(documentRef, "div", {
+        className: "ad-xconfig-color-controls",
+      });
+
+      controls.appendChild(createElement(documentRef, "span", {
+        className: "ad-xconfig-color-swatch",
+        attributes: {
+          "data-adxconfig-color-swatch": "true",
+          "aria-hidden": "true",
+        },
+      }));
+      controls.appendChild(createElement(documentRef, "input", {
+        id: `${fieldId}-picker`,
+        type: "color",
+        className: "ad-xconfig-color-picker",
+        attributes: {
+          "data-adxconfig-setting": "true",
+          "data-feature-key": feature.featureKey,
+          "data-config-key": feature.configKey,
+          "data-setting-key": field.key,
+          "data-setting-control": field.control,
+          "data-color-input-role": "picker",
+          "aria-label": `${field.label} per Farbwähler wählen`,
+        },
+      }));
+      controls.appendChild(createElement(documentRef, "input", {
+        id: `${fieldId}-hex`,
+        type: "text",
+        className: "ad-xconfig-color-code",
+        attributes: {
+          "data-adxconfig-setting": "true",
+          "data-feature-key": feature.featureKey,
+          "data-config-key": feature.configKey,
+          "data-setting-key": field.key,
+          "data-setting-control": field.control,
+          "data-color-input-role": "hex",
+          autocomplete: "off",
+          autocapitalize: "characters",
+          spellcheck: "false",
+          inputmode: "text",
+          placeholder: "#RRGGBB",
+          "aria-label": `${field.label} als Hex-Code`,
+        },
+      }));
+      controls.appendChild(createElement(documentRef, "button", {
+        type: "button",
+        className: "ad-xconfig-mini-btn ad-xconfig-mini-btn--color-reset",
+        text: "Zurücksetzen",
+        attributes: {
+          "data-adxconfig-action": "clear-setting-color",
+          "data-feature-key": feature.featureKey,
+          "data-config-key": feature.configKey,
+          "data-setting-key": field.key,
+        },
+      }));
+
+      wrapper.appendChild(controls);
+      wrapper.appendChild(createElement(documentRef, "p", {
+        className: "ad-xconfig-note ad-xconfig-color-status",
+        attributes: {
+          "data-adxconfig-color-status": "true",
+        },
+      }));
+      syncColorFieldControl(wrapper, {
+        value: colorValue,
+      });
+      return wrapper;
+    }
+
+    case "text": {
+      const wrapper = createElement(documentRef, "div", {
+        className: "ad-xconfig-text-field",
+      });
+      const input = createElement(documentRef, "input", {
+        id: fieldId,
+        type: "text",
+        className: "ad-xconfig-text-input",
+        attributes: {
+          "data-adxconfig-setting": "true",
+          "data-feature-key": feature.featureKey,
+          "data-config-key": feature.configKey,
+          "data-setting-key": field.key,
+          "data-setting-control": field.control,
+          autocomplete: "off",
+          spellcheck: "false",
+          placeholder: field.placeholder || "",
+          maxlength: field.maxLength > 0 ? String(field.maxLength) : undefined,
+        },
+      });
+      input.value = String(feature.config?.[field.key] || "");
+      wrapper.appendChild(input);
+      return wrapper;
+    }
+
+    default:
+      return buildFeatureSelectField(documentRef, feature, field, fieldId);
   }
-
-  if (field.control === "checkbox") {
-    const input = createElement(documentRef, "input", {
-      id: fieldId,
-      type: "checkbox",
-      attributes: {
-        "data-adxconfig-setting": "true",
-        "data-feature-key": feature.featureKey,
-        "data-config-key": feature.configKey,
-        "data-setting-key": field.key,
-        "data-setting-control": field.control,
-      },
-    });
-    input.checked = Boolean(feature.config?.[field.key]);
-    return buildSwitch(documentRef, input, field.label);
-  }
-
-  if (field.control === "color") {
-    const colorValue = getColorFieldValue(feature, field);
-    const wrapper = createElement(documentRef, "div", {
-      className: "ad-xconfig-color-field",
-      attributes: {
-        "data-adxconfig-color-field": "true",
-        "data-feature-key": feature.featureKey,
-        "data-config-key": feature.configKey,
-        "data-setting-key": field.key,
-        "data-invalid": "false",
-        "data-has-custom-value": colorValue ? "true" : "false",
-        "data-color-value": colorValue,
-      },
-    });
-    const controls = createElement(documentRef, "div", {
-      className: "ad-xconfig-color-controls",
-    });
-
-    controls.appendChild(createElement(documentRef, "span", {
-      className: "ad-xconfig-color-swatch",
-      attributes: {
-        "data-adxconfig-color-swatch": "true",
-        "aria-hidden": "true",
-      },
-    }));
-    controls.appendChild(createElement(documentRef, "input", {
-      id: `${fieldId}-picker`,
-      type: "color",
-      className: "ad-xconfig-color-picker",
-      attributes: {
-        "data-adxconfig-setting": "true",
-        "data-feature-key": feature.featureKey,
-        "data-config-key": feature.configKey,
-        "data-setting-key": field.key,
-        "data-setting-control": field.control,
-        "data-color-input-role": "picker",
-        "aria-label": `${field.label} per Farbwähler wählen`,
-      },
-    }));
-    controls.appendChild(createElement(documentRef, "input", {
-      id: `${fieldId}-hex`,
-      type: "text",
-      className: "ad-xconfig-color-code",
-      attributes: {
-        "data-adxconfig-setting": "true",
-        "data-feature-key": feature.featureKey,
-        "data-config-key": feature.configKey,
-        "data-setting-key": field.key,
-        "data-setting-control": field.control,
-        "data-color-input-role": "hex",
-        autocomplete: "off",
-        autocapitalize: "characters",
-        spellcheck: "false",
-        inputmode: "text",
-        placeholder: "#RRGGBB",
-        "aria-label": `${field.label} als Hex-Code`,
-      },
-    }));
-    controls.appendChild(createElement(documentRef, "button", {
-      type: "button",
-      className: "ad-xconfig-mini-btn ad-xconfig-mini-btn--color-reset",
-      text: "Zurücksetzen",
-      attributes: {
-        "data-adxconfig-action": "clear-setting-color",
-        "data-feature-key": feature.featureKey,
-        "data-config-key": feature.configKey,
-        "data-setting-key": field.key,
-      },
-    }));
-
-    wrapper.appendChild(controls);
-    wrapper.appendChild(createElement(documentRef, "p", {
-      className: "ad-xconfig-note ad-xconfig-color-status",
-      attributes: {
-        "data-adxconfig-color-status": "true",
-      },
-    }));
-    syncColorFieldControl(wrapper, {
-      value: colorValue,
-    });
-    return wrapper;
-  }
-
-  if (field.control === "text") {
-    const wrapper = createElement(documentRef, "div", {
-      className: "ad-xconfig-text-field",
-    });
-    const input = createElement(documentRef, "input", {
-      id: fieldId,
-      type: "text",
-      className: "ad-xconfig-text-input",
-      attributes: {
-        "data-adxconfig-setting": "true",
-        "data-feature-key": feature.featureKey,
-        "data-config-key": feature.configKey,
-        "data-setting-key": field.key,
-        "data-setting-control": field.control,
-        autocomplete: "off",
-        spellcheck: "false",
-        placeholder: field.placeholder || "",
-        maxlength: field.maxLength > 0 ? String(field.maxLength) : undefined,
-      },
-    });
-    input.value = String(feature.config?.[field.key] || "");
-    wrapper.appendChild(input);
-    return wrapper;
-  }
-
-  return buildFeatureSelectField(documentRef, feature, field, fieldId);
 }
+
 
 function getFieldNoteText(field) {
   return String(field?.description || "").trim();

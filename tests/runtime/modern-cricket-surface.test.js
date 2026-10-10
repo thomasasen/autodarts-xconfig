@@ -250,7 +250,7 @@ test("modern Cricket runtime renders an overlay and observes native image and ac
   try {
     const overlay = documentRef.getElementById(OVERLAY_ID);
     assert.ok(overlay?.children.length);
-    const observer = observers.get("cricket-target-highlighter:dom-observer");
+    const observer = observers.get("cricket-surface:dom-observer");
     assert.ok(observer.observeCalls[0].options.attributeFilter.includes("src"));
     const icon = documentRef.createElement("img");
     host.cells.get("20")[0].appendChild(icon);
@@ -456,7 +456,7 @@ test("modern Cricket grid effects stay mounted while the dartboard surface is un
   assert.equal(host.labelNodes.get("20").classList.contains(NATIVE_LABEL_CLASS), true);
   assert.equal(host.root.querySelectorAll(`[${SYNTHETIC_BADGE_ATTRIBUTE}="true"]`).length, 0);
 
-  const observer = observers.get("cricket-grid-status-effects:dom-observer");
+  const observer = observers.get("cricket-surface:dom-observer");
   assert.ok(observer);
   board.remove();
   observer.callback([{

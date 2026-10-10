@@ -1,12 +1,16 @@
-﻿import { collectBoardMarkers } from "../../shared/dartboard-markers.js";
+import { getMarkerOriginalOpacity, isMarkerHiddenByOverlay, setMarkerHighlightOpacity,
+  releaseMarkerHighlightOpacity } from "../../shared/marker-opacity.js";
+import { collectBoardMarkers } from "../../shared/dartboard-markers.js";
 import { BASE_CLASS, EFFECT_CLASSES } from "./style.js";
 
-const HIDDEN_MARKER_DATASET_KEY = "adExtOriginalOpacity";
-const HIDDEN_MARKER_ATTRIBUTE = "data-ad-ext-original-opacity";
+const APPEARANCE_STYLE_KEYS = ["fill", "stroke", "strokeWidth"];
+const APPEARANCE_CLASSES = {
+  hadBaseClass: BASE_CLASS, hadPulseClass: EFFECT_CLASSES["size-pulse"], hadGlowClass: EFFECT_CLASSES["soft-glow"],
+};
 
 function captureSnapshot(marker) {
   return {
-    radius: marker.getAttribute?.("r") || "",
+    radius: marker.getAttribute?.("r") ?? null,
     fill: marker.style?.fill || "",
     opacity: marker.style?.opacity || "",
     stroke: marker.style?.stroke || "",
@@ -18,36 +22,34 @@ function captureSnapshot(marker) {
 }
 
 function restoreSnapshot(marker, snapshot) {
-  if (!marker || !snapshot) {
-    return;
-  }
-
-  if (snapshot.radius) {
-    marker.setAttribute("r", snapshot.radius);
-  }
-
-  marker.style.fill = snapshot.fill;
-  marker.style.opacity = snapshot.opacity;
-  marker.style.stroke = snapshot.stroke;
-  marker.style.strokeWidth = snapshot.strokeWidth;
-
-  marker.classList.remove(BASE_CLASS, EFFECT_CLASSES["size-pulse"], EFFECT_CLASSES["soft-glow"]);
-  if (snapshot.hadBaseClass) {
-    marker.classList.add(BASE_CLASS);
-  }
-  if (snapshot.hadPulseClass) {
-    marker.classList.add(EFFECT_CLASSES["size-pulse"]);
-  }
-  if (snapshot.hadGlowClass) {
-    marker.classList.add(EFFECT_CLASSES["soft-glow"]);
-  }
+  if (!marker || !snapshot?.applied) return;
+  if (marker.getAttribute("r") === snapshot.applied.radius) marker.setAttribute("r", snapshot.radius);
+  APPEARANCE_STYLE_KEYS.forEach((key) => {
+    if (marker.style[key] === snapshot.applied[key]) marker.style[key] = snapshot[key];
+  });
+  Object.entries(APPEARANCE_CLASSES).forEach(([key, className]) => {
+    if (marker.classList.contains(className) === snapshot.applied[key]) marker.classList.toggle(className, snapshot[key]);
+  });
+  releaseMarkerHighlightOpacity(marker);
 }
 
-function isHiddenByDartOverlay(marker) {
-  if (marker?.getAttribute?.(HIDDEN_MARKER_ATTRIBUTE) !== null) {
-    return true;
+function refreshAppearance(marker, visualConfig, snapshot, preserveForeign = false) {
+  const previous = preserveForeign ? snapshot.applied : null;
+  const current = previous ? captureSnapshot(marker) : null;
+  applyDartboardMarkerHighlightToMarker(marker, visualConfig);
+  snapshot.applied = captureSnapshot(marker);
+  if (!previous) return;
+  // A visibility change may refresh our effect, but does not reclaim foreign edits.
+  if (current.radius !== previous.radius) {
+    if (current.radius === null) marker.removeAttribute("r");
+    else marker.setAttribute("r", current.radius);
   }
-  return Boolean(marker?.dataset?.[HIDDEN_MARKER_DATASET_KEY] !== undefined);
+  APPEARANCE_STYLE_KEYS.forEach((key) => {
+    if (current[key] !== previous[key]) marker.style[key] = current[key];
+  });
+  Object.entries(APPEARANCE_CLASSES).forEach(([key, className]) => {
+    if (current[key] !== previous[key]) marker.classList.toggle(className, current[key]);
+  });
 }
 
 function setAttributeIfChanged(node, name, value) {
@@ -105,7 +107,7 @@ function buildAppliedSignature(marker, visualConfig) {
     visualConfig.effect,
     visualConfig.opacity,
     visualConfig.outlineColor || "",
-    isHiddenByDartOverlay(marker) ? "hidden" : "visible",
+    isMarkerHiddenByOverlay(marker) ? "hidden" : "visible",
   ].join("|");
 }
 
@@ -113,7 +115,7 @@ export function applyDartboardMarkerHighlightToMarker(marker, visualConfig) {
   setAttributeIfChanged(marker, "r", String(visualConfig.markerSize));
   setStyleIfChanged(marker.style, "fill", visualConfig.markerColor);
 
-  if (isHiddenByDartOverlay(marker)) {
+  if (isMarkerHiddenByOverlay(marker)) {
     setStyleIfChanged(marker.style, "opacity", "0");
     setStyleIfChanged(marker.style, "stroke", "none");
     setStyleIfChanged(marker.style, "strokeWidth", "0");
@@ -184,14 +186,15 @@ export function updateDartboardMarkerHighlight(options = {}) {
 
   markers.forEach((marker) => {
     if (!state.snapshotsByMarker.has(marker)) {
-      state.snapshotsByMarker.set(marker, captureSnapshot(marker));
+      state.snapshotsByMarker.set(marker, { ...captureSnapshot(marker), opacity: getMarkerOriginalOpacity(marker) });
     }
     state.trackedMarkers.add(marker);
     const nextSignature = buildAppliedSignature(marker, visualConfig);
     if (state.appliedSignaturesByMarker?.get(marker) === nextSignature) {
       return;
     }
-    applyDartboardMarkerHighlightToMarker(marker, visualConfig);
+    setMarkerHighlightOpacity(marker, visualConfig.opacity, (preserveForeign) =>
+      refreshAppearance(marker, visualConfig, state.snapshotsByMarker.get(marker), preserveForeign));
     state.appliedSignaturesByMarker?.set(marker, nextSignature);
   });
 }

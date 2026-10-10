@@ -23,8 +23,7 @@ import {
 } from "./path-utils.js";
 import { cancelWindowSync, queueWindowSync } from "./sync-scheduler.js";
 import {
-  buildShellRenderSignature,
-  parseShellRenderSignature,
+  createShellRenderSignatureBuilder,
 } from "./render-signature.js";
 import { createShellFocusController } from "./focus-controller.js";
 import { createShellRenderController } from "./render-controller.js";
@@ -176,6 +175,7 @@ function ensureXConfigShell(options = {}) {
     },
     shellNode: null,
     renderSignature: "",
+    previousRenderState: null,
     updateStatus: readStoredUpdateStatus({
       windowRef,
       installedVersion,
@@ -661,7 +661,7 @@ function ensureXConfigShell(options = {}) {
   });
   renderController = createShellRenderController({
     buildShellContent,
-    buildShellRenderSignature,
+    buildShellRenderSignature: createShellRenderSignatureBuilder(),
     createElement,
     documentRef,
     getContentElement,
@@ -686,7 +686,6 @@ function ensureXConfigShell(options = {}) {
       focusController.afterRender();
     },
     panelHostId: PANEL_HOST_ID,
-    parseShellRenderSignature,
     sidebarRouteHints: SIDEBAR_ROUTE_HINTS,
     state,
     toRoutePathname,

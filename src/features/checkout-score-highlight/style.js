@@ -1,3 +1,5 @@
+import { CHECKOUT_EFFECT_ALIASES } from "../../shared/checkout-zoom-options.js";
+
 export const STYLE_ID = "autodarts-animate-checkout-style";
 export const HIGHLIGHT_CLASS = "ad-ext-checkout-possible";
 
@@ -7,13 +9,6 @@ export const EFFECT_CLASSES = {
   "grow-only": "ad-ext-checkout-possible--grow-only",
   "fade-blink": "ad-ext-checkout-possible--fade-blink",
 };
-
-const EFFECT_ALIASES = Object.freeze({
-  pulse: "grow-glow",
-  glow: "glow-only",
-  scale: "grow-only",
-  blink: "fade-blink",
-});
 
 export const STYLE_VARIABLES = Object.freeze({
   color: "--ad-ext-checkout-pulse-color",
@@ -216,7 +211,7 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
 
 export function getEffectClass(effect) {
   const normalized = String(effect || "").trim().toLowerCase();
-  const canonical = EFFECT_ALIASES[normalized] || normalized;
+  const canonical = CHECKOUT_EFFECT_ALIASES[normalized] || normalized;
   return EFFECT_CLASSES[canonical] || EFFECT_CLASSES["grow-only"];
 }
 

@@ -1,4 +1,4 @@
-import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
+import { createFeatureMountHarness } from "../shared/feature-mount-harness.js";
 import {
   clearDartboardMarkerHighlight,
   createDartboardMarkerHighlightState,
@@ -92,9 +92,6 @@ export function initializeDartboardMarkerHighlight(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const domGuards = context.domGuards;
-  const observerRegistry = context.registries?.observers;
-  const listenerRegistry = context.registries?.listeners;
-  const gameState = context.gameState;
   const config = context.config;
   const schedulerFactory = context.helpers?.createRafScheduler;
 
@@ -126,69 +123,37 @@ export function initializeDartboardMarkerHighlight(context = {}) {
     });
   }
 
-  const scheduler = createTurnScopedScheduler(context, update, { windowRef, resetTurn() {
+  const harness = createFeatureMountHarness(context, { update, resetTurn() {
     clearDartboardMarkerHighlight(state);
-  } }, schedulerFactory);
+  } });
   const rootNode = documentRef.documentElement || documentRef.body || documentRef;
 
-  if (observerRegistry && typeof observerRegistry.registerMutationObserver === "function") {
-    observerRegistry.registerMutationObserver({
-      key: OBSERVER_KEY,
-      target: rootNode,
-      callback: (mutations) => {
-        if (hasRelevantDartboardMarkerHighlightMutation(mutations, state)) {
-          scheduler.schedule();
-        }
-      },
-      observeOptions: {
-        childList: true,
-        subtree: true,
-      },
-      MutationObserverRef: windowRef?.MutationObserver,
-    });
-  }
-
-  if (listenerRegistry && typeof listenerRegistry.register === "function") {
-    listenerRegistry.register({
-      key: LISTENER_KEYS.visibility,
-      target: documentRef,
-      type: "visibilitychange",
-      handler: () => scheduler.schedule(),
-    });
-  }
-
-  const unsubscribeGameState =
-    gameState && typeof gameState.subscribe === "function"
-      ? gameState.subscribe(() => scheduler.schedule())
-      : () => {};
-
-  scheduler.schedule();
-  let cleanedUp = false;
-
-  return function cleanup() {
-    if (cleanedUp) {
-      return;
-    }
-    cleanedUp = true;
-
-    scheduler.cancel();
-
-    try {
-      unsubscribeGameState();
-    } catch (_) {
-      // fail-soft
-    }
-
-    if (observerRegistry && typeof observerRegistry.disconnect === "function") {
-      observerRegistry.disconnect(OBSERVER_KEY);
-    }
-    if (listenerRegistry && typeof listenerRegistry.remove === "function") {
-      Object.values(LISTENER_KEYS).forEach((key) => listenerRegistry.remove(key));
-    }
-
+  harness.registerObserver({
+    key: OBSERVER_KEY,
+    target: rootNode,
+    callback: (mutations) => {
+      if (hasRelevantDartboardMarkerHighlightMutation(mutations, state)) {
+        harness.schedule();
+      }
+    },
+    observeOptions: {
+      childList: true,
+      subtree: true,
+    },
+    MutationObserverRef: windowRef?.MutationObserver,
+  });
+  harness.registerListeners([{
+    key: LISTENER_KEYS.visibility,
+    target: documentRef,
+    type: "visibilitychange",
+    handler: () => harness.schedule(),
+  }]);
+  harness.subscribeToGameState();
+  harness.schedule();
+  return harness.createCleanup(() => {
     clearDartboardMarkerHighlight(state);
     domGuards.removeNodeById(STYLE_ID);
-  };
+  });
 }
 
 export const mountDartboardMarkerHighlight = initializeDartboardMarkerHighlight;

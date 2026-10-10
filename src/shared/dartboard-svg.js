@@ -20,6 +20,8 @@ const PREFERRED_BOARD_SVG_SELECTORS = Object.freeze([
 ]);
 const IGNORED_BOARD_SVG_ANCESTOR_SELECTOR = [
   "#ad-xconfig-panel-host",
+  "#adt-zoom",
+  ".adt-zoom-view",
   "[data-adxconfig-checkout-board-preview-kind]",
 ].join(",");
 const BOARD_SNAPSHOT_CACHE = new WeakMap();

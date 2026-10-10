@@ -1,3 +1,4 @@
+import { getMarkerOriginalOpacity, setMarkerOverlayHidden } from "../../shared/marker-opacity.js";
 import { findBoardSvgGroup } from "../../shared/dartboard-svg.js";
 import {
   buildMarkerKey,
@@ -691,15 +692,14 @@ function setMarkerHidden(marker, shouldHide, state) {
 
   if (shouldHide) {
     if (!state.markerOpacityByMarker.has(marker)) {
-      state.markerOpacityByMarker.set(marker, marker.style.opacity || "");
+      state.markerOpacityByMarker.set(marker, getMarkerOriginalOpacity(marker));
     }
-    marker.dataset[MARKER_OPACITY_DATA_KEY] = marker.style.opacity || "";
-    setStyleIfChanged(marker.style, "opacity", "0");
+    marker.dataset[MARKER_OPACITY_DATA_KEY] = state.markerOpacityByMarker.get(marker);
+    setMarkerOverlayHidden(marker, true);
     return;
   }
 
   if (state.markerOpacityByMarker.has(marker)) {
-    setStyleIfChanged(marker.style, "opacity", state.markerOpacityByMarker.get(marker));
     state.markerOpacityByMarker.delete(marker);
   }
 
@@ -709,6 +709,7 @@ function setMarkerHidden(marker, shouldHide, state) {
   ) {
     delete marker.dataset[MARKER_OPACITY_DATA_KEY];
   }
+  setMarkerOverlayHidden(marker, false);
 }
 
 function restoreHiddenMarkers(state) {
@@ -716,19 +717,7 @@ function restoreHiddenMarkers(state) {
     return;
   }
 
-  state.markerOpacityByMarker.forEach((opacity, marker) => {
-    if (!marker?.style) {
-      return;
-    }
-
-    setStyleIfChanged(marker.style, "opacity", opacity);
-    if (
-      marker.dataset &&
-      Object.hasOwn(marker.dataset, MARKER_OPACITY_DATA_KEY)
-    ) {
-      delete marker.dataset[MARKER_OPACITY_DATA_KEY];
-    }
-  });
+  state.markerOpacityByMarker.forEach((_opacity, marker) => setMarkerHidden(marker, false, state));
 
   state.markerOpacityByMarker.clear();
 }
