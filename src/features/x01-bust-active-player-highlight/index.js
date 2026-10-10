@@ -7,11 +7,13 @@ import {
   refreshBustImpactOrigin,
   runBustActivePlayerHighlightPreview,
   syncBustActivePlayerHighlight,
+  syncBustGifVisibility,
   tryUnlockBustGlassCrackAudio,
 } from "./logic.js";
 import { STYLE_ID, buildStyleText } from "./style.js";
 import { createFeatureMountHarness } from "../shared/feature-mount-harness.js";
 import { createX01PlayerSurfaceObserverController } from "../shared/x01-player-surface-adapter.js";
+import { acquireToolsAnimationLayerController, isToolsAnimationActive } from "../shared/tools-animation-layer-controller.js";
 
 const FEATURE_KEY = "x01-bust-active-player-highlight";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -143,6 +145,10 @@ export function mountX01BustActivePlayerHighlight(context = {}) {
     return () => {};
   }
 
+  const toolsAnimationLayers = acquireToolsAnimationLayerController({ documentRef, windowRef,
+    onChange: (active) => syncBustGifVisibility(state, active) });
+  harness.addCleanup(() => toolsAnimationLayers.release());
+
   harness.addCleanup(createX01PlayerSurfaceObserverController({
     documentRef,
     windowRef,
@@ -165,6 +171,9 @@ export function mountX01BustActivePlayerHighlight(context = {}) {
           target: windowRef,
           type: "click",
           handler: (event) => {
+            if (isToolsAnimationActive(documentRef)) {
+              return;
+            }
             if (dismissBustSurfaceHighlightForEvent(state, event)) {
               stopImpactOriginTracking();
             }

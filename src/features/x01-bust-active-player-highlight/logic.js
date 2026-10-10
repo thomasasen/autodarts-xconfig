@@ -1,3 +1,4 @@
+import { isToolsAnimationActive } from "../shared/tools-animation-layer-controller.js";
 import { queryAll } from "../../shared/dom-query.js";
 import {
   BUST_ACTIVE_CLASS,
@@ -248,7 +249,7 @@ function resolveBustImpactOrigin(context = {}, targetNode = null) {
   const targetRect = readNodeRect(targetNode);
   const boardSurface = context.boardSurface || resolveBoardRenderSurface(context.documentRef);
   const boardNode = resolveBustBoardTarget({ ...context, boardSurface });
-  const boardRect = readNodeRect(boardNode);
+  const boardRect = readNodeRect(boardSurface?.svg) || readNodeRect(boardNode);
   if (!targetRect) {
     return null;
   }
@@ -371,27 +372,70 @@ export function resolveBustCardVisuals() {
   };
 }
 
-function setStylePropertyIfChanged(node, propertyName, value) {
+const bustStyleSnapshots = new WeakMap();
+
+function rememberBustStyles(node) {
+  if (!node?.style || bustStyleSnapshots.has(node)) return;
+  bustStyleSnapshots.set(node, new Map([...BUST_INLINE_STYLE_PROPERTIES, ...BUST_CARD_STYLE_PROPERTIES].map((name) =>
+    [name, { original: { value: node.style.getPropertyValue(name), priority: node.style.getPropertyPriority(name) }, applied: null }])));
+}
+
+function setOwnedBustStyle(node, propertyName, value, priority = "") {
   const normalizedValue = String(value || "").trim();
-  if (!node?.style || !propertyName || !normalizedValue) {
-    return;
+  if (!node?.style || !normalizedValue) return;
+  let snapshots = bustStyleSnapshots.get(node);
+  if (!snapshots) {
+    snapshots = new Map();
+    bustStyleSnapshots.set(node, snapshots);
   }
-  if (node.style.getPropertyValue?.(propertyName) !== normalizedValue) {
-    node.style.setProperty(propertyName, normalizedValue);
+  const current = { value: node.style.getPropertyValue(propertyName),
+    priority: node.style.getPropertyPriority(propertyName) };
+  let snapshot = snapshots.get(propertyName);
+  if (!snapshot || (snapshot.applied && (current.value !== snapshot.applied.value || current.priority !== snapshot.applied.priority))) {
+    snapshot = { original: current, applied: { value: normalizedValue, priority } };
+    snapshots.set(propertyName, snapshot);
   }
+  if (current.value !== normalizedValue || current.priority !== priority) {
+    node.style.setProperty(propertyName, normalizedValue, priority);
+  }
+  snapshot.applied = { value: node.style.getPropertyValue(propertyName),
+    priority: node.style.getPropertyPriority(propertyName) };
+}
+
+function restoreOwnedBustStyles(node, properties) {
+  const snapshots = bustStyleSnapshots.get(node);
+  if (!node?.style || !snapshots) return;
+  const owned = properties.filter((name) => {
+    const snapshot = snapshots.get(name);
+    return snapshot?.applied && node.style.getPropertyValue(name) === snapshot.applied.value &&
+      node.style.getPropertyPriority(name) === snapshot.applied.priority;
+  });
+  owned.forEach((name) => {
+    const snapshot = snapshots.get(name);
+    if (snapshot.original.value) node.style.setProperty(name, snapshot.original.value, snapshot.original.priority);
+    else node.style.removeProperty(name);
+  });
+  properties.forEach((name) => {
+    snapshots.delete(name);
+  });
+  if (!snapshots.size) bustStyleSnapshots.delete(node);
+}
+
+function sealBustStyles(node) {
+  // CSS shorthands change when their longhands are written. Record the final
+  // browser-normalized values only after the complete decoration is applied.
+  bustStyleSnapshots.get(node)?.forEach((snapshot, name) => {
+    if (snapshot.applied) snapshot.applied = { value: node.style.getPropertyValue(name),
+      priority: node.style.getPropertyPriority(name) };
+  });
+}
+
+function setStylePropertyIfChanged(node, propertyName, value) {
+  setOwnedBustStyle(node, propertyName, value);
 }
 
 function setImportantStyleProperty(node, propertyName, value) {
-  const normalizedValue = String(value || "").trim();
-  if (!node?.style || !propertyName || !normalizedValue) {
-    return;
-  }
-  if (
-    node.style.getPropertyValue?.(propertyName) !== normalizedValue ||
-    node.style.getPropertyPriority?.(propertyName) !== "important"
-  ) {
-    node.style.setProperty(propertyName, normalizedValue, "important");
-  }
+  setOwnedBustStyle(node, propertyName, value, "important");
 }
 
 function applyBustInlineVisuals(node, visuals = {}) {
@@ -411,24 +455,14 @@ function findBustFillNode(node) {
 }
 
 function clearBustInlineVisuals(node) {
-  if (!node?.style) {
-    return;
-  }
-  BUST_INLINE_STYLE_PROPERTIES.forEach((propertyName) => {
-    if (node.style.getPropertyValue?.(propertyName)) {
-      node.style.removeProperty(propertyName);
-    }
-  });
+  restoreOwnedBustStyles(node, BUST_INLINE_STYLE_PROPERTIES);
 }
 
 function applyBustFillVisuals(node, visuals = {}) {
   const fillNode = findBustFillNode(node);
+  rememberBustStyles(fillNode);
   if (fillNode !== node) {
-    ["background", "background-color"].forEach((propertyName) => {
-      if (node?.style?.getPropertyValue?.(propertyName)) {
-        node.style.removeProperty(propertyName);
-      }
-    });
+    restoreOwnedBustStyles(node, ["background", "background-color"]);
   }
   setImportantStyleProperty(
     fillNode,
@@ -443,6 +477,7 @@ function applyBustFillVisuals(node, visuals = {}) {
 }
 
 function applyBustCardVisuals(node, visuals = {}) {
+  rememberBustStyles(node);
   setStylePropertyIfChanged(
     node,
     "--ad-ext-x01-bust-active-player-background",
@@ -465,17 +500,15 @@ function applyBustCardVisuals(node, visuals = {}) {
   );
   applyBustInlineVisuals(node, visuals);
   applyBustFillVisuals(node, visuals);
+  sealBustStyles(node);
+  sealBustStyles(findBustFillNode(node));
 }
 
 function clearBustCardVisuals(node) {
   if (!node?.style) {
     return;
   }
-  BUST_CARD_STYLE_PROPERTIES.forEach((propertyName) => {
-    if (node.style.getPropertyValue?.(propertyName)) {
-      node.style.removeProperty(propertyName);
-    }
-  });
+  restoreOwnedBustStyles(node, BUST_CARD_STYLE_PROPERTIES);
   clearBustInlineVisuals(node);
   const fillNode = findBustFillNode(node);
   if (fillNode !== node) {
@@ -762,6 +795,18 @@ function applyBustEffectVisuals(node, effectTarget, visuals = {}, options = {}) 
   );
 }
 
+export function syncBustGifVisibility(state, suppressed) {
+  if (!state.activeNode || !state.wasBust || state.dismissedForCurrentBust ||
+      state.effectTarget !== BUST_EFFECT_TARGETS.PLAYER_CARD) return;
+  if (suppressed) {
+    state.activeNode.classList.remove(BUST_ACTIVE_CLASS);
+    clearBustCardVisuals(state.activeNode);
+  } else {
+    state.activeNode.classList.add(BUST_ACTIVE_CLASS);
+    applyBustCardVisuals(state.activeNode, state.cardVisuals);
+  }
+}
+
 export function createBustActivePlayerHighlightState() {
   return {
     wasBust: false,
@@ -937,9 +982,14 @@ export function syncBustActivePlayerHighlight(context = {}, state = createBustAc
 
   const enteredBust = state.wasBust !== true;
   const visuals = resolveBustCardVisuals();
-  applyBustEffectVisuals(activeNode, effectTarget, visuals, { raiseDartOverlay: true });
+  const gifActive = isToolsAnimationActive(documentRef);
+  if (effectTarget !== BUST_EFFECT_TARGETS.PLAYER_CARD || !gifActive) {
+    applyBustEffectVisuals(activeNode, effectTarget, visuals, { raiseDartOverlay: true });
+  }
+  state.cardVisuals = visuals;
   state.activeNode = activeNode;
   state.wasBust = true;
+  syncBustGifVisibility(state, gifActive);
   const suppressedNativeEffects = suppressNativeBustEffectLayers(activePlayerNode, state);
 
   if (enteredBust || targetChanged) {

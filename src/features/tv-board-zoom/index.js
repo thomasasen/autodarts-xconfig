@@ -7,7 +7,7 @@ import {
   resolveTvBoardZoomTruth,
   resolveZoomHost,
   resolveZoomTarget,
-  syncGifOverlayContainment,
+  hasHealthyZoomSurface,
 } from "./logic.js";
 import {
   STYLE_ID,
@@ -36,11 +36,10 @@ import {
   findModernTurnSurface,
 } from "../shared/x01-match-surface.js";
 import { createX01ReadContext, readX01MatchSurface } from "../x01-checkout-context.js";
+import { acquireToolsAnimationLayerController, isToolsAnimationActive } from "../shared/tools-animation-layer-controller.js";
 
 const FEATURE_KEY = "tv-board-zoom";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
-const GIF_OBSERVER_KEY = `${FEATURE_KEY}:tools-animation-observer`;
-const TOOLS_ANIMATION_HOST_SELECTOR = "autodarts-tools-animations";
 const LISTENER_KEYS = Object.freeze({
   resize: `${FEATURE_KEY}:window-resize`,
   orientation: `${FEATURE_KEY}:window-orientation`,
@@ -113,6 +112,12 @@ function hasMatchingInteractionLayout(interactionSurface, nativeBoard) {
 function resolveManualNativeBoardSurface(boardSurface) {
   const nativeBoard = boardSurface?.zoomTarget || null;
   if (!nativeBoard?.matches?.(NATIVE_BOARD_SELECTOR)) {
+    return null;
+  }
+  // Native pointer coordinates require transforming their input surface. With
+  // Tools animations available, keep that surface stable and click-safe instead.
+  const documentRef = nativeBoard.ownerDocument;
+  if (documentRef?.querySelector?.("autodarts-tools-animations") || isToolsAnimationActive(documentRef)) {
     return null;
   }
 
@@ -544,12 +549,6 @@ export function initializeTvBoardZoom(context = {}) {
     releaseTimeoutId: 0,
     targetStyleSnapshot: null,
     hostStyleSnapshot: null,
-    gifStyleSnapshots: [],
-    gifManagedNodes: new WeakSet(),
-    gifContainmentDirty: true,
-    gifContainmentTarget: null,
-    gifContainmentHost: null,
-    gifContainmentRectSignature: "",
     stickyUntilTurnChange: false,
     stickyUntilLegEnd: false,
     manualPause: false,
@@ -570,36 +569,6 @@ export function initializeTvBoardZoom(context = {}) {
 
   function invalidateBoardCache() {
     boardCache.surface = null;
-    zoomState.gifContainmentDirty = true;
-  }
-
-  function markGifContainmentDirty() {
-    zoomState.gifContainmentDirty = true;
-  }
-
-  function syncGifContainmentIfNeeded(targetNode, hostNode) {
-    const containmentHost = hostNode || targetNode;
-    const rect = containmentHost?.getBoundingClientRect?.();
-    const rectSignature = [
-      Number(rect?.left) || 0,
-      Number(rect?.top) || 0,
-      Number(rect?.width) || Number(containmentHost?.clientWidth || containmentHost?.offsetWidth || 0),
-      Number(rect?.height) || Number(containmentHost?.clientHeight || containmentHost?.offsetHeight || 0),
-    ].join(":");
-    const bindingsChanged =
-      zoomState.gifContainmentTarget !== targetNode ||
-      zoomState.gifContainmentHost !== containmentHost ||
-      zoomState.gifContainmentRectSignature !== rectSignature;
-    if (!zoomState.gifContainmentDirty && !bindingsChanged) {
-      return false;
-    }
-
-    syncGifOverlayContainment(zoomState, targetNode, containmentHost);
-    zoomState.gifContainmentDirty = false;
-    zoomState.gifContainmentTarget = targetNode;
-    zoomState.gifContainmentHost = containmentHost;
-    zoomState.gifContainmentRectSignature = rectSignature;
-    return true;
   }
 
   function getBoardSurface() {
@@ -614,9 +583,10 @@ export function initializeTvBoardZoom(context = {}) {
   }
 
   let scheduler = null;
+  const toolsAnimationLayers = acquireToolsAnimationLayerController({ documentRef, windowRef,
+    onChange: () => scheduler?.schedule?.() });
   let holdTimerId = 0;
   let integrityTimerId = 0;
-  let gifOverlayShadowRoot = null;
   let resizeObserver = null;
   let resizeObserverNodes = [];
 
@@ -666,7 +636,6 @@ export function initializeTvBoardZoom(context = {}) {
     }
 
     resizeObserver ||= new windowRef.ResizeObserver(() => {
-      markGifContainmentDirty();
       scheduler?.schedule?.();
     });
     nextNodes.forEach((node) => resizeObserver.observe?.(node));
@@ -713,9 +682,7 @@ export function initializeTvBoardZoom(context = {}) {
     const hasActiveZoom = Boolean(zoomState.zoomedElement);
     if (forceReset || !hasActiveZoom) {
       clearTransientResetState();
-      resetZoom(speedConfig, zoomState, Boolean(options.immediate), {
-        preserveGifContainment: Boolean(options.preserveGifContainment),
-      });
+      resetZoom(speedConfig, zoomState, Boolean(options.immediate));
       emitDebugEvent(debugState, reason === "board-missing" || reason === "target-missing" ? "warn" : "log", () => withTruthDebug({
         status: "reset",
         reason,
@@ -737,49 +704,17 @@ export function initializeTvBoardZoom(context = {}) {
     }
 
     clearTransientResetState();
-    resetZoom(speedConfig, zoomState, false, {
-      preserveGifContainment: Boolean(options.preserveGifContainment),
-    });
+    resetZoom(speedConfig, zoomState, false);
     emitDebugEvent(debugState, reason === "board-missing" || reason === "target-missing" ? "warn" : "log", () => withTruthDebug({
       status: "reset",
       reason,
     }, zoomState.x01TruthDebug));
   }
 
-  function ensureGifOverlayObserver() {
-    const animationHost = documentRef.querySelector?.(TOOLS_ANIMATION_HOST_SELECTOR) || null;
-    const nextShadowRoot = animationHost?.shadowRoot || null;
-    if (nextShadowRoot === gifOverlayShadowRoot) {
-      return;
-    }
-
-    observerRegistry?.disconnect?.(GIF_OBSERVER_KEY);
-    gifOverlayShadowRoot = nextShadowRoot;
-    if (!nextShadowRoot || typeof observerRegistry?.registerMutationObserver !== "function") {
-      return;
-    }
-
-    observerRegistry.registerMutationObserver({
-      key: GIF_OBSERVER_KEY,
-      target: nextShadowRoot,
-      callback: () => {
-        markGifContainmentDirty();
-        scheduler?.schedule?.();
-      },
-      observeOptions: {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ["class", "src", "hidden"],
-      },
-      MutationObserverRef: windowRef?.MutationObserver,
-    });
-  }
-
   scheduler = createTurnScopedScheduler(context, () => {
     clearHoldTimer();
     clearIntegrityTimer();
-    ensureGifOverlayObserver();
+    toolsAnimationLayers.sync();
     const readContext = createX01ReadContext({
       gameState,
       documentRef,
@@ -830,7 +765,6 @@ export function initializeTvBoardZoom(context = {}) {
 
     const hostNode = effectiveBoardSurface?.zoomHost || resolveZoomHost(targetNode);
     syncResizeObserver([targetNode, hostNode, boardSvg]);
-    syncGifContainmentIfNeeded(targetNode, hostNode);
 
     const intent = computeZoomIntent({
       gameState,
@@ -856,7 +790,6 @@ export function initializeTvBoardZoom(context = {}) {
       requestZoomReset("virtual-board-input", {
         force: true,
         immediate: true,
-        preserveGifContainment: true,
       });
       return;
     }
@@ -865,16 +798,13 @@ export function initializeTvBoardZoom(context = {}) {
       requestZoomReset(lifecycleResetReason || "intent-missing", {
         force: Boolean(lifecycleResetReason),
         immediate: Boolean(lifecycleResetReason),
-        preserveGifContainment: true,
       });
       return;
     }
 
     clearTransientResetState();
     if (lifecycleResetReason) {
-      resetZoom(speedConfig, zoomState, true, {
-        preserveGifContainment: true,
-      });
+      resetZoom(speedConfig, zoomState, true);
       emitDebugEvent(debugState, "log", () => withTruthDebug({
         status: "reset",
         reason: lifecycleResetReason,
@@ -891,7 +821,6 @@ export function initializeTvBoardZoom(context = {}) {
         x01Rules,
         windowRef,
         documentRef,
-        syncGifOverlayContainment: false,
       }
     );
     expectedZoomTarget = targetNode;
@@ -917,8 +846,7 @@ export function initializeTvBoardZoom(context = {}) {
       const node = expectedZoomTarget || zoomState.zoomedElement;
       if (!node) return null;
       if (!documentRef.getElementById(STYLE_ID)) return "zoom-style-missing";
-      return node.isConnected !== false && node.classList.contains(ZOOM_CLASS) &&
-        String(node.style.transform || "").includes("scale(") &&
+      return node.isConnected !== false && hasHealthyZoomSurface(zoomState) &&
         (!zoomState.zoomHost || (zoomState.zoomHost.isConnected !== false &&
           zoomState.zoomHost.classList.contains(ZOOM_HOST_CLASS)))
         ? null : "zoom-surface-damaged";
@@ -927,7 +855,6 @@ export function initializeTvBoardZoom(context = {}) {
       domGuards.ensureStyle(STYLE_ID, buildStyleText());
       // Preserve manual pause, BUST/third-dart holds and the current intent.
       invalidateBoardCache();
-      markGifContainmentDirty();
     },
     watchdogRestartSafe: false,
     resetTurn() {
@@ -950,7 +877,6 @@ export function initializeTvBoardZoom(context = {}) {
     zoomState.lastTurnProgressSignature = "";
     zoomState.pendingLifecycleResetReason = "";
     invalidateBoardCache();
-    markGifContainmentDirty();
   }, suspendTurn() {
     expectedZoomTarget = null;
     clearHoldTimer();
@@ -959,14 +885,12 @@ export function initializeTvBoardZoom(context = {}) {
     disconnectResizeObserver();
     resetZoom(speedConfig, zoomState, true);
     invalidateBoardCache();
-    markGifContainmentDirty();
   } }, schedulerFactory);
   const isManagedNode = createManagedNodeMatcher({
     classNames: [ZOOM_CLASS, ZOOM_HOST_CLASS],
     predicates: [
       (node) => node === zoomState.zoomedElement,
       (node) => node === zoomState.zoomHost,
-      (node) => Boolean(node && zoomState.gifManagedNodes?.has?.(node)),
     ],
   });
 
@@ -1002,7 +926,6 @@ export function initializeTvBoardZoom(context = {}) {
         if (mutationReaction.shouldInvalidateBoardCache) {
           invalidateBoardCache();
         }
-        markGifContainmentDirty();
         scheduler.schedule();
       },
       observeOptions: {
@@ -1035,7 +958,6 @@ export function initializeTvBoardZoom(context = {}) {
       target: windowRef,
       type: "resize",
       handler: () => {
-        markGifContainmentDirty();
         scheduler.schedule();
       },
       options: { passive: true },
@@ -1045,7 +967,6 @@ export function initializeTvBoardZoom(context = {}) {
       target: windowRef,
       type: "orientationchange",
       handler: () => {
-        markGifContainmentDirty();
         scheduler.schedule();
       },
       options: { passive: true },
@@ -1066,9 +987,7 @@ export function initializeTvBoardZoom(context = {}) {
         clearHoldTimer();
         clearIntegrityTimer();
         clearTransientResetState();
-        resetZoom(speedConfig, zoomState, false, {
-          preserveGifContainment: true,
-        });
+        resetZoom(speedConfig, zoomState, false);
       },
       options: { passive: true, capture: true },
     });
@@ -1077,7 +996,6 @@ export function initializeTvBoardZoom(context = {}) {
       target: documentRef,
       type: "visibilitychange",
       handler: () => {
-        markGifContainmentDirty();
         scheduler.schedule();
       },
     });
@@ -1106,6 +1024,7 @@ export function initializeTvBoardZoom(context = {}) {
     cleanedUp = true;
 
     scheduler.cancel();
+    toolsAnimationLayers.release();
     clearHoldTimer();
     clearIntegrityTimer();
     disconnectResizeObserver();
@@ -1117,9 +1036,7 @@ export function initializeTvBoardZoom(context = {}) {
 
     if (observerRegistry && typeof observerRegistry.disconnect === "function") {
       observerRegistry.disconnect(OBSERVER_KEY);
-      observerRegistry.disconnect(GIF_OBSERVER_KEY);
     }
-    gifOverlayShadowRoot = null;
 
     if (listenerRegistry && typeof listenerRegistry.remove === "function") {
       Object.values(LISTENER_KEYS).forEach((key) => {

@@ -6,18 +6,13 @@ import {
 } from "../x01-checkout-route.js";
 import { resolveX01CheckoutContext } from "../x01-checkout-context.js";
 import { readModernMatchSurface } from "../shared/x01-match-surface.js";
+import { isLegacyToolsAnimationMedia } from "../shared/tools-animation-layer-controller.js";
 import {
   NATIVE_BOARD_SELECTOR,
   getBoardRadius,
   resolveBoardZoomHostNode,
   resolveBoardZoomTargetNode,
 } from "../../shared/dartboard-svg.js";
-import {
-  applyToolsAnimationGifContainmentStyles,
-  restoreToolsAnimationGifNodeStyle,
-  snapshotToolsAnimationGifNodeStyle,
-} from "../themes/shared/tools-animation-gif-containment.js";
-
 const SEGMENT_ORDER = Object.freeze([
   20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
 ]);
@@ -693,214 +688,6 @@ function restoreTargetStyle(state, targetNode) {
   targetNode.classList?.remove?.(ZOOM_CLASS);
 }
 
-function isLikelyGifOverlayNode(node) {
-  if (!node) {
-    return false;
-  }
-
-  const idToken = String(node.id || "").toLowerCase();
-  const classToken = String(node.classList?.toString?.() || "").toLowerCase();
-  const srcToken = String(
-    node.currentSrc || node.src || node.getAttribute?.("src") || ""
-  ).toLowerCase();
-
-  return (
-    idToken.includes("gif") ||
-    classToken.includes("gif") ||
-    srcToken.includes(".gif") ||
-    srcToken.includes("giphy") ||
-    srcToken.includes("tenor")
-  );
-}
-
-function resolveGifOverlayContainer(node) {
-  return node?.closest?.(".fixed") || node || null;
-}
-
-function collectGifOverlayEntries(targetNode, hostNode) {
-  const roots = [];
-  const showAnimationsRoot = targetNode?.closest?.(".showAnimations") || null;
-  const ownerDocument = targetNode?.ownerDocument || hostNode?.ownerDocument || null;
-  if (showAnimationsRoot) {
-    roots.push(showAnimationsRoot);
-  } else if (hostNode) {
-    roots.push(hostNode);
-  }
-
-  const seen = new Set();
-  const overlays = [];
-  const pushCandidate = (node) => {
-    if (!node || seen.has(node) || !isLikelyGifOverlayNode(node)) {
-      return;
-    }
-    seen.add(node);
-    const containerNode = resolveGifOverlayContainer(node);
-    overlays.push({
-      mediaNode: node,
-      frameNode: containerNode && containerNode !== node ? node.parentElement || null : null,
-      containerNode,
-    });
-  };
-  const scanRoot = (rootNode) => {
-    if (!rootNode || typeof rootNode.querySelectorAll !== "function") {
-      return;
-    }
-
-    const candidates = [
-      ...Array.from(rootNode.querySelectorAll("img,video")),
-      ...Array.from(rootNode.querySelectorAll("#gif-animation,.gif-animation")),
-    ];
-
-    if (isLikelyGifOverlayNode(rootNode)) {
-      candidates.push(rootNode);
-    }
-
-    candidates.forEach(pushCandidate);
-
-    Array.from(rootNode.querySelectorAll("autodarts-tools-animations")).forEach((host) => {
-      if (host?.shadowRoot) {
-        scanRoot(host.shadowRoot);
-      }
-    });
-  };
-
-  roots.forEach(scanRoot);
-  queryAll(ownerDocument, "autodarts-tools-animations").forEach((host) => {
-    if (host?.shadowRoot) {
-      scanRoot(host.shadowRoot);
-    }
-  });
-
-  return overlays;
-}
-
-const GIF_CONTAINMENT_SELECTOR = ".fixed:has(#gif-animation, .gif-animation, " +
-  "img[src*=\".gif\" i], video[src*=\".gif\" i], " +
-  "img[src*=\"giphy\" i], video[src*=\"giphy\" i], " +
-  "img[src*=\"tenor\" i], video[src*=\"tenor\" i])";
-
-function syncGifOverlayStylesheets(state, ownerDocument, viewportRect) {
-  const stylesheets = state.gifContainmentStylesheets ||= new Map();
-  const roots = new Set();
-  queryAll(ownerDocument, "autodarts-tools-animations").forEach((host) => {
-    const root = host.shadowRoot;
-    if (!root?.appendChild) {
-      return;
-    }
-    roots.add(root);
-    let style = stylesheets.get(root);
-    if (!style || style.parentNode !== root) {
-      style?.remove?.();
-      style = ownerDocument.createElement("style");
-      style.id = "ad-ext-tv-board-zoom-gif-containment";
-      root.appendChild(style);
-      stylesheets.set(root, style);
-    }
-
-    // Tools rewrites its inline geometry on GIF load/fade. A shadow-root rule
-    // keeps those ordinary inline writes from changing the rendered viewport.
-    const css = `${GIF_CONTAINMENT_SELECTOR} {
-      position: fixed !important;
-      top: ${viewportRect.top.toFixed(2)}px !important;
-      left: ${viewportRect.left.toFixed(2)}px !important;
-      right: auto !important;
-      bottom: auto !important;
-      width: ${viewportRect.width.toFixed(2)}px !important;
-      height: ${viewportRect.height.toFixed(2)}px !important;
-      max-width: none !important;
-      max-height: none !important;
-      overflow: hidden !important;
-    }`;
-    if (style.textContent !== css) {
-      style.textContent = css;
-    }
-  });
-  stylesheets.forEach((style, root) => {
-    if (!roots.has(root)) {
-      style.remove();
-      stylesheets.delete(root);
-    }
-  });
-}
-
-function restoreGifOverlayStyles(state, preserveStylesheets = false) {
-  const snapshots = Array.isArray(state?.gifStyleSnapshots) ? state.gifStyleSnapshots : [];
-  snapshots.forEach(restoreToolsAnimationGifNodeStyle);
-
-  if (state) {
-    state.gifStyleSnapshots = [];
-    if (!preserveStylesheets) {
-      state.gifContainmentStylesheets?.forEach((style) => style.remove());
-      state.gifContainmentStylesheets?.clear();
-    }
-  }
-}
-
-export function syncGifOverlayContainment(state, targetNode, hostNode) {
-  restoreGifOverlayStyles(state, true);
-
-  if (!hostNode) {
-    return;
-  }
-
-  const hostRect = hostNode.getBoundingClientRect?.();
-  const hostWidth = Number(hostRect?.width) > 0
-    ? Number(hostRect.width)
-    : Number(hostNode.clientWidth || hostNode.offsetWidth || 0);
-  const hostHeight = Number(hostRect?.height) > 0
-    ? Number(hostRect.height)
-    : Number(hostNode.clientHeight || hostNode.offsetHeight || 0);
-  if (!(hostWidth > 0 && hostHeight > 0)) {
-    return;
-  }
-
-  const viewportRect = {
-    left: Number(hostRect?.left) || 0,
-    top: Number(hostRect?.top) || 0,
-    width: hostWidth,
-    height: hostHeight,
-  };
-  syncGifOverlayStylesheets(state, targetNode?.ownerDocument || hostNode.ownerDocument, viewportRect);
-  const overlays = collectGifOverlayEntries(targetNode, hostNode);
-  if (!overlays.length) {
-    return;
-  }
-  const snapshots = [];
-  const snapshottedNodes = new Map();
-
-  const addSnapshot = (node) => {
-    if (!node?.style) {
-      return null;
-    }
-    if (snapshottedNodes.has(node)) {
-      return snapshottedNodes.get(node);
-    }
-
-    const snapshot = snapshotToolsAnimationGifNodeStyle(node);
-    if (!snapshot) {
-      return null;
-    }
-
-    snapshottedNodes.set(node, snapshot);
-    state.gifManagedNodes?.add?.(node);
-    snapshots.push(snapshot);
-    return snapshot;
-  };
-
-  overlays.forEach(({ mediaNode, frameNode, containerNode }) => {
-    applyToolsAnimationGifContainmentStyles({
-      state,
-      mediaNode,
-      frameNode,
-      containerNode,
-      viewportRect,
-      rememberSnapshot: (_styleState, node) => addSnapshot(node),
-    });
-  });
-
-  state.gifStyleSnapshots = snapshots;
-}
-
 function clearPendingRelease(state) {
   if (!state?.releaseTimeoutId) {
     return;
@@ -1133,7 +920,7 @@ export function buildZoomTransform(options = {}) {
     activeTargetZoomTransform,
     targetNode
   );
-  const boardRect = resolveStableMeasuredRect(
+  const boardRect = options.boardRectOverride || resolveStableMeasuredRect(
     boardSvg.getBoundingClientRect?.(),
     activeBoardZoomTransform,
     boardSvg
@@ -1981,7 +1768,101 @@ function hasAppliedZoomHostState(state, hostNode) {
     isOwnedStyleApplied(hostNode.style, "overflow-y", snapshot.overflowY);
 }
 
+function resolveVisualLayers(targetNode, boardSvg) {
+  if (!targetNode?.matches?.(`${NATIVE_BOARD_SELECTOR}, .showAnimations, .ad-ext-theme-board-canvas`)) return null;
+  // Keep Tools' board-area measurement anchors stable. Never reparent native
+  // nodes: the host renderer continues owning their identities and order.
+  const candidates = queryAll(targetNode, "svg, img, video").filter((node) =>
+    !isLegacyToolsAnimationMedia(node) && !node.closest?.(
+      "autodarts-tools-animations, .ad-ext-x01-bust-active-player-cracks, #ad-ext-dart-image-overlay"));
+  const layers = candidates.filter((node) => !candidates.some((parent) => parent !== node && parent.contains(node)));
+  return layers.includes(boardSvg) ? layers : null;
+}
+
+export function hasHealthyZoomSurface(state) {
+  if (state.visualZoomStates?.size) {
+    return Array.from(state.visualZoomStates.values()).every(hasHealthyZoomSurface);
+  }
+  const node = state.zoomedElement;
+  return Boolean(node && node.isConnected !== false && node.classList?.contains?.(ZOOM_CLASS) &&
+    isOwnedStyleApplied(node.style, "transform", state.targetStyleSnapshot?.transform));
+}
+
 export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, options = {}) {
+  const { targetNode, hostNode, boardSvg } = resolveApplyZoomNodes(zoomNodes);
+  const layers = resolveVisualLayers(targetNode, boardSvg);
+  if (!layers) {
+    if (state.visualZoomStates) resetZoom(speedConfig, state, true);
+    return applySingleZoom(zoomNodes, zoomLevel, speedConfig, intent, state, options);
+  }
+  clearPendingRelease(state);
+  if (state.zoomedElement && state.zoomedElement !== targetNode) resetZoom(speedConfig, state, true);
+  if (state.zoomHost && state.zoomHost !== hostNode) {
+    restoreHostStyle(state, state.zoomHost);
+    state.zoomHost = null;
+    state.hostStyleSnapshot = null;
+  }
+  const states = state.visualZoomStates ||= new Map();
+  states.forEach((layerState, node) => {
+    if (!layers.includes(node)) {
+      resetZoom(speedConfig, layerState, true);
+      states.delete(node);
+    }
+  });
+  const anchorRect = normalizeRect(targetNode.getBoundingClientRect?.());
+  if (!anchorRect?.width || !anchorRect?.height) return null;
+  // A live CSS transition reports intermediate SVG bounds. Store the layout
+  // relative to the stable frame so passive updates cannot chase those bounds.
+  function measureLayer(node, layerState) {
+    const previous = layerState?.layoutGeometry;
+    if (previous && isOwnedStyleApplied(node.style, "transform", layerState.targetStyleSnapshot?.transform)) {
+      const scaleX = anchorRect.width / previous.anchor.width;
+      const scaleY = anchorRect.height / previous.anchor.height;
+      return normalizeRect({ left: anchorRect.left + (previous.rect.left - previous.anchor.left) * scaleX,
+        top: anchorRect.top + (previous.rect.top - previous.anchor.top) * scaleY,
+        width: previous.rect.width * scaleX, height: previous.rect.height * scaleY });
+    }
+    return normalizeRect(node.getBoundingClientRect?.());
+  }
+  const boardRect = measureLayer(boardSvg, states.get(boardSvg));
+  const zoomData = buildZoomTransform({ ...zoomNodes, zoomLevel, intent,
+    x01Rules: options.x01Rules, windowRef: options.windowRef, baseTransform: "",
+    boardRectOverride: boardRect,
+  });
+  if (!zoomData) return null;
+  // Prepare every layer before writing the first transform, otherwise the
+  // later layers could measure an already zoomed primary SVG.
+  const prepared = layers.map((node) => {
+    const layerState = states.get(node) || {};
+    states.set(node, layerState);
+    const rect = measureLayer(node, layerState);
+    if (!rect?.width || !rect?.height) return null;
+    cacheTargetStyle(layerState, node);
+    adoptExternalTargetStyleChanges(layerState, node);
+    layerState.layoutGeometry = { rect, anchor: anchorRect };
+    const tx = zoomData.tx + (zoomLevel - 1) * (rect.left - zoomData.targetRect.left);
+    const ty = zoomData.ty + (zoomLevel - 1) * (rect.top - zoomData.targetRect.top);
+    const baseTransform = String(layerState.targetStyleSnapshot.transform.original.value || "");
+    return { node, layerState, data: { ...zoomData, tx, ty, baseTransform, targetRect: rect,
+      transform: `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${zoomLevel.toFixed(4)})`,
+      signature: `${zoomData.signature}|${baseTransform}|${tx.toFixed(2)}|${ty.toFixed(2)}` } };
+  });
+  if (prepared.some((layer) => !layer)) return null;
+  prepared.forEach(({ node, layerState, data }) => applySingleZoom(
+    { targetNode: node, hostNode: null, boardSvg }, zoomLevel, speedConfig, intent,
+    layerState, { ...options, zoomData: data }));
+  cacheHostStyle(state, hostNode);
+  adoptExternalHostStyleChanges(state, hostNode);
+  applyZoomHostState(state, hostNode);
+  targetNode.setAttribute("data-ad-ext-board-zoom-anchor", "true");
+  state.zoomedElement = targetNode;
+  state.zoomHost = hostNode;
+  state.lastAppliedSignature = zoomData.signature;
+  state.lastAppliedIntentSignature = zoomData.intentSignature;
+  return zoomData;
+}
+
+function applySingleZoom(zoomNodes, zoomLevel, speedConfig, intent, state, options = {}) {
   const { targetNode, hostNode, boardSvg } = resolveApplyZoomNodes(zoomNodes);
   if (!targetNode?.style) {
     return;
@@ -1992,7 +1873,7 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
   cacheTargetStyle(state, targetNode);
   adoptExternalTargetStyleChanges(state, targetNode);
   adoptExternalHostStyleChanges(state, hostNode);
-  const zoomData = buildApplyZoomData(targetNode, hostNode, boardSvg, zoomLevel, intent, state, options);
+  const zoomData = options.zoomData || buildApplyZoomData(targetNode, hostNode, boardSvg, zoomLevel, intent, state, options);
 
   if (!zoomData) {
     return null;
@@ -2015,9 +1896,6 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
       state.targetStyleSnapshot?.node === targetNode ? state.targetStyleSnapshot.transform : null
     ) &&
     hasAppliedZoomHostState(state, hostNode);
-  if (options.syncGifOverlayContainment !== false) {
-    syncGifOverlayContainment(state, targetNode, hostNode || targetNode);
-  }
   if (
     state.zoomedElement === targetNode &&
     state.zoomHost === normalizedHostNode &&
@@ -2073,10 +1951,30 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
   return zoomData;
 }
 
-export function resetZoom(speedConfig, state, immediate = false, options = {}) {
+export function resetZoom(speedConfig, state, immediate = false) {
+  if (state.visualZoomStates) {
+    clearPendingRelease(state);
+    state.visualZoomStates.forEach((layerState) => resetZoom(speedConfig, layerState, immediate));
+    const targetNode = state.zoomedElement;
+    const hostNode = state.zoomHost;
+    const finish = () => {
+      state.releaseTimeoutId = 0;
+      if (state.zoomedElement !== targetNode) return;
+      targetNode?.removeAttribute?.("data-ad-ext-board-zoom-anchor");
+      restoreHostStyle(state, hostNode);
+      state.zoomedElement = null;
+      state.zoomHost = null;
+      state.hostStyleSnapshot = null;
+      state.lastAppliedSignature = "";
+      state.lastAppliedIntentSignature = "";
+      state.lastAppliedZoomTransform = null;
+      state.visualZoomStates = null;
+    };
+    if (immediate) finish();
+    else state.releaseTimeoutId = setTimeout(finish, Math.max(0, Number(speedConfig?.zoomOutMs || 0)) + RELEASE_PADDING_MS);
+    return;
+  }
   clearPendingRelease(state);
-
-  const preserveGifContainment = Boolean(options.preserveGifContainment);
 
   const targetNode = state.zoomedElement;
   const hostNode = state.zoomHost;
@@ -2087,9 +1985,6 @@ export function resetZoom(speedConfig, state, immediate = false, options = {}) {
       : "";
 
   if (!targetNode) {
-    if (!preserveGifContainment) {
-      restoreGifOverlayStyles(state);
-    }
     if (hostNode) {
       restoreHostStyle(state, hostNode);
     }
@@ -2103,9 +1998,6 @@ export function resetZoom(speedConfig, state, immediate = false, options = {}) {
 
   if (immediate) {
     restoreTargetStyle(state, targetNode);
-    if (!preserveGifContainment) {
-      restoreGifOverlayStyles(state);
-    }
     if (hostNode) {
       restoreHostStyle(state, hostNode);
     }
@@ -2133,9 +2025,6 @@ export function resetZoom(speedConfig, state, immediate = false, options = {}) {
   const releaseDelay = Math.max(0, Number(speedConfig?.zoomOutMs || 0)) + RELEASE_PADDING_MS;
   state.releaseTimeoutId = setTimeout(() => {
     state.releaseTimeoutId = 0;
-    if (!preserveGifContainment) {
-      restoreGifOverlayStyles(state);
-    }
 
     if (state.zoomedElement === expectedTarget) {
       restoreTargetStyle(state, expectedTarget);

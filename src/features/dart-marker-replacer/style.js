@@ -1,5 +1,6 @@
 import { DART_DESIGN_KEYS } from "#feature-assets";
 import { normalizeDartImpactStyle, normalizeDartPerspectiveStrength } from "./pose.js";
+import { TOOLS_ANIMATION_ACTIVE_ATTRIBUTE } from "../shared/tools-animation-layer-controller.js";
 
 export const STYLE_ID = "ad-ext-dart-marker-replacer-style";
 export const OVERLAY_ID = "ad-ext-dart-image-overlay";
@@ -102,6 +103,11 @@ export function buildStyleText() {
   opacity: 0;
   transform-box: fill-box;
   will-change: transform, opacity;
+}
+
+html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] #${OVERLAY_ID},
+html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] #${OVERLAY_ID} * {
+  visibility: hidden !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

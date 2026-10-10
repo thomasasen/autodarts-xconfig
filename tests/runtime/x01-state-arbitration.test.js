@@ -421,8 +421,8 @@ test("P0 X01 to Cricket clears score, target overlay and zoom with stale X01 sta
       name: "zoom",
       mount: initializeTvBoardZoom,
       prepare: (scenario) => scenario.windowRef.localStorage.setItem("selectedBoard", "board-123"),
-      assertActive: (scenario) => scenario.board.classList.contains(ZOOM_CLASS),
-      assertInactive: (scenario) => !scenario.board.classList.contains(ZOOM_CLASS),
+      assertActive: (scenario) => scenario.layers[0].classList.contains(ZOOM_CLASS),
+      assertInactive: (scenario) => !scenario.layers[0].classList.contains(ZOOM_CLASS),
     },
   ];
 

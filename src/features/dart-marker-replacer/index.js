@@ -18,6 +18,7 @@ import {
 } from "./style.js";
 import { runDartMarkerReplacerPreview } from "./preview.js";
 import { createZoomTransitionTracker } from "./zoom-transition-tracker.js";
+import { acquireToolsAnimationLayerController } from "../shared/tools-animation-layer-controller.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 
 const FEATURE_KEY = "dart-marker-replacer";
@@ -278,6 +279,7 @@ export function initializeDartMarkerReplacer(context = {}) {
   }
 
   domGuards.ensureStyle(STYLE_ID, buildStyleText());
+  const toolsAnimationLayers = acquireToolsAnimationLayerController({ documentRef, windowRef });
 
   const state = createDartMarkerReplacerState(windowRef);
   state.lastHref = getCurrentHref(windowRef);
@@ -419,6 +421,7 @@ export function initializeDartMarkerReplacer(context = {}) {
     cleanedUp = true;
 
     scheduler?.cancel?.();
+    toolsAnimationLayers.release();
     state.cancelZoomTransitionLoop?.();
 
     try {

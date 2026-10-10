@@ -917,7 +917,8 @@ export function resolveBoardZoomTargetNode(boardSvg) {
   }
 
   const nativeBoard = boardSvg.closest(NATIVE_BOARD_SELECTOR);
-  if (nativeBoard && isValidZoomTargetCandidate(nativeBoard, boardSvg)) {
+  if (nativeBoard && (nativeBoard.getAttribute("data-ad-ext-board-zoom-anchor") === "true" ||
+      isValidZoomTargetCandidate(nativeBoard, boardSvg))) {
     return nativeBoard;
   }
   const stableBoardCanvas = boardSvg.closest(".ad-ext-theme-board-canvas");
