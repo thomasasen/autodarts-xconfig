@@ -362,6 +362,40 @@ test("xConfig shell injects below Legal with its bullseye menu glyph, opens rout
   runtime.stop();
 });
 
+test("xConfig shell updates the reduced motion notice without replacing existing panel content and cleans up on stop", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  windowRef.navigator = { platform: "Win32", userAgent: "Chrome" };
+  const listeners = new Set();
+  const mediaQuery = {
+    matches: true,
+    addEventListener: (_type, listener) => listeners.add(listener),
+    removeEventListener: (_type, listener) => listeners.delete(listener),
+  };
+  windowRef.matchMedia = () => mediaQuery;
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  try {
+    await waitForMenuButton(documentRef);
+    documentRef.getElementById("ad-xconfig-menu-item").click();
+    await waitForShellOpen(windowRef, documentRef);
+    const shell = documentRef.querySelector(".ad-xconfig-shell");
+    const header = shell.querySelector(".ad-xconfig-header");
+    assert.equal(shell.firstChild.getAttribute("data-adxconfig-reduced-motion"), "true");
+    mediaQuery.matches = false;
+    listeners.forEach((listener) => listener());
+    assert.equal(shell.querySelector("[data-adxconfig-reduced-motion]"), null);
+    assert.equal(shell.querySelector(".ad-xconfig-header"), header);
+    mediaQuery.matches = true;
+    listeners.forEach((listener) => listener());
+    assert.equal(shell.querySelectorAll("[data-adxconfig-reduced-motion]").length, 1);
+    assert.ok(listeners.size > 0);
+  } finally {
+    runtime.stop();
+  }
+  assert.equal(listeners.size, 0);
+  assert.equal(documentRef.getElementById("ad-xconfig-panel-host"), null);
+});
+
 test("xConfig shell normalizes legacy /ad-xconfig path on the new Autodarts domain", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();

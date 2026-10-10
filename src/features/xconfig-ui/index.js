@@ -28,6 +28,7 @@ import {
 } from "./render-signature.js";
 import { createShellFocusController } from "./focus-controller.js";
 import { createShellRenderController } from "./render-controller.js";
+import { createReducedMotionNoticeController } from "./reduced-motion-notice.js";
 import { createShellRouteController } from "./route-controller.js";
 import {
   applyThemeBackgroundStatusNode,
@@ -653,6 +654,11 @@ function ensureXConfigShell(options = {}) {
   });
 
   const focusController = createShellFocusController({ documentRef, panelHostId: PANEL_HOST_ID });
+  const reducedMotionNoticeController = createReducedMotionNoticeController({
+    windowRef,
+    documentRef,
+    getShell: () => state.shellNode?.querySelector(".ad-xconfig-shell"),
+  });
   renderController = createShellRenderController({
     buildShellContent,
     buildShellRenderSignature,
@@ -674,6 +680,7 @@ function ensureXConfigShell(options = {}) {
       specialHitHighlightsPreviewController?.stop();
     },
     onAfterRender: () => {
+      reducedMotionNoticeController.sync();
       x01RemainingScoreBarPreviewController?.start();
       specialHitHighlightsPreviewController?.start();
       focusController.afterRender();
@@ -762,6 +769,7 @@ function ensureXConfigShell(options = {}) {
     },
     onDocumentPointerout: (event) => effectPreviewController?.handlePreviewEndEvent(event),
     onMounted: () => {
+      reducedMotionNoticeController.start();
       domGuards.ensureStyle(
         SPECIAL_HIT_HIGHLIGHTS_PREVIEW_STYLE_ID,
         buildSpecialHitHighlightsStyleText()
@@ -769,6 +777,7 @@ function ensureXConfigShell(options = {}) {
       retainElectricPreviewFilters();
     },
     onTeardown: () => {
+      reducedMotionNoticeController.stop();
       effectPreviewController?.stopActivePreview();
       x01RemainingScoreBarPreviewController?.stop();
       specialHitHighlightsPreviewController?.stop();

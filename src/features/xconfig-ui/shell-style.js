@@ -122,6 +122,11 @@ ${buildX01RemainingScoreBarStyleText()}
 #${PANEL_HOST_ID} .ad-xconfig-notice--success{background:rgba(58,180,122,.17);border-color:rgba(58,180,122,.52)}
 #${PANEL_HOST_ID} .ad-xconfig-notice--error{background:rgba(255,84,84,.15);border-color:rgba(255,84,84,.5)}
 #${PANEL_HOST_ID} .ad-xconfig-notice--info{background:rgba(74,178,255,.18);border-color:rgba(74,178,255,.5)}
+#${PANEL_HOST_ID} .ad-xconfig-motion-notice{margin:0 0 .85rem;flex-wrap:wrap}
+#${PANEL_HOST_ID} .ad-xconfig-motion-notice > div:first-child{flex:1 1 360px;min-width:0}
+#${PANEL_HOST_ID} .ad-xconfig-motion-actions{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+#${PANEL_HOST_ID} .ad-xconfig-motion-notice .ad-xconfig-notice-action{display:inline-block;text-decoration:none;white-space:normal;line-height:1.3}
+#${PANEL_HOST_ID} .ad-xconfig-motion-help{display:block;margin-top:.35rem;line-height:1.5}
 #${PANEL_HOST_ID} .ad-xconfig-header-actions{display:flex;flex:0 1 auto;flex-wrap:wrap;justify-content:flex-end;gap:8px}
 #${PANEL_HOST_ID} .ad-xconfig-update-panel{min-width:min(100%,360px);padding:10px 12px;border-radius:10px;border:1px solid var(--adx-border);background:var(--adx-raised);display:grid;gap:8px}
 #${PANEL_HOST_ID} .ad-xconfig-update-panel[data-update-state="available"]{border-color:var(--adx-primary);background:var(--adx-surface)}
