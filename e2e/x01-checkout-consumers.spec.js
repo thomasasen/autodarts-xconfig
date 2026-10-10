@@ -65,6 +65,18 @@ test("Chromium observers keep checkout targets and TV zoom aligned through darts
 
   const result = await page.evaluate(async () => {
     const api = window.checkoutConsumers;
+    const main = document.querySelector("main");
+    const semanticHost = document.createElement("div");
+    semanticHost.className = "semantic-host";
+    let semanticWrapper = document.createElement("section");
+    semanticWrapper.className = "semantic-wrapper";
+    const scoreCard = main.querySelector(".overflow-clip");
+    const initialTurnSurface = Array.from(main.querySelectorAll(".bg-surface-surface"))
+      .find((node) => node.children.length === 2);
+    scoreCard.before(semanticHost);
+    semanticWrapper.append(scoreCard, initialTurnSurface);
+    semanticHost.appendChild(semanticWrapper);
+
     const subscribers = new Set();
     const state = {
       boardId: "hardware-board",
@@ -159,8 +171,8 @@ test("Chromium observers keep checkout targets and TV zoom aligned through darts
       await new Promise(requestAnimationFrame);
       await new Promise(requestAnimationFrame);
     };
-    const getTurn = () => {
-      const surface = Array.from(document.querySelectorAll("main .bg-surface-surface"))
+    const getTurn = (rootNode = document) => {
+      const surface = Array.from(rootNode.querySelectorAll(".bg-surface-surface"))
         .find((node) => node.children.length === 2);
       return {
         rows: Array.from(surface.children[0].children),
@@ -173,22 +185,33 @@ test("Chromium observers keep checkout targets and TV zoom aligned through darts
       span.textContent = value;
       row.replaceChildren(span);
     };
-    const setVisit = (score, throws, route, scoreMutation) => {
-      state.score = score;
-      state.throws = throws;
-      state.route = route;
-      subscribers.forEach((listener) => listener());
-
-      const scoreNode = document.querySelector("main .overflow-clip .font-number.overflow-hidden");
+    const writeDomVisit = (rootNode, score, throws, route, scoreMutation) => {
+      const scoreNode = rootNode.querySelector(".overflow-clip .font-number.overflow-hidden");
       if (scoreMutation === "characterData") {
         scoreNode.firstChild.data = String(score);
       } else {
         scoreNode.replaceChildren(document.createTextNode(String(score)));
       }
-      const { rows, total } = getTurn();
+      const { rows, total } = getTurn(rootNode);
       const values = [...throws, ...route];
       rows.forEach((row, index) => setRow(row, values[index] || "", index >= throws.length));
       total.replaceChildren(document.createTextNode(String(121 - score)));
+    };
+    const setVisit = (score, throws, route, scoreMutation) => {
+      state.score = score;
+      state.throws = throws;
+      state.route = route;
+      subscribers.forEach((listener) => listener());
+      writeDomVisit(document, score, throws, route, scoreMutation);
+    };
+    const replaceSemanticWrapper = (score, throws, route) => {
+      state.score = score;
+      state.throws = throws;
+      state.route = route;
+      const replacement = semanticWrapper.cloneNode(true);
+      writeDomVisit(replacement, score, throws, route, "childList");
+      semanticHost.replaceChildren(replacement);
+      semanticWrapper = replacement;
     };
     const snapshot = () => {
       const overlay = document.getElementById("ad-ext-checkout-targets");
@@ -196,6 +219,7 @@ test("Chromium observers keep checkout targets and TV zoom aligned through darts
       const board = document.querySelector('[role="img"][aria-label="Dartboard"]');
       const transformedLayer = Array.from(board.querySelectorAll("svg"))
         .find((node) => node.style.transform);
+      const targetStyle = firstTarget ? window.getComputedStyle(firstTarget) : null;
       return {
         target: firstTarget
           ? `${firstTarget.dataset.targetRing}:${firstTarget.dataset.targetValue || ""}`
@@ -203,6 +227,9 @@ test("Chromium observers keep checkout targets and TV zoom aligned through darts
         zoomed: Boolean(document.querySelector(".ad-ext-tv-board-zoom")),
         zoomNode: document.querySelector(".ad-ext-tv-board-zoom")?.getAttribute("class") || "",
         transform: transformedLayer?.style.transform || "",
+        targetConnected: firstTarget?.isConnected === true,
+        targetGeometry: firstTarget?.getAttribute("d") || firstTarget?.getAttribute("r") || "",
+        targetOpacity: Number.parseFloat(targetStyle?.opacity || "0"),
         debug: debugEvents.filter((event) =>
           ["apply", "apply-missing-transform", "reset"].includes(event?.status)
         ).at(-1) || null,
@@ -227,12 +254,16 @@ test("Chromium observers keep checkout targets and TV zoom aligned through darts
       subscribers.forEach((listener) => listener());
       await waitForRender();
       const restoredBoardIdentity = snapshot();
+      replaceSemanticWrapper(40, ["T20", "T7"], ["D20"]);
+      await waitForRender();
+      const wrapperReplacement = snapshot();
       return {
         dartOne,
         dartTwo,
         dartThree,
         missingBoardIdentity,
         restoredBoardIdentity,
+        wrapperReplacement,
         mutationTypes: Array.from(mutationTypes).sort(),
         browser: navigator.userAgent,
         platform: navigator.platform,
@@ -258,6 +289,9 @@ test("Chromium observers keep checkout targets and TV zoom aligned through darts
     expect(dart.zoomed).toBe(true);
     expect(dart.transform).toContain("scale(2.75)");
     expect(dart.debug?.status).toBe("apply");
+    expect(dart.targetConnected).toBe(true);
+    expect(dart.targetGeometry).not.toBe("");
+    expect(dart.targetOpacity).toBeGreaterThan(0);
   }
   expect(result.missingBoardIdentity.zoomed).toBe(false);
   expect(result.missingBoardIdentity.transform).toBe("");
@@ -268,6 +302,13 @@ test("Chromium observers keep checkout targets and TV zoom aligned through darts
   expect(result.restoredBoardIdentity.zoomed).toBe(true);
   expect(result.restoredBoardIdentity.transform).toContain("scale(2.75)");
   expect(result.restoredBoardIdentity.debug?.status).toBe("apply");
+  expect(result.wrapperReplacement.target).toBe("D:20");
+  expect(result.wrapperReplacement.targetConnected).toBe(true);
+  expect(result.wrapperReplacement.targetGeometry).not.toBe("");
+  expect(result.wrapperReplacement.targetOpacity).toBeGreaterThan(0);
+  expect(result.wrapperReplacement.zoomed).toBe(true);
+  expect(result.wrapperReplacement.transform).toContain("scale(2.75)");
+  expect(result.wrapperReplacement.debug).toMatchObject({ status: "apply", segment: "D20" });
   expect(result.mutationTypes).toEqual(expect.arrayContaining(["attributes", "characterData", "childList"]));
   expect(result.capabilities).toEqual({
     mutationObserver: true,

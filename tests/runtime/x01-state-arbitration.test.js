@@ -265,6 +265,25 @@ test("checkout and zoom mutation adapters retain their node normalization and in
   assert.deepEqual(resolveTvBoardZoomMutationReaction([{ type: "characterData", target: nestedText }]), relevant);
 });
 
+test("checkout and zoom observers detect semantic surfaces inside replaced wrappers", () => {
+  const scenario = createScenario();
+  const semanticHost = scenario.node(scenario.documentRef.main, "div", "semantic-host");
+  const wrapper = scenario.node(semanticHost, "section", "", "replacement-wrapper");
+  const nestedSuggestion = scenario.node(wrapper, "div", "text-checkout-suggestion", "S25");
+  const mutation = {
+    type: "childList",
+    target: semanticHost,
+    addedNodes: [wrapper],
+    removedNodes: [],
+  };
+  const relevant = { shouldSchedule: true, shouldInvalidateBoardCache: false };
+
+  assert.equal(wrapper.closest(".text-checkout-suggestion"), null);
+  assert.equal(wrapper.querySelector(".text-checkout-suggestion"), nestedSuggestion);
+  assert.deepEqual(resolveCheckoutBoardMutationReaction([mutation]), relevant);
+  assert.deepEqual(resolveTvBoardZoomMutationReaction([mutation]), relevant);
+});
+
 for (const mutationType of ["characterData", "childList", "attributes"]) {
   test(`checkout targets recover for darts two and three when native ${mutationType} updates complete a partial render`, () => {
     const scenario = createScenario({

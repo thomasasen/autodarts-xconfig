@@ -7,6 +7,7 @@ import {
 import { OVERLAY_ID, STYLE_ID, buildStyleText, resolveBoardTargetVisualConfig } from "./style.js";
 import {
   createManagedNodeMatcher,
+  elementContainsDescendantSelectors,
   elementMatchesAncestorSelectors,
   getTouchedMutationNodes,
   hasExternalDomMutation,
@@ -57,6 +58,16 @@ function nodeOrAncestorMatchesAnySelector(node, selectors = []) {
   return elementMatchesAncestorSelectors(elementNode, selectors);
 }
 
+function changedNodeOrDescendantMatchesAnySelector(mutation, selectors = []) {
+  const targetNode = mutation?.target || null;
+  return getTouchedMutationNodes(mutation).some((node) => {
+    if (nodeOrAncestorMatchesAnySelector(node, selectors)) {
+      return true;
+    }
+    return node !== targetNode && elementContainsDescendantSelectors(node, selectors);
+  });
+}
+
 function nodesAreRelated(leftNode, rightNode) {
   if (!leftNode || !rightNode) {
     return false;
@@ -87,8 +98,9 @@ function shouldInvalidateBoardSurfaceForMutation(mutation, watchedNodes = []) {
     return true;
   }
 
-  return touchedNodes.some((node) =>
-    nodeOrAncestorMatchesAnySelector(node, BOARD_STRUCTURE_CHILDLIST_SELECTORS)
+  return changedNodeOrDescendantMatchesAnySelector(
+    mutation,
+    BOARD_STRUCTURE_CHILDLIST_SELECTORS
   );
 }
 
@@ -139,9 +151,9 @@ export function resolveCheckoutBoardMutationReaction(mutations = [], context = {
     }
 
     if (mutationType === "childList") {
-      const touchedNodes = getTouchedMutationNodes(mutation);
-      const touchesSemanticSurface = touchedNodes.some((node) =>
-        nodeOrAncestorMatchesAnySelector(node, CHECKOUT_SEMANTIC_CHILDLIST_SELECTORS)
+      const touchesSemanticSurface = changedNodeOrDescendantMatchesAnySelector(
+        mutation,
+        CHECKOUT_SEMANTIC_CHILDLIST_SELECTORS
       );
       const invalidatesBoardSurface = shouldInvalidateBoardSurfaceForMutation(
         mutation,

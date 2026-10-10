@@ -19,6 +19,7 @@ import {
 } from "./style.js";
 import {
   createManagedNodeMatcher,
+  elementContainsDescendantSelectors,
   elementMatchesAncestorSelectors,
   getTouchedMutationNodes as collectTouchedMutationNodes,
   hasExternalDomMutation,
@@ -212,10 +213,6 @@ function getTouchedMutationNodes(mutation) {
   return collectTouchedMutationNodes(mutation, (value) => Array.from(value || []));
 }
 
-function containsMatchingDescendant(node, selectors) {
-  return selectors.some((selector) => Boolean(node?.querySelector?.(selector)));
-}
-
 function isDirectWatchedNodeMutation(mutation, watchedNodes = []) {
   if (!Array.isArray(watchedNodes) || !watchedNodes.length) {
     return false;
@@ -276,8 +273,19 @@ function shouldInvalidateBoardSurfaceForTvBoardZoomMutation(mutation, watchedNod
 
   return getTouchedMutationNodes(mutation).some((node) =>
     nodeOrAncestorMatchesAnySelector(node, ZOOM_STRUCTURE_CHILDLIST_SELECTORS) ||
-    containsMatchingDescendant(node, ZOOM_STRUCTURE_CHILDLIST_SELECTORS)
+    elementContainsDescendantSelectors(node, ZOOM_STRUCTURE_CHILDLIST_SELECTORS)
   );
+}
+
+function changedNodeContainsSemanticSurface(mutation) {
+  const targetNode = mutation?.target || null;
+  return getTouchedMutationNodes(mutation).some((node) => {
+    if (nodeOrAncestorMatchesAnySelector(node, ZOOM_SEMANTIC_CONTAINER_SELECTORS)) {
+      return true;
+    }
+    return node !== targetNode &&
+      elementContainsDescendantSelectors(node, ZOOM_SEMANTIC_CONTAINER_SELECTORS);
+  });
 }
 
 export function resolveTvBoardZoomMutationReaction(mutations = [], context = {}) {
@@ -339,9 +347,7 @@ export function resolveTvBoardZoomMutationReaction(mutations = [], context = {})
         watchedNodes
       );
       const touchesSemanticSurface = isDescendantWatchedNodeMutation(mutation, semanticNodes) ||
-        getTouchedMutationNodes(mutation).some((node) =>
-          nodeOrAncestorMatchesAnySelector(node, ZOOM_SEMANTIC_CONTAINER_SELECTORS)
-        );
+        changedNodeContainsSemanticSurface(mutation);
       if (touchesSemanticSurface || invalidatesBoardSurface) {
         shouldSchedule = true;
       }

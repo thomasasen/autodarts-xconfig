@@ -116,6 +116,16 @@ export function elementMatchesAncestorSelectors(elementNode, selectors) {
   });
 }
 
+export function elementContainsDescendantSelectors(elementNode, selectors) {
+  return selectors.some((selector) => {
+    try {
+      return Boolean(elementNode?.querySelector?.(selector));
+    } catch (_) {
+      return false;
+    }
+  });
+}
+
 export function hasExternalDomMutation(mutations = [], isManagedNode = null) {
   if (!Array.isArray(mutations) || !mutations.length || typeof isManagedNode !== "function") {
     return true;
