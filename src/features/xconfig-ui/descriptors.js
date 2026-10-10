@@ -525,6 +525,9 @@ export const xconfigDescriptors = Object.freeze([
       selectValueLabelField("zoomLevel", "Zoomstärke", [
         [2.35, "Leicht"], [2.75, "Mittel"], [3.15, "Stark"],
       ]),
+      selectValueLabelField("zoomStyle", "Zoom-Stil", [
+        ["standard", "Standard"], ["cinematic", "Cinematic"],
+      ]),
       selectValueLabelField("zoomSpeed", "Zoom-Geschwindigkeit", [
         ["schnell", "Schnell"], ["mittel", "Mittel"], ["langsam", "Langsam"],
       ]),

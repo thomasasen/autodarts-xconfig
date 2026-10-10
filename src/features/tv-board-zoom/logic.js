@@ -1937,7 +1937,8 @@ function applySingleZoom(zoomNodes, zoomLevel, speedConfig, intent, state, optio
     state.targetStyleSnapshot?.transition,
     targetNode.style,
     "transition",
-    isSameVisualIntent ? "none" : `transform ${speedConfig.zoomInMs}ms ${speedConfig.easingIn}`
+    isSameVisualIntent ? "none" : `transform ${speedConfig.zoomInMs}ms ${speedConfig.easingIn}`,
+    speedConfig.transitionPriority || ""
   );
   setOwnedStyle(
     state.targetStyleSnapshot?.transform,
@@ -2031,7 +2032,8 @@ export function resetZoom(speedConfig, state, immediate = false) {
     targetSnapshot?.transition,
     targetNode.style,
     "transition",
-    `transform ${speedConfig.zoomOutMs}ms ${speedConfig.easingOut}`
+    `transform ${speedConfig.zoomOutMs}ms ${speedConfig.easingOut}`,
+    speedConfig.transitionPriority || ""
   );
   setOwnedStyle(targetSnapshot?.transform, targetNode.style, "transform", snapshotTransform);
 

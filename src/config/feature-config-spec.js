@@ -44,6 +44,7 @@ const BOARD_TARGET_SELECTION_MODES = new Set(["next", "all", "finish"]);
 const BOARD_TARGET_THEMES = new Set(["violet", "cyan", "amber", "lime", "rose", "white"]);
 const TV_ZOOM_LEVELS = new Set([2.35, 2.75, 3.15]);
 const TV_ZOOM_SPEEDS = new Set(["schnell", "mittel", "langsam"]);
+const TV_ZOOM_STYLES = new Set(["standard", "cinematic"]);
 const TV_ZOOM_TARGETS = new Set(["finish-only", "route-first"]);
 const SUGGESTION_STYLES = new Set(["badge", "ribbon", "stripe", "ticket", "outline"]);
 const SUGGESTION_COLOR_THEMES = new Set(["amber", "cyan", "rose"]);
@@ -373,7 +374,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   cricketLayout: DEFAULT_CRICKET_LAYOUT_CONFIG,
   checkoutScoreHighlight: { enabled: false, effect: "grow-only", colorTheme: "159, 219, 88", intensity: "standard", triggerSource: "suggestion-first", debug: false },
   checkoutTargetHighlights: { enabled: false, visualPreset: "soft-pulse", segmentStyle: "surface-outline", singleRing: "both", targetSelectionMode: "next", colorTheme: "amber", debug: false },
-  tvBoardZoom: { enabled: false, zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true, debug: false },
+  tvBoardZoom: { enabled: false, zoomLevel: 2.75, zoomSpeed: "mittel", zoomStyle: "standard", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true, debug: false },
   checkoutSuggestionStyles: { enabled: false, style: "ribbon", labelText: "CHECKOUT", colorTheme: "amber", colorNumbers: false, debug: false },
   x01BustActivePlayerHighlight: { enabled: false, effectTarget: "player-card", crackCount: 2, soundEnabled: true, debug: false },
   avgTrendArrow: { enabled: false, durationMs: 320, size: "standard", debug: false },
@@ -427,7 +428,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
 const RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
   checkoutScoreHighlight: { effect: "fade-blink", colorTheme: "56, 189, 248", intensity: "standard", triggerSource: "suggestion-first" },
   checkoutTargetHighlights: { visualPreset: "fast-blink", segmentStyle: "surface-outline", singleRing: "both", targetSelectionMode: "next", colorTheme: "violet" },
-  tvBoardZoom: { zoomLevel: 2.75, zoomSpeed: "mittel", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true },
+  tvBoardZoom: { zoomLevel: 2.75, zoomSpeed: "mittel", zoomStyle: "standard", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true },
   checkoutSuggestionStyles: { style: "stripe", labelText: "CHECKOUT", colorTheme: "amber" },
   x01BustActivePlayerHighlight: { effectTarget: "player-card", crackCount: 2, soundEnabled: true },
   avgTrendArrow: { durationMs: 500, size: "standard" },
@@ -635,7 +636,7 @@ const FEATURE_NORMALIZERS = Object.freeze({
     return { enabled: normalizeBoolean(rawConfig.enabled, false), visualPreset: normalizeMappedStringChoice(resolveLegacyBoardTargetVisualPreset(rawConfig), "soft-pulse", BOARD_TARGET_VISUAL_PRESET_ALIASES), segmentStyle: normalizeStringChoice(rawConfig.segmentStyle, "surface-outline", BOARD_TARGET_SEGMENT_STYLES), singleRing: "both", targetSelectionMode: normalizeStringChoice(rawConfig.targetSelectionMode, "next", BOARD_TARGET_SELECTION_MODES), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "amber", BOARD_TARGET_THEMES), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   tvBoardZoom(rawConfig = {}) {
-    return { enabled: normalizeBoolean(rawConfig.enabled, false), zoomLevel: normalizeNumberChoice(rawConfig.zoomLevel, 2.75, TV_ZOOM_LEVELS), zoomSpeed: normalizeStringChoice(rawConfig.zoomSpeed, "mittel", TV_ZOOM_SPEEDS), checkoutZoomEnabled: normalizeBoolean(rawConfig.checkoutZoomEnabled, true), checkoutZoomTarget: normalizeStringChoice(rawConfig.checkoutZoomTarget, "finish-only", TV_ZOOM_TARGETS), t20SetupZoomEnabled: normalizeBoolean(rawConfig.t20SetupZoomEnabled, true), debug: normalizeBoolean(rawConfig.debug, false) };
+    return { enabled: normalizeBoolean(rawConfig.enabled, false), zoomLevel: normalizeNumberChoice(rawConfig.zoomLevel, 2.75, TV_ZOOM_LEVELS), zoomSpeed: normalizeStringChoice(rawConfig.zoomSpeed, "mittel", TV_ZOOM_SPEEDS), zoomStyle: normalizeStringChoice(rawConfig.zoomStyle, "standard", TV_ZOOM_STYLES), checkoutZoomEnabled: normalizeBoolean(rawConfig.checkoutZoomEnabled, true), checkoutZoomTarget: normalizeStringChoice(rawConfig.checkoutZoomTarget, "finish-only", TV_ZOOM_TARGETS), t20SetupZoomEnabled: normalizeBoolean(rawConfig.t20SetupZoomEnabled, true), debug: normalizeBoolean(rawConfig.debug, false) };
   },
   checkoutSuggestionStyles(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), style: normalizeStringChoice(rawConfig.style, "ribbon", SUGGESTION_STYLES), labelText: normalizeMappedStringChoice(rawConfig.labelText, "CHECKOUT", { "": "", checkout: "CHECKOUT", finish: "FINISH" }), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "amber", SUGGESTION_COLOR_THEMES), colorNumbers: normalizeBoolean(rawConfig.colorNumbers, false), debug: normalizeBoolean(rawConfig.debug, false) };

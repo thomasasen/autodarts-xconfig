@@ -527,12 +527,13 @@ export function initializeTvBoardZoom(context = {}) {
       : {
           zoomLevel: 2.75,
           zoomSpeed: "mittel",
+          zoomStyle: "standard",
           checkoutZoomEnabled: true,
           checkoutZoomTarget: "finish-only",
           t20SetupZoomEnabled: true,
         };
 
-  const speedConfig = resolveZoomSpeedConfig(featureConfig.zoomSpeed);
+  const speedConfig = resolveZoomSpeedConfig(featureConfig.zoomSpeed, featureConfig.zoomStyle);
   const zoomLevel = resolveZoomLevel(featureConfig.zoomLevel);
   const zoomState = {
     zoomedElement: null,

@@ -131,6 +131,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 **Automatischer Board-Zoom**
 - `Zoomstärke`: Mittel
+- `Zoom-Stil`: Standard
 - `Zoom-Geschwindigkeit`: Mittel
 - `Checkout-Zoom`: An
 - `Zoom auf`: Nur Finish-Feld
@@ -759,13 +760,16 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 ### Automatischer Board-Zoom
 
 - Gilt für: `X01`
-- Kurz: Bei klaren X01-Zielsituationen zoomt die Ansicht auf relevante Board-Bereiche und hält den Fokus in sinnvollen Finish-Momenten stabil.
+- Kurz: Bei klaren X01-Zielsituationen zoomt die Ansicht auf relevante Board-Bereiche und hält den Fokus in sinnvollen Finish-Momenten stabil. Optional fährt `Cinematic` mit sanftem Anlauf und Abbremsen wie eine Zoomlinse ein und aus.
 - Grafisch: Das Board wird innerhalb des rechten Board-Bereichs vergrößert, damit relevante Segmente mehr Platz bekommen. Nach `T20,T20,T20` bleibt der Fokus bis zum Spielerwechsel bestehen, nach getroffenem Checkout bis zum Leg-Ende. Klicks auf die Wurfanzeigenleiste zoomen sofort aus, damit Korrekturen auf der ganzen Scheibe möglich bleiben.
 - Wann sinnvoll? Wenn du bei dritten Darts und Finishes mehr Fokus auf Zielbereiche willst, aber bei Korrekturen schnell wieder die ganze Scheibe brauchst.
 - `Zoomstärke`: Bestimmt die Stärke des Board-Zooms.
   - `Leicht`: Diese Stufe vergrößert das Ziel spürbar, lässt aber noch viel vom restlichen Board im Bild. Der Effekt wirkt eher wie ein sanfter Fokus als wie ein enger Ausschnitt.
   - `Mittel`: Diese Stufe liefert den vorgesehenen Mittelwert für den Board-Zoom. Das Zielsegment wird deutlich hervorgehoben, während rundherum noch genug Board sichtbar bleibt, um sich räumlich zu orientieren.
   - `Stark`: Diese Stufe zieht die Kamera am stärksten in den relevanten Bereich hinein. Das Zielsegment dominiert das Bild klarer, während das restliche Board stärker aus dem Blickfeld rückt.
+- `Zoom-Stil`: Wählt den Bewegungsstil des Board-Zooms.
+  - `Standard`: Die bisherigen Geschwindigkeiten und Bewegungsabläufe bleiben erhalten.
+  - `Cinematic`: Bei Schnell dauert das Rein- und Rauszoomen 320/260 ms, bei Mittel 420/340 ms und bei Langsam 520/420 ms. Die Zoomfahrt bleibt auch bei reduzierter Bewegung im Browser oder System aktiv. Korrekturklicks zoomen weiterhin sofort aus.
 - `Zoom-Geschwindigkeit`: Regelt die Geschwindigkeit des Zooms.
   - `Schnell`: Diese Stufe verkürzt Ein- und Auszoomung sichtbar und lässt den Fokus direkter anspringen. Die Bewegung bleibt weich, fühlt sich aber deutlich sportlicher und unmittelbarer an.
   - `Mittel`: Diese Stufe ist der Mittelweg zwischen schnellem Fokuswechsel und weicher Kamerafahrt. Die Bewegung bleibt klar wahrnehmbar, ohne das Geschehen unnötig zu verzögern.

@@ -2586,6 +2586,12 @@ test("xConfig shell persists checkout board target and TV zoom select settings",
     (config) => config.features.tvBoardZoom.checkoutZoomTarget === "route-first"
   );
 
+  clickSelectSettingOption(documentRef, "tv-board-zoom", "zoomStyle", "cinematic");
+  await waitForStoredConfig(
+    localStorage,
+    (config) => config.features.tvBoardZoom.zoomStyle === "cinematic"
+  );
+
   clickSettingToggle(documentRef, "tv-board-zoom", "t20SetupZoomEnabled", false);
   await waitForStoredConfig(
     localStorage,
@@ -2594,6 +2600,7 @@ test("xConfig shell persists checkout board target and TV zoom select settings",
 
   storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(storedConfig.features.tvBoardZoom.checkoutZoomTarget, "route-first");
+  assert.equal(storedConfig.features.tvBoardZoom.zoomStyle, "cinematic");
   assert.equal(storedConfig.features.tvBoardZoom.t20SetupZoomEnabled, false);
 
   runtime.stop();

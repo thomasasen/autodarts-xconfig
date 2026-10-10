@@ -37,6 +37,20 @@ function createEnvelope(features, options = {}) {
   };
 }
 
+test("TV zoom cinematic style and speed survive settings export and import", () => {
+  const configured = normalizeRuntimeConfig({
+    features: { tvBoardZoom: { zoomStyle: "cinematic", zoomSpeed: "langsam" } },
+  });
+  const exported = createSettingsExport(configured, { descriptors: xconfigDescriptors });
+  assert.equal(exported.payload.features.tvBoardZoom.settings.zoomStyle, "cinematic");
+  const imported = analyzeSettingsImport(exported.payload, normalizeRuntimeConfig(), {
+    descriptors: xconfigDescriptors,
+    mode: "replace",
+  });
+  assert.equal(imported.config.features.tvBoardZoom.zoomStyle, "cinematic");
+  assert.equal(imported.config.features.tvBoardZoom.zoomSpeed, "langsam");
+});
+
 test("Cricket and Tactics profiles survive export/import with separate layout settings and palettes", () => {
   const values = (feature, field, value) => Object.values(buildFeatureSettingPatch(feature, field, value).features)[0];
   const configured = normalizeRuntimeConfig({

@@ -289,6 +289,7 @@ function startModernZoom(options = {}) {
   const events = [];
   const cleanup = startTvBoardZoom({ ...fixture,
     gameState: options.gameState || { isX01Variant: () => false },
+    featureConfig: options.featureConfig,
     featureDebug: { enabled: true, log: (_summary, event) => events.push(event), warn: () => {} },
   });
   const tick = (node = fixture.total) => {
@@ -308,6 +309,36 @@ function startModernZoom(options = {}) {
     setBoardInputMode,
     stop() { cleanup(); timers.restoreGlobals(); },
   };
+}
+
+for (const [speed, zoomInMs, zoomOutMs] of [["schnell", 320, 260], ["mittel", 420, 340], ["langsam", 520, 420]]) {
+  test(`cinematic ${speed} drives every native board layer and restores owned transitions`, () => {
+    const f = startModernZoom({ featureConfig: { zoomStyle: "cinematic", zoomSpeed: speed } });
+    try {
+      f.timers.advance(25);
+      f.tick();
+      f.layers.forEach((layer) => {
+        assert.match(layer.style.transition, new RegExp(`transform ${zoomInMs}ms`));
+        assert.equal(layer.style.getPropertyPriority("transition"), "important");
+      });
+      f.player.textContent = "Player 2";
+      f.score.textContent = "301";
+      f.setVisit([], []);
+      f.total.textContent = "0";
+      f.tick();
+      // Let the existing transient DOM-reset grace elapse before the return.
+      f.timers.advance(150);
+      f.layers.forEach((layer) => {
+        assert.match(layer.style.transition, new RegExp(`transform ${zoomOutMs}ms`));
+        assert.equal(layer.style.getPropertyPriority("transition"), "important");
+      });
+      f.timers.advance(zoomOutMs + 45);
+      f.layers.forEach((layer) => {
+        assert.equal(layer.style.transition || "", "");
+        assert.equal(layer.style.getPropertyPriority("transition"), "");
+      });
+    } finally { f.stop(); }
+  });
 }
 
 test("native D18 zoom moves all four board layers together and restores clipping on cleanup", () => {

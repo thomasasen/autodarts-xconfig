@@ -505,7 +505,7 @@ export const xconfigFeatureCopy = deepFreeze({
     cardDescription:
       "Zoomt in X01 bei Checkout- und sinnvollen Setup-Zielen TV-artig auf das Board.",
     visibleDescription:
-      "Bei klaren X01-Zielsituationen zoomt die Ansicht auf relevante Board-Bereiche und hält den Fokus in sinnvollen Finish-Momenten stabil.",
+      "Bei klaren X01-Zielsituationen zoomt die Ansicht auf relevante Board-Bereiche und hält den Fokus in sinnvollen Finish-Momenten stabil. Optional fährt `Cinematic` mit sanftem Anlauf und Abbremsen wie eine Zoomlinse ein und aus.",
     visualDescription:
       "Das Board wird innerhalb des rechten Board-Bereichs vergrößert, damit relevante Segmente mehr Platz bekommen. Nach `T20,T20,T20` bleibt der Fokus bis zum Spielerwechsel bestehen, nach getroffenem Checkout bis zum Leg-Ende. Klicks auf die Wurfanzeigenleiste zoomen sofort aus, damit Korrekturen auf der ganzen Scheibe möglich bleiben.",
     usefulWhen:
@@ -516,6 +516,11 @@ export const xconfigFeatureCopy = deepFreeze({
         "Bestimmt, wie stark das Board vergrößert wird.",
         "Legt fest, wie weit das Modul in den relevanten Board-Bereich hineinzoomt. Hohe Stufen zeigen weniger Umgebung und mehr Zielsegment.",
         "Bestimmt die Stärke des Board-Zooms."
+      ),
+      zoomStyle: fieldCopy(
+        "Wählt zwischen direktem Standard-Zoom und einer weichen Zoomfahrt.",
+        "`Standard` behält die bisherige Bewegung bei. `Cinematic` läuft sanft an und bremst weich ab, ohne Überschwingen. Die gewählte Geschwindigkeit gilt für beide Stile. Cinematic animiert auch bei aktivierter Browser- oder Systemeinstellung für reduzierte Bewegung; Korrekturklicks zoomen weiterhin sofort aus.",
+        "Wählt den Bewegungsstil des Board-Zooms."
       ),
       zoomSpeed: fieldCopy(
         "Regelt, wie schnell der Zoom ein- und ausläuft.",
@@ -1482,6 +1487,19 @@ const TV_BOARD_ZOOM_LEVEL_OPTION_COPY = deepFreeze({
     "Zoomt am engsten auf den Zielbereich.",
     "Das relevante Segment füllt deutlich mehr vom sichtbaren Bereich. Rundherum bleibt weniger Board-Kontext übrig, dafür springt das Ziel stärker in den Fokus.",
     "Diese Stufe zieht die Kamera am stärksten in den relevanten Bereich hinein. Das Zielsegment dominiert das Bild klarer, während das restliche Board stärker aus dem Blickfeld rückt."
+  ),
+});
+
+const TV_BOARD_ZOOM_STYLE_OPTION_COPY = deepFreeze({
+  standard: optionCopy(
+    "Behält den bisherigen direkten Zoom bei.",
+    "Das Ziel rückt mit kurzem, schnellem Anlauf in den Fokus.",
+    "Die bisherigen Geschwindigkeiten und Bewegungsabläufe bleiben erhalten."
+  ),
+  cinematic: optionCopy(
+    "Zoomt mit sanftem Anlauf und weichem Abbremsen.",
+    "Vergrößerung und Verschiebung zum Ziel laufen gemeinsam wie beim Drehen einer Zoomlinse, ohne Federn oder Überschwingen.",
+    "Bei Schnell dauert das Rein- und Rauszoomen 320/260 ms, bei Mittel 420/340 ms und bei Langsam 520/420 ms. Die Zoomfahrt bleibt auch bei reduzierter Bewegung im Browser oder System aktiv. Korrekturklicks zoomen weiterhin sofort aus."
   ),
 });
 
@@ -2538,6 +2556,7 @@ const xconfigFieldOptionCopy = deepFreeze({
   },
   "tv-board-zoom": {
     zoomLevel: TV_BOARD_ZOOM_LEVEL_OPTION_COPY,
+    zoomStyle: TV_BOARD_ZOOM_STYLE_OPTION_COPY,
     zoomSpeed: TV_BOARD_ZOOM_SPEED_OPTION_COPY,
     checkoutZoomTarget: TV_BOARD_ZOOM_TARGET_OPTION_COPY,
   },
@@ -2774,7 +2793,7 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         ["targetSelectionMode", "Zielauswahl"], ["colorTheme", "Farbe"],
       ]),
       recommendedSection("Automatischer Board-Zoom", "tv-board-zoom", [
-        ["zoomLevel", "Zoomstärke"], ["zoomSpeed", "Zoom-Geschwindigkeit"],
+        ["zoomLevel", "Zoomstärke"], ["zoomStyle", "Zoom-Stil"], ["zoomSpeed", "Zoom-Geschwindigkeit"],
         ["checkoutZoomEnabled", "Checkout-Zoom"], ["checkoutZoomTarget", "Zoom auf"],
         ["t20SetupZoomEnabled", "Auch auf T20-Setup zoomen"],
       ]),

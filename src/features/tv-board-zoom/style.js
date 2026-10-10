@@ -23,8 +23,23 @@ const SPEED_PRESETS = Object.freeze({
   },
 });
 
-export function resolveZoomSpeedConfig(speed) {
+const CINEMATIC_SPEED_PRESETS = Object.freeze({
+  schnell: { zoomInMs: 320, zoomOutMs: 260 },
+  mittel: { zoomInMs: 420, zoomOutMs: 340 },
+  langsam: { zoomInMs: 520, zoomOutMs: 420 },
+});
+
+export function resolveZoomSpeedConfig(speed, zoomStyle = "standard") {
   const normalized = String(speed || "").trim().toLowerCase();
+  if (String(zoomStyle || "").trim().toLowerCase() === "cinematic") {
+    return {
+      ...(CINEMATIC_SPEED_PRESETS[normalized] || CINEMATIC_SPEED_PRESETS.mittel),
+      easingIn: "cubic-bezier(0.45, 0, 0.55, 1)",
+      easingOut: "cubic-bezier(0.45, 0, 0.55, 1)",
+      // Explicit opt-in also wins over host reduced-motion CSS rules.
+      transitionPriority: "important",
+    };
+  }
   return SPEED_PRESETS[normalized] || SPEED_PRESETS.mittel;
 }
 

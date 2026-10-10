@@ -117,6 +117,15 @@ test("renamed feature catalog entries expose one canonical key with legacy alias
   });
 });
 
+test("TV zoom style keeps existing configs on standard and accepts cinematic", () => {
+  const spec = getFeatureConfigSpec("tvBoardZoom");
+  assert.equal(spec.createDefaultConfig().zoomStyle, "standard");
+  assert.equal(createRecommendedFeatureConfig("tvBoardZoom").zoomStyle, "standard");
+  assert.equal(spec.normalizeConfig({ zoomSpeed: "langsam" }).zoomStyle, "standard");
+  assert.equal(spec.normalizeConfig({ zoomStyle: " CINEMATIC " }).zoomStyle, "cinematic");
+  assert.equal(spec.normalizeConfig({ zoomStyle: "invalid" }).zoomStyle, "standard");
+});
+
 test("feature config spec carries remove-key rules for retired config fields", () => {
   assert.deepEqual(getFeatureConfigSpec("x01RemainingScoreBar")?.removeKeys, ["designPreset"]);
   assert.deepEqual(getFeatureConfigSpec("checkoutScoreHighlight")?.removeKeys, []);
