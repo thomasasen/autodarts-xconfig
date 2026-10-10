@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.5.2] - 2026-10-11
+
+### Fixed
+
+- Nutzerwirkung: Checkout-Zielhervorhebung und TV-Board-Zoom aktualisieren sich auch dann zuverlässig, wenn Autodarts beim zweiten oder dritten Dart einen verschachtelten Score-, Wurf- oder Board-Bereich vollständig ersetzt.
+  Technik: Die gemeinsamen Mutation-Filter erkennen semantische Nachfahren neu eingefügter oder entfernter Wrapper und invalidieren bei ersetzten Board-Strukturen den Cache. Runtime- und Chromium-Regressionen sichern Checkout-Routen, Zoom sowie fehlende und wiederhergestellte Hardware-Board-Zuordnung ab.
+
 ## [3.5.1] - 2026-10-10
 
 ### Fixed
@@ -2372,6 +2379,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.5.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.1...v3.5.2
 [3.5.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.0...v3.5.1
 [3.5.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.4.2...v3.5.0
 [3.4.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.4.1...v3.4.2

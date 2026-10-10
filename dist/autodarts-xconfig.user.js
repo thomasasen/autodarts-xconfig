@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         autodarts-xconfig
 // @namespace    https://github.com/thomasasen/autodarts-xconfig
-// @version      3.5.1
+// @version      3.5.2
 // @description  Modular, side-effect resistant Tampermonkey runtime for Autodarts enhancements.
 // @author       Thomas Asen
 // @license      MIT
@@ -7094,6 +7094,15 @@
       }
     });
   }
+  function elementContainsDescendantSelectors(elementNode, selectors) {
+    return selectors.some((selector) => {
+      try {
+        return Boolean(elementNode?.querySelector?.(selector));
+      } catch (_) {
+        return false;
+      }
+    });
+  }
   function hasExternalDomMutation(mutations = [], isManagedNode = null) {
     if (!Array.isArray(mutations) || !mutations.length || typeof isManagedNode !== "function") {
       return true;
@@ -12309,6 +12318,15 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
     const elementNode = node.nodeType === 3 ? node.parentNode : node;
     return elementMatchesAncestorSelectors(elementNode, selectors);
   }
+  function changedNodeOrDescendantMatchesAnySelector(mutation, selectors = []) {
+    const targetNode = mutation?.target || null;
+    return getTouchedMutationNodes(mutation).some((node) => {
+      if (nodeOrAncestorMatchesAnySelector(node, selectors)) {
+        return true;
+      }
+      return node !== targetNode && elementContainsDescendantSelectors(node, selectors);
+    });
+  }
   function nodesAreRelated(leftNode, rightNode) {
     if (!leftNode || !rightNode) {
       return false;
@@ -12334,8 +12352,9 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
     )) {
       return true;
     }
-    return touchedNodes.some(
-      (node) => nodeOrAncestorMatchesAnySelector(node, BOARD_STRUCTURE_CHILDLIST_SELECTORS)
+    return changedNodeOrDescendantMatchesAnySelector(
+      mutation,
+      BOARD_STRUCTURE_CHILDLIST_SELECTORS
     );
   }
   function resolveCheckoutBoardMutationReaction(mutations = [], context = {}) {
@@ -12376,9 +12395,9 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
         return;
       }
       if (mutationType === "childList") {
-        const touchedNodes = getTouchedMutationNodes(mutation);
-        const touchesSemanticSurface = touchedNodes.some(
-          (node) => nodeOrAncestorMatchesAnySelector(node, CHECKOUT_SEMANTIC_CHILDLIST_SELECTORS)
+        const touchesSemanticSurface = changedNodeOrDescendantMatchesAnySelector(
+          mutation,
+          CHECKOUT_SEMANTIC_CHILDLIST_SELECTORS
         );
         const invalidatesBoardSurface = shouldInvalidateBoardSurfaceForMutation(
           mutation,
@@ -15121,9 +15140,6 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
   function getTouchedMutationNodes2(mutation) {
     return getTouchedMutationNodes(mutation, (value) => Array.from(value || []));
   }
-  function containsMatchingDescendant(node, selectors) {
-    return selectors.some((selector) => Boolean(node?.querySelector?.(selector)));
-  }
   function isDirectWatchedNodeMutation(mutation, watchedNodes = []) {
     if (!Array.isArray(watchedNodes) || !watchedNodes.length) {
       return false;
@@ -15173,8 +15189,17 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
       return true;
     }
     return getTouchedMutationNodes2(mutation).some(
-      (node) => nodeOrAncestorMatchesAnySelector2(node, ZOOM_STRUCTURE_CHILDLIST_SELECTORS) || containsMatchingDescendant(node, ZOOM_STRUCTURE_CHILDLIST_SELECTORS)
+      (node) => nodeOrAncestorMatchesAnySelector2(node, ZOOM_STRUCTURE_CHILDLIST_SELECTORS) || elementContainsDescendantSelectors(node, ZOOM_STRUCTURE_CHILDLIST_SELECTORS)
     );
+  }
+  function changedNodeContainsSemanticSurface(mutation) {
+    const targetNode = mutation?.target || null;
+    return getTouchedMutationNodes2(mutation).some((node) => {
+      if (nodeOrAncestorMatchesAnySelector2(node, ZOOM_SEMANTIC_CONTAINER_SELECTORS)) {
+        return true;
+      }
+      return node !== targetNode && elementContainsDescendantSelectors(node, ZOOM_SEMANTIC_CONTAINER_SELECTORS);
+    });
   }
   function resolveTvBoardZoomMutationReaction(mutations = [], context = {}) {
     if (!Array.isArray(mutations) || !mutations.length) {
@@ -15223,9 +15248,7 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
           mutation,
           watchedNodes
         );
-        const touchesSemanticSurface = isDescendantWatchedNodeMutation(mutation, semanticNodes) || getTouchedMutationNodes2(mutation).some(
-          (node) => nodeOrAncestorMatchesAnySelector2(node, ZOOM_SEMANTIC_CONTAINER_SELECTORS)
-        );
+        const touchesSemanticSurface = isDescendantWatchedNodeMutation(mutation, semanticNodes) || changedNodeContainsSemanticSurface(mutation);
         if (touchesSemanticSurface || invalidatesBoardSurface) {
           shouldSchedule = true;
         }
@@ -40474,7 +40497,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
 
   // src/core/bootstrap.js
   var GLOBAL_NAMESPACE_KEY = "__adXConfig";
-  var API_VERSION = "3.5.1";
+  var API_VERSION = "3.5.2";
   var STARTUP_DEFER_INTERVAL_MS = 16;
   function getWindowTimerApi(windowRef) {
     let setTimeoutRef = null;
