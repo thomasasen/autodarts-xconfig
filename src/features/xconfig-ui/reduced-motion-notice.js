@@ -12,6 +12,15 @@ function buildNotice(documentRef, windowRef) {
   const isLinux = /linux|x11/i.test(
     `${navigatorRef?.userAgentData?.platform || ""} ${navigatorRef?.platform || ""} ${navigatorRef?.userAgent || ""}`
   ) && !/android/i.test(navigatorRef?.userAgent || "");
+  let platformHelp = "Die Vorgabe stammt meist aus den Bedienungshilfen deines Geräts. Dort „Bewegung reduzieren“ bzw. „Animationen entfernen“ ausschalten.";
+  let guideLabel = "Anleitung öffnen";
+  if (isWindows) {
+    platformHelp = "Windows 11: Einstellungen → Barrierefreiheit → Visuelle Effekte → Animationseffekte einschalten. Windows 10: Erleichterte Bedienung → Anzeige → Animationen anzeigen einschalten.";
+    guideLabel = "Windows-Animationseinstellungen öffnen";
+  } else if (isLinux) {
+    platformHelp = "Linux: In GNOME unter Einstellungen → Barrierefreiheit → Sehen „Animationen reduzieren“ ausschalten. In KDE Plasma die Animationsgeschwindigkeit nicht auf „Sofort“ stellen. Ein einheitlicher Direktlink zu diesen Einstellungen ist unter Linux nicht verfügbar.";
+    guideLabel = "Linux-Anleitung öffnen";
+  }
   const notice = createElement(documentRef, "aside", {
     className: "ad-xconfig-notice ad-xconfig-notice--info ad-xconfig-motion-notice",
     attributes: {
@@ -25,11 +34,7 @@ function buildNotice(documentRef, windowRef) {
   }));
   text.appendChild(createElement(documentRef, "small", {
     className: "ad-xconfig-motion-help",
-    text: isWindows
-      ? "Windows 11: Einstellungen → Barrierefreiheit → Visuelle Effekte → Animationseffekte einschalten. Windows 10: Erleichterte Bedienung → Anzeige → Animationen anzeigen einschalten."
-      : isLinux
-        ? "Linux: In GNOME unter Einstellungen → Barrierefreiheit → Sehen „Animationen reduzieren“ ausschalten. In KDE Plasma die Animationsgeschwindigkeit nicht auf „Sofort“ stellen. Ein einheitlicher Direktlink zu diesen Einstellungen ist unter Linux nicht verfügbar."
-        : "Die Vorgabe stammt meist aus den Bedienungshilfen deines Geräts. Dort „Bewegung reduzieren“ bzw. „Animationen entfernen“ ausschalten.",
+    text: platformHelp,
   }));
   if (isFirefox) {
     text.appendChild(createElement(documentRef, "small", {
@@ -65,7 +70,7 @@ function buildNotice(documentRef, windowRef) {
   }
   actions.appendChild(createElement(documentRef, "a", {
     className: "ad-xconfig-notice-action",
-    text: isWindows ? "Windows-Animationseinstellungen öffnen" : isLinux ? "Linux-Anleitung öffnen" : "Anleitung öffnen",
+    text: guideLabel,
     attributes: isWindows
       ? { href: "ms-settings:easeofaccess-visualeffects" }
       : { href: MOTION_HELP_URL, target: "_blank", rel: "noopener noreferrer" },

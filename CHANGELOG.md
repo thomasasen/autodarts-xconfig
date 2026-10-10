@@ -12,6 +12,22 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.5.0] - 2026-10-10
+
+### Added
+
+- Nutzerwirkung: TV-Board-Zoom bietet zusätzlich den wählbaren Stil „Cinematic“ für weichere Zoomübergänge. Der bisherige Standardstil bleibt voreingestellt; die Auswahl wird beim Konfigurationsexport und -import übernommen.
+  Technik: Normalisierte Zoom-Stile steuern Dauer und Verlauf der CSS-Transition. Laufzeit-, Konfigurations- und Chromium-Regressionen prüfen beide Stile sowie reduzierte Bewegung.
+- Nutzerwirkung: Bei aktivierter Systemeinstellung „Bewegung reduzieren“ erklärt xConfig eingeschränkte Animationen und zeigt passende Hilfen für Windows, Linux und Firefox an.
+  Technik: Ein Media-Query-Controller aktualisiert den Hinweis bei Änderungen von prefers-reduced-motion und entfernt Listener und Hinweis beim Abschalten. Plattform- und Clipboard-Regressionen sichern die Hilfen ab.
+
+### Fixed
+
+- Nutzerwirkung: Autodarts-Tools-GIFs bleiben unabhängig vom Board-Zoom sichtbar. Dart- und BUST-Effekte verdecken laufende Animationen nicht mehr und erscheinen nach deren Ende wieder; manuelle Board-Eingaben bleiben mit Tools klicksicher.
+  Technik: Ein gemeinsam genutzter Animation-Layer-Controller erkennt moderne Shadow-DOM- und Legacy-Animationen, Ladefehler und Fade-Phasen. Er koordiniert die Effekte ohne Änderungen an fremden GIF-Styles und räumt Observer und Listener beim letzten Verbraucher auf.
+- Nutzerwirkung: Zoom bleibt auch bei schnellen Zustandswechseln, beschädigten Styles und wiederverwendeten Board-Flächen zuverlässig; vorhandene Board- und BUST-Styles werden beim Aufräumen erhalten.
+  Technik: Zoom-Integritätsprüfungen berücksichtigen Ziel und Transformationszustand. Eigentumsbasierte Style-Snapshots und erweiterte Lifecycle-Regressionen sichern Wiederherstellung, BUST, Undo und Korrekturen ab.
+
 ## [3.4.2] - 2026-10-10
 
 ### Fixed
@@ -2335,6 +2351,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.5.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.4.2...v3.5.0
 [3.4.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.4.1...v3.4.2
 [3.4.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.3.2...v3.4.1
 [3.3.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.3.1...v3.3.2
