@@ -90,11 +90,37 @@ function fixture(options = {}) {
   return { ...f, runtime, cards, timers, plays, showPlayer, setState, close };
 }
 
+function zoomLayer(board) {
+  return board.querySelector("svg");
+}
+
+function assertBoardLayers(board, zoomed) {
+  assert.equal(board.style.transform || "", "", "Tools measurement frame stays untransformed");
+  assert.equal(board.classList.contains(ZOOM_CLASS), false);
+  const layers = Array.from(board.children).filter((node) => node.tagName === "SVG");
+  assert.ok(layers.length);
+  for (const layer of layers) {
+    assert.equal(layer.classList.contains(ZOOM_CLASS), zoomed);
+    if (zoomed) {
+      assert.match(layer.style.transform, /scale/);
+      assert.equal(layer.style.transform, layers[0].style.transform);
+    }
+  }
+}
+
+function resetClonedBoard(board) {
+  board.removeAttribute("data-ad-ext-board-zoom-anchor");
+  for (const layer of Array.from(board.children).filter((node) => node.tagName === "SVG")) {
+    layer.classList.remove(ZOOM_CLASS);
+    layer.style.transform = "";
+  }
+}
+
 function assertCheckout(f, player) {
   assert.equal(f.runtime.context.turnLifecycle.getSnapshot().phase, "ready");
   assert.equal(f.cards[player].querySelector(".font-number").classList.contains(HIGHLIGHT_CLASS), true);
   assert.ok(f.documentRef.getElementById(OVERLAY_ID));
-  assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+  assertBoardLayers(f.board, true);
 }
 
 function notifyDom(f) {
@@ -124,7 +150,7 @@ function assertSuspended(f, generation) {
   assert.equal(snapshot.phase, "pending");
   assert.equal(snapshot.generation, generation);
   assert.equal(f.documentRef.getElementById(OVERLAY_ID), null);
-  assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+  assertBoardLayers(f.board, false);
   f.cards.forEach((card) => {
     assert.equal(card.querySelector(".font-number").classList.contains(HIGHLIGHT_CLASS), false);
   });
@@ -133,8 +159,7 @@ function assertSuspended(f, generation) {
 function replaceBoard(f) {
   const oldBoard = f.board;
   const replacement = oldBoard.cloneNode(true);
-  replacement.classList.remove(ZOOM_CLASS);
-  replacement.style.transform = "";
+  resetClonedBoard(replacement);
   replacement.__rect = { ...oldBoard.__rect };
   replacement.offsetWidth = replacement.offsetHeight = 549;
   replacement.offsetParent = f.host;
@@ -151,17 +176,17 @@ for (const first of ["state", "dom"]) {
     const f = fixture();
     try {
       const generation = f.runtime.context.turnLifecycle.getSnapshot().generation;
-      const initialTransform = f.board.style.transform;
+      const initialTransform = zoomLayer(f.board).style.transform;
       f.showPlayer(0, 40, ["MISS"]);
       f.setState(0, 0, ["MISS"]);
       f.timers.advance(25);
       assertDirectCheckout(f, 0, 40, 20, generation);
       f.windowRef.dispatchEvent({ type: "pointerdown", target: f.rows[0].label });
       f.timers.advance(300);
-      assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+      assertBoardLayers(f.board, false);
       const oldBoard = replaceBoard(f);
       f.timers.advance(12000);
-      assert.equal(f.board.classList.contains(ZOOM_CLASS), false, "board replacement must respect correction pause");
+      assert.equal(zoomLayer(f.board).classList.contains(ZOOM_CLASS), false, "board replacement must respect correction pause");
       assert.equal(f.windowRef.__adXConfig.inspect().watchdog.features["tv-board-zoom"].attempts, 0);
       f.plays.length = 0;
 
@@ -173,22 +198,22 @@ for (const first of ["state", "dom"]) {
         updates[first]();
         f.timers.advance(25);
         assertDoubleTarget(f, double);
-        assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+        assertBoardLayers(f.board, true);
         assert.equal(f.runtime.context.turnLifecycle.getSnapshot().generation, generation);
-        const leadingTransform = f.board.style.transform;
+        const leadingTransform = zoomLayer(f.board).style.transform;
         if (double === 18) assert.notEqual(leadingTransform, initialTransform);
         else assert.equal(leadingTransform, initialTransform);
         updates[first]();
         f.timers.advance(25);
         assertDoubleTarget(f, double);
-        assert.equal(f.board.style.transform, leadingTransform);
+        assert.equal(zoomLayer(f.board).style.transform, leadingTransform);
         updates[first === "state" ? "dom" : "state"]();
         f.timers.advance(25);
         assertDirectCheckout(f, 0, score, double, generation);
-        assert.equal(f.board.style.transform, leadingTransform);
+        assert.equal(zoomLayer(f.board).style.transform, leadingTransform);
         f.timers.advance(2000);
         assertDirectCheckout(f, 0, score, double, generation);
-        assert.equal(oldBoard.classList.contains(ZOOM_CLASS), false);
+        assertBoardLayers(oldBoard, false);
       }
       assert.equal(f.plays.length, 0);
     } finally { f.close(); }
@@ -229,7 +254,7 @@ for (const first of ["state", "dom"]) {
       updates[first]();
       f.timers.advance(12000);
       assertSuspended(f, generation);
-      assert.equal(oldBoard.classList.contains(ZOOM_CLASS), false);
+      assertBoardLayers(oldBoard, false);
       assert.ok(Object.values(f.windowRef.__adXConfig.inspect().watchdog.features)
         .every((entry) => entry.attempts === 0), "the watchdog must not repair ambiguous identity");
       updates[first === "state" ? "dom" : "state"]();
@@ -239,7 +264,7 @@ for (const first of ["state", "dom"]) {
       updates.dom();
       f.timers.advance(2000);
       assertDirectCheckout(f, 0, 40, 20, generation + 1);
-      assert.equal(oldBoard.classList.contains(ZOOM_CLASS), false);
+      assertBoardLayers(oldBoard, false);
       assert.equal(f.plays.length, 0);
     } finally { f.close(); }
   });
@@ -256,10 +281,10 @@ for (const count of [1, 2]) {
       notifyDom(f);
       f.setState(0, 0, throws);
       f.timers.advance(25);
-      assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+      assertBoardLayers(f.board, false);
       assert.equal(f.runtime.context.turnLifecycle.getSnapshot().generation, generation);
       f.timers.advance(2000);
-      assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+      assertBoardLayers(f.board, false);
       f.showPlayer(0);
       notifyDom(f);
       f.setState(0, 1);
@@ -271,7 +296,7 @@ for (const count of [1, 2]) {
       f.timers.advance(25);
       f.windowRef.dispatchEvent({ type: "pointerdown", target: f.rows[0].label });
       f.timers.advance(300);
-      assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+      assertBoardLayers(f.board, false);
       f.showPlayer(0);
       notifyDom(f);
       f.setState(0, 1);
@@ -295,11 +320,11 @@ for (const exit of ["disable", "stop"]) {
       f.plays.length = 0;
       if (exit === "disable") f.runtime.setFeatureEnabled("tv-board-zoom", false);
       else f.runtime.stop();
-      assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
-      assert.equal(f.board.style.transform || "", "");
+      assertBoardLayers(f.board, false);
+      assert.equal(zoomLayer(f.board).style.transform || "", "");
       f.timers.advance(20000);
-      assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
-      assert.equal(f.board.style.transform || "", "");
+      assertBoardLayers(f.board, false);
+      assert.equal(zoomLayer(f.board).style.transform || "", "");
       assert.equal(f.plays.length, 0);
       if (exit === "disable") {
         assert.equal(f.runtime.context.registries.observers.get("tv-board-zoom:dom-observer"), null);
@@ -310,7 +335,7 @@ for (const exit of ["disable", "stop"]) {
       assert.equal(f.timers.pendingCount, 0);
       f.timers.advance(20000);
       assert.equal(f.timers.pendingCount, 0);
-      assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+      assertBoardLayers(f.board, false);
     } finally { f.close(); }
   });
 }
@@ -328,13 +353,13 @@ for (const boundary of ["player", "leg", "match", "variant"]) {
       notifyDom(f);
       f.setState(0, 0, ["MISS", "MISS", "MISS"]);
       f.timers.advance(25);
-      assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+      assertBoardLayers(f.board, true);
       assert.equal(f.runtime.context.turnLifecycle.getSnapshot().generation, generation);
       f.plays.length = 0;
-      const oldTransform = f.board.style.transform;
+      const oldTransform = zoomLayer(f.board).style.transform;
       // Queue structural and semantic work without letting its RAF run yet.
-      f.board.style.transform = "";
-      f.documentRef.flushMutations([{ type: "attributes", attributeName: "style", target: f.board }]);
+      zoomLayer(f.board).style.transform = "";
+      f.documentRef.flushMutations([{ type: "attributes", attributeName: "style", target: zoomLayer(f.board) }]);
       const player = boundary === "player" ? 1 : 0;
       f.showPlayer(player, 36, [], ["D18"]);
       if (boundary === "match") f.windowRef.location.pathname = "/matches/next-match";
@@ -347,16 +372,16 @@ for (const boundary of ["player", "leg", "match", "variant"]) {
       });
       f.timers.advance(25);
       if (boundary === "variant") {
-        assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+        assertBoardLayers(f.board, false);
         assert.equal(f.documentRef.getElementById(OVERLAY_ID), null);
         f.cards.forEach((card) => assert.equal(card.querySelector(".font-number").classList.contains(HIGHLIGHT_CLASS), false));
       } else {
         assertDirectCheckout(f, player, 36, 18, generation + 1);
-        assert.notEqual(f.board.style.transform, oldTransform);
+        assert.notEqual(zoomLayer(f.board).style.transform, oldTransform);
       }
       f.timers.advance(12000);
       if (boundary === "variant") {
-        assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+        assertBoardLayers(f.board, false);
         assert.equal(f.documentRef.getElementById(OVERLAY_ID), null);
       } else assertDirectCheckout(f, player, 36, 18, generation + 1);
       assert.equal(f.runtime.context.turnLifecycle.getSnapshot().generation, generation + 1);
@@ -379,8 +404,8 @@ test("watchdog restores a deleted checkout overlay and a zoom whose integrity re
     const listeners = f.runtime.context.registries.listeners.size();
     f.plays.length = 0;
     f.documentRef.getElementById(OVERLAY_ID).remove();
-    f.board.classList.remove(ZOOM_CLASS);
-    f.board.style.transform = "";
+    zoomLayer(f.board).classList.remove(ZOOM_CLASS);
+    zoomLayer(f.board).style.transform = "";
     dropNext = true;
     // Deliberately no MutationObserver delivery: the periodic backstop must heal.
     f.timers.advance(12000);
@@ -420,8 +445,26 @@ test("watchdog accepts a manual zoom pause without consuming the repair budget",
     f.timers.advance(25);
     f.windowRef.dispatchEvent({ type: "pointerdown", target: f.rows[0].label });
     f.timers.advance(20000);
-    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    assertBoardLayers(f.board, false);
     assert.equal(f.windowRef.__adXConfig.inspect().watchdog.features["tv-board-zoom"].attempts, 0);
+  } finally { f.close(); }
+});
+
+test("temporarily unmeasurable board artwork leaves the frame stable without consuming watchdog repairs", () => {
+  const f = fixture();
+  try {
+    assertCheckout(f, 0);
+    const layers = Array.from(f.board.children).filter((node) => node.tagName === "SVG");
+    layers.forEach((layer) => { layer.__rect = { left: 0, top: 0, width: 0, height: 0 }; });
+    notifyDom(f);
+    f.timers.advance(25);
+    assertBoardLayers(f.board, false);
+    f.timers.advance(12000);
+    assert.equal(f.windowRef.__adXConfig.inspect().watchdog.features["tv-board-zoom"].attempts, 0);
+    layers.forEach((layer) => { layer.__rect = { ...f.board.__rect }; });
+    notifyDom(f);
+    f.timers.advance(25);
+    assertCheckout(f, 0);
   } finally { f.close(); }
 });
 
@@ -440,13 +483,13 @@ test("watchdog repairs a held third-dart BUST zoom without releasing its hold or
     f.total.textContent = "BUST";
     f.setState(0, 0, ["MISS", "MISS", "MISS"]);
     f.timers.advance(25);
-    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+    assertBoardLayers(f.board, true);
     f.plays.length = 0;
-    f.board.classList.remove(ZOOM_CLASS);
-    f.board.style.transform = "";
+    zoomLayer(f.board).classList.remove(ZOOM_CLASS);
+    zoomLayer(f.board).style.transform = "";
     dropNext = true;
     f.timers.advance(12000);
-    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+    assertBoardLayers(f.board, true);
     assert.equal(f.windowRef.__adXConfig.inspect().watchdog.features["tv-board-zoom"].attempts, 1);
     assert.equal(f.plays.length, 0);
   } finally { f.close(); }
@@ -461,7 +504,7 @@ test("all turn consumers recover together after state-first and DOM-first equal-
     f.timers.advance(25);
     assert.equal(f.runtime.context.turnLifecycle.getSnapshot().generation, start + 1);
     assert.equal(f.documentRef.getElementById(OVERLAY_ID), null);
-    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    assertBoardLayers(f.board, false);
     f.showPlayer(1);
     f.runtime.context.turnLifecycle.refresh();
     f.timers.advance(25);
@@ -540,8 +583,7 @@ test("board replacement rebinds zoom and checkout without inventing an extra vis
     const generation = f.runtime.context.turnLifecycle.getSnapshot().generation;
     const oldBoard = f.board;
     const replacement = oldBoard.cloneNode(true);
-    replacement.classList.remove(ZOOM_CLASS);
-    replacement.style.transform = "";
+    resetClonedBoard(replacement);
     replacement.__rect = { ...oldBoard.__rect };
     replacement.offsetWidth = replacement.offsetHeight = 549;
     replacement.offsetParent = f.host;
@@ -570,7 +612,7 @@ test("late previous-visit state suspends effects and resumes without replay or a
     assert.equal(f.runtime.context.turnLifecycle.getSnapshot().generation, generation);
     assert.equal(f.runtime.context.turnLifecycle.getSnapshot().phase, "pending");
     assert.equal(f.documentRef.getElementById(OVERLAY_ID), null);
-    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    assertBoardLayers(f.board, false);
     assert.equal(f.plays.length, 0);
     f.setState(1, 1);
     f.timers.advance(25);
@@ -587,12 +629,12 @@ test("BUST hold, correction and undo keep the visit until an actual player switc
     f.showPlayer(0, 40, ["MISS", "MISS"]);
     f.setState(0, 0, ["MISS", "MISS"]);
     f.timers.advance(25);
-    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+    assertBoardLayers(f.board, true);
     f.showPlayer(0, 40, ["MISS", "MISS", "MISS"], []);
     f.total.textContent = "BUST";
     f.setState(0, 0, ["MISS", "MISS", "MISS"]);
     f.timers.advance(25);
-    assert.equal(f.board.classList.contains(ZOOM_CLASS), true);
+    assertBoardLayers(f.board, true);
     assert.equal(f.runtime.context.turnLifecycle.getSnapshot().generation, generation);
     for (const throws of [["MISS", "MISS"], ["MISS"]]) {
       f.showPlayer(0, 40, throws);
@@ -643,7 +685,7 @@ for (const variant of ["Cricket", "Tactics"]) {
         for (const row of cells.values()) {
           row.forEach((cell, player) => assert.equal(cell.classList.contains(OPEN_ACTIVE_CLASS), player === active));
         }
-        assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+        assertBoardLayers(f.board, false);
         assert.equal(f.documentRef.getElementById(OVERLAY_ID), null);
       }
       f.runtime.setFeatureEnabled("cricket-target-highlighter", false);

@@ -1769,14 +1769,14 @@ function hasAppliedZoomHostState(state, hostNode) {
 }
 
 function resolveVisualLayers(targetNode, boardSvg) {
-  if (!targetNode?.matches?.(`${NATIVE_BOARD_SELECTOR}, .showAnimations, .ad-ext-theme-board-canvas`)) return null;
+  if (!targetNode?.matches?.(`${NATIVE_BOARD_SELECTOR}, .showAnimations, .ad-ext-theme-board-canvas, .aspect-square`)) return null;
   // Keep Tools' board-area measurement anchors stable. Never reparent native
   // nodes: the host renderer continues owning their identities and order.
   const candidates = queryAll(targetNode, "svg, img, video").filter((node) =>
     !isLegacyToolsAnimationMedia(node) && !node.closest?.(
       "autodarts-tools-animations, .ad-ext-x01-bust-active-player-cracks, #ad-ext-dart-image-overlay"));
   const layers = candidates.filter((node) => !candidates.some((parent) => parent !== node && parent.contains(node)));
-  return layers.includes(boardSvg) ? layers : null;
+  return layers.includes(boardSvg) ? layers : [];
 }
 
 export function hasHealthyZoomSurface(state) {
@@ -1795,8 +1795,14 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
     if (state.visualZoomStates) resetZoom(speedConfig, state, true);
     return applySingleZoom(zoomNodes, zoomLevel, speedConfig, intent, state, options);
   }
+  if (!layers.length) {
+    // An unsupported render structure must never make a measurement frame or
+    // GIF ancestor the fallback transform target.
+    resetZoom(speedConfig, state, true);
+    return null;
+  }
   clearPendingRelease(state);
-  if (state.zoomedElement && state.zoomedElement !== targetNode) resetZoom(speedConfig, state, true);
+  if (state.zoomedElement && (!state.visualZoomStates || state.zoomedElement !== targetNode)) resetZoom(speedConfig, state, true);
   if (state.zoomHost && state.zoomHost !== hostNode) {
     restoreHostStyle(state, state.zoomHost);
     state.zoomHost = null;
@@ -1814,6 +1820,8 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
   // A live CSS transition reports intermediate SVG bounds. Store the layout
   // relative to the stable frame so passive updates cannot chase those bounds.
   function measureLayer(node, layerState) {
+    const measured = normalizeRect(node.getBoundingClientRect?.());
+    if (!measured?.width || !measured?.height) return null;
     const previous = layerState?.layoutGeometry;
     if (previous && isOwnedStyleApplied(node.style, "transform", layerState.targetStyleSnapshot?.transform)) {
       const scaleX = anchorRect.width / previous.anchor.width;
@@ -1822,9 +1830,13 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
         top: anchorRect.top + (previous.rect.top - previous.anchor.top) * scaleY,
         width: previous.rect.width * scaleX, height: previous.rect.height * scaleY });
     }
-    return normalizeRect(node.getBoundingClientRect?.());
+    return measured;
   }
   const boardRect = measureLayer(boardSvg, states.get(boardSvg));
+  if (!boardRect) {
+    resetZoom(speedConfig, state, true);
+    return null;
+  }
   const zoomData = buildZoomTransform({ ...zoomNodes, zoomLevel, intent,
     x01Rules: options.x01Rules, windowRef: options.windowRef, baseTransform: "",
     boardRectOverride: boardRect,
@@ -1834,9 +1846,13 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
   // later layers could measure an already zoomed primary SVG.
   const prepared = layers.map((node) => {
     const layerState = states.get(node) || {};
-    states.set(node, layerState);
     const rect = measureLayer(node, layerState);
-    if (!rect?.width || !rect?.height) return null;
+    if (!rect) {
+      resetZoom(speedConfig, layerState, true);
+      states.delete(node);
+      return null;
+    }
+    states.set(node, layerState);
     cacheTargetStyle(layerState, node);
     adoptExternalTargetStyleChanges(layerState, node);
     layerState.layoutGeometry = { rect, anchor: anchorRect };
@@ -1847,8 +1863,7 @@ export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, opti
       transform: `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${zoomLevel.toFixed(4)})`,
       signature: `${zoomData.signature}|${baseTransform}|${tx.toFixed(2)}|${ty.toFixed(2)}` } };
   });
-  if (prepared.some((layer) => !layer)) return null;
-  prepared.forEach(({ node, layerState, data }) => applySingleZoom(
+  prepared.filter(Boolean).forEach(({ node, layerState, data }) => applySingleZoom(
     { targetNode: node, hostNode: null, boardSvg }, zoomLevel, speedConfig, intent,
     layerState, { ...options, zoomData: data }));
   cacheHostStyle(state, hostNode);
@@ -1981,7 +1996,7 @@ export function resetZoom(speedConfig, state, immediate = false) {
   const targetSnapshot = state.targetStyleSnapshot;
   const snapshotTransform =
     targetSnapshot?.node === targetNode
-      ? String(targetSnapshot.transform?.original?.value || "")
+      ? String(targetSnapshot?.transform?.original?.value || "")
       : "";
 
   if (!targetNode) {

@@ -823,7 +823,7 @@ export function initializeTvBoardZoom(context = {}) {
         documentRef,
       }
     );
-    expectedZoomTarget = targetNode;
+    expectedZoomTarget = zoomData ? targetNode : null;
     if (zoomData) {
       scheduleIntegrityCheck();
     }
