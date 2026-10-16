@@ -1473,17 +1473,17 @@ const BOARD_TARGET_SELECTION_MODE_OPTION_COPY = deepFreeze({
 });
 
 const TV_BOARD_ZOOM_LEVEL_OPTION_COPY = deepFreeze({
-  "2.35": optionCopy(
+  "1.35": optionCopy(
     "Zoomt vergleichsweise weit und lässt noch viel Boardumfeld stehen.",
     "Das Segment wird klar vergrößert, aber noch mit gut sichtbarer Umgebung gezeigt. Die Kamera wirkt dadurch weniger eng.",
     "Diese Stufe vergrößert das Ziel spürbar, lässt aber noch viel vom restlichen Board im Bild. Der Effekt wirkt eher wie ein sanfter Fokus als wie ein enger Ausschnitt."
   ),
-  "2.75": optionCopy(
+  "1.75": optionCopy(
     "Nutzen die ausgewogene Standardvergrößerung.",
     "Der relevante Bereich rückt klar nach vorn, ohne den Kontext komplett zu verlieren. Das ist der Mittelweg zwischen Überblick und Fokus.",
     "Diese Stufe liefert den vorgesehenen Mittelwert für den Board-Zoom. Das Zielsegment wird deutlich hervorgehoben, während rundherum noch genug Board sichtbar bleibt, um sich räumlich zu orientieren."
   ),
-  "3.15": optionCopy(
+  "2.15": optionCopy(
     "Zoomt am engsten auf den Zielbereich.",
     "Das relevante Segment füllt deutlich mehr vom sichtbaren Bereich. Rundherum bleibt weniger Board-Kontext übrig, dafür springt das Ziel stärker in den Fokus.",
     "Diese Stufe zieht die Kamera am stärksten in den relevanten Bereich hinein. Das Zielsegment dominiert das Bild klarer, während das restliche Board stärker aus dem Blickfeld rückt."

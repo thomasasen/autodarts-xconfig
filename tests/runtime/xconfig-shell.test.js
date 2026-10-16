@@ -2702,7 +2702,7 @@ test("xConfig shell previews partial settings imports and applies the selected m
 
     const exported = await runtime.createSettingsExport({ includeAssets: false });
     exported.payload.features.tvBoardZoom.enabled = true;
-    exported.payload.features.tvBoardZoom.settings.zoomLevel = 3.15;
+    exported.payload.features.tvBoardZoom.settings.zoomLevel = 2.15;
     exported.payload.features.tvBoardZoom.settings.zoomSpeed = "warp";
 
     clickHeaderAction(documentRef, "open-settings-import");
@@ -2743,7 +2743,7 @@ test("xConfig shell previews partial settings imports and applies the selected m
     });
     const storedConfig = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
     assert.equal(storedConfig.featureToggles.tvBoardZoom, true);
-    assert.equal(storedConfig.features.tvBoardZoom.zoomLevel, 3.15);
+    assert.equal(storedConfig.features.tvBoardZoom.zoomLevel, 2.15);
     assert.equal(storedConfig.features.tvBoardZoom.zoomSpeed, "mittel");
   } finally {
     runtime.stop();

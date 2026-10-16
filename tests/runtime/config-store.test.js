@@ -246,7 +246,7 @@ test("config store transactions analyze and replace the latest queued config ato
         ...currentConfig.features,
         tvBoardZoom: {
           ...currentConfig.features.tvBoardZoom,
-          zoomLevel: 3.15,
+          zoomLevel: 2.15,
         },
       },
     },
@@ -258,7 +258,7 @@ test("config store transactions analyze and replace the latest queued config ato
   assert.equal(outcome.persisted, true);
   assert.equal(outcome.result, "imported");
   assert.equal(outcome.config.features.tvBoardZoom.zoomSpeed, "langsam");
-  assert.equal(outcome.config.features.tvBoardZoom.zoomLevel, 3.15);
+  assert.equal(outcome.config.features.tvBoardZoom.zoomLevel, 2.15);
 });
 
 test("config store imports migrated legacy feature and theme settings once without overwriting later config", async () => {
@@ -555,12 +555,12 @@ test("config store serializes updates from separate instances through one Web Lo
 
   await Promise.all([
     firstStore.update({ features: { checkoutScoreHighlight: { effect: "blink" } } }),
-    secondStore.update({ features: { tvBoardZoom: { zoomLevel: 3.15 } } }),
+    secondStore.update({ features: { tvBoardZoom: { zoomLevel: 2.15 } } }),
   ]);
 
   const stored = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
   assert.equal(stored.features.checkoutScoreHighlight.effect, "fade-blink");
-  assert.equal(stored.features.tvBoardZoom.zoomLevel, 3.15);
+  assert.equal(stored.features.tvBoardZoom.zoomLevel, 2.15);
 });
 
 test("config store propagates Web Lock request failures", async () => {

@@ -68,7 +68,7 @@ function fixture(options = {}) {
       featureToggles: Object.fromEntries(definitions.map((definition) => [definition.configKey, true])),
       features: {
         ...Object.fromEntries(definitions.map((definition) => [definition.configKey, { enabled: true }])),
-        tvBoardZoom: { enabled: true, checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", zoomLevel: 2.75 },
+        tvBoardZoom: { enabled: true, checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", zoomLevel: 1.75 },
         checkoutScoreHighlight: { enabled: true, triggerSource: "score-only" },
       },
     },

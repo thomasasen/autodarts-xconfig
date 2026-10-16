@@ -261,7 +261,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
         targetSelectionMode: "ALL",
       },
       tvBoardZoom: {
-        zoomLevel: "3.15",
+        zoomLevel: "2.15",
         zoomSpeed: "SCHNELL",
         checkoutZoomTarget: "ROUTE-FIRST",
         t20SetupZoomEnabled: "false",
@@ -400,7 +400,7 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
   assert.equal(runtimeConfig.getFeatureConfig("checkoutTargetHighlights").segmentStyle, "surface-only");
   assert.equal(runtimeConfig.getFeatureConfig("checkoutTargetHighlights").singleRing, "both");
   assert.equal(runtimeConfig.getFeatureConfig("checkoutTargetHighlights").targetSelectionMode, "all");
-  assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").zoomLevel, 3.15);
+  assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").zoomLevel, 2.15);
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").zoomSpeed, "schnell");
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").checkoutZoomTarget, "route-first");
   assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").t20SetupZoomEnabled, false);
@@ -510,6 +510,21 @@ test("createRuntimeConfig normalizes wave-2 feature options", () => {
     "data:image/png;base64,DDDD"
   );
   assert.equal(runtimeConfig.getNormalized().features.themes.x01, undefined);
+});
+
+test("createRuntimeConfig migrates legacy tv-board-zoom levels to the matching reduced level", () => {
+  const mappings = [
+    [2.35, 1.35],
+    [2.75, 1.75],
+    [3.15, 2.15],
+  ];
+
+  mappings.forEach(([legacyLevel, expectedLevel]) => {
+    const runtimeConfig = createRuntimeConfig({
+      features: { tvBoardZoom: { zoomLevel: legacyLevel } },
+    });
+    assert.equal(runtimeConfig.getFeatureConfig("tvBoardZoom").zoomLevel, expectedLevel);
+  });
 });
 
 test("createRuntimeConfig normalizes turn-score-counter speed presets and legacy durations", () => {

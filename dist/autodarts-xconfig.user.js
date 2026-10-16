@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         autodarts-xconfig
 // @namespace    https://github.com/thomasasen/autodarts-xconfig
-// @version      3.5.3
+// @version      3.5.4
 // @description  Modular, side-effect resistant Tampermonkey runtime for Autodarts enhancements.
 // @author       Thomas Asen
 // @license      MIT
@@ -1414,7 +1414,7 @@
     ...Object.fromEntries(CHECKOUT_SCORE_OPTIONS.effect.map(([value]) => [value, value]))
   });
   var TV_ZOOM_OPTIONS = Object.freeze({
-    zoomLevel: freezeOptions([[2.35, "Leicht"], [2.75, "Mittel"], [3.15, "Stark"]]),
+    zoomLevel: freezeOptions([[1.35, "Leicht"], [1.75, "Mittel"], [2.15, "Stark"]]),
     zoomStyle: freezeOptions([["standard", "Standard"], ["cinematic", "Cinematic"]]),
     zoomSpeed: freezeOptions([["schnell", "Schnell"], ["mittel", "Mittel"], ["langsam", "Langsam"]]),
     checkoutZoomTarget: freezeOptions([["finish-only", "Nur Finish-Feld"], ["route-first", "Erstes Routenfeld"]])
@@ -2201,6 +2201,11 @@
   var BOARD_TARGET_SELECTION_MODES = /* @__PURE__ */ new Set(["next", "all", "finish"]);
   var BOARD_TARGET_THEMES = /* @__PURE__ */ new Set(["violet", "cyan", "amber", "lime", "rose", "white"]);
   var TV_ZOOM_LEVELS = new Set(TV_ZOOM_OPTIONS.zoomLevel.map(([value]) => value));
+  var TV_ZOOM_LEVEL_ALIASES = Object.freeze({
+    2.35: 1.35,
+    2.75: 1.75,
+    3.15: 2.15
+  });
   var TV_ZOOM_SPEEDS = new Set(TV_ZOOM_OPTIONS.zoomSpeed.map(([value]) => value));
   var TV_ZOOM_STYLES = new Set(TV_ZOOM_OPTIONS.zoomStyle.map(([value]) => value));
   var TV_ZOOM_TARGETS = new Set(TV_ZOOM_OPTIONS.checkoutZoomTarget.map(([value]) => value));
@@ -2360,6 +2365,13 @@
     const numeric = Number(value);
     return Number.isFinite(numeric) && allowedSet.has(numeric) ? numeric : fallbackValue;
   }
+  function normalizeTvBoardZoomLevel(value) {
+    const numeric = Number(value);
+    if (Number.isFinite(numeric) && TV_ZOOM_LEVELS.has(numeric)) {
+      return numeric;
+    }
+    return Object.hasOwn(TV_ZOOM_LEVEL_ALIASES, numeric) ? TV_ZOOM_LEVEL_ALIASES[numeric] : 1.75;
+  }
   function normalizeLimitedText(value, maxLength = 80) {
     const normalized = String(value || "").replaceAll(/[\r\n\t]+/g, " ").trim();
     return normalized.slice(0, Math.max(0, Number(maxLength) || 0));
@@ -2496,7 +2508,7 @@
     cricketLayout: DEFAULT_CRICKET_LAYOUT_CONFIG,
     checkoutScoreHighlight: { enabled: false, effect: "grow-only", colorTheme: "159, 219, 88", intensity: "standard", triggerSource: "suggestion-first", debug: false },
     checkoutTargetHighlights: { enabled: false, visualPreset: "soft-pulse", segmentStyle: "surface-outline", singleRing: "both", targetSelectionMode: "next", colorTheme: "amber", debug: false },
-    tvBoardZoom: { enabled: false, zoomLevel: 2.75, zoomSpeed: "mittel", zoomStyle: "standard", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true, debug: false },
+    tvBoardZoom: { enabled: false, zoomLevel: 1.75, zoomSpeed: "mittel", zoomStyle: "standard", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true, debug: false },
     checkoutSuggestionStyles: { enabled: false, style: "ribbon", labelText: "CHECKOUT", colorTheme: "amber", colorNumbers: false, debug: false },
     x01BustActivePlayerHighlight: { enabled: false, effectTarget: "player-card", crackCount: 2, soundEnabled: true, debug: false },
     avgTrendArrow: { enabled: false, durationMs: 320, size: "standard", debug: false },
@@ -2549,7 +2561,7 @@
   var RECOMMENDED_FEATURE_CONFIGS = Object.freeze({
     checkoutScoreHighlight: { effect: "fade-blink", colorTheme: "56, 189, 248", intensity: "standard", triggerSource: "suggestion-first" },
     checkoutTargetHighlights: { visualPreset: "fast-blink", segmentStyle: "surface-outline", singleRing: "both", targetSelectionMode: "next", colorTheme: "violet" },
-    tvBoardZoom: { zoomLevel: 2.75, zoomSpeed: "mittel", zoomStyle: "standard", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true },
+    tvBoardZoom: { zoomLevel: 1.75, zoomSpeed: "mittel", zoomStyle: "standard", checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", t20SetupZoomEnabled: true },
     checkoutSuggestionStyles: { style: "stripe", labelText: "CHECKOUT", colorTheme: "amber" },
     x01BustActivePlayerHighlight: { effectTarget: "player-card", crackCount: 2, soundEnabled: true },
     avgTrendArrow: { durationMs: 500, size: "standard" },
@@ -2622,7 +2634,7 @@
     tvBoardZoom(legacyFeatureState) {
       const settings = getLegacyFeatureSettings(legacyFeatureState);
       return buildFeatureImport("tvBoardZoom", legacyFeatureState, {
-        zoomLevel: readLegacySetting(settings, "ZOOM_STUFE", 2.75),
+        zoomLevel: readLegacySetting(settings, "ZOOM_STUFE", 1.75),
         zoomSpeed: readLegacySetting(settings, "ZOOM_GESCHWINDIGKEIT", "mittel"),
         checkoutZoomEnabled: readLegacySetting(settings, "CHECKOUT_ZOOM", true),
         debug: readLegacySetting(settings, "DEBUG", false)
@@ -2754,7 +2766,7 @@
       return { enabled: normalizeBoolean(rawConfig.enabled, false), visualPreset: normalizeMappedStringChoice(resolveLegacyBoardTargetVisualPreset(rawConfig), "soft-pulse", BOARD_TARGET_VISUAL_PRESET_ALIASES), segmentStyle: normalizeStringChoice(rawConfig.segmentStyle, "surface-outline", BOARD_TARGET_SEGMENT_STYLES), singleRing: "both", targetSelectionMode: normalizeStringChoice(rawConfig.targetSelectionMode, "next", BOARD_TARGET_SELECTION_MODES), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "amber", BOARD_TARGET_THEMES), debug: normalizeBoolean(rawConfig.debug, false) };
     },
     tvBoardZoom(rawConfig = {}) {
-      return { enabled: normalizeBoolean(rawConfig.enabled, false), zoomLevel: normalizeNumberChoice(rawConfig.zoomLevel, 2.75, TV_ZOOM_LEVELS), zoomSpeed: normalizeStringChoice(rawConfig.zoomSpeed, "mittel", TV_ZOOM_SPEEDS), zoomStyle: normalizeStringChoice(rawConfig.zoomStyle, "standard", TV_ZOOM_STYLES), checkoutZoomEnabled: normalizeBoolean(rawConfig.checkoutZoomEnabled, true), checkoutZoomTarget: normalizeStringChoice(rawConfig.checkoutZoomTarget, "finish-only", TV_ZOOM_TARGETS), t20SetupZoomEnabled: normalizeBoolean(rawConfig.t20SetupZoomEnabled, true), debug: normalizeBoolean(rawConfig.debug, false) };
+      return { enabled: normalizeBoolean(rawConfig.enabled, false), zoomLevel: normalizeTvBoardZoomLevel(rawConfig.zoomLevel), zoomSpeed: normalizeStringChoice(rawConfig.zoomSpeed, "mittel", TV_ZOOM_SPEEDS), zoomStyle: normalizeStringChoice(rawConfig.zoomStyle, "standard", TV_ZOOM_STYLES), checkoutZoomEnabled: normalizeBoolean(rawConfig.checkoutZoomEnabled, true), checkoutZoomTarget: normalizeStringChoice(rawConfig.checkoutZoomTarget, "finish-only", TV_ZOOM_TARGETS), t20SetupZoomEnabled: normalizeBoolean(rawConfig.t20SetupZoomEnabled, true), debug: normalizeBoolean(rawConfig.debug, false) };
     },
     checkoutSuggestionStyles(rawConfig = {}) {
       return { enabled: normalizeBoolean(rawConfig.enabled, false), style: normalizeStringChoice(rawConfig.style, "ribbon", SUGGESTION_STYLES), labelText: normalizeMappedStringChoice(rawConfig.labelText, "CHECKOUT", { "": "", checkout: "CHECKOUT", finish: "FINISH" }), colorTheme: normalizeStringChoice(rawConfig.colorTheme, "amber", SUGGESTION_COLOR_THEMES), colorNumbers: normalizeBoolean(rawConfig.colorNumbers, false), debug: normalizeBoolean(rawConfig.debug, false) };
@@ -13305,8 +13317,8 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
   var SINGLE_RING_RATIO = (RING_RATIOS2.tripleOuter + RING_RATIOS2.doubleInner) / 2;
   var RELEASE_PADDING_MS = 40;
   var CHECKOUT_DOUBLE_ZOOM_RANGE = Object.freeze({
-    min: 2.35,
-    max: 3.15
+    min: 1.35,
+    max: 2.15
   });
   var TRANSFORM_SIGNATURE_STEP_PX = 0.5;
   var TRANSLATE_PREFIX = "translate(";
@@ -15193,7 +15205,7 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
     if (TV_ZOOM_OPTIONS.zoomLevel.some(([value]) => value === numeric)) {
       return numeric;
     }
-    return 2.75;
+    return 1.75;
   }
   function toElementNode(node = null) {
     let current = node;
@@ -15467,7 +15479,7 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
       };
     }
     const featureConfig = config && typeof config.getFeatureConfig === "function" ? config.getFeatureConfig("tvBoardZoom") : {
-      zoomLevel: 2.75,
+      zoomLevel: 1.75,
       zoomSpeed: "mittel",
       zoomStyle: "standard",
       checkoutZoomEnabled: true,
@@ -40570,7 +40582,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
 
   // src/core/bootstrap.js
   var GLOBAL_NAMESPACE_KEY = "__adXConfig";
-  var API_VERSION = "3.5.3";
+  var API_VERSION = "3.5.4";
   var STARTUP_DEFER_INTERVAL_MS = 16;
   function getWindowTimerApi(windowRef) {
     let setTimeoutRef = null;
@@ -42753,17 +42765,17 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
     )
   });
   var TV_BOARD_ZOOM_LEVEL_OPTION_COPY = deepFreeze2({
-    "2.35": optionCopy(
+    "1.35": optionCopy(
       "Zoomt vergleichsweise weit und lässt noch viel Boardumfeld stehen.",
       "Das Segment wird klar vergrößert, aber noch mit gut sichtbarer Umgebung gezeigt. Die Kamera wirkt dadurch weniger eng.",
       "Diese Stufe vergrößert das Ziel spürbar, lässt aber noch viel vom restlichen Board im Bild. Der Effekt wirkt eher wie ein sanfter Fokus als wie ein enger Ausschnitt."
     ),
-    "2.75": optionCopy(
+    "1.75": optionCopy(
       "Nutzen die ausgewogene Standardvergrößerung.",
       "Der relevante Bereich rückt klar nach vorn, ohne den Kontext komplett zu verlieren. Das ist der Mittelweg zwischen Überblick und Fokus.",
       "Diese Stufe liefert den vorgesehenen Mittelwert für den Board-Zoom. Das Zielsegment wird deutlich hervorgehoben, während rundherum noch genug Board sichtbar bleibt, um sich räumlich zu orientieren."
     ),
-    "3.15": optionCopy(
+    "2.15": optionCopy(
       "Zoomt am engsten auf den Zielbereich.",
       "Das relevante Segment füllt deutlich mehr vom sichtbaren Bereich. Rundherum bleibt weniger Board-Kontext übrig, dafür springt das Ziel stärker in den Fokus.",
       "Diese Stufe zieht die Kamera am stärksten in den relevanten Bereich hinein. Das Zielsegment dominiert das Bild klarer, während das restliche Board stärker aus dem Blickfeld rückt."

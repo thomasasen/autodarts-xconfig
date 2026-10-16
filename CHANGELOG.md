@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.5.4] - 2026-10-16
+
+### Changed
+
+- Nutzerwirkung: Die drei Stufen des automatischen TV-Board-Zooms sind jeweils um `1,0` reduziert: Leicht zoomt mit `1,35×`, Mittel mit `1,75×` und Stark mit `2,15×`. Bereits gespeicherte Zoomstufen behalten dabei ihre gewählte Bedeutung.
+  Technik: Gemeinsame Optionen, Standardwert, Laufzeitgrenzen, xConfig-Texte und Regressionstests verwenden dieselben Werte. Bestehende Konfigurationen mit `2,35`, `2,75` oder `3,15` werden kompatibel auf die entsprechende neue Stufe migriert.
+
 ## [3.5.3] - 2026-10-16
 
 ### Fixed
@@ -2386,6 +2393,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.5.4]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.3...v3.5.4
 [3.5.3]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.2...v3.5.3
 [3.5.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.1...v3.5.2
 [3.5.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.0...v3.5.1

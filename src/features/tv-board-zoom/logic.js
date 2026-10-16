@@ -27,8 +27,8 @@ const RING_RATIOS = Object.freeze({
 const SINGLE_RING_RATIO = (RING_RATIOS.tripleOuter + RING_RATIOS.doubleInner) / 2;
 const RELEASE_PADDING_MS = 40;
 const CHECKOUT_DOUBLE_ZOOM_RANGE = Object.freeze({
-  min: 2.35,
-  max: 3.15,
+  min: 1.35,
+  max: 2.15,
 });
 const TRANSFORM_SIGNATURE_STEP_PX = 0.5;
 const TRANSLATE_PREFIX = "translate(";

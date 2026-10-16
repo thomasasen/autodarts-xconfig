@@ -13,7 +13,7 @@ import { ZOOM_CLASS, ZOOM_HOST_CLASS } from "../../src/features/tv-board-zoom/st
 import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 import { createModernX01Fixture } from "./modern-x01-fixture.js";
 
-const ZOOM_LEVELS = Object.freeze([2.35, 2.75, 3.15]);
+const ZOOM_LEVELS = Object.freeze([1.35, 1.75, 2.15]);
 const NUMBER_RING_PADDING_PX = 8;
 const NUMBER_RING_OUTER_OFFSET_RATIO = 0.2;
 

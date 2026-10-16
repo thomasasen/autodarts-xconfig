@@ -259,7 +259,7 @@ function resolveZoomLevel(zoomLevel) {
   if (TV_ZOOM_OPTIONS.zoomLevel.some(([value]) => value === numeric)) {
     return numeric;
   }
-  return 2.75;
+  return 1.75;
 }
 
 function toElementNode(node = null) {
@@ -602,7 +602,7 @@ export function initializeTvBoardZoom(context = {}) {
     config && typeof config.getFeatureConfig === "function"
       ? config.getFeatureConfig("tvBoardZoom")
       : {
-          zoomLevel: 2.75,
+          zoomLevel: 1.75,
           zoomSpeed: "mittel",
           zoomStyle: "standard",
           checkoutZoomEnabled: true,

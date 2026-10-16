@@ -12,7 +12,7 @@ const contracts = [
     triggerSource: [["suggestion-first", "Vorschlag zuerst"], ["score-only", "Nur Score"], ["suggestion-only", "Nur Vorschlag"]],
   }],
   ["tv-board-zoom", "tvBoardZoom", {
-    zoomLevel: [[2.35, "Leicht"], [2.75, "Mittel"], [3.15, "Stark"]],
+    zoomLevel: [[1.35, "Leicht"], [1.75, "Mittel"], [2.15, "Stark"]],
     zoomStyle: [["standard", "Standard"], ["cinematic", "Cinematic"]],
     zoomSpeed: [["schnell", "Schnell"], ["mittel", "Mittel"], ["langsam", "Langsam"]],
     checkoutZoomTarget: [["finish-only", "Nur Finish-Feld"], ["route-first", "Erstes Routenfeld"]],

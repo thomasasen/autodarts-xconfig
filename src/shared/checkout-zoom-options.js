@@ -19,7 +19,7 @@ export const CHECKOUT_EFFECT_ALIASES = Object.freeze({
 });
 
 export const TV_ZOOM_OPTIONS = Object.freeze({
-  zoomLevel: freezeOptions([[2.35, "Leicht"], [2.75, "Mittel"], [3.15, "Stark"]]),
+  zoomLevel: freezeOptions([[1.35, "Leicht"], [1.75, "Mittel"], [2.15, "Stark"]]),
   zoomStyle: freezeOptions([["standard", "Standard"], ["cinematic", "Cinematic"]]),
   zoomSpeed: freezeOptions([["schnell", "Schnell"], ["mittel", "Mittel"], ["langsam", "Langsam"]]),
   checkoutZoomTarget: freezeOptions([["finish-only", "Nur Finish-Feld"], ["route-first", "Erstes Routenfeld"]]),

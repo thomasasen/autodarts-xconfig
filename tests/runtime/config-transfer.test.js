@@ -246,7 +246,7 @@ test("Autodarts dart designer image and part selection survive settings transfer
 test("settings import applies valid values and skips incompatible fields without aborting", () => {
   const current = normalizeRuntimeConfig({
     features: {
-      tvBoardZoom: { zoomLevel: 2.35, zoomSpeed: "langsam" },
+      tvBoardZoom: { zoomLevel: 1.35, zoomSpeed: "langsam" },
     },
   });
   const analysis = analyzeSettingsImport(
@@ -254,7 +254,7 @@ test("settings import applies valid values and skips incompatible fields without
       tvBoardZoom: {
         enabled: true,
         settings: {
-          zoomLevel: 3.15,
+          zoomLevel: 2.15,
           zoomSpeed: "warp",
           removedSetting: true,
         },
@@ -270,7 +270,7 @@ test("settings import applies valid values and skips incompatible fields without
 
   assert.equal(analysis.report.status, "ready");
   assert.equal(analysis.config.featureToggles.tvBoardZoom, true);
-  assert.equal(analysis.config.features.tvBoardZoom.zoomLevel, 3.15);
+  assert.equal(analysis.config.features.tvBoardZoom.zoomLevel, 2.15);
   assert.equal(analysis.config.features.tvBoardZoom.zoomSpeed, "langsam");
   assert.ok(analysis.report.counts.applied >= 2);
   assert.ok(analysis.report.counts.skipped >= 3);
@@ -291,7 +291,7 @@ test("merge preserves missing values while replace starts from current defaults"
   const payload = createEnvelope({
     tvBoardZoom: {
       enabled: false,
-      settings: { zoomLevel: 3.15 },
+      settings: { zoomLevel: 2.15 },
     },
   }, { assetsIncluded: false });
 
@@ -351,14 +351,14 @@ test("settings import accepts raw runtime and known legacy config structures", (
       "a-tv-board-zoom": {
         enabled: true,
         settings: {
-          ZOOM_STUFE: 3.15,
+          ZOOM_STUFE: 2.15,
           ZOOM_GESCHWINDIGKEIT: "schnell",
         },
       },
     },
   }, normalizeRuntimeConfig(), { descriptors: xconfigDescriptors });
   assert.equal(legacy.config.featureToggles.tvBoardZoom, true);
-  assert.equal(legacy.config.features.tvBoardZoom.zoomLevel, 3.15);
+  assert.equal(legacy.config.features.tvBoardZoom.zoomLevel, 2.15);
   assert.ok(legacy.report.counts.migrated > 0);
 });
 
@@ -438,14 +438,14 @@ test("malformed files and unsafe keys never produce an import candidate", () => 
     "features":{
       "tvBoardZoom":{
         "enabled":true,
-        "settings":{"__proto__":{"polluted":true},"zoomLevel":3.15}
+        "settings":{"__proto__":{"polluted":true},"zoomLevel":2.15}
       }
     }
   }`);
   const analysis = analyzeSettingsImport(unsafePayload, normalizeRuntimeConfig(), {
     descriptors: xconfigDescriptors,
   });
-  assert.equal(analysis.config.features.tvBoardZoom.zoomLevel, 3.15);
+  assert.equal(analysis.config.features.tvBoardZoom.zoomLevel, 2.15);
   assert.equal({}.polluted, undefined);
   assert.ok(analysis.report.issues.some((issue) => issue.code === "forbidden-setting"));
 });

@@ -183,7 +183,7 @@ test("native zoom retains aligned camera media while leaving legacy GIF siblings
   legacyGif.setAttribute("src", "blob:https://play.autodarts.io/gif");
   const state = {};
   try {
-    for (const level of [2.35, 2.75, 3.15]) {
+    for (const level of [1.35, 1.75, 2.15]) {
       for (const intent of [{ reason: "t20-setup", segment: "T20" },
         { reason: "checkout", segment: "D5" }, { reason: "checkout", segment: "BULL" }]) {
         applyZoom({ targetNode: f.board, hostNode: f.host, boardSvg: f.layers[0] }, level, speed, intent, state);
@@ -637,7 +637,7 @@ function startFeatures({ bustTarget = "impact", enabled = [true, true, true], or
     domain: { x01Rules }, config: { getFeatureConfig(key) {
       if (key === "x01BustActivePlayerHighlight") return { effectTarget: bustTarget, crackCount: 2, soundEnabled: true };
       if (key === "dartMarkerReplacer") return { animateDarts, enableShadow: true };
-      return { checkoutZoomEnabled: true, zoomLevel: 2.75, zoomSpeed: "mittel" };
+      return { checkoutZoomEnabled: true, zoomLevel: 1.75, zoomSpeed: "mittel" };
     } }, helpers: { createRafScheduler: (callback, options = {}) => createRafScheduler(callback, { ...options, windowRef: f.windowRef }) } };
   const mounts = [initializeTvBoardZoom, initializeDartMarkerReplacer, mountX01BustActivePlayerHighlight];
   const initialToolsGif = initialGif ? addToolsGif(f, undefined, prepareInitialGif) : null;
@@ -833,14 +833,14 @@ test("pre-existing Tools GIF stays presentation-identical through hardware zoom 
     assertToolsIdentity(gif, expectedIdentity);
     assert.equal(f.host.style.transform || "", "");
     const firstTransform = f.layers[0].style.transform;
-    assert.match(firstTransform, /scale\(2\.750*\)/);
+    assert.match(firstTransform, /scale\(1\.750*\)/);
     f.layers.forEach((layer) => assert.equal(layer.style.transform, firstTransform));
 
     f.score.textContent = "4";
     f.setVisit([], ["D2"]);
     f.tick();
     const retargetedTransform = f.layers[0].style.transform;
-    assert.match(retargetedTransform, /scale\(2\.750*\)/);
+    assert.match(retargetedTransform, /scale\(1\.750*\)/);
     assert.notEqual(retargetedTransform, firstTransform);
     assert.deepEqual(snapshotToolsPresentation(gif), initialPresentation);
     assertToolsIdentity(gif, expectedIdentity);
@@ -879,7 +879,7 @@ test("pre-existing Tools GIF stays presentation-identical through hardware zoom 
 test("late Tools host mount swaps hardware zoom to inner layers and removal restores one clean wrapper zoom", () => {
   const f = startFeatures({ enabled: [true, false, false], manual: true, hardware: true });
   try {
-    assert.match(f.host.style.transform, /scale\(2\.750*\)/);
+    assert.match(f.host.style.transform, /scale\(1\.750*\)/);
     f.layers.forEach((layer) => assert.equal(layer.style.transform || "", ""));
 
     const gif = addToolsGif(f, undefined, seedToolsPresentation);
@@ -890,7 +890,7 @@ test("late Tools host mount swaps hardware zoom to inner layers and removal rest
     assert.equal(f.host.style.transform || "", "");
     assert.equal(f.host.classList.contains("ad-ext-tv-board-zoom"), false);
     const innerTransform = f.layers[0].style.transform;
-    assert.match(innerTransform, /scale\(2\.750*\)/);
+    assert.match(innerTransform, /scale\(1\.750*\)/);
     f.layers.forEach((layer) => assert.equal(layer.style.transform, innerTransform));
     assert.deepEqual(snapshotToolsPresentation(gif), presentation);
     assertToolsIdentity(gif, expectedIdentity);
@@ -899,7 +899,7 @@ test("late Tools host mount swaps hardware zoom to inner layers and removal rest
     const removedPresentation = snapshotToolsPresentation(gif);
     expectedIdentity = snapshotToolsIdentity(gif);
     f.tick();
-    assert.match(f.host.style.transform, /scale\(2\.750*\)/);
+    assert.match(f.host.style.transform, /scale\(1\.750*\)/);
     assert.equal(f.host.classList.contains("ad-ext-tv-board-zoom"), true);
     f.layers.forEach((layer) => assert.equal(layer.style.transform || "", ""));
     assert.deepEqual(snapshotToolsPresentation(gif), removedPresentation);
@@ -923,7 +923,7 @@ test("persistent legacy Tools root keeps one hardware zoom target before, during
   try {
     const transform = f.layers[0].style.transform;
     const transitions = f.layers.map((layer) => layer.style.transition);
-    assert.match(transform, /scale\(2\.750*\)/);
+    assert.match(transform, /scale\(1\.750*\)/);
     f.layers.forEach((layer) => assert.equal(layer.style.transform, transform));
     assert.equal(f.host.style.transform || "", "");
     assert.equal(f.host.style.overflow || "", "");

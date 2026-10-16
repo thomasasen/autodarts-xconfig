@@ -136,7 +136,7 @@ function startTvBoardZoom({ documentRef, windowRef, gameState, featureConfig = {
     config: {
       getFeatureConfig() {
         return {
-          zoomLevel: 2.75,
+          zoomLevel: 1.75,
           zoomSpeed: "schnell",
           checkoutZoomEnabled: true,
           ...featureConfig,
@@ -364,7 +364,7 @@ test("native D18 zoom moves all four board layers together and restores clipping
     assert.equal(f.events.find((event) => event.status === "apply")?.segment, "D18");
     assert.equal(f.layers[0].classList.contains(ZOOM_CLASS), true);
     assert.equal(f.host.classList.contains(ZOOM_HOST_CLASS), true);
-    assert.match(f.layers[0].style.transform, /scale\(2\.750*\)/);
+    assert.match(f.layers[0].style.transform, /scale\(1\.750*\)/);
     f.layers.forEach((layer) => {
       assert.equal(layer.parentElement, f.board);
       assert.equal(layer.style.transform, f.layers[0].style.transform);
@@ -416,7 +416,7 @@ test("native four-layer vector board without mode controls zooms for a hardware 
   try {
     f.timers.advance(25);
     assert.equal(f.layers[0].classList.contains(ZOOM_CLASS), true);
-    assert.match(f.layers[0].style.transform, /scale\(2\.750*\)/);
+    assert.match(f.layers[0].style.transform, /scale\(1\.750*\)/);
   } finally { f.stop(); }
 });
 
@@ -432,7 +432,7 @@ test("stored hardware board restores zoom when match player board id is missing"
   try {
     f.timers.advance(25);
     assert.equal(f.layers[0].classList.contains(ZOOM_CLASS), true);
-    assert.match(f.layers[0].style.transform, /scale\(2\.750*\)/);
+    assert.match(f.layers[0].style.transform, /scale\(1\.750*\)/);
   } finally { f.stop(); }
 });
 
@@ -446,7 +446,7 @@ test("stored hardware board allows zoom before match state hydration", () => {
   try {
     f.timers.advance(25);
     assert.equal(f.layers[0].classList.contains(ZOOM_CLASS), true);
-    assert.match(f.layers[0].style.transform, /scale\(2\.750*\)/);
+    assert.match(f.layers[0].style.transform, /scale\(1\.750*\)/);
   } finally { f.stop(); }
 });
 
@@ -460,7 +460,7 @@ test("stored manual board zooms the aligned pointer surface before match state h
   try {
     f.timers.advance(25);
     assert.equal(f.host.classList.contains(ZOOM_CLASS), true);
-    assert.match(f.host.style.transform, /scale\(2\.750*\)/);
+    assert.match(f.host.style.transform, /scale\(1\.750*\)/);
     assert.equal(f.layers[0].classList.contains(ZOOM_CLASS), false);
     assert.equal(f.board.style.transform || "", "");
   } finally { f.stop(); }
@@ -474,7 +474,7 @@ test("manual native four-layer vector board zooms its aligned pointer surface", 
   try {
     f.timers.advance(25);
     assert.equal(f.host.classList.contains(ZOOM_CLASS), true);
-    assert.match(f.host.style.transform, /scale\(2\.750*\)/);
+    assert.match(f.host.style.transform, /scale\(1\.750*\)/);
     assert.equal(f.layers[0].classList.contains(ZOOM_CLASS), false);
     assert.equal(f.board.style.transform || "", "");
   } finally { f.stop(); }
@@ -497,7 +497,7 @@ for (const hydrated of [false, true]) {
       f.host.style.touchAction = "none";
       f.timers.advance(25);
       assert.equal(f.events.at(-1).segment, "D2");
-      assert.match(f.host.style.transform, /scale\(2\.750*\)/);
+      assert.match(f.host.style.transform, /scale\(1\.750*\)/);
       assert.equal(f.board.style.transform || "", "");
     } finally { f.stop(); }
   });
@@ -536,7 +536,7 @@ test("hardware pointer input with Tools zooms every board SVG while both measure
   try {
     f.timers.advance(25);
     const transform = f.layers[0].style.transform;
-    assert.match(transform, /scale\(2\.750*\)/);
+    assert.match(transform, /scale\(1\.750*\)/);
     f.layers.forEach((layer) => assert.equal(layer.style.transform, transform));
     assert.equal(f.layers[3].classList.contains(ZOOM_CLASS), true);
     assert.equal(f.interactiveHitArea.parentElement, f.layers[3]);
@@ -589,7 +589,7 @@ test("missing board id uses the click-safe manual pointer surface", () => {
   try {
     f.timers.advance(25);
     assert.equal(f.host.classList.contains(ZOOM_CLASS), true);
-    assert.match(f.host.style.transform, /scale\(2\.750*\)/);
+    assert.match(f.host.style.transform, /scale\(1\.750*\)/);
     assert.equal(f.layers[0].classList.contains(ZOOM_CLASS), false);
     assert.equal(f.board.style.transform || "", "");
   } finally { f.stop(); }
@@ -616,7 +616,7 @@ test("bot players remain zoomable without a scoring board id", () => {
   try {
     f.timers.advance(25);
     assert.equal(f.layers[0].classList.contains(ZOOM_CLASS), true);
-    assert.match(f.layers[0].style.transform, /scale\(2\.750*\)/);
+    assert.match(f.layers[0].style.transform, /scale\(1\.750*\)/);
   } finally { f.stop(); }
 });
 
@@ -632,7 +632,7 @@ test("unknown dense vector board stays unzoomed until hardware state hydrates", 
     f.timers.advance(25);
 
     assert.equal(f.layers[0].classList.contains(ZOOM_CLASS), true);
-    assert.match(f.layers[0].style.transform, /scale\(2\.750*\)/);
+    assert.match(f.layers[0].style.transform, /scale\(1\.750*\)/);
   } finally { f.stop(); }
 });
 
@@ -655,13 +655,13 @@ test("active player switches between hardware and click-safe manual zoom targets
     assert.equal(f.layers[0].classList.contains(ZOOM_CLASS), false);
     assert.equal(f.board.style.transform || "", "");
     assert.equal(f.host.classList.contains(ZOOM_CLASS), true);
-    assert.match(f.host.style.transform, /scale\(2\.750*\)/);
+    assert.match(f.host.style.transform, /scale\(1\.750*\)/);
 
     gameState.state.snapshot = createScoringSnapshot(players[0], 0, players);
     gameState.notify();
     f.timers.advance(25);
     assert.equal(f.layers[0].classList.contains(ZOOM_CLASS), true);
-    assert.match(f.layers[0].style.transform, /scale\(2\.750*\)/);
+    assert.match(f.layers[0].style.transform, /scale\(1\.750*\)/);
     assert.equal(f.host.classList.contains(ZOOM_CLASS), false);
     assert.equal(f.host.style.transform || "", "");
   } finally { f.stop(); }
@@ -677,7 +677,7 @@ test("board input controls without an active choice stay unzoomed until live mod
     f.setBoardInputMode("live");
 
     assert.equal(f.layers[0].classList.contains(ZOOM_CLASS), true);
-    assert.match(f.layers[0].style.transform, /scale\(2\.750*\)/);
+    assert.match(f.layers[0].style.transform, /scale\(1\.750*\)/);
   } finally { f.stop(); }
 });
 
@@ -686,7 +686,7 @@ test("native media-backed board without mode controls remains zoomable", () => {
   try {
     f.timers.advance(25);
     assert.equal(f.layers[0].classList.contains(ZOOM_CLASS), true);
-    assert.match(f.layers[0].style.transform, /scale\(2\.750*\)/);
+    assert.match(f.layers[0].style.transform, /scale\(1\.750*\)/);
   } finally { f.stop(); }
 });
 
@@ -748,13 +748,13 @@ for (const undoThirdDart of [false, true]) {
       f.setVisit(undoThirdDart ? ["T20", "T20"] : ["T20"], [undoThirdDart ? "D2" : "D20"]);
       f.total.textContent = undoThirdDart ? "120" : "60";
       f.tick();
-      assert.match(f.layers[0].style.transform, /scale\(2\.750*\)/);
+      assert.match(f.layers[0].style.transform, /scale\(1\.750*\)/);
       assert.equal(f.events.filter((event) => event.status === "apply").at(-1)?.segment,
         undoThirdDart ? "D2" : "D20");
 
       f.timers.advance(1200);
       f.tick();
-      assert.match(f.layers[0].style.transform, /scale\(2\.750*\)/);
+      assert.match(f.layers[0].style.transform, /scale\(1\.750*\)/);
     } finally { f.stop(); }
   });
 }
@@ -763,7 +763,7 @@ test("native correction undo reapplies the same zoom before zoom-out completes",
   const f = startModernZoom();
   try {
     f.timers.advance(25);
-    assert.match(f.layers[0].style.transform, /scale\(2\.750*\)/);
+    assert.match(f.layers[0].style.transform, /scale\(1\.750*\)/);
 
     f.windowRef.dispatchEvent({ type: "pointerdown", target: f.rows[0].label });
     f.score.textContent = "61";
@@ -775,7 +775,7 @@ test("native correction undo reapplies the same zoom before zoom-out completes",
     f.setVisit(["T20", "25"], ["D18"]);
     f.tick();
 
-    assert.match(f.layers[0].style.transform, /scale\(2\.750*\)/);
+    assert.match(f.layers[0].style.transform, /scale\(1\.750*\)/);
   } finally { f.stop(); }
 });
 
@@ -1610,7 +1610,7 @@ test("tv-board-zoom repairs externally replaced zoom styles and preserves the ne
 
   try {
     timers.advance(25);
-    assert.match(String(targetNode.style.transform || ""), /scale\(2\.7500\)/);
+    assert.match(String(targetNode.style.transform || ""), /scale\(1\.7500\)/);
 
     targetNode.style.setProperty("transform", "rotate(1deg)");
     targetNode.classList.remove(ZOOM_CLASS);
@@ -1624,7 +1624,7 @@ test("tv-board-zoom repairs externally replaced zoom styles and preserves the ne
     ]);
     timers.advance(25);
 
-    assert.match(String(targetNode.style.transform || ""), /^rotate\(1deg\) translate\(.+scale\(2\.7500\)$/);
+    assert.match(String(targetNode.style.transform || ""), /^rotate\(1deg\) translate\(.+scale\(1\.7500\)$/);
     assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
     assert.equal(hostNode.style.getPropertyValue("overflow"), "hidden");
     assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), true);
@@ -1679,7 +1679,7 @@ test("tv-board-zoom heartbeat repairs silent transform loss without a DOM event"
 
     timers.advance(1100);
 
-    assert.match(String(targetNode.style.transform || ""), /scale\(2\.7500\)/);
+    assert.match(String(targetNode.style.transform || ""), /scale\(1\.7500\)/);
     assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
   } finally {
     cleanup();

@@ -167,7 +167,7 @@ test("tv-board-zoom registers managed listeners and releases them on cleanup", a
     windowRef,
     documentRef,
     config: createSingleFeatureConfig("tvBoardZoom", {
-      zoomLevel: 2.75,
+      zoomLevel: 1.75,
       zoomSpeed: "mittel",
       checkoutZoomEnabled: true,
     }),

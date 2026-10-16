@@ -467,7 +467,7 @@ test("P0 X01 to Cricket clears score, target overlay and zoom with stale X01 sta
           if (key === "checkoutTargetHighlights") {
             return { targetSelectionMode: "next" };
           }
-          return { checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", zoomLevel: 2.75 };
+          return { checkoutZoomEnabled: true, checkoutZoomTarget: "finish-only", zoomLevel: 1.75 };
         },
       },
       helpers: { createRafScheduler },
