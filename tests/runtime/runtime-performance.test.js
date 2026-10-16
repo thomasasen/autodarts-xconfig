@@ -259,6 +259,91 @@ test("checkout-target-highlights renders the modern checkout surface in the top 
   }
 });
 
+test("checkout-target-highlights restores an expected overlay removed by the native board layer", () => {
+  const documentRef = new FakeDocument();
+  documentRef.variantElement.remove();
+  documentRef.suggestionElement.remove();
+  documentRef.activePlayerRow.remove();
+  appendModernCheckoutSuggestion(documentRef, "T20", 720, 30);
+  appendModernCheckoutSuggestion(documentRef, "25", 820, 30);
+  appendModernCheckoutSuggestion(documentRef, "D18", 920, 30);
+  const board = appendLayeredBoardFixture(documentRef);
+  const windowRef = createFakeWindow({ documentRef });
+  const observerRegistry = createObserverRegistry();
+  const scheduleCounter = { count: 0 };
+
+  const cleanup = initializeCheckoutTargetHighlights({
+    documentRef,
+    windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: {
+      observers: observerRegistry,
+    },
+    gameState: {
+      isX01Variant: () => true,
+      getActiveScore: () => 121,
+      getActiveThrows: () => [],
+      getOutMode: () => "Double Out",
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          visualPreset: "soft-pulse",
+          singleRing: "both",
+          targetSelectionMode: "next",
+          colorTheme: "amber",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler: createImmediateSchedulerFactory(scheduleCounter),
+    },
+  });
+
+  try {
+    const observer = observerRegistry.get("checkout-target-highlights:dom-observer");
+    const removedOverlay = board.markerGroup.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
+    assert.ok(observer);
+    assert.ok(removedOverlay);
+    assert.equal(scheduleCounter.count, 1);
+
+    removedOverlay.remove();
+    board.markerGroup.appendChild(removedOverlay);
+    observer.callback([{
+      type: "childList",
+      target: board.markerGroup,
+      addedNodes: [removedOverlay],
+      removedNodes: [removedOverlay],
+    }]);
+    assert.equal(scheduleCounter.count, 1, "a connected overlay move remains self-managed");
+    assert.equal(board.markerGroup.querySelector(`#${CHECKOUT_OVERLAY_ID}`), removedOverlay);
+
+    removedOverlay.remove();
+    observer.callback([{
+      type: "childList",
+      target: board.markerGroup,
+      addedNodes: [],
+      removedNodes: [removedOverlay],
+    }]);
+
+    const restoredOverlay = board.markerGroup.querySelector(`#${CHECKOUT_OVERLAY_ID}`);
+    assert.equal(scheduleCounter.count, 2);
+    assert.ok(restoredOverlay, "the expected checkout overlay is restored immediately");
+    assert.notEqual(restoredOverlay, removedOverlay);
+    assert.equal(restoredOverlay.children[0]?.dataset?.targetRing, "T");
+    assert.equal(restoredOverlay.children[0]?.dataset?.targetValue, "20");
+  } finally {
+    cleanup();
+  }
+});
+
 test("checkout-target-highlights ignores self-managed overlay mutations", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         autodarts-xconfig
 // @namespace    https://github.com/thomasasen/autodarts-xconfig
-// @version      3.5.4
+// @version      3.5.5
 // @description  Modular, side-effect resistant Tampermonkey runtime for Autodarts enhancements.
 // @author       Thomas Asen
 // @license      MIT
@@ -12339,6 +12339,29 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
       return node !== targetNode && elementContainsDescendantSelectors(node, selectors);
     });
   }
+  function mutationRemovesCheckoutOverlay(mutation) {
+    if (resolveMutationType(mutation) !== "childList") {
+      return false;
+    }
+    const removedNodes = mutation?.removedNodes;
+    if (!removedNodes || typeof removedNodes[Symbol.iterator] !== "function") {
+      return false;
+    }
+    return Array.from(removedNodes).some((node) => {
+      if (String(node?.id || "") === OVERLAY_ID) {
+        return true;
+      }
+      try {
+        return Boolean(node?.querySelector?.(`#${OVERLAY_ID}`));
+      } catch (_) {
+        return false;
+      }
+    });
+  }
+  function boardHasCheckoutOverlay(board) {
+    const overlayGroup = board?.overlayGroup || board?.group;
+    return Boolean(overlayGroup?.querySelector?.(`#${OVERLAY_ID}`));
+  }
   function nodesAreRelated(leftNode, rightNode) {
     if (!leftNode || !rightNode) {
       return false;
@@ -13018,7 +13041,13 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
         key: OBSERVER_KEY2,
         target: rootNode,
         callback: (mutations = []) => {
-          if (!hasExternalDomMutation(mutations, isManagedNode)) {
+          const expectedOverlayRemoved = Boolean(expectedOverlay) && !boardHasCheckoutOverlay(expectedOverlay) && mutations.some(mutationRemovesCheckoutOverlay);
+          if (!expectedOverlayRemoved && !hasExternalDomMutation(mutations, isManagedNode)) {
+            return;
+          }
+          if (expectedOverlayRemoved) {
+            invalidateBoardCache();
+            scheduler.schedule();
             return;
           }
           const mutationReaction = resolveCheckoutBoardMutationReaction(mutations, {
@@ -40582,7 +40611,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
 
   // src/core/bootstrap.js
   var GLOBAL_NAMESPACE_KEY = "__adXConfig";
-  var API_VERSION = "3.5.4";
+  var API_VERSION = "3.5.5";
   var STARTUP_DEFER_INTERVAL_MS = 16;
   function getWindowTimerApi(windowRef) {
     let setTimeoutRef = null;

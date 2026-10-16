@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.5.5] - 2026-10-17
+
+### Fixed
+
+- Nutzerwirkung: Checkout-Zielhervorhebungen bleiben auch nach dem ersten Dart sichtbar und werden für den zweiten und dritten Dart zuverlässig neu aufgebaut, wenn Autodarts seine native Board-Marker-Ebene aktualisiert.
+  Technik: Der Checkout-Observer unterscheidet ein tatsächlich entferntes erwartetes SVG-Overlay von einer weiterhin verbundenen internen Verschiebung, invalidiert nur im Verlustfall den Board-Cache und rendert das Ziel unmittelbar neu. Eine Runtime-Regression sichert Entfernung, Wiederaufbau und schleifenfreie Eigenmutationen ab.
+
 ## [3.5.4] - 2026-10-16
 
 ### Changed
@@ -2393,6 +2400,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.5.5]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.4...v3.5.5
 [3.5.4]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.3...v3.5.4
 [3.5.3]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.2...v3.5.3
 [3.5.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.1...v3.5.2

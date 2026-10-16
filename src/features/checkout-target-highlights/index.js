@@ -68,6 +68,33 @@ function changedNodeOrDescendantMatchesAnySelector(mutation, selectors = []) {
   });
 }
 
+function mutationRemovesCheckoutOverlay(mutation) {
+  if (resolveMutationType(mutation) !== "childList") {
+    return false;
+  }
+
+  const removedNodes = mutation?.removedNodes;
+  if (!removedNodes || typeof removedNodes[Symbol.iterator] !== "function") {
+    return false;
+  }
+
+  return Array.from(removedNodes).some((node) => {
+    if (String(node?.id || "") === OVERLAY_ID) {
+      return true;
+    }
+    try {
+      return Boolean(node?.querySelector?.(`#${OVERLAY_ID}`));
+    } catch (_) {
+      return false;
+    }
+  });
+}
+
+function boardHasCheckoutOverlay(board) {
+  const overlayGroup = board?.overlayGroup || board?.group;
+  return Boolean(overlayGroup?.querySelector?.(`#${OVERLAY_ID}`));
+}
+
 function nodesAreRelated(leftNode, rightNode) {
   if (!leftNode || !rightNode) {
     return false;
@@ -911,7 +938,15 @@ export function initializeCheckoutTargetHighlights(context = {}) {
       key: OBSERVER_KEY,
       target: rootNode,
       callback: (mutations = []) => {
-        if (!hasExternalDomMutation(mutations, isManagedNode)) {
+        const expectedOverlayRemoved = Boolean(expectedOverlay) &&
+          !boardHasCheckoutOverlay(expectedOverlay) &&
+          mutations.some(mutationRemovesCheckoutOverlay);
+        if (!expectedOverlayRemoved && !hasExternalDomMutation(mutations, isManagedNode)) {
+          return;
+        }
+        if (expectedOverlayRemoved) {
+          invalidateBoardCache();
+          scheduler.schedule();
           return;
         }
         const mutationReaction = resolveCheckoutBoardMutationReaction(mutations, {
