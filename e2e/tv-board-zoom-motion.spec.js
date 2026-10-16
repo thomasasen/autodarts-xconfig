@@ -40,7 +40,7 @@ test.beforeEach(async ({ page }) => {
     window.zoomTest = {
       layers, state,
       apply(segment, zoomStyle = "cinematic") {
-        return logic.applyZoom({ targetNode, hostNode, boardSvg: layers[0] }, 2.75,
+        return logic.applyZoom({ targetNode, hostNode, boardSvg: layers[0] }, 1.75,
           style.resolveZoomSpeedConfig("mittel", zoomStyle),
           { reason: "checkout", segment }, state, { x01Rules, windowRef: window, documentRef: document });
       },
@@ -97,7 +97,7 @@ for (const reducedMotion of ["no-preference", "reduce"]) {
     for (let index = 0; index < 4; index += 1) {
       const entering = result.duringIn[index];
       expect(entering.scale).toBeGreaterThan(1);
-      expect(entering.scale).toBeLessThan(2.75);
+      expect(entering.scale).toBeLessThan(1.75);
       expect(entering.duration).toBe("0.42s");
       expect(entering.priority).toBe("important");
       expect(result.afterDuplicate[index].scale).toBeCloseTo(entering.scale, 3);
@@ -105,16 +105,16 @@ for (const reducedMotion of ["no-preference", "reduce"]) {
       expect(result.afterRetarget[index].scale).toBeCloseTo(entering.scale, 3);
       expect(result.afterRetarget[index].x).toBeCloseTo(entering.x, 2);
       expect(result.afterRetarget[index].y).toBeCloseTo(entering.y, 2);
-      expect(result.settled[index].scale).toBeCloseTo(2.75, 3);
+      expect(result.settled[index].scale).toBeCloseTo(1.75, 3);
       const leaving = result.duringOut[index];
       expect(leaving.scale).toBeGreaterThan(1);
-      expect(leaving.scale).toBeLessThan(2.75);
+      expect(leaving.scale).toBeLessThan(1.75);
       expect(leaving.duration).toBe("0.34s");
       expect(leaving.priority).toBe("important");
       expect(result.afterResume[index].scale).toBeCloseTo(leaving.scale, 3);
       expect(result.afterResume[index].x).toBeCloseTo(leaving.x, 2);
       expect(result.afterResume[index].y).toBeCloseTo(leaving.y, 2);
-      expect(result.resumed[index].scale).toBeCloseTo(2.75, 3);
+      expect(result.resumed[index].scale).toBeCloseTo(1.75, 3);
       expect(result.restored[index].scale).toBe(1);
       expect(result.restored[index].priority).toBe("");
       expect(entering.scale).toBeCloseTo(result.duringIn[0].scale, 3);

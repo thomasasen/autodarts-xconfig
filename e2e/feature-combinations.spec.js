@@ -118,7 +118,7 @@ test("actual transforms and Shadow DOM GIF loading, fades and errors preserve th
     const activeOnLoad = api.tools.isToolsAnimationActive(document);
     const state = {};
     const speed = api.resolveZoomSpeedConfig("mittel");
-    api.applyZoom({ targetNode: target, hostNode: host, boardSvg: surface.svg }, 2.75, speed,
+    api.applyZoom({ targetNode: target, hostNode: host, boardSvg: surface.svg }, 1.75, speed,
       { reason: "checkout", segment: "D20" }, state, { documentRef: document, windowRef: window, x01Rules: api.x01Rules });
     await new Promise((resolve) => setTimeout(resolve, 240));
     const layer = target.querySelector("svg");
@@ -142,7 +142,7 @@ test("actual transforms and Shadow DOM GIF loading, fades and errors preserve th
   expect(result.activeDuringFade).toBe(true);
   expect(result.inactiveAfterFade).toBe(true);
   expect(result.inactiveAfterError).toBe(true);
-  expect(result.scale).toBeCloseTo(2.75, 3);
+  expect(result.scale).toBeCloseTo(1.75, 3);
   expect(result.anchorAfter).toEqual(result.anchorBefore);
   expect(result.restored).toBe("");
   expect(result.flag).toBeNull();

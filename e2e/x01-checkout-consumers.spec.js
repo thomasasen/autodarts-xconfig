@@ -133,7 +133,7 @@ test("Chromium observers keep checkout targets and TV zoom aligned through darts
         getFeatureConfig(key) {
           return key === "tvBoardZoom"
             ? {
-                zoomLevel: 2.75,
+                zoomLevel: 1.75,
                 zoomSpeed: "schnell",
                 zoomStyle: "standard",
                 checkoutZoomEnabled: true,
@@ -271,7 +271,7 @@ test("Chromium observers keep checkout targets and TV zoom aligned through darts
           mutationObserver: typeof MutationObserver === "function",
           resizeObserver: typeof ResizeObserver === "function",
           requestAnimationFrame: typeof requestAnimationFrame === "function",
-          cssTransform: CSS.supports("transform", "scale(2.75)"),
+          cssTransform: CSS.supports("transform", "scale(1.75)"),
         },
       };
     } finally {
@@ -287,7 +287,7 @@ test("Chromium observers keep checkout targets and TV zoom aligned through darts
   expect(result.dartThree.target).toBe("D:18");
   for (const dart of [result.dartOne, result.dartTwo, result.dartThree]) {
     expect(dart.zoomed).toBe(true);
-    expect(dart.transform).toContain("scale(2.75)");
+    expect(dart.transform).toContain("scale(1.75)");
     expect(dart.debug?.status).toBe("apply");
     expect(dart.targetConnected).toBe(true);
     expect(dart.targetGeometry).not.toBe("");
@@ -300,14 +300,14 @@ test("Chromium observers keep checkout targets and TV zoom aligned through darts
     reason: "virtual-board-input",
   });
   expect(result.restoredBoardIdentity.zoomed).toBe(true);
-  expect(result.restoredBoardIdentity.transform).toContain("scale(2.75)");
+  expect(result.restoredBoardIdentity.transform).toContain("scale(1.75)");
   expect(result.restoredBoardIdentity.debug?.status).toBe("apply");
   expect(result.wrapperReplacement.target).toBe("D:20");
   expect(result.wrapperReplacement.targetConnected).toBe(true);
   expect(result.wrapperReplacement.targetGeometry).not.toBe("");
   expect(result.wrapperReplacement.targetOpacity).toBeGreaterThan(0);
   expect(result.wrapperReplacement.zoomed).toBe(true);
-  expect(result.wrapperReplacement.transform).toContain("scale(2.75)");
+  expect(result.wrapperReplacement.transform).toContain("scale(1.75)");
   expect(result.wrapperReplacement.debug).toMatchObject({ status: "apply", segment: "D20" });
   expect(result.mutationTypes).toEqual(expect.arrayContaining(["attributes", "characterData", "childList"]));
   expect(result.capabilities).toEqual({
