@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         autodarts-xconfig
 // @namespace    https://github.com/thomasasen/autodarts-xconfig
-// @version      3.5.2
+// @version      3.5.3
 // @description  Modular, side-effect resistant Tampermonkey runtime for Autodarts enhancements.
 // @author       Thomas Asen
 // @license      MIT
@@ -14738,6 +14738,19 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
     const layers = candidates.filter((node) => !candidates.some((parent) => parent !== node && parent.contains(node)));
     return layers.includes(boardSvg) ? layers : [];
   }
+  function ownsProtectedAnimationRoot(node, protectedRoots) {
+    if (!node) {
+      return false;
+    }
+    const shadowHost = node.getRootNode?.()?.host || null;
+    return protectedRoots.some((root) => root === node || node.contains?.(root) || root === shadowHost || root.matches?.("autodarts-tools-animations") && root.contains?.(node));
+  }
+  function hasUnsafeProtectedAnimationBinding(targetNode, hostNode, boardSvg, protectedRoots) {
+    if (!protectedRoots.length) {
+      return false;
+    }
+    return [targetNode, hostNode, boardSvg].some((node) => ownsProtectedAnimationRoot(node, protectedRoots));
+  }
   function hasHealthyZoomSurface(state) {
     if (state.visualZoomStates?.size) {
       return Array.from(state.visualZoomStates.values()).every(hasHealthyZoomSurface);
@@ -14747,6 +14760,16 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
   }
   function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, options = {}) {
     const { targetNode, hostNode, boardSvg } = resolveApplyZoomNodes(zoomNodes);
+    const protectedAnimationRoots = Array.isArray(options.protectedAnimationRoots) ? options.protectedAnimationRoots.filter(Boolean) : [];
+    if (hasUnsafeProtectedAnimationBinding(
+      targetNode,
+      hostNode,
+      boardSvg,
+      protectedAnimationRoots
+    )) {
+      resetZoom(speedConfig, state, true);
+      return null;
+    }
     const layers = resolveVisualLayers(targetNode, boardSvg);
     if (!layers) {
       if (state.visualZoomStates) resetZoom(speedConfig, state, true);
@@ -15011,6 +15034,9 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
   var ACTIVE_ZOOM_INTEGRITY_CHECK_MS = 1e3;
   var VIRTUAL_BOARD_MIN_PATH_COUNT = 40;
   var BOARD_MEDIA_SELECTOR = "img, video, canvas, image";
+  var TOOLS_ANIMATION_HOST_SELECTOR = "autodarts-tools-animations";
+  var LEGACY_TOOLS_ANIMATION_ROOT_SELECTOR = ".showAnimations";
+  var LEGACY_TOOLS_ANIMATION_MEDIA_SELECTOR = "#gif-animation, .gif-animation";
   var THROW_HISTORY_CLICK_SELECTORS = Object.freeze([
     "#ad-ext-turn .ad-ext-turn-throw",
     ".ad-ext-turn-throw"
@@ -15059,13 +15085,9 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
     const tolerancePx = Math.max(2, Math.min(boardWidth, boardHeight) * 0.01);
     return Math.abs(interactionWidth - boardWidth) <= tolerancePx && Math.abs(interactionHeight - boardHeight) <= tolerancePx && Math.abs(Number(nativeBoard?.offsetLeft) || 0) <= tolerancePx && Math.abs(Number(nativeBoard?.offsetTop) || 0) <= tolerancePx;
   }
-  function resolveManualNativeBoardSurface(boardSurface) {
+  function resolveAlignedNativePointerSurface(boardSurface) {
     const nativeBoard = boardSurface?.zoomTarget || null;
     if (!nativeBoard?.matches?.(NATIVE_BOARD_SELECTOR)) {
-      return null;
-    }
-    const documentRef = nativeBoard.ownerDocument;
-    if (documentRef?.querySelector?.("autodarts-tools-animations") || isToolsAnimationActive(documentRef)) {
       return null;
     }
     const interactionSurface = nativeBoard.parentElement || null;
@@ -15082,6 +15104,41 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
       zoomHost
     };
   }
+  function isNodeRelatedToBoardSurface(node, boardSurface) {
+    if (!node) {
+      return false;
+    }
+    return [boardSurface?.svg, boardSurface?.zoomTarget, boardSurface?.zoomHost].filter(Boolean).some((surfaceNode) => node === surfaceNode || node.contains?.(surfaceNode) || surfaceNode.contains?.(node));
+  }
+  function resolveToolsAnimationTopology(documentRef, boardSurface) {
+    const modernHosts = Array.from(
+      documentRef?.querySelectorAll?.(TOOLS_ANIMATION_HOST_SELECTOR) || []
+    );
+    const legacyRoots = Array.from(
+      documentRef?.querySelectorAll?.(LEGACY_TOOLS_ANIMATION_ROOT_SELECTOR) || []
+    ).filter((node) => isNodeRelatedToBoardSurface(node, boardSurface) && (!node.contains?.(boardSurface?.svg) || Boolean(node.querySelector?.(LEGACY_TOOLS_ANIMATION_MEDIA_SELECTOR))));
+    return {
+      protectedRoots: [.../* @__PURE__ */ new Set([...modernHosts, ...legacyRoots])]
+    };
+  }
+  function isSafeToolsClippingHost(candidate, zoomTarget, protectedRoots) {
+    if (!candidate || !zoomTarget || candidate !== zoomTarget && !candidate.contains?.(zoomTarget)) {
+      return false;
+    }
+    return !protectedRoots.some((root) => root === candidate || candidate.contains?.(root) || root.matches?.(TOOLS_ANIMATION_HOST_SELECTOR) && root.contains?.(candidate));
+  }
+  function resolveToolsCompatibleBoardSurface(boardSurface, protectedRoots) {
+    const zoomTarget = boardSurface?.zoomTarget || null;
+    const zoomHost = [boardSurface?.zoomHost, zoomTarget].find((candidate) => isSafeToolsClippingHost(candidate, zoomTarget, protectedRoots));
+    if (!zoomHost) {
+      return null;
+    }
+    return {
+      ...boardSurface,
+      zoomHost,
+      protectedAnimationRoots: protectedRoots
+    };
+  }
   function resolveInputSafeBoardSurface(documentRef, gameState, boardSurface, windowRef) {
     const activeMode = getActiveBoardInputMode(documentRef);
     if (activeMode && activeMode !== "live") {
@@ -15089,12 +15146,27 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
     }
     const scoringBoardMode = resolveScoringBoardInputMode(gameState, { windowRef });
     const nativeBoard = boardSurface?.zoomTarget;
+    const { protectedRoots } = resolveToolsAnimationTopology(documentRef, boardSurface);
+    const hasToolsAnimationLayer = protectedRoots.length > 0;
     const hasNativePointerSurface = nativeBoard?.matches?.(NATIVE_BOARD_SELECTOR) && nativeBoard.parentElement?.style?.touchAction === "none";
-    if (scoringBoardMode === "manual" || hasNativePointerSurface) {
-      return resolveManualNativeBoardSurface(boardSurface);
+    const alignedPointerSurface = scoringBoardMode === "manual" || hasNativePointerSurface ? resolveAlignedNativePointerSurface(boardSurface) : null;
+    if (scoringBoardMode === "manual") {
+      return hasToolsAnimationLayer ? null : alignedPointerSurface;
+    }
+    if (hasNativePointerSurface) {
+      if (!alignedPointerSurface) {
+        return null;
+      }
+      if (!hasToolsAnimationLayer) {
+        return alignedPointerSurface;
+      }
+      return scoringBoardMode === "live" ? resolveToolsCompatibleBoardSurface(boardSurface, protectedRoots) : null;
+    }
+    if (hasToolsAnimationLayer && scoringBoardMode !== "live") {
+      return null;
     }
     if (scoringBoardMode === "live" || activeMode === "live") {
-      return boardSurface;
+      return hasToolsAnimationLayer ? resolveToolsCompatibleBoardSurface(boardSurface, protectedRoots) : boardSurface;
     }
     if (collectBoardInputModeControls(documentRef, { availableOnly: true }).length > 0) {
       return null;
@@ -15657,7 +15729,8 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
         {
           x01Rules,
           windowRef,
-          documentRef
+          documentRef,
+          protectedAnimationRoots: effectiveBoardSurface?.protectedAnimationRoots || []
         }
       );
       expectedZoomTarget = zoomData ? targetNode : null;
@@ -40497,7 +40570,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
 
   // src/core/bootstrap.js
   var GLOBAL_NAMESPACE_KEY = "__adXConfig";
-  var API_VERSION = "3.5.2";
+  var API_VERSION = "3.5.3";
   var STARTUP_DEFER_INTERVAL_MS = 16;
   function getWindowTimerApi(windowRef) {
     let setTimeoutRef = null;

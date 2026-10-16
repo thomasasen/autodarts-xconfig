@@ -38,7 +38,7 @@ import {
   findModernTurnSurface,
 } from "../shared/x01-match-surface.js";
 import { createX01ReadContext, readX01MatchSurface } from "../x01-checkout-context.js";
-import { acquireToolsAnimationLayerController, isToolsAnimationActive } from "../shared/tools-animation-layer-controller.js";
+import { acquireToolsAnimationLayerController } from "../shared/tools-animation-layer-controller.js";
 
 const FEATURE_KEY = "tv-board-zoom";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
@@ -53,6 +53,9 @@ const TRANSIENT_RESET_GRACE_MS = 120;
 const ACTIVE_ZOOM_INTEGRITY_CHECK_MS = 1000;
 const VIRTUAL_BOARD_MIN_PATH_COUNT = 40;
 const BOARD_MEDIA_SELECTOR = "img, video, canvas, image";
+const TOOLS_ANIMATION_HOST_SELECTOR = "autodarts-tools-animations";
+const LEGACY_TOOLS_ANIMATION_ROOT_SELECTOR = ".showAnimations";
+const LEGACY_TOOLS_ANIMATION_MEDIA_SELECTOR = "#gif-animation, .gif-animation";
 const THROW_HISTORY_CLICK_SELECTORS = Object.freeze([
   "#ad-ext-turn .ad-ext-turn-throw",
   ".ad-ext-turn-throw",
@@ -111,15 +114,9 @@ function hasMatchingInteractionLayout(interactionSurface, nativeBoard) {
   );
 }
 
-function resolveManualNativeBoardSurface(boardSurface) {
+function resolveAlignedNativePointerSurface(boardSurface) {
   const nativeBoard = boardSurface?.zoomTarget || null;
   if (!nativeBoard?.matches?.(NATIVE_BOARD_SELECTOR)) {
-    return null;
-  }
-  // Native pointer coordinates require transforming their input surface. With
-  // Tools animations available, keep that surface stable and click-safe instead.
-  const documentRef = nativeBoard.ownerDocument;
-  if (documentRef?.querySelector?.("autodarts-tools-animations") || isToolsAnimationActive(documentRef)) {
     return null;
   }
 
@@ -140,6 +137,55 @@ function resolveManualNativeBoardSurface(boardSurface) {
   };
 }
 
+function isNodeRelatedToBoardSurface(node, boardSurface) {
+  if (!node) {
+    return false;
+  }
+  return [boardSurface?.svg, boardSurface?.zoomTarget, boardSurface?.zoomHost]
+    .filter(Boolean)
+    .some((surfaceNode) => node === surfaceNode ||
+      node.contains?.(surfaceNode) || surfaceNode.contains?.(node));
+}
+
+function resolveToolsAnimationTopology(documentRef, boardSurface) {
+  const modernHosts = Array.from(
+    documentRef?.querySelectorAll?.(TOOLS_ANIMATION_HOST_SELECTOR) || []
+  );
+  const legacyRoots = Array.from(
+    documentRef?.querySelectorAll?.(LEGACY_TOOLS_ANIMATION_ROOT_SELECTOR) || []
+  ).filter((node) => isNodeRelatedToBoardSurface(node, boardSurface) &&
+    (!node.contains?.(boardSurface?.svg) ||
+      Boolean(node.querySelector?.(LEGACY_TOOLS_ANIMATION_MEDIA_SELECTOR))));
+  return {
+    protectedRoots: [...new Set([...modernHosts, ...legacyRoots])],
+  };
+}
+
+function isSafeToolsClippingHost(candidate, zoomTarget, protectedRoots) {
+  if (!candidate || !zoomTarget ||
+      (candidate !== zoomTarget && !candidate.contains?.(zoomTarget))) {
+    return false;
+  }
+  return !protectedRoots.some((root) =>
+    root === candidate ||
+    candidate.contains?.(root) ||
+    (root.matches?.(TOOLS_ANIMATION_HOST_SELECTOR) && root.contains?.(candidate)));
+}
+
+function resolveToolsCompatibleBoardSurface(boardSurface, protectedRoots) {
+  const zoomTarget = boardSurface?.zoomTarget || null;
+  const zoomHost = [boardSurface?.zoomHost, zoomTarget].find((candidate) =>
+    isSafeToolsClippingHost(candidate, zoomTarget, protectedRoots));
+  if (!zoomHost) {
+    return null;
+  }
+  return {
+    ...boardSurface,
+    zoomHost,
+    protectedAnimationRoots: protectedRoots,
+  };
+}
+
 function resolveInputSafeBoardSurface(documentRef, gameState, boardSurface, windowRef) {
   const activeMode = getActiveBoardInputMode(documentRef);
   if (activeMode && activeMode !== "live") {
@@ -148,15 +194,39 @@ function resolveInputSafeBoardSurface(documentRef, gameState, boardSurface, wind
 
   const scoringBoardMode = resolveScoringBoardInputMode(gameState, { windowRef });
   const nativeBoard = boardSurface?.zoomTarget;
+  const { protectedRoots } = resolveToolsAnimationTopology(documentRef, boardSurface);
+  const hasToolsAnimationLayer = protectedRoots.length > 0;
   // Native coordinate input remains available with a selected hardware board.
   // Its touch-action wrapper must share the visible board's zoom geometry.
   const hasNativePointerSurface = nativeBoard?.matches?.(NATIVE_BOARD_SELECTOR) &&
     nativeBoard.parentElement?.style?.touchAction === "none";
-  if (scoringBoardMode === "manual" || hasNativePointerSurface) {
-    return resolveManualNativeBoardSurface(boardSurface);
+  const alignedPointerSurface = scoringBoardMode === "manual" || hasNativePointerSurface
+    ? resolveAlignedNativePointerSurface(boardSurface)
+    : null;
+  if (scoringBoardMode === "manual") {
+    return hasToolsAnimationLayer ? null : alignedPointerSurface;
+  }
+  if (hasNativePointerSurface) {
+    if (!alignedPointerSurface) {
+      return null;
+    }
+    // Keep Tools' measurement frame and GIF layer stable. Hardware input stays
+    // aligned because every native SVG, including the pointer layer, receives
+    // the same inner-layer transform from applyZoom().
+    if (!hasToolsAnimationLayer) {
+      return alignedPointerSurface;
+    }
+    return scoringBoardMode === "live"
+      ? resolveToolsCompatibleBoardSurface(boardSurface, protectedRoots)
+      : null;
+  }
+  if (hasToolsAnimationLayer && scoringBoardMode !== "live") {
+    return null;
   }
   if (scoringBoardMode === "live" || activeMode === "live") {
-    return boardSurface;
+    return hasToolsAnimationLayer
+      ? resolveToolsCompatibleBoardSurface(boardSurface, protectedRoots)
+      : boardSurface;
   }
 
   if (collectBoardInputModeControls(documentRef, { availableOnly: true }).length > 0) {
@@ -829,6 +899,7 @@ export function initializeTvBoardZoom(context = {}) {
         x01Rules,
         windowRef,
         documentRef,
+        protectedAnimationRoots: effectiveBoardSurface?.protectedAnimationRoots || [],
       }
     );
     expectedZoomTarget = zoomData ? targetNode : null;

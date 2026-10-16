@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.5.3] - 2026-10-16
+
+### Fixed
+
+- Nutzerwirkung: TV-Board-Zoom funktioniert auf erkannten Hardwareboards auch mit modernen und kompatiblen Legacy-Versionen von „Tools for Autodarts“. Tools-GIFs behalten beim Ein- und Auszoomen unverändert ihre Darstellung; unsichere manuelle oder mehrdeutige Strukturen bleiben klicksicher ungezoomt.
+  Technik: Die Runtime trennt Pointer-Geometrie und persistente Tools-Topologie, transformiert ausschließlich die Board-SVG-Layer einschließlich der interaktiven Fläche und wählt nur Clipping-Hosts außerhalb geschützter GIF-Roots. Erweiterte Regressionen sichern Host-Wechsel, Zoom-out, Style- und DOM-Identität sowie fail-closed Fallbacks ab.
+
 ## [3.5.2] - 2026-10-11
 
 ### Fixed
@@ -2379,6 +2386,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.5.3]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.2...v3.5.3
 [3.5.2]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.1...v3.5.2
 [3.5.1]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.0...v3.5.1
 [3.5.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.4.2...v3.5.0

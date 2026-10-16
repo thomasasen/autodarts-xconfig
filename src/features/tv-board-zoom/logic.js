@@ -1779,6 +1779,26 @@ function resolveVisualLayers(targetNode, boardSvg) {
   return layers.includes(boardSvg) ? layers : [];
 }
 
+function ownsProtectedAnimationRoot(node, protectedRoots) {
+  if (!node) {
+    return false;
+  }
+  const shadowHost = node.getRootNode?.()?.host || null;
+  return protectedRoots.some((root) =>
+    root === node ||
+    node.contains?.(root) ||
+    root === shadowHost ||
+    (root.matches?.("autodarts-tools-animations") && root.contains?.(node)));
+}
+
+function hasUnsafeProtectedAnimationBinding(targetNode, hostNode, boardSvg, protectedRoots) {
+  if (!protectedRoots.length) {
+    return false;
+  }
+  return [targetNode, hostNode, boardSvg].some((node) =>
+    ownsProtectedAnimationRoot(node, protectedRoots));
+}
+
 export function hasHealthyZoomSurface(state) {
   if (state.visualZoomStates?.size) {
     return Array.from(state.visualZoomStates.values()).every(hasHealthyZoomSurface);
@@ -1790,6 +1810,18 @@ export function hasHealthyZoomSurface(state) {
 
 export function applyZoom(zoomNodes, zoomLevel, speedConfig, intent, state, options = {}) {
   const { targetNode, hostNode, boardSvg } = resolveApplyZoomNodes(zoomNodes);
+  const protectedAnimationRoots = Array.isArray(options.protectedAnimationRoots)
+    ? options.protectedAnimationRoots.filter(Boolean)
+    : [];
+  if (hasUnsafeProtectedAnimationBinding(
+    targetNode,
+    hostNode,
+    boardSvg,
+    protectedAnimationRoots
+  )) {
+    resetZoom(speedConfig, state, true);
+    return null;
+  }
   const layers = resolveVisualLayers(targetNode, boardSvg);
   if (!layers) {
     if (state.visualZoomStates) resetZoom(speedConfig, state, true);

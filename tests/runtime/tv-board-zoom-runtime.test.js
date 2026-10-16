@@ -260,6 +260,14 @@ function installBoardInputModeControls(fixture, activeMode = "live") {
   };
 }
 
+function addToolsAnimationHost(fixture) {
+  const host = fixture.documentRef.createElement("autodarts-tools-animations");
+  const root = fixture.documentRef.createElement("div");
+  host.shadowRoot = root;
+  fixture.documentRef.main.appendChild(host);
+  return host;
+}
+
 function startModernZoom(options = {}) {
   const stateScore = options.gameState?.getActiveScore?.();
   const stateThrows = options.gameState?.getActiveThrows?.();
@@ -283,6 +291,12 @@ function startModernZoom(options = {}) {
   if (options.hasBoardMedia) {
     fixture.node(fixture.board, "img", "", "");
   }
+  if (options.nativePointerSurface) {
+    fixture.host.style.touchAction = "none";
+  }
+  const toolsAnimationHost = options.toolsAnimationHost
+    ? addToolsAnimationHost(fixture)
+    : null;
   const timers = createFakeTimerHarness();
   timers.installOnWindow(fixture.windowRef);
   timers.installGlobals();
@@ -305,6 +319,7 @@ function startModernZoom(options = {}) {
     boardModeControls: boardMode?.controls || null,
     timers,
     events,
+    toolsAnimationHost,
     tick,
     setBoardInputMode,
     stop() { cleanup(); timers.restoreGlobals(); },
@@ -500,6 +515,70 @@ test("native mouse input with hardware state stays unzoomed if its surface is mi
     assert.equal(f.host.classList.contains(ZOOM_CLASS), false);
     assert.equal(f.layers[0].classList.contains(ZOOM_CLASS), false);
   } finally { f.stop(); }
+});
+
+test("hardware pointer input with Tools zooms every board SVG while both measurement frames stay stable", () => {
+  const gameState = createMutableX01GameState({
+    activeScore: 4,
+    snapshot: createScoringSnapshot({ boardId: "board-123" }),
+  });
+  const f = startModernZoom({
+    boardInputMode: null,
+    gameState: gameState.api,
+    nativePointerSurface: true,
+    toolsAnimationHost: true,
+    score: 4,
+    throws: [],
+    route: ["D2"],
+  });
+  const boardRect = f.board.getBoundingClientRect();
+  const pointerRect = f.host.getBoundingClientRect();
+  try {
+    f.timers.advance(25);
+    const transform = f.layers[0].style.transform;
+    assert.match(transform, /scale\(2\.750*\)/);
+    f.layers.forEach((layer) => assert.equal(layer.style.transform, transform));
+    assert.equal(f.layers[3].classList.contains(ZOOM_CLASS), true);
+    assert.equal(f.interactiveHitArea.parentElement, f.layers[3]);
+    assert.equal(f.interactiveHitArea.getAttribute("pointer-events"), "auto");
+    assert.equal(f.layers[3].style.transform, transform);
+    assert.equal(f.board.style.transform || "", "");
+    assert.equal(f.host.style.transform || "", "");
+    assert.deepEqual(f.board.getBoundingClientRect(), boardRect);
+    assert.deepEqual(f.host.getBoundingClientRect(), pointerRect);
+    assert.equal(f.toolsAnimationHost.classList.contains(ZOOM_CLASS), false);
+    assert.equal(f.toolsAnimationHost.classList.contains(ZOOM_HOST_CLASS), false);
+    assert.equal(f.toolsAnimationHost.style.transform || "", "");
+  } finally { f.stop(); }
+});
+
+test("Tools keeps manual, unknown and misaligned native pointer input fail-closed", () => {
+  for (const scenario of [
+    { name: "manual", player: { boardId: "manual" } },
+    { name: "unknown", player: null },
+    { name: "misaligned", player: { boardId: "board-123" }, misaligned: true },
+  ]) {
+    const gameState = createMutableX01GameState({
+      snapshot: scenario.player ? createScoringSnapshot(scenario.player) : null,
+    });
+    const f = startModernZoom({
+      boardInputMode: null,
+      gameState: gameState.api,
+      nativePointerSurface: true,
+      toolsAnimationHost: true,
+    });
+    try {
+      if (scenario.misaligned) {
+        f.host.__rect = { left: 680, top: 100, width: 700, height: 700 };
+      }
+      f.timers.advance(25);
+      assert.equal(f.host.classList.contains(ZOOM_CLASS), false, scenario.name);
+      f.layers.forEach((layer) => {
+        assert.equal(layer.classList.contains(ZOOM_CLASS), false, scenario.name);
+        assert.equal(layer.style.transform || "", "", scenario.name);
+      });
+    } finally { f.stop(); }
+  }
 });
 
 test("missing board id uses the click-safe manual pointer surface", () => {

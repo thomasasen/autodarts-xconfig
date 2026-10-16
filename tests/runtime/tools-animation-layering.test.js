@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { applyZoom, resetZoom, hasHealthyZoomSurface } from "../../src/features/tv-board-zoom/logic.js";
+import { ZOOM_CLASS, ZOOM_HOST_CLASS } from "../../src/features/tv-board-zoom/style.js";
 import { resolveBoardRenderSurface } from "../../src/shared/dartboard-svg.js";
 import { createModernX01Fixture } from "./modern-x01-fixture.js";
 import { acquireToolsAnimationLayerController, isToolsAnimationActive,
@@ -37,7 +38,7 @@ function createAnimationFixture() {
 
 const speed = { zoomInMs: 180, zoomOutMs: 220, easingIn: "ease", easingOut: "ease" };
 
-function addToolsGif(f, src = "https://example.test/finish.gif") {
+function addToolsGif(f, src = "https://example.test/finish.gif", prepare = null) {
   const host = f.documentRef.createElement("autodarts-tools-animations");
   const root = f.documentRef.createElement("div");
   host.shadowRoot = root;
@@ -47,8 +48,114 @@ function addToolsGif(f, src = "https://example.test/finish.gif") {
   media.setAttribute("src", src);
   wrapper.appendChild(media);
   root.appendChild(wrapper);
+  prepare?.({ host, root, wrapper, media });
   f.documentRef.main.appendChild(host);
   return { host, root, wrapper, media };
+}
+
+function addLegacyToolsGif(f, root, src = "https://example.test/legacy.gif", prepare = null) {
+  const wrapper = f.documentRef.createElement("div");
+  wrapper.classList.add("fixed");
+  const media = f.documentRef.createElement("img");
+  media.id = "gif-animation";
+  media.setAttribute("src", src);
+  wrapper.appendChild(media);
+  root.appendChild(wrapper);
+  const gif = { root, wrapper, media };
+  prepare?.(gif);
+  return gif;
+}
+
+const TOOLS_PRESENTATION_PROPERTIES = Object.freeze([
+  "transform",
+  "transition",
+  "transform-origin",
+  "will-change",
+  "width",
+  "height",
+  "max-width",
+  "max-height",
+  "position",
+  "inset",
+  "top",
+  "right",
+  "bottom",
+  "left",
+  "object-fit",
+  "opacity",
+  "z-index",
+  "overflow",
+  "overflow-x",
+  "overflow-y",
+  "clip",
+  "clip-path",
+  "backface-visibility",
+]);
+
+function snapshotToolsPresentation(gif) {
+  return Object.fromEntries(Object.entries(gif).map(([key, node]) => [key, {
+    className: node.className,
+    src: node.getAttribute?.("src"),
+    animationCount: node.__animations?.length || 0,
+    rect: { ...node.getBoundingClientRect() },
+    styles: Object.fromEntries(TOOLS_PRESENTATION_PROPERTIES.map((property) => [property, {
+      value: node.style.getPropertyValue(property),
+      priority: node.style.getPropertyPriority(property),
+    }])),
+  }]));
+}
+
+function snapshotToolsIdentity(gif) {
+  return Object.fromEntries(Object.entries(gif).map(([key, node]) => [key, {
+    node,
+    parentNode: node.parentNode,
+    src: node.getAttribute?.("src"),
+    animationCount: node.__animations?.length || 0,
+  }]));
+}
+
+function assertToolsIdentity(gif, snapshot) {
+  Object.entries(gif).forEach(([key, node]) => {
+    assert.equal(node, snapshot[key].node, `${key} identity`);
+    assert.equal(node.parentNode, snapshot[key].parentNode, `${key} parent`);
+    assert.equal(node.getAttribute?.("src"), snapshot[key].src, `${key} source`);
+    assert.equal(node.__animations?.length || 0, snapshot[key].animationCount, `${key} animations`);
+  });
+}
+
+function seedToolsPresentation(gif) {
+  Object.entries(gif).forEach(([key, node], index) => {
+    node.classList.add(`tools-${key}-seed`);
+    node.__rect = { left: 100 + index, top: 200 + index, width: 300 + index, height: 400 + index };
+    TOOLS_PRESENTATION_PROPERTIES.forEach((property, propertyIndex) => {
+      const values = {
+        transform: `translate(${index + 1}px, ${index + 2}px)`,
+        transition: `opacity ${100 + index}ms linear`,
+        "transform-origin": "50% 50%",
+        "will-change": "opacity",
+        width: `${300 + index}px`,
+        height: `${400 + index}px`,
+        "max-width": `${500 + index}px`,
+        "max-height": `${600 + index}px`,
+        position: "fixed",
+        inset: `${index}px`,
+        top: `${index + 1}px`,
+        right: `${index + 2}px`,
+        bottom: `${index + 3}px`,
+        left: `${index + 4}px`,
+        "object-fit": "contain",
+        opacity: "0.85",
+        "z-index": String(900 + index),
+        overflow: "visible",
+        "overflow-x": "visible",
+        "overflow-y": "visible",
+        clip: "auto",
+        "clip-path": "none",
+        "backface-visibility": "visible",
+      };
+      node.style.setProperty(property, values[property], propertyIndex % 2 ? "important" : "");
+    });
+  });
 }
 
 test("native zoom leaves the Tools measurement anchor unchanged and transforms every board layer", () => {
@@ -485,7 +592,7 @@ test("a shadow root attached after its host hydrates is discovered and its pendi
   assert.equal(isToolsAnimationActive(f.documentRef), false);
 });
 
-function startFeatures({ bustTarget = "impact", enabled = [true, true, true], order = [0, 1, 2], animateDarts = true, manual = false, initialGif = false, initialBust = false } = {}) {
+function startFeatures({ bustTarget = "impact", enabled = [true, true, true], order = [0, 1, 2], animateDarts = true, manual = false, hardware = false, initialGif = false, prepareInitialGif = null, initialLegacyRootParent = "", initialLegacyGif = false, prepareInitialLegacyRoot = null, prepareInitialLegacyGif = null, initialBust = false } = {}) {
   const f = createAnimationFixture();
   const timers = createFakeTimerHarness();
   timers.installOnWindow(f.windowRef);
@@ -496,6 +603,18 @@ function startFeatures({ bustTarget = "impact", enabled = [true, true, true], or
     viewport.appendChild(f.host);
     f.host.style.touchAction = "none";
   }
+  const legacyRootParent = initialLegacyRootParent === "board"
+    ? f.board
+    : initialLegacyRootParent === "host" ? f.host : null;
+  const initialLegacyRoot = legacyRootParent
+    ? f.node(legacyRootParent, "div", "showAnimations")
+    : null;
+  if (initialLegacyRoot) {
+    prepareInitialLegacyRoot?.({ root: initialLegacyRoot });
+  }
+  const initialLegacyToolsGif = initialLegacyRoot && initialLegacyGif
+    ? addLegacyToolsGif(f, initialLegacyRoot, undefined, prepareInitialLegacyGif)
+    : null;
   let soundCount = 0;
   f.windowRef.Audio = class {
     play() { if (this.volume > 0.1) soundCount += 1; return Promise.resolve(); }
@@ -511,14 +630,17 @@ function startFeatures({ bustTarget = "impact", enabled = [true, true, true], or
   f.layers[3].appendChild(marker);
   const context = { ...f, domGuards: createDomGuards(f),
     registries: { observers: createObserverRegistry(), listeners: createListenerRegistry() },
-    gameState: { isX01Variant: () => true, getSnapshot: () => null, subscribe: () => () => {} },
+    gameState: { isX01Variant: () => true, getSnapshot: () => hardware ? {
+      activePlayerIndex: 0,
+      match: { player: 0, players: [{ boardId: "board-123" }] },
+    } : null, subscribe: () => () => {} },
     domain: { x01Rules }, config: { getFeatureConfig(key) {
       if (key === "x01BustActivePlayerHighlight") return { effectTarget: bustTarget, crackCount: 2, soundEnabled: true };
       if (key === "dartMarkerReplacer") return { animateDarts, enableShadow: true };
       return { checkoutZoomEnabled: true, zoomLevel: 2.75, zoomSpeed: "mittel" };
     } }, helpers: { createRafScheduler: (callback, options = {}) => createRafScheduler(callback, { ...options, windowRef: f.windowRef }) } };
   const mounts = [initializeTvBoardZoom, initializeDartMarkerReplacer, mountX01BustActivePlayerHighlight];
-  if (initialGif) addToolsGif(f);
+  const initialToolsGif = initialGif ? addToolsGif(f, undefined, prepareInitialGif) : null;
   if (initialBust) f.total.textContent = "BUST";
   const cleanup = [];
   order.forEach((index) => { if (enabled[index]) cleanup.push(mounts[index](context)); });
@@ -528,7 +650,8 @@ function startFeatures({ bustTarget = "impact", enabled = [true, true, true], or
     timers.advance(25);
   }
   timers.advance(25);
-  return { ...f, timers, tick, get soundCount() { return soundCount; },
+  return { ...f, timers, tick, initialToolsGif, initialLegacyRoot, initialLegacyToolsGif,
+    get soundCount() { return soundCount; },
     stop() { cleanup.reverse().forEach((release) => release()); timers.restoreGlobals(); } };
 }
 
@@ -689,6 +812,198 @@ test("Tools host insertion disables manual pointer zoom and removing it restores
     f.tick();
     assert.match(f.host.style.transform, /scale/);
   } finally { f.stop(); }
+});
+
+test("pre-existing Tools GIF stays presentation-identical through hardware zoom targeting and zoom-out", () => {
+  let initialPresentation = null;
+  const f = startFeatures({
+    enabled: [true, false, false],
+    manual: true,
+    hardware: true,
+    initialGif: true,
+    prepareInitialGif(gif) {
+      seedToolsPresentation(gif);
+      initialPresentation = snapshotToolsPresentation(gif);
+    },
+  });
+  const gif = f.initialToolsGif;
+  let expectedIdentity = snapshotToolsIdentity(gif);
+  try {
+    assert.deepEqual(snapshotToolsPresentation(gif), initialPresentation);
+    assertToolsIdentity(gif, expectedIdentity);
+    assert.equal(f.host.style.transform || "", "");
+    const firstTransform = f.layers[0].style.transform;
+    assert.match(firstTransform, /scale\(2\.750*\)/);
+    f.layers.forEach((layer) => assert.equal(layer.style.transform, firstTransform));
+
+    f.score.textContent = "4";
+    f.setVisit([], ["D2"]);
+    f.tick();
+    const retargetedTransform = f.layers[0].style.transform;
+    assert.match(retargetedTransform, /scale\(2\.750*\)/);
+    assert.notEqual(retargetedTransform, firstTransform);
+    assert.deepEqual(snapshotToolsPresentation(gif), initialPresentation);
+    assertToolsIdentity(gif, expectedIdentity);
+
+    const mediaAnimationCount = gif.media.__animations.length;
+    gif.wrapper.remove();
+    const endedPresentation = snapshotToolsPresentation(gif);
+    expectedIdentity = snapshotToolsIdentity(gif);
+    f.tick();
+    assert.equal(isToolsAnimationActive(f.documentRef), false);
+    assert.equal(f.layers[0].style.transform, retargetedTransform);
+    assert.deepEqual(snapshotToolsPresentation(gif), endedPresentation);
+    assertToolsIdentity(gif, expectedIdentity);
+    assert.equal(gif.media.__animations.length, mediaAnimationCount);
+
+    gif.root.appendChild(gif.wrapper);
+    const restartedPresentation = snapshotToolsPresentation(gif);
+    expectedIdentity = snapshotToolsIdentity(gif);
+    f.tick();
+    assert.equal(isToolsAnimationActive(f.documentRef), true);
+    f.player.textContent = "Player 2";
+    f.score.textContent = "301";
+    f.total.textContent = "0";
+    f.setVisit([], []);
+    f.tick();
+    assert.deepEqual(snapshotToolsPresentation(gif), restartedPresentation);
+    assertToolsIdentity(gif, expectedIdentity);
+    assert.equal(gif.media.__animations.length, mediaAnimationCount);
+    f.timers.advance(500);
+    f.layers.forEach((layer) => assert.equal(layer.style.transform || "", ""));
+    assert.deepEqual(snapshotToolsPresentation(gif), restartedPresentation);
+    assertToolsIdentity(gif, expectedIdentity);
+  } finally { f.stop(); }
+});
+
+test("late Tools host mount swaps hardware zoom to inner layers and removal restores one clean wrapper zoom", () => {
+  const f = startFeatures({ enabled: [true, false, false], manual: true, hardware: true });
+  try {
+    assert.match(f.host.style.transform, /scale\(2\.750*\)/);
+    f.layers.forEach((layer) => assert.equal(layer.style.transform || "", ""));
+
+    const gif = addToolsGif(f, undefined, seedToolsPresentation);
+    const presentation = snapshotToolsPresentation(gif);
+    let expectedIdentity = snapshotToolsIdentity(gif);
+    f.tick();
+
+    assert.equal(f.host.style.transform || "", "");
+    assert.equal(f.host.classList.contains("ad-ext-tv-board-zoom"), false);
+    const innerTransform = f.layers[0].style.transform;
+    assert.match(innerTransform, /scale\(2\.750*\)/);
+    f.layers.forEach((layer) => assert.equal(layer.style.transform, innerTransform));
+    assert.deepEqual(snapshotToolsPresentation(gif), presentation);
+    assertToolsIdentity(gif, expectedIdentity);
+
+    gif.host.remove();
+    const removedPresentation = snapshotToolsPresentation(gif);
+    expectedIdentity = snapshotToolsIdentity(gif);
+    f.tick();
+    assert.match(f.host.style.transform, /scale\(2\.750*\)/);
+    assert.equal(f.host.classList.contains("ad-ext-tv-board-zoom"), true);
+    f.layers.forEach((layer) => assert.equal(layer.style.transform || "", ""));
+    assert.deepEqual(snapshotToolsPresentation(gif), removedPresentation);
+    assertToolsIdentity(gif, expectedIdentity);
+  } finally { f.stop(); }
+});
+
+test("persistent legacy Tools root keeps one hardware zoom target before, during and after its GIF", () => {
+  let initialRootPresentation = null;
+  const f = startFeatures({
+    enabled: [true, false, false],
+    manual: true,
+    hardware: true,
+    initialLegacyRootParent: "host",
+    prepareInitialLegacyRoot(gif) {
+      seedToolsPresentation(gif);
+      initialRootPresentation = snapshotToolsPresentation(gif);
+    },
+  });
+  const root = f.initialLegacyRoot;
+  try {
+    const transform = f.layers[0].style.transform;
+    const transitions = f.layers.map((layer) => layer.style.transition);
+    assert.match(transform, /scale\(2\.750*\)/);
+    f.layers.forEach((layer) => assert.equal(layer.style.transform, transform));
+    assert.equal(f.host.style.transform || "", "");
+    assert.equal(f.host.style.overflow || "", "");
+    assert.equal(f.host.classList.contains(ZOOM_HOST_CLASS), false);
+    assert.equal(f.board.classList.contains(ZOOM_HOST_CLASS), true);
+    assert.equal(f.board.style.overflow, "hidden");
+    assert.deepEqual(snapshotToolsPresentation({ root }), initialRootPresentation);
+
+    const gif = addLegacyToolsGif(f, root, undefined, (value) =>
+      seedToolsPresentation({ wrapper: value.wrapper, media: value.media }));
+    const activePresentation = snapshotToolsPresentation(gif);
+    let expectedIdentity = snapshotToolsIdentity(gif);
+    f.tick();
+    assert.equal(isToolsAnimationActive(f.documentRef), true);
+    assert.equal(f.layers[0].style.transform, transform);
+    assert.deepEqual(f.layers.map((layer) => layer.style.transition), transitions);
+    assert.deepEqual(snapshotToolsPresentation(gif), activePresentation);
+    assertToolsIdentity(gif, expectedIdentity);
+
+    gif.wrapper.remove();
+    const endedPresentation = snapshotToolsPresentation(gif);
+    expectedIdentity = snapshotToolsIdentity(gif);
+    f.tick();
+    assert.equal(isToolsAnimationActive(f.documentRef), false);
+    assert.equal(f.layers[0].style.transform, transform);
+    assert.deepEqual(f.layers.map((layer) => layer.style.transition), transitions);
+    assert.deepEqual(snapshotToolsPresentation(gif), endedPresentation);
+    assertToolsIdentity(gif, expectedIdentity);
+    assert.equal(f.board.classList.contains(ZOOM_HOST_CLASS), true);
+    assert.equal(root.classList.contains(ZOOM_CLASS), false);
+    assert.equal(root.classList.contains(ZOOM_HOST_CLASS), false);
+  } finally { f.stop(); }
+});
+
+test("unsafe legacy Tools nesting stays fail-closed without writing presentation styles", () => {
+  let initialPresentation = null;
+  const f = startFeatures({
+    enabled: [true, false, false],
+    manual: true,
+    hardware: true,
+    initialLegacyRootParent: "board",
+    initialLegacyGif: true,
+    prepareInitialLegacyRoot(gif) {
+      seedToolsPresentation(gif);
+    },
+    prepareInitialLegacyGif(gif) {
+      seedToolsPresentation({ wrapper: gif.wrapper, media: gif.media });
+      initialPresentation = snapshotToolsPresentation(gif);
+    },
+  });
+  const expectedIdentity = snapshotToolsIdentity(f.initialLegacyToolsGif);
+  try {
+    assert.equal(f.host.classList.contains(ZOOM_CLASS), false);
+    assert.equal(f.host.classList.contains(ZOOM_HOST_CLASS), false);
+    assert.equal(f.board.classList.contains(ZOOM_CLASS), false);
+    assert.equal(f.board.classList.contains(ZOOM_HOST_CLASS), false);
+    f.layers.forEach((layer) => assert.equal(layer.style.transform || "", ""));
+    assert.deepEqual(snapshotToolsPresentation(f.initialLegacyToolsGif), initialPresentation);
+    assertToolsIdentity(f.initialLegacyToolsGif, expectedIdentity);
+  } finally { f.stop(); }
+});
+
+test("protected legacy root blocks an unsafe direct zoom binding before any style write", () => {
+  const f = createAnimationFixture();
+  const root = f.node(f.host, "div", "showAnimations");
+  const state = {};
+  try {
+    const result = applyZoom(
+      { targetNode: f.board, hostNode: f.host, boardSvg: f.layers[0] },
+      2.75,
+      speed,
+      { reason: "checkout", segment: "D18" },
+      state,
+      { protectedAnimationRoots: [root] }
+    );
+    assert.equal(result, null);
+    assert.equal(f.host.classList.contains(ZOOM_HOST_CLASS), false);
+    assert.equal(f.host.style.overflow || "", "");
+    f.layers.forEach((layer) => assert.equal(layer.style.transform || "", ""));
+  } finally { resetZoom(speed, state, true); }
 });
 
 for (const animateDarts of [true, false]) {

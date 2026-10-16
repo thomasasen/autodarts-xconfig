@@ -70,6 +70,13 @@ export function createModernX01Fixture(options = {}) {
     path.setAttribute("d", "M 0 0 L 20 0 L 0 20 Z");
     layers[0].appendChild(path);
   }
+  const interactiveHitArea = documentRef.createElementNS("http://www.w3.org/2000/svg", "rect");
+  interactiveHitArea.setAttribute("width", "1000");
+  interactiveHitArea.setAttribute("height", "1000");
+  interactiveHitArea.setAttribute("fill", "transparent");
+  interactiveHitArea.setAttribute("pointer-events", "auto");
+  interactiveHitArea.style.touchAction = "none";
+  layers[3].appendChild(interactiveHitArea);
   return { documentRef, windowRef, header, variant, card, marker, player, score, cardRoute,
-    turn, slots, rows, total, host, board, layers, setVisit, node };
+    turn, slots, rows, total, host, board, layers, interactiveHitArea, setVisit, node };
 }
