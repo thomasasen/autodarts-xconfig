@@ -1,9 +1,13 @@
-import { findModernTurnSurface, isMatchNodeVisible } from "./shared/x01-match-surface.js";
+import {
+  findModernTurnSurface,
+  isMatchNodeVisible,
+  MODERN_CHECKOUT_HINT_SELECTOR,
+} from "./shared/x01-match-surface.js";
 
 export const MODERN_CHECKOUT_SUGGESTION_SELECTOR = ".text-checkout-suggestion";
 export const SUGGESTION_SELECTOR = [
   ".suggestion",
-  MODERN_CHECKOUT_SUGGESTION_SELECTOR,
+  MODERN_CHECKOUT_HINT_SELECTOR,
 ].join(", ");
 const CHECKOUT_MARKER_PATTERN = /\bCHECKOUT\b/i;
 

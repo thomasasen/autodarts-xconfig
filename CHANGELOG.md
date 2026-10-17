@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.5.6] - 2026-10-17
+
+### Fixed
+
+- Nutzerwirkung: Checkout-Zielhervorhebungen zeigen auch nach zwei geworfenen Darts das von Autodarts empfohlene Setup-Feld für den dritten Dart zuverlässig auf dem Board an.
+  Technik: Die Routenerkennung berücksichtigt neben Checkout-Empfehlungen auch moderne Setup-Empfehlungen, ohne diese als bereits geworfenen dritten Dart zu zählen. Domain- und Runtime-Regressionen sichern Routenauswahl, Score-Puls, TV-Board-Zoom und das tatsächlich gerenderte Board-Ziel ab.
+
 ## [3.5.5] - 2026-10-17
 
 ### Fixed
@@ -2400,6 +2407,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.5.6]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.5...v3.5.6
 [3.5.5]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.4...v3.5.5
 [3.5.4]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.3...v3.5.4
 [3.5.3]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.2...v3.5.3

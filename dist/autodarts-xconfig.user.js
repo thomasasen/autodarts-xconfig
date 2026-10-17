@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         autodarts-xconfig
 // @namespace    https://github.com/thomasasen/autodarts-xconfig
-// @version      3.5.5
+// @version      3.5.6
 // @description  Modular, side-effect resistant Tampermonkey runtime for Autodarts enhancements.
 // @author       Thomas Asen
 // @license      MIT
@@ -6544,10 +6544,9 @@
   }
 
   // src/features/x01-checkout-route.js
-  var MODERN_CHECKOUT_SUGGESTION_SELECTOR = ".text-checkout-suggestion";
   var SUGGESTION_SELECTOR = [
     ".suggestion",
-    MODERN_CHECKOUT_SUGGESTION_SELECTOR
+    MODERN_CHECKOUT_HINT_SELECTOR
   ].join(", ");
   var CHECKOUT_MARKER_PATTERN = /\bCHECKOUT\b/i;
   function isElementStyleVisible(element, windowRef) {
@@ -40611,7 +40610,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
 
   // src/core/bootstrap.js
   var GLOBAL_NAMESPACE_KEY = "__adXConfig";
-  var API_VERSION = "3.5.5";
+  var API_VERSION = "3.5.6";
   var STARTUP_DEFER_INTERVAL_MS = 16;
   function getWindowTimerApi(windowRef) {
     let setTimeoutRef = null;

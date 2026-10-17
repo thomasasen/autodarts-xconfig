@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as x01Rules from "../../src/domain/x01-rules.js";
+import { computeShouldHighlight } from "../../src/features/checkout-score-highlight/logic.js";
 import { readModernMatchSurface, readModernThrows } from "../../src/features/shared/x01-match-surface.js";
 import { collectVisibleCheckoutRoute } from "../../src/features/x01-checkout-route.js";
 import { resolveX01CheckoutContext } from "../../src/features/x01-checkout-context.js";
@@ -54,7 +55,7 @@ test("native active player follows the card background when the identity marker 
   assert.equal(f.marker.isConnected, true);
 });
 
-test("native setup recommendation is not a third thrown dart", () => {
+test("native setup recommendation remains a route target without becoming a third thrown dart", () => {
   const f = createModernX01Fixture({ score: 83, throws: ["S20", "S18"], route: ["T17"] });
   f.rows[2].row.classList.remove("text-checkout-suggestion");
   f.rows[2].row.classList.add("text-checkout-setup");
@@ -62,6 +63,16 @@ test("native setup recommendation is not a third thrown dart", () => {
     readModernThrows(readModernMatchSurface(f.documentRef, f.windowRef), x01Rules)
       .map((entry) => entry.segment.name),
     ["S20", "S18"]
+  );
+  assert.deepEqual(collectVisibleCheckoutRoute(f.documentRef, f.windowRef, x01Rules), ["T17"]);
+  const context = resolveX01CheckoutContext({ ...f, x01Rules, gameState: emptyGameState });
+  assert.equal(context.checkoutSurface.selectionSource, "visible-setup-segment");
+  assert.deepEqual(context.checkoutSurface.authoritativeRouteSegments, ["T17"]);
+  assert.equal(computeShouldHighlight({ ...f, gameState: emptyGameState, x01Rules }), false);
+  assert.equal(intent(f), null);
+  assert.deepEqual(
+    intent(f, { checkoutZoomTarget: "route-first" }),
+    { reason: "smart-setup", segment: "T17" }
   );
 });
 

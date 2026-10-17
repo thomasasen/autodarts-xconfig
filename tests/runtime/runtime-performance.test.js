@@ -60,6 +60,7 @@ import {
   FakeWebSocket,
   createFakeWindow,
 } from "./fake-dom.js";
+import { createModernX01Fixture } from "./modern-x01-fixture.js";
 
 function wait(ms = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -254,6 +255,64 @@ test("checkout-target-highlights renders the modern checkout surface in the top 
     assert.equal(board.markerGroup.children[1], dartMarker);
     assert.equal(overlay.children[0]?.dataset?.targetRing, "T");
     assert.equal(overlay.children[0]?.dataset?.targetValue, "20");
+  } finally {
+    cleanup();
+  }
+});
+
+test("checkout-target-highlights renders a modern third-dart setup recommendation", () => {
+  const fixture = createModernX01Fixture({
+    score: 83,
+    throws: ["S20", "S18"],
+    route: ["T17"],
+  });
+  fixture.rows[2].row.classList.remove("text-checkout-suggestion");
+  fixture.rows[2].row.classList.add("text-checkout-setup");
+
+  const cleanup = initializeCheckoutTargetHighlights({
+    ...fixture,
+    domGuards: createDomGuards({ documentRef: fixture.documentRef }),
+    registries: {
+      observers: createObserverRegistry(),
+    },
+    gameState: {
+      isX01Variant: () => false,
+      getActiveTurn: () => null,
+      getActiveThrows: () => [],
+      getActiveScore: () => null,
+      getOutMode: () => "",
+      getSnapshot: () => null,
+      subscribe() {
+        return () => {};
+      },
+    },
+    domain: {
+      x01Rules,
+      variantRules,
+    },
+    config: {
+      getFeatureConfig() {
+        return {
+          visualPreset: "soft-pulse",
+          singleRing: "both",
+          targetSelectionMode: "next",
+          colorTheme: "amber",
+        };
+      },
+    },
+    helpers: {
+      createRafScheduler: createImmediateSchedulerFactory({ count: 0 }),
+    },
+  });
+
+  try {
+    const overlay = fixture.documentRef.getElementById(CHECKOUT_OVERLAY_ID);
+    const target = Array.from(overlay?.children || []).find((node) =>
+      node.classList?.contains?.(TARGET_CLASS)
+    );
+    assert.ok(target, "the third setup recommendation is rendered on the board");
+    assert.equal(target.dataset.targetRing, "T");
+    assert.equal(target.dataset.targetValue, "17");
   } finally {
     cleanup();
   }
