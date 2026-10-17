@@ -2,6 +2,7 @@ import { TOOLS_ANIMATION_ACTIVE_ATTRIBUTE } from "../shared/tools-animation-laye
 
 export const STYLE_ID = "ad-ext-x01-bust-active-player-highlight-style";
 export const BUST_ACTIVE_CLASS = "ad-ext-x01-bust-active-player-highlight";
+export const BUST_BOARD_SURFACE_CLASS = "ad-ext-x01-bust-board-highlight";
 export const BUST_SURFACE_CLASS = "ad-ext-x01-bust-surface-highlight";
 export const BUST_IMPACT_SURFACE_CLASS = "ad-ext-x01-bust-impact-highlight";
 export const BUST_CRACK_OVERLAY_CLASS = "ad-ext-x01-bust-active-player-cracks";
@@ -161,10 +162,16 @@ html:has(.${BUST_IMPACT_SURFACE_CLASS}) #ad-ext-dart-image-overlay .ad-ext-dart-
   filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 7px rgba(217, 31, 62, 0.9));
 }
 
-html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_SURFACE_CLASS}::before,
-html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_CRACK_OVERLAY_CLASS},
-html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_CRACK_OVERLAY_CLASS} * {
+html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_BOARD_SURFACE_CLASS}::before,
+html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_BOARD_SURFACE_CLASS} > .${BUST_CRACK_OVERLAY_CLASS},
+html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_BOARD_SURFACE_CLASS} > .${BUST_CRACK_OVERLAY_CLASS} * {
   visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_SURFACE_CLASS}:not(.${BUST_BOARD_SURFACE_CLASS})::before,
+html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_SURFACE_CLASS}:not(.${BUST_BOARD_SURFACE_CLASS}) > .${BUST_CRACK_OVERLAY_CLASS},
+html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_SURFACE_CLASS}:not(.${BUST_BOARD_SURFACE_CLASS}) > .${BUST_CRACK_OVERLAY_CLASS} * {
   pointer-events: none !important;
 }
 

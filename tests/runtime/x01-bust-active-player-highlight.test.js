@@ -13,6 +13,7 @@ import {
 } from "../../src/features/x01-bust-active-player-highlight/logic.js";
 import {
   BUST_ACTIVE_CLASS,
+  BUST_BOARD_SURFACE_CLASS,
   BUST_CRACK_CLASS,
   BUST_CRACK_OVERLAY_CLASS,
   BUST_IMPACT_HOLE_CLASS,
@@ -267,6 +268,7 @@ test("x01 bust highlight can target only the board while keeping the player card
 
   assert.equal(result.activeNode, fixture.board);
   assert.equal(fixture.board.classList.contains(BUST_SURFACE_CLASS), true);
+  assert.equal(fixture.board.classList.contains(BUST_BOARD_SURFACE_CLASS), true);
   assert.equal(fixture.card.classList.contains(BUST_ACTIVE_CLASS), false);
   assert.equal(fixture.board.querySelectorAll(`.${BUST_CRACK_CLASS}`).length, 2);
   assert.equal(fixture.nativeEffect.classList.contains(NATIVE_BUST_EFFECT_HIDDEN_CLASS), true);
@@ -289,6 +291,7 @@ test("x01 bust highlight can cover the complete match surface without styling th
 
   assert.equal(result.activeNode, fixture.documentRef.main);
   assert.equal(fixture.documentRef.main.classList.contains(BUST_SURFACE_CLASS), true);
+  assert.equal(fixture.documentRef.main.classList.contains(BUST_BOARD_SURFACE_CLASS), false);
   assert.equal(fixture.card.classList.contains(BUST_ACTIVE_CLASS), false);
   assert.equal(fixture.documentRef.main.querySelectorAll(`.${BUST_CRACK_CLASS}`).length, 1);
 });
@@ -316,6 +319,7 @@ test("x01 bust impact target starts every screen crack at the Bust dart coordina
   const expectedY = 136 + 549 * (0.5 - coords.y * (17 / 45));
   assert.equal(result.activeNode, fixture.documentRef.main);
   assert.equal(fixture.documentRef.main.classList.contains(BUST_IMPACT_SURFACE_CLASS), true);
+  assert.equal(fixture.documentRef.main.classList.contains(BUST_BOARD_SURFACE_CLASS), false);
   assert.equal(cracks.length, 2);
   cracks.forEach((crack) => {
     assert.equal(crack.getAttribute("data-crack-x"), expectedX.toFixed(2));
@@ -453,6 +457,7 @@ test("x01 bust impact target prefers the rendered last marker over coordinate pr
 
   clearBustActivePlayerHighlightState(state);
   assert.equal(fixture.documentRef.main.classList.contains(BUST_IMPACT_SURFACE_CLASS), false);
+  assert.equal(fixture.documentRef.main.classList.contains(BUST_BOARD_SURFACE_CLASS), false);
 });
 
 test("x01 bust impact tracks the rendered dart tip while board zoom is moving", () => {

@@ -7,7 +7,6 @@ import {
   refreshBustImpactOrigin,
   runBustActivePlayerHighlightPreview,
   syncBustActivePlayerHighlight,
-  syncBustGifVisibility,
   tryUnlockBustGlassCrackAudio,
 } from "./logic.js";
 import { STYLE_ID, buildStyleText } from "./style.js";
@@ -145,8 +144,7 @@ export function mountX01BustActivePlayerHighlight(context = {}) {
     return () => {};
   }
 
-  const toolsAnimationLayers = acquireToolsAnimationLayerController({ documentRef, windowRef,
-    onChange: (active) => syncBustGifVisibility(state, active) });
+  const toolsAnimationLayers = acquireToolsAnimationLayerController({ documentRef, windowRef });
   harness.addCleanup(() => toolsAnimationLayers.release());
 
   harness.addCleanup(createX01PlayerSurfaceObserverController({

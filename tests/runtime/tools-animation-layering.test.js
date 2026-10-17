@@ -16,15 +16,21 @@ import { initializeTvBoardZoom } from "../../src/features/tv-board-zoom/index.js
 import { initializeDartMarkerReplacer } from "../../src/features/dart-marker-replacer/index.js";
 import { mountX01BustActivePlayerHighlight } from "../../src/features/x01-bust-active-player-highlight/index.js";
 import { buildStyleText as dartCss } from "../../src/features/dart-marker-replacer/style.js";
-import { buildStyleText as bustCss, BUST_ACTIVE_CLASS, BUST_CRACK_OVERLAY_CLASS } from "../../src/features/x01-bust-active-player-highlight/style.js";
+import {
+  buildStyleText as bustCss,
+  BUST_ACTIVE_CLASS,
+  BUST_BOARD_SURFACE_CLASS,
+  BUST_CRACK_OVERLAY_CLASS,
+  BUST_SURFACE_CLASS,
+} from "../../src/features/x01-bust-active-player-highlight/style.js";
 
 // Layer audit: native art, markers and checkout/Cricket overlays share the board
 // SVGs; Special Hit decorations stay in their score/card stacking contexts.
 // Replacement darts/shadows use a fixed body SVG (49), below the native winner.
 // BUST board/screen pseudo-elements and cracks use isolated high layers; impact
 // raises the last replacement dart. Tools owns its fixed Shadow-DOM GIF wrapper.
-// GIF priority therefore suppresses our independent darts/BUST decoration and
-// preserves the stable frame around every zoomed board rendering layer.
+// GIF priority suppresses independent darts and board-only BUST decoration;
+// player-card and screen effects remain visible without intercepting GIF input.
 
 function createAnimationFixture() {
   const fixture = createModernX01Fixture();
@@ -655,6 +661,27 @@ function startFeatures({ bustTarget = "impact", enabled = [true, true, true], or
     stop() { cleanup.reverse().forEach((release) => release()); timers.restoreGlobals(); } };
 }
 
+function assertBustTargetClasses(fixture, target) {
+  const targetNode = target === "player-card"
+    ? fixture.card
+    : target === "board" ? fixture.board : fixture.documentRef.main;
+  assert.equal(
+    targetNode.classList.contains(BUST_ACTIVE_CLASS),
+    target === "player-card",
+    `${target} player-card class`
+  );
+  assert.equal(
+    targetNode.classList.contains(BUST_SURFACE_CLASS),
+    target !== "player-card",
+    `${target} surface class`
+  );
+  assert.equal(
+    targetNode.classList.contains(BUST_BOARD_SURFACE_CLASS),
+    target === "board",
+    `${target} board-only class`
+  );
+}
+
 for (const target of ["player-card", "board", "screen", "impact"]) {
   for (const zoom of [false, true]) {
     test(`GIF priority preserves ${target} BUST state and dart identity, zoom=${zoom}`, () => {
@@ -673,13 +700,13 @@ for (const target of ["player-card", "board", "screen", "impact"]) {
         assert.equal(isToolsAnimationActive(f.documentRef), true);
         assert.equal(f.documentRef.querySelector(".ad-ext-dart-flight-group"), dart);
         assert.equal(f.documentRef.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`), cracks);
-        if (target === "player-card") assert.equal(f.card.classList.contains(BUST_ACTIVE_CLASS), false);
+        assertBustTargetClasses(f, target);
         gif.wrapper.remove();
         f.tick();
         assert.equal(isToolsAnimationActive(f.documentRef), false);
         assert.equal(f.documentRef.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`), cracks);
         assert.equal(f.soundCount, sounds);
-        if (target === "player-card") assert.equal(f.card.classList.contains(BUST_ACTIVE_CLASS), true);
+        assertBustTargetClasses(f, target);
         f.total.textContent = "85";
         f.tick();
         assert.equal(f.documentRef.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`), null);
@@ -712,7 +739,7 @@ for (const target of ["player-card", "board", "screen", "impact"]) {
       assert.equal(isToolsAnimationActive(f.documentRef), true);
       const cracks = f.documentRef.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`);
       assert.ok(cracks);
-      if (target === "player-card") assert.equal(f.card.classList.contains(BUST_ACTIVE_CLASS), false);
+      assertBustTargetClasses(f, target);
       const sounds = f.soundCount;
       f.documentRef.querySelector("autodarts-tools-animations").remove();
       f.tick();
@@ -755,7 +782,7 @@ test("1000 GIF cycles retain dart/crack identity and release all observers, list
   assert.equal(f.windowRef.__eventTarget.listenerCount(), 0);
 });
 
-test("GIF before BUST and BUST ending during GIF do not resurrect an obsolete effect", () => {
+test("GIF before BUST renders the player card immediately and does not resurrect an obsolete effect", () => {
   const f = startFeatures({ bustTarget: "player-card" });
   try {
     f.card.style.setProperty("background", "blue", "important");
@@ -763,8 +790,8 @@ test("GIF before BUST and BUST ending during GIF do not resurrect an obsolete ef
     f.tick();
     f.total.textContent = "BUST";
     f.tick();
-    assert.equal(f.card.classList.contains(BUST_ACTIVE_CLASS), false);
-    assert.equal(f.card.style.getPropertyValue("background"), "blue");
+    assert.equal(f.card.classList.contains(BUST_ACTIVE_CLASS), true);
+    assert.notEqual(f.card.style.getPropertyValue("background"), "blue");
     assert.equal(f.score.textContent, "36");
     assert.ok(f.documentRef.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`));
     f.total.textContent = "85";
@@ -778,7 +805,7 @@ test("GIF before BUST and BUST ending during GIF do not resurrect an obsolete ef
   } finally { f.stop(); }
 });
 
-test("closing a Tools GIF does not dismiss the hidden screen BUST effect", () => {
+test("closing a Tools GIF does not dismiss the visible screen BUST effect", () => {
   const f = startFeatures({ bustTarget: "screen" });
   try {
     f.total.textContent = "BUST";
@@ -1058,7 +1085,7 @@ for (const count of [1, 2, 3]) {
   });
 }
 
-test("BUST card suppression restores original visuals and preserves newer third-party inline styles", () => {
+test("GIF transitions keep BUST card visuals and preserve newer third-party inline styles", () => {
   const f = startFeatures({ bustTarget: "player-card" });
   try {
     f.card.style.setProperty("background", "blue", "important");
@@ -1066,12 +1093,13 @@ test("BUST card suppression restores original visuals and preserves newer third-
     f.total.textContent = "BUST";
     f.tick();
     const cracks = f.card.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`);
-    assert.notEqual(f.card.style.getPropertyValue("background"), "blue");
+    const bustBackground = f.card.style.getPropertyValue("background");
+    assert.notEqual(bustBackground, "blue");
     const gif = addToolsGif(f);
     f.tick();
-    assert.equal(f.card.style.getPropertyValue("background"), "blue");
-    assert.equal(f.card.style.getPropertyPriority("background"), "important");
-    assert.equal(f.card.style.getPropertyValue("border"), "1px solid green");
+    assert.equal(f.card.classList.contains(BUST_ACTIVE_CLASS), true);
+    assert.equal(f.card.style.getPropertyValue("background"), bustBackground);
+    assert.ok(f.card.querySelector(`.${BUST_CRACK_OVERLAY_CLASS}`) === cracks);
     f.card.style.setProperty("background", "purple");
     gif.host.remove();
     f.tick();
@@ -1084,11 +1112,21 @@ test("BUST card suppression restores original visuals and preserves newer third-
   } finally { f.stop(); }
 });
 
-test("GIF suppression targets all dart descendants and only BUST decoration, including impact overrides", () => {
+test("GIF suppression targets darts and board-only BUST decoration while screen effects stay interactive-safe", () => {
   const attribute = `${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"`;
+  const css = bustCss();
   assert.ok(dartCss().includes(`html[${attribute}] #ad-ext-dart-image-overlay *`));
   assert.match(dartCss(), /visibility: hidden !important/);
-  assert.ok(bustCss().includes(`html[${attribute}] .ad-ext-x01-bust-surface-highlight::before`));
-  assert.ok(bustCss().includes(`html[${attribute}] .ad-ext-x01-bust-active-player-cracks *`));
-  assert.match(bustCss(), /visibility: hidden !important;\s*pointer-events: none !important/);
+  assert.ok(css.includes(`html[${attribute}] .${BUST_BOARD_SURFACE_CLASS}::before`));
+  assert.ok(css.includes(
+    `html[${attribute}] .${BUST_BOARD_SURFACE_CLASS} > .${BUST_CRACK_OVERLAY_CLASS} *`
+  ));
+  assert.match(css, /visibility: hidden !important;\s*pointer-events: none !important/);
+  const nonBoardRuleStart = css.indexOf(
+    `html[${attribute}] .${BUST_SURFACE_CLASS}:not(.${BUST_BOARD_SURFACE_CLASS})::before`
+  );
+  assert.notEqual(nonBoardRuleStart, -1);
+  const nonBoardRule = css.slice(nonBoardRuleStart, css.indexOf("}", nonBoardRuleStart) + 1);
+  assert.match(nonBoardRule, /pointer-events: none !important/);
+  assert.doesNotMatch(nonBoardRule, /visibility:\s*hidden/);
 });

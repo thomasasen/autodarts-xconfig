@@ -1,7 +1,7 @@
-import { isToolsAnimationActive } from "../shared/tools-animation-layer-controller.js";
 import { queryAll } from "../../shared/dom-query.js";
 import {
   BUST_ACTIVE_CLASS,
+  BUST_BOARD_SURFACE_CLASS,
   BUST_CARD_STYLE_PROPERTIES,
   BUST_IMPACT_SURFACE_CLASS,
   BUST_SURFACE_CLASS,
@@ -773,7 +773,12 @@ function clearNodeState(node, state = null) {
   if (!node?.classList) {
     return;
   }
-  node.classList.remove(BUST_ACTIVE_CLASS, BUST_SURFACE_CLASS, BUST_IMPACT_SURFACE_CLASS);
+  node.classList.remove(
+    BUST_ACTIVE_CLASS,
+    BUST_BOARD_SURFACE_CLASS,
+    BUST_SURFACE_CLASS,
+    BUST_IMPACT_SURFACE_CLASS
+  );
   removeBustCracks(node);
   clearBustCardVisuals(node);
   findNativeBustEffectLayers(node).forEach((nativeEffectNode) => {
@@ -789,22 +794,11 @@ function applyBustEffectVisuals(node, effectTarget, visuals = {}, options = {}) 
     return;
   }
   node.classList.add(BUST_SURFACE_CLASS);
+  node.classList.toggle(BUST_BOARD_SURFACE_CLASS, effectTarget === BUST_EFFECT_TARGETS.BOARD);
   node.classList.toggle(
     BUST_IMPACT_SURFACE_CLASS,
     effectTarget === BUST_EFFECT_TARGETS.IMPACT && options.raiseDartOverlay === true
   );
-}
-
-export function syncBustGifVisibility(state, suppressed) {
-  if (!state.activeNode || !state.wasBust || state.dismissedForCurrentBust ||
-      state.effectTarget !== BUST_EFFECT_TARGETS.PLAYER_CARD) return;
-  if (suppressed) {
-    state.activeNode.classList.remove(BUST_ACTIVE_CLASS);
-    clearBustCardVisuals(state.activeNode);
-  } else {
-    state.activeNode.classList.add(BUST_ACTIVE_CLASS);
-    applyBustCardVisuals(state.activeNode, state.cardVisuals);
-  }
 }
 
 export function createBustActivePlayerHighlightState() {
@@ -982,14 +976,9 @@ export function syncBustActivePlayerHighlight(context = {}, state = createBustAc
 
   const enteredBust = state.wasBust !== true;
   const visuals = resolveBustCardVisuals();
-  const gifActive = isToolsAnimationActive(documentRef);
-  if (effectTarget !== BUST_EFFECT_TARGETS.PLAYER_CARD || !gifActive) {
-    applyBustEffectVisuals(activeNode, effectTarget, visuals, { raiseDartOverlay: true });
-  }
-  state.cardVisuals = visuals;
+  applyBustEffectVisuals(activeNode, effectTarget, visuals, { raiseDartOverlay: true });
   state.activeNode = activeNode;
   state.wasBust = true;
-  syncBustGifVisibility(state, gifActive);
   const suppressedNativeEffects = suppressNativeBustEffectLayers(activePlayerNode, state);
 
   if (enteredBust || targetChanged) {

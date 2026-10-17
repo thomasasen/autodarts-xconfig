@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.5.7] - 2026-10-17
+
+### Fixed
+
+- Nutzerwirkung: Die BUST-Hervorhebung bleibt während eines Tools-for-Autodarts-GIFs auf der Spielerkachel sowie bei beiden Vollbildvarianten sichtbar. Nur die direkt auf dem Board liegende Darstellung wird weiterhin zugunsten des GIFs ausgeblendet; Vollbild-Effekte blockieren währenddessen keine GIF-Bedienung.
+  Technik: Die GIF-Unterdrückung ist an eine eigene Board-Klasse gebunden. Spielerkachel und nicht boardgebundene Flächen behalten ihren bestehenden BUST-Zustand und ihre Glasrisse, während Vollbild-Overlays bei aktivem GIF für Pointer-Ereignisse durchlässig sind. Regressionen sichern alle vier Wirkbereiche, Mount-Reihenfolgen und ausbleibende Effekt-Replays ab.
+
 ## [3.5.6] - 2026-10-17
 
 ### Fixed
@@ -2407,6 +2414,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.5.7]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.6...v3.5.7
 [3.5.6]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.5...v3.5.6
 [3.5.5]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.4...v3.5.5
 [3.5.4]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.3...v3.5.4

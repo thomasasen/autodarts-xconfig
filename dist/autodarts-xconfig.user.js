@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         autodarts-xconfig
 // @namespace    https://github.com/thomasasen/autodarts-xconfig
-// @version      3.5.6
+// @version      3.5.7
 // @description  Modular, side-effect resistant Tampermonkey runtime for Autodarts enhancements.
 // @author       Thomas Asen
 // @license      MIT
@@ -16683,6 +16683,7 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
   // src/features/x01-bust-active-player-highlight/style.js
   var STYLE_ID5 = "ad-ext-x01-bust-active-player-highlight-style";
   var BUST_ACTIVE_CLASS = "ad-ext-x01-bust-active-player-highlight";
+  var BUST_BOARD_SURFACE_CLASS = "ad-ext-x01-bust-board-highlight";
   var BUST_SURFACE_CLASS = "ad-ext-x01-bust-surface-highlight";
   var BUST_IMPACT_SURFACE_CLASS = "ad-ext-x01-bust-impact-highlight";
   var BUST_CRACK_OVERLAY_CLASS = "ad-ext-x01-bust-active-player-cracks";
@@ -16838,10 +16839,16 @@ html:has(.${BUST_IMPACT_SURFACE_CLASS}) #ad-ext-dart-image-overlay .ad-ext-dart-
   filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 7px rgba(217, 31, 62, 0.9));
 }
 
-html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_SURFACE_CLASS}::before,
-html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_CRACK_OVERLAY_CLASS},
-html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_CRACK_OVERLAY_CLASS} * {
+html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_BOARD_SURFACE_CLASS}::before,
+html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_BOARD_SURFACE_CLASS} > .${BUST_CRACK_OVERLAY_CLASS},
+html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_BOARD_SURFACE_CLASS} > .${BUST_CRACK_OVERLAY_CLASS} * {
   visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_SURFACE_CLASS}:not(.${BUST_BOARD_SURFACE_CLASS})::before,
+html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_SURFACE_CLASS}:not(.${BUST_BOARD_SURFACE_CLASS}) > .${BUST_CRACK_OVERLAY_CLASS},
+html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_SURFACE_CLASS}:not(.${BUST_BOARD_SURFACE_CLASS}) > .${BUST_CRACK_OVERLAY_CLASS} * {
   pointer-events: none !important;
 }
 
@@ -18106,7 +18113,12 @@ html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_CRACK_OVERLAY_CLASS} * 
     if (!node?.classList) {
       return;
     }
-    node.classList.remove(BUST_ACTIVE_CLASS, BUST_SURFACE_CLASS, BUST_IMPACT_SURFACE_CLASS);
+    node.classList.remove(
+      BUST_ACTIVE_CLASS,
+      BUST_BOARD_SURFACE_CLASS,
+      BUST_SURFACE_CLASS,
+      BUST_IMPACT_SURFACE_CLASS
+    );
     removeBustCracks(node);
     clearBustCardVisuals(node);
     findNativeBustEffectLayers(node).forEach((nativeEffectNode) => {
@@ -18121,20 +18133,11 @@ html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_CRACK_OVERLAY_CLASS} * 
       return;
     }
     node.classList.add(BUST_SURFACE_CLASS);
+    node.classList.toggle(BUST_BOARD_SURFACE_CLASS, effectTarget === BUST_EFFECT_TARGETS.BOARD);
     node.classList.toggle(
       BUST_IMPACT_SURFACE_CLASS,
       effectTarget === BUST_EFFECT_TARGETS.IMPACT && options.raiseDartOverlay === true
     );
-  }
-  function syncBustGifVisibility(state, suppressed) {
-    if (!state.activeNode || !state.wasBust || state.dismissedForCurrentBust || state.effectTarget !== BUST_EFFECT_TARGETS.PLAYER_CARD) return;
-    if (suppressed) {
-      state.activeNode.classList.remove(BUST_ACTIVE_CLASS);
-      clearBustCardVisuals(state.activeNode);
-    } else {
-      state.activeNode.classList.add(BUST_ACTIVE_CLASS);
-      applyBustCardVisuals(state.activeNode, state.cardVisuals);
-    }
   }
   function createBustActivePlayerHighlightState() {
     return {
@@ -18285,14 +18288,9 @@ html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_CRACK_OVERLAY_CLASS} * 
     }
     const enteredBust = state.wasBust !== true;
     const visuals = resolveBustCardVisuals();
-    const gifActive = isToolsAnimationActive(documentRef);
-    if (effectTarget !== BUST_EFFECT_TARGETS.PLAYER_CARD || !gifActive) {
-      applyBustEffectVisuals(activeNode, effectTarget, visuals, { raiseDartOverlay: true });
-    }
-    state.cardVisuals = visuals;
+    applyBustEffectVisuals(activeNode, effectTarget, visuals, { raiseDartOverlay: true });
     state.activeNode = activeNode;
     state.wasBust = true;
-    syncBustGifVisibility(state, gifActive);
     const suppressedNativeEffects = suppressNativeBustEffectLayers(activePlayerNode, state);
     if (enteredBust || targetChanged) {
       const impactOrigin = effectTarget === BUST_EFFECT_TARGETS.IMPACT ? resolveBustImpactOrigin(context, activeNode) : null;
@@ -18429,11 +18427,7 @@ html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_CRACK_OVERLAY_CLASS} * 
       return () => {
       };
     }
-    const toolsAnimationLayers = acquireToolsAnimationLayerController({
-      documentRef,
-      windowRef,
-      onChange: (active) => syncBustGifVisibility(state, active)
-    });
+    const toolsAnimationLayers = acquireToolsAnimationLayerController({ documentRef, windowRef });
     harness.addCleanup(() => toolsAnimationLayers.release());
     harness.addCleanup(createX01PlayerSurfaceObserverController({
       documentRef,
@@ -40610,7 +40604,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
 
   // src/core/bootstrap.js
   var GLOBAL_NAMESPACE_KEY = "__adXConfig";
-  var API_VERSION = "3.5.6";
+  var API_VERSION = "3.5.7";
   var STARTUP_DEFER_INTERVAL_MS = 16;
   function getWindowTimerApi(windowRef) {
     let setTimeoutRef = null;
