@@ -12,6 +12,13 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.5.8] - 2026-10-19
+
+### Changed
+
+- Nutzerwirkung: Keine sichtbare Änderung; der Feature-Watchdog behält seine bestehenden Prüf-, Reparatur- und Blockierregeln unverändert bei.
+  Technik: Die Watchdog-Prüfroute wurde in kleine modulinterne Helfer zerlegt, die Coverage-Auswahl linearisiert und die Feature-Prüfung aus dem Factory-Scope gehoben. Damit sind die drei offenen SonarQube-Wartbarkeitsbefunde ohne beabsichtigte Verhaltensänderung beseitigt.
+
 ## [3.5.7] - 2026-10-17
 
 ### Fixed
@@ -2414,6 +2421,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.5.8]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.7...v3.5.8
 [3.5.7]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.6...v3.5.7
 [3.5.6]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.5...v3.5.6
 [3.5.5]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.4...v3.5.5

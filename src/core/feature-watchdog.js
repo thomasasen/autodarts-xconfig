@@ -15,6 +15,112 @@ function requireSynchronous(result) {
   return result;
 }
 
+function inspectFeature(entry, snapshot) {
+  const status = entry.readStatus();
+  if (!status.enabled || status.scheduled) return { skip: true };
+  if (status.failure?.phase === "cleanup") return { reason: "cleanup-failed", unsafe: true };
+  // A throwing initializer may already own timers/DOM without having returned
+  // cleanup. Automatically mounting it again would duplicate those resources.
+  if (status.failure?.phase === "mount") return { reason: "mount-failed", unsafe: true };
+  if (!status.mounted) return { reason: "mount-missing", restart: true };
+  for (const hooks of entry.checks) {
+    const result = requireSynchronous(hooks.check(snapshot));
+    if (result !== true && result != null) {
+      return { reason: String(result || "health-check-failed"), hooks };
+    }
+  }
+  return {};
+}
+
+function readFeatureProblem(entry, snapshot) {
+  try {
+    return inspectFeature(entry, snapshot);
+  } catch (error) {
+    return { reason: `check-failed: ${error?.message || error}`, unsafe: true };
+  }
+}
+
+function markHealthy(key, entry, snapshot, record) {
+  if (entry.awaitingVerification) record(key, "recovered", "health-check-passed", snapshot.generation);
+  entry.awaitingVerification = false;
+  entry.correctionFailed = false;
+  entry.firstFailure = null;
+  entry.reason = "";
+  entry.status = entry.blocked ? "blocked" : "healthy";
+}
+
+function markDegraded(key, entry, problem, snapshot, record) {
+  if (entry.awaitingVerification) {
+    record(key, "repair-unconfirmed", problem.reason, snapshot.generation);
+    entry.awaitingVerification = false;
+    entry.correctionFailed = true;
+  }
+  if (entry.reason !== problem.reason) record(key, "detected", problem.reason, snapshot.generation);
+  entry.reason = problem.reason;
+  entry.status = entry.blocked ? "blocked" : "degraded";
+  if (entry.firstFailure === null) entry.firstFailure = Date.now();
+}
+
+function blockUnsafeFeature(key, entry, problem, snapshot, record) {
+  if (!entry.blocked) record(key, "blocked", problem.reason, snapshot.generation);
+  entry.blocked = true;
+  entry.status = "blocked";
+}
+
+function repairFeature(key, entry, problem, snapshot, repairTimes, record) {
+  entry.attempts += 1;
+  entry.lastRepair = Date.now();
+  repairTimes.push(Date.now());
+  // A second failed correction may restart only explicitly safe features.
+  const restart = problem.restart || (entry.correctionFailed && problem.hooks?.restartSafe === true);
+  record(key, restart ? "restart" : "repair", problem.reason, snapshot.generation);
+  try {
+    const repair = restart ? entry.restart : problem.hooks?.repair;
+    if (typeof repair !== "function") throw new Error("No safe repair registered");
+    requireSynchronous(repair(snapshot));
+    entry.awaitingVerification = true;
+  } catch (error) {
+    // Uncertain cleanup/repair must never trigger another automatic mount.
+    entry.blocked = true;
+    entry.status = "blocked";
+    record(key, "blocked", `repair-failed: ${error?.message || error}`, snapshot.generation);
+  }
+}
+
+function checkFeature(key, entry, snapshot, repairTimes, record) {
+  const problem = readFeatureProblem(entry, snapshot);
+  if (problem.skip) {
+    entry.status = "inactive";
+    return;
+  }
+  if (!problem.reason) {
+    markHealthy(key, entry, snapshot, record);
+    return;
+  }
+
+  markDegraded(key, entry, problem, snapshot, record);
+  if (problem.unsafe) {
+    blockUnsafeFeature(key, entry, problem, snapshot, record);
+    return;
+  }
+  if (entry.blocked || Date.now() - entry.firstFailure < SETTLE_MS ||
+      Date.now() - entry.lastRepair < REPAIR_COOLDOWN_MS) return;
+  if (entry.attempts >= MAX_REPAIRS_PER_FEATURE) {
+    entry.blocked = true;
+    entry.status = "blocked";
+    record(key, "blocked", "repair-budget-exhausted", snapshot.generation);
+    return;
+  }
+  while (repairTimes.length && Date.now() - repairTimes[0] >= GLOBAL_WINDOW_MS) repairTimes.shift();
+  if (repairTimes.length >= MAX_GLOBAL_REPAIRS) return;
+  repairFeature(key, entry, problem, snapshot, repairTimes, record);
+}
+
+function getCoverage(checks) {
+  if ([...checks].some((hooks) => hooks.coverage === "display")) return "display";
+  return checks.size ? "render" : "mount";
+}
+
 // Synchronous checks only. Neither a healthy render nor a new turn replenishes
 // repair budgets. Only an explicit runtime stop/start opens the circuit again.
 export function createFeatureWatchdog(context = {}) {
@@ -47,23 +153,6 @@ export function createFeatureWatchdog(context = {}) {
     }, delay);
   }
 
-  function inspectFeature(entry, snapshot) {
-    const status = entry.readStatus();
-    if (!status.enabled || status.scheduled) return { skip: true };
-    if (status.failure?.phase === "cleanup") return { reason: "cleanup-failed", unsafe: true };
-    // A throwing initializer may already own timers/DOM without having returned
-    // cleanup. Automatically mounting it again would duplicate those resources.
-    if (status.failure?.phase === "mount") return { reason: "mount-failed", unsafe: true };
-    if (!status.mounted) return { reason: "mount-missing", restart: true };
-    for (const hooks of entry.checks) {
-      const result = requireSynchronous(hooks.check(snapshot));
-      if (result !== true && result != null) {
-        return { reason: String(result || "health-check-failed"), hooks };
-      }
-    }
-    return {};
-  }
-
   function check() {
     if (!started || checking || context.documentRef?.hidden ||
         context.documentRef?.visibilityState === "hidden") return;
@@ -87,64 +176,7 @@ export function createFeatureWatchdog(context = {}) {
       pendingSince = null;
       pendingLogged = false;
       for (const [key, entry] of features) {
-        let problem;
-        try {
-          problem = inspectFeature(entry, snapshot);
-        } catch (error) {
-          problem = { reason: `check-failed: ${error?.message || error}`, unsafe: true };
-        }
-        if (problem.skip) { entry.status = "inactive"; continue; }
-        if (!problem.reason) {
-          if (entry.awaitingVerification) record(key, "recovered", "health-check-passed", snapshot.generation);
-          entry.awaitingVerification = false;
-          entry.correctionFailed = false;
-          entry.firstFailure = null;
-          entry.reason = "";
-          entry.status = entry.blocked ? "blocked" : "healthy";
-          continue;
-        }
-        if (entry.awaitingVerification) {
-          record(key, "repair-unconfirmed", problem.reason, snapshot.generation);
-          entry.awaitingVerification = false;
-          entry.correctionFailed = true;
-        }
-        if (entry.reason !== problem.reason) record(key, "detected", problem.reason, snapshot.generation);
-        entry.reason = problem.reason;
-        entry.status = entry.blocked ? "blocked" : "degraded";
-        if (entry.firstFailure === null) entry.firstFailure = Date.now();
-        if (problem.unsafe) {
-          if (!entry.blocked) record(key, "blocked", problem.reason, snapshot.generation);
-          entry.blocked = true;
-          entry.status = "blocked";
-          continue;
-        }
-        if (entry.blocked || Date.now() - entry.firstFailure < SETTLE_MS ||
-            Date.now() - entry.lastRepair < REPAIR_COOLDOWN_MS) continue;
-        if (entry.attempts >= MAX_REPAIRS_PER_FEATURE) {
-          entry.blocked = true;
-          entry.status = "blocked";
-          record(key, "blocked", "repair-budget-exhausted", snapshot.generation);
-          continue;
-        }
-        while (repairTimes.length && Date.now() - repairTimes[0] >= GLOBAL_WINDOW_MS) repairTimes.shift();
-        if (repairTimes.length >= MAX_GLOBAL_REPAIRS) continue;
-        entry.attempts += 1;
-        entry.lastRepair = Date.now();
-        repairTimes.push(Date.now());
-        // A second failed correction may restart only explicitly safe features.
-        const restart = problem.restart || (entry.correctionFailed && problem.hooks?.restartSafe === true);
-        record(key, restart ? "restart" : "repair", problem.reason, snapshot.generation);
-        try {
-          const repair = restart ? entry.restart : problem.hooks?.repair;
-          if (typeof repair !== "function") throw new Error("No safe repair registered");
-          requireSynchronous(repair(snapshot));
-          entry.awaitingVerification = true;
-        } catch (error) {
-          // Uncertain cleanup/repair must never trigger another automatic mount.
-          entry.blocked = true;
-          entry.status = "blocked";
-          record(key, "blocked", `repair-failed: ${error?.message || error}`, snapshot.generation);
-        }
+        checkFeature(key, entry, snapshot, repairTimes, record);
       }
     } catch (error) {
       record("turn-lifecycle", "check-failed", error?.message || error, null);
@@ -210,8 +242,7 @@ export function createFeatureWatchdog(context = {}) {
         features: Object.fromEntries([...features].map(([key, entry]) => [key, {
           status: entry.status, attempts: entry.attempts, blocked: entry.blocked,
           reason: entry.reason, checks: entry.checks.size,
-          coverage: [...entry.checks].some((hooks) => hooks.coverage === "display")
-            ? "display" : entry.checks.size ? "render" : "mount",
+          coverage: getCoverage(entry.checks),
         }])),
         log: log.map((entry) => ({ ...entry })),
       };
