@@ -178,6 +178,14 @@ test("source userscript metadata supports only the current Autodarts domain", ()
   }
 });
 
+test("source userscript loader delegates initialization guards and retry ownership to the runtime", () => {
+  const loader = readFileSync(loaderPath, "utf8");
+
+  assert.match(loader, /await initializeTampermonkeyRuntime\(/);
+  assert.doesNotMatch(loader, /data-adxconfig-loader-started/);
+  assert.doesNotMatch(loader, /windowRef\.__adXConfig/);
+});
+
 test("userscript metadata switches payload delivery at 2.9.2 while retaining the Raw manifest", () => {
   const legacyHeader = buildUserscriptHeader("2.9.1");
   const migratedHeader = buildUserscriptHeader("2.9.2");

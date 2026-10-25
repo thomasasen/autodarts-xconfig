@@ -26,23 +26,6 @@ import { initializeTampermonkeyRuntime } from "../src/runtime/bootstrap-runtime.
   }
 
   const documentRef = windowRef.document || null;
-  const loaderGuardAttribute = "data-adxconfig-loader-started";
-  const rootNode = documentRef?.documentElement || null;
-  if (rootNode?.getAttribute(loaderGuardAttribute) === "1") {
-    if (windowRef.__adXConfig && typeof windowRef.__adXConfig.start === "function") {
-      windowRef.__adXConfig.start();
-      return;
-    }
-  }
-  if (rootNode) {
-    rootNode.setAttribute(loaderGuardAttribute, "1");
-  }
-
-  if (windowRef.__adXConfig && typeof windowRef.__adXConfig.start === "function") {
-    windowRef.__adXConfig.start();
-    return;
-  }
-
   try {
     await initializeTampermonkeyRuntime({
       windowRef,

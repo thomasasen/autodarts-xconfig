@@ -51,6 +51,24 @@ test("initializeTampermonkeyRuntime is idempotent and reuses the namespace", asy
   first.stop();
 });
 
+test("initializeTampermonkeyRuntime delegates an existing namespace to its start contract", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  let startCalls = 0;
+  const namespace = {
+    start() {
+      startCalls += 1;
+    },
+  };
+  windowRef.__adXConfig = namespace;
+
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+
+  assert.equal(runtime, namespace);
+  assert.equal(startCalls, 1);
+  assert.equal(Object.hasOwn(namespace, "__runtimeInitPromise"), false);
+});
+
 test("initializeTampermonkeyRuntime starts with defaults when localStorage access is blocked", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
@@ -72,17 +90,61 @@ test("parallel runtime initialization shares one startup promise and one namespa
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
+  let lockRequests = 0;
+  const lockManager = {
+    request(_name, _options, callback) {
+      lockRequests += 1;
+      return callback();
+    },
+  };
 
   const [first, second] = await Promise.all([
-    initializeTampermonkeyRuntime({ windowRef, documentRef }),
-    initializeTampermonkeyRuntime({ windowRef, documentRef }),
+    initializeTampermonkeyRuntime({ windowRef, documentRef, lockManager }),
+    initializeTampermonkeyRuntime({ windowRef, documentRef, lockManager }),
   ]);
 
   assert.equal(first, second);
+  assert.equal(lockRequests, 1);
   assert.equal(typeof windowRef.__adXConfig.start, "function");
   assert.equal(windowRef.__adXConfig.inspect().observerCount >= 1, true);
 
   first.stop();
+});
+
+test("failed parallel initialization clears its guard and allows a clean retry", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const startupError = new Error("intentional startup failure");
+  let featureKeyReads = 0;
+  const failingDefinition = {};
+  Object.defineProperty(failingDefinition, "featureKey", {
+    get() {
+      featureKeyReads += 1;
+      throw startupError;
+    },
+  });
+
+  const results = await Promise.allSettled([
+    initializeTampermonkeyRuntime({
+      windowRef,
+      documentRef,
+      featureDefinitions: [failingDefinition],
+    }),
+    initializeTampermonkeyRuntime({ windowRef, documentRef }),
+  ]);
+
+  assert.deepEqual(results.map((result) => result.status), ["rejected", "rejected"]);
+  assert.equal(results[0].reason, startupError);
+  assert.equal(results[1].reason, startupError);
+  assert.equal(featureKeyReads, 1);
+  assert.equal(Object.hasOwn(windowRef.__adXConfig, "__runtimeInitPromise"), false);
+
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+
+  assert.equal(runtime.getSnapshot().started, true);
+  assert.equal(typeof windowRef.__adXConfig.start, "function");
+  runtime.stop();
 });
 
 test("fresh runtime initialization persists the recommended profile", async () => {
