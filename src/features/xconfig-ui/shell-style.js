@@ -215,7 +215,6 @@ ${buildX01RemainingScoreBarStyleText()}
 #${PANEL_HOST_ID} .ad-xconfig-card-title,#${PANEL_HOST_ID} .ad-xconfig-card-copy,#${PANEL_HOST_ID} .ad-xconfig-switch-state{text-shadow:0 2px 7px rgba(0,0,0,.88)}
 #${PANEL_HOST_ID} .ad-xconfig-card-badges{margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 #${PANEL_HOST_ID} .ad-xconfig-status-badge{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;font:600 12px/1.2 var(--adx-body)}
-#${PANEL_HOST_ID} .ad-xconfig-status-badge--deprecated{border:1px solid #fb8b58;background:rgba(251,139,88,.08);color:#fb8b58}
 #${PANEL_HOST_ID} .ad-xconfig-status-badge--diagnostic{border:1px solid #f7c948;background:rgba(247,201,72,.12);color:#f7c948}
 #${PANEL_HOST_ID} .ad-xconfig-card-global-summary{margin-top:.85rem;display:grid;gap:.58rem}
 #${PANEL_HOST_ID} .ad-xconfig-card-global-badges{display:flex;gap:.45rem;flex-wrap:wrap}

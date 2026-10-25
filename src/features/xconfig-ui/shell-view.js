@@ -3233,7 +3233,7 @@ function buildFeatureCard(documentRef, feature, previewFeatures = []) {
       "data-card-kind": isThemeGlobalCard ? "theme-global" : "default",
       "data-card-type": descriptor?.cardType || "toggle",
       "data-enabled": descriptor?.cardType === "action" ? undefined : String(Boolean(feature.enabled)),
-      "data-design-status": descriptor?.designStatus || "deprecated",
+      "data-design-status": "ready",
       "data-preview-kind": preview.kind,
       "data-preview-display-mode": preview.displayMode || undefined,
     },
@@ -3312,15 +3312,6 @@ function buildFeatureCard(documentRef, feature, previewFeatures = []) {
   const badges = createElement(documentRef, "div", {
     className: "ad-xconfig-card-badges",
   });
-  if (descriptor?.designStatus === "deprecated") {
-    badges.appendChild(createElement(documentRef, "span", {
-      className: "ad-xconfig-status-badge ad-xconfig-status-badge--deprecated",
-      text: "Deprecated",
-      attributes: {
-        "data-adxconfig-status-badge": "deprecated",
-      },
-    }));
-  }
   if (feature.config?.debug === true) {
     badges.appendChild(createElement(documentRef, "span", {
       className: "ad-xconfig-status-badge ad-xconfig-status-badge--diagnostic",

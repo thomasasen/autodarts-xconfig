@@ -119,38 +119,12 @@ const README_ANCHOR_ALIASES = Object.freeze({
   "turn-score-counter": ["animation-autodarts-animate-turn-points-count"],
 });
 
-const NEW_DESIGN_READY_FEATURE_KEYS = new Set([
-  "cricket-layout",
-  "theme-global-background",
-  "theme-global-typography",
-  "theme-game-layout",
-  "theme-global-presets",
-  "bot-board-style",
-  "turn-dart-display",
-  "tv-board-zoom",
-  "checkout-target-highlights",
-  "checkout-suggestion-styles",
-  "checkout-score-highlight",
-  "avg-trend-arrow",
-  "dart-marker-replacer",
-  "dartboard-marker-highlight",
-  "take-out-darts-alert",
-  "single-bull-hit-sound",
-  "special-hit-highlights",
-  "turn-score-counter",
-  "x01-remaining-score-bar",
-  "x01-bust-active-player-highlight",
-  "cricket-target-highlighter",
-  "cricket-grid-status-effects",
-]);
-
 function descriptorEntry(definition) {
   const featureKey = normalizeFeatureKey(definition.featureKey);
   const featureCopy = getXConfigFeatureCopy(featureKey);
   return Object.freeze({
     ...definition,
     cardType: definition.cardType === "action" ? "action" : "toggle",
-    designStatus: NEW_DESIGN_READY_FEATURE_KEYS.has(featureKey) ? "ready" : "deprecated",
     readmeAnchorAliases: Object.freeze([
       ...(Array.isArray(definition.readmeAnchorAliases)
         ? definition.readmeAnchorAliases.map((entry) => String(entry || "").trim()).filter(Boolean)

@@ -1734,7 +1734,7 @@ test("xConfig cards show when diagnosis is active", async () => {
   runtime.stop();
 });
 
-test("xConfig shell marks pending themes and animations as deprecated", async () => {
+test("xConfig shell keeps every current feature card design-ready", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -1744,42 +1744,21 @@ test("xConfig shell marks pending themes and animations as deprecated", async ()
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
 
-  const assertCardStatus = (featureKey, expectedStatus) => {
+  const assertCardReady = (featureKey) => {
     const card = documentRef.querySelector(
       `.ad-xconfig-card[data-feature-key='${featureKey}']`
     );
     assert.ok(card, `missing card ${featureKey}`);
-    assert.equal(card.getAttribute("data-design-status"), expectedStatus);
-    const badge = card.querySelector("[data-adxconfig-status-badge='deprecated']");
-    if (expectedStatus === "deprecated") {
-      assert.equal(badge?.textContent, "Deprecated");
-    } else {
-      assert.equal(badge, null);
-    }
+    assert.equal(card.getAttribute("data-design-status"), "ready");
+    assert.equal(card.querySelector("[data-adxconfig-status-badge='deprecated']"), null);
   };
 
-  [
-    "theme-global-background",
-    "theme-global-typography",
-    "theme-global-presets",
-    "theme-game-layout",
-  ].forEach((featureKey) => assertCardStatus(featureKey, "ready"));
-
   const styleText = String(documentRef.getElementById("ad-xconfig-shell-style")?.textContent || "");
-  assert.match(styleText, /\.ad-xconfig-status-badge--deprecated\{[^}]*border:[^}]*background:[^}]*color:/);
+  assert.doesNotMatch(styleText, /ad-xconfig-status-badge--deprecated/);
 
-
-  documentRef.querySelectorAll(".ad-xconfig-card").forEach((card) => {
-    const featureKey = String(card.getAttribute("data-feature-key") || "");
-    const expectedStatus = ["theme-global-background", "theme-global-typography", "theme-global-presets", "theme-game-layout", "bot-board-style", "turn-dart-display", "tv-board-zoom", "checkout-target-highlights", "checkout-suggestion-styles", "checkout-score-highlight", "avg-trend-arrow", "dart-marker-replacer", "dartboard-marker-highlight", "take-out-darts-alert",
-      "single-bull-hit-sound", "special-hit-highlights", "turn-score-counter", "x01-remaining-score-bar", "x01-bust-active-player-highlight", "cricket-target-highlighter",
-      "cricket-grid-status-effects", "cricket-layout"].includes(
-      featureKey
-    )
-      ? "ready"
-      : "deprecated";
-    assertCardStatus(featureKey, expectedStatus);
-  });
+  const cards = documentRef.querySelectorAll(".ad-xconfig-card");
+  assert.ok(cards.length > 0);
+  cards.forEach((card) => assertCardReady(String(card.getAttribute("data-feature-key") || "")));
 
   runtime.stop();
 });
