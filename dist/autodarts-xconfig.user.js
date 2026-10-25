@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         autodarts-xconfig
 // @namespace    https://github.com/thomasasen/autodarts-xconfig
-// @version      3.5.8
+// @version      3.5.9
 // @description  Modular, side-effect resistant Tampermonkey runtime for Autodarts enhancements.
 // @author       Thomas Asen
 // @license      MIT
@@ -4724,6 +4724,7 @@
   }
   var CHECKOUT_TOKEN_PATTERN = /DBULL|DB|BULLSEYE|BULL|SB|OB|[TDS]?\d{1,2}/g;
   var EXPLICIT_SEGMENT_PATTERN = /\b(?:DBULL|DB|BULLSEYE|BULL|SB|OB|25|[TDS](?:[1-9]|1\d|20|25))\b/g;
+  var MAX_DARTS_PER_VISIT = 3;
   var SCORING_SEGMENTS = Object.freeze([
     ...Array.from({ length: 20 }, (_value, index) => `S${index + 1}`),
     ...Array.from({ length: 20 }, (_value, index) => `D${index + 1}`),
@@ -4995,61 +4996,50 @@
     return normalized;
   }
   var CHECKOUT_SETUP_SEGMENTS = Object.freeze(getCheckoutSetupSegments());
+  var CHECKOUT_SETUP_SCORES = Object.freeze([
+    ...new Set(CHECKOUT_SETUP_SEGMENTS.map((segment) => segment.score))
+  ]);
   var CHECKOUT_FINISH_SEGMENTS_BY_MODE = Object.freeze({
     straight: Object.freeze(getCheckoutFinishSegments("straight")),
     double: Object.freeze(getCheckoutFinishSegments("double")),
     master: Object.freeze(getCheckoutFinishSegments("master"))
   });
-  function buildCheckoutFeasibilitySet(outMode, dartsRemaining) {
-    const normalizedOutMode = normalizeOutMode(outMode);
-    const finishSegments = CHECKOUT_FINISH_SEGMENTS_BY_MODE[normalizedOutMode] || CHECKOUT_FINISH_SEGMENTS_BY_MODE.straight;
-    const scores = /* @__PURE__ */ new Set();
-    const normalizedDartsRemaining = normalizeDartsRemaining(dartsRemaining, 3);
-    if (normalizedDartsRemaining < 1) {
-      return scores;
-    }
-    finishSegments.forEach((finishSegment) => {
-      scores.add(finishSegment.score);
-    });
-    if (normalizedDartsRemaining < 2) {
-      return scores;
-    }
-    CHECKOUT_SETUP_SEGMENTS.forEach((firstSegment) => {
-      finishSegments.forEach((finishSegment) => {
-        scores.add(firstSegment.score + finishSegment.score);
-      });
-    });
-    if (normalizedDartsRemaining < 3) {
-      return scores;
-    }
-    CHECKOUT_SETUP_SEGMENTS.forEach((firstSegment) => {
-      CHECKOUT_SETUP_SEGMENTS.forEach((secondSegment) => {
-        finishSegments.forEach((finishSegment) => {
-          scores.add(firstSegment.score + secondSegment.score + finishSegment.score);
-        });
+  function extendCheckoutFeasibilitySet(previousScores) {
+    const scores = new Set(previousScores);
+    CHECKOUT_SETUP_SCORES.forEach((setupScore) => {
+      previousScores.forEach((reachableScore) => {
+        scores.add(setupScore + reachableScore);
       });
     });
     return scores;
   }
+  function buildCheckoutFeasibilitySets(outMode) {
+    const normalizedOutMode = normalizeOutMode(outMode);
+    const finishSegments = CHECKOUT_FINISH_SEGMENTS_BY_MODE[normalizedOutMode] || CHECKOUT_FINISH_SEGMENTS_BY_MODE.straight;
+    const oneDartScores = new Set(finishSegments.map((segment) => segment.score));
+    const twoDartScores = extendCheckoutFeasibilitySet(oneDartScores);
+    return Object.freeze({
+      1: oneDartScores,
+      2: twoDartScores,
+      3: extendCheckoutFeasibilitySet(twoDartScores)
+    });
+  }
   var CHECKOUTABLE_SCORES_BY_MODE = Object.freeze({
-    straight: Object.freeze({
-      1: buildCheckoutFeasibilitySet("straight", 1),
-      2: buildCheckoutFeasibilitySet("straight", 2),
-      3: buildCheckoutFeasibilitySet("straight", 3)
-    }),
-    double: Object.freeze({
-      1: buildCheckoutFeasibilitySet("double", 1),
-      2: buildCheckoutFeasibilitySet("double", 2),
-      3: buildCheckoutFeasibilitySet("double", 3)
-    }),
-    master: Object.freeze({
-      1: buildCheckoutFeasibilitySet("master", 1),
-      2: buildCheckoutFeasibilitySet("master", 2),
-      3: buildCheckoutFeasibilitySet("master", 3)
-    })
+    straight: buildCheckoutFeasibilitySets("straight"),
+    double: buildCheckoutFeasibilitySets("double"),
+    master: buildCheckoutFeasibilitySets("master")
   });
   var CHECKOUT_ROUTE_CACHE = /* @__PURE__ */ new Map();
   var PREFERRED_CHECKOUT_ROUTE_CACHE = /* @__PURE__ */ new Map();
+  function isCheckoutFinishSegmentForNormalizedMode(segment, normalizedOutMode) {
+    if (normalizedOutMode === "straight") {
+      return true;
+    }
+    if (normalizedOutMode === "double") {
+      return segment.ring === "D";
+    }
+    return segment.ring === "D" || segment.ring === "T";
+  }
   function getOneDartPreference(segment, outMode) {
     if (!segment) {
       return 99;
@@ -5190,31 +5180,25 @@
     const routes = [];
     const currentRoute = [];
     function visitRoutes(remainingScore, remainingDarts) {
-      if (remainingDarts < 1) {
-        return;
-      }
       CHECKOUT_SETUP_SEGMENTS.forEach((segment) => {
-        const outcome = evaluateThrowOutcome({
-          scoreBefore: remainingScore,
-          segmentName: segment.normalized,
-          outMode: normalizedOutMode
-        });
-        if (outcome.isBust) {
+        const scoreAfter = remainingScore - segment.score;
+        const leavesInvalidRemainder = scoreAfter === 1 && normalizedOutMode !== "straight";
+        const isFinish = scoreAfter === 0 && isCheckoutFinishSegmentForNormalizedMode(segment, normalizedOutMode);
+        if (scoreAfter < 0 || leavesInvalidRemainder || scoreAfter === 0 && !isFinish) {
           return;
         }
         currentRoute.push(segment.normalized);
-        if (outcome.isFinish) {
+        if (isFinish) {
           routes.push(currentRoute.slice());
-          currentRoute.pop();
-          return;
-        }
-        const nextRemainingDarts = remainingDarts - 1;
-        if (nextRemainingDarts >= 1 && isCheckoutPossibleFromScoreForOutModeWithDarts(
-          outcome.scoreAfter,
-          normalizedOutMode,
-          nextRemainingDarts
-        )) {
-          visitRoutes(outcome.scoreAfter, nextRemainingDarts);
+        } else {
+          const nextRemainingDarts = remainingDarts - 1;
+          if (nextRemainingDarts >= 1 && isCheckoutPossibleFromScoreForOutModeWithDarts(
+            scoreAfter,
+            normalizedOutMode,
+            nextRemainingDarts
+          )) {
+            visitRoutes(scoreAfter, nextRemainingDarts);
+          }
         }
         currentRoute.pop();
       });
@@ -5568,6 +5552,18 @@
     let isFinish = false;
     const throwResults = throws.map((throwEntry, index) => {
       const segmentName = normalizeSegmentName(getThrowSegmentName(throwEntry));
+      if (index >= MAX_DARTS_PER_VISIT) {
+        if (stoppedIndex < 0) {
+          stopReason = "visit-dart-limit";
+        }
+        return {
+          index,
+          segmentName,
+          ignored: true,
+          reason: "visit-dart-limit",
+          outcome: null
+        };
+      }
       if (stoppedIndex >= 0) {
         return {
           index,
@@ -23208,7 +23204,7 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
     const visiblePlayers = playerNodes.filter((node) => isNodeVisible(node));
     return visiblePlayers.length > 0 ? visiblePlayers.length : playerNodes.length;
   }
-  function resolveActivePlayerIndex2(gameState, documentRef, playerCount, options = {}) {
+  function resolveActivePlayerIndex2(gameState, documentRef, playerCount) {
     const stateIndex = Number.isFinite(gameState?.getActivePlayerIndex?.()) ? Number(gameState.getActivePlayerIndex()) : 0;
     const activePlayerNodes = queryAll(documentRef, ".ad-ext-player");
     const visiblePlayerNodes = activePlayerNodes.filter((node) => isNodeVisible(node));
@@ -23362,7 +23358,6 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
     const expectedPlayerCount = resolveExpectedGridPlayerCount(documentRef, gameState, grid);
     const cachedStableRows = !grid.modern && options.cache?.gridStableRowsByLabel instanceof Map ? options.cache.gridStableRowsByLabel : null;
     const {
-      hasIndexedPlayerColumns,
       labelCellMarkSourceLabels,
       marksByLabel,
       maxPlayerCount,
@@ -23391,9 +23386,7 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
         marksByLabel[label].push(0);
       }
     });
-    const activePlayerIndex = grid.activePlayerIndex ?? resolveActivePlayerIndex2(gameState, documentRef, playerCount, {
-      preferGameStateIndex: hasIndexedPlayerColumns
-    });
+    const activePlayerIndex = grid.activePlayerIndex ?? resolveActivePlayerIndex2(gameState, documentRef, playerCount);
     const activeThrows = Array.isArray(gameState?.getActiveThrows?.()) ? gameState.getActiveThrows() : [];
     const activeThrowPreview = {
       marksByLabel: /* @__PURE__ */ new Map(),
@@ -26356,14 +26349,6 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
   }
 
   // src/features/cricket-grid-status-effects/logic.js
-  var GRID_ROOT_SELECTORS2 = Object.freeze([
-    "#grid",
-    ".ad-ext-cricket-grid",
-    ".ad-ext-crfx-root",
-    ".chakra-grid",
-    "table",
-    "tbody"
-  ]);
   var LABEL_NODE_SELECTORS2 = Object.freeze([
     "[data-row-label]",
     "[data-target-label]",
@@ -40625,7 +40610,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
 
   // src/core/bootstrap.js
   var GLOBAL_NAMESPACE_KEY = "__adXConfig";
-  var API_VERSION = "3.5.8";
+  var API_VERSION = "3.5.9";
   var STARTUP_DEFER_INTERVAL_MS = 16;
   function getWindowTimerApi(windowRef) {
     let setTimeoutRef = null;
@@ -44214,37 +44199,12 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
     "single-bull-hit-sound": ["animation-autodarts-animate-single-bull-sound"],
     "turn-score-counter": ["animation-autodarts-animate-turn-points-count"]
   });
-  var NEW_DESIGN_READY_FEATURE_KEYS = /* @__PURE__ */ new Set([
-    "cricket-layout",
-    "theme-global-background",
-    "theme-global-typography",
-    "theme-game-layout",
-    "theme-global-presets",
-    "bot-board-style",
-    "turn-dart-display",
-    "tv-board-zoom",
-    "checkout-target-highlights",
-    "checkout-suggestion-styles",
-    "checkout-score-highlight",
-    "avg-trend-arrow",
-    "dart-marker-replacer",
-    "dartboard-marker-highlight",
-    "take-out-darts-alert",
-    "single-bull-hit-sound",
-    "special-hit-highlights",
-    "turn-score-counter",
-    "x01-remaining-score-bar",
-    "x01-bust-active-player-highlight",
-    "cricket-target-highlighter",
-    "cricket-grid-status-effects"
-  ]);
   function descriptorEntry(definition) {
     const featureKey = normalizeFeatureKey(definition.featureKey);
     const featureCopy2 = getXConfigFeatureCopy(featureKey);
     return Object.freeze({
       ...definition,
       cardType: definition.cardType === "action" ? "action" : "toggle",
-      designStatus: NEW_DESIGN_READY_FEATURE_KEYS.has(featureKey) ? "ready" : "deprecated",
       readmeAnchorAliases: Object.freeze([
         ...Array.isArray(definition.readmeAnchorAliases) ? definition.readmeAnchorAliases.map((entry) => String(entry || "").trim()).filter(Boolean) : [],
         ...README_ANCHOR_ALIASES[featureKey] || []
@@ -47301,7 +47261,6 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
   var MENU_LABEL = "xConfig";
   var README_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md";
   var CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/CHANGELOG.md";
-  var UPDATE_AUTO_CHECK_INTERVAL_MS = 15 * 60 * 1e3;
   var DART_MARKER_DARTS_FEATURE_KEY = "dart-marker-replacer";
   var DART_MARKER_DARTS_DESIGN_SETTING_KEY = "design";
   var DARTBOARD_MARKER_HIGHLIGHT_FEATURE_KEY = "dartboard-marker-highlight";
@@ -47368,13 +47327,6 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
   var TURN_DART_DISPLAY_FEATURE_KEY = "turn-dart-display";
   var TURN_DART_DISPLAY_ASSET_FIELD_KEY = "turnDartAssetKey";
   var XCONFIG_COLOR_INPUT_DEFAULT = "#9FDB58";
-  var LISTENER_KEYS8 = Object.freeze({
-    popstate: "xconfig-shell:popstate",
-    click: "xconfig-shell:document-click",
-    change: "xconfig-shell:document-change",
-    keydown: "xconfig-shell:document-keydown",
-    visibilitychange: "xconfig-shell:document-visibilitychange"
-  });
   var descriptorOrder = xconfigDescriptorOrder;
   function isObjectLike6(value) {
     return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -50030,7 +49982,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
         "data-card-kind": isThemeGlobalCard ? "theme-global" : "default",
         "data-card-type": descriptor?.cardType || "toggle",
         "data-enabled": descriptor?.cardType === "action" ? void 0 : String(Boolean(feature.enabled)),
-        "data-design-status": descriptor?.designStatus || "deprecated",
+        "data-design-status": "ready",
         "data-preview-kind": preview.kind,
         "data-preview-display-mode": preview.displayMode || void 0
       }
@@ -50107,15 +50059,6 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
     const badges = createElement(documentRef, "div", {
       className: "ad-xconfig-card-badges"
     });
-    if (descriptor?.designStatus === "deprecated") {
-      badges.appendChild(createElement(documentRef, "span", {
-        className: "ad-xconfig-status-badge ad-xconfig-status-badge--deprecated",
-        text: "Deprecated",
-        attributes: {
-          "data-adxconfig-status-badge": "deprecated"
-        }
-      }));
-    }
     if (feature.config?.debug === true) {
       badges.appendChild(createElement(documentRef, "span", {
         className: "ad-xconfig-status-badge ad-xconfig-status-badge--diagnostic",
@@ -53593,7 +53536,6 @@ ${buildStyleText14()}
 #${PANEL_HOST_ID} .ad-xconfig-card-title,#${PANEL_HOST_ID} .ad-xconfig-card-copy,#${PANEL_HOST_ID} .ad-xconfig-switch-state{text-shadow:0 2px 7px rgba(0,0,0,.88)}
 #${PANEL_HOST_ID} .ad-xconfig-card-badges{margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 #${PANEL_HOST_ID} .ad-xconfig-status-badge{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;font:600 12px/1.2 var(--adx-body)}
-#${PANEL_HOST_ID} .ad-xconfig-status-badge--deprecated{border:1px solid #fb8b58;background:rgba(251,139,88,.08);color:#fb8b58}
 #${PANEL_HOST_ID} .ad-xconfig-status-badge--diagnostic{border:1px solid #f7c948;background:rgba(247,201,72,.12);color:#f7c948}
 #${PANEL_HOST_ID} .ad-xconfig-card-global-summary{margin-top:.85rem;display:grid;gap:.58rem}
 #${PANEL_HOST_ID} .ad-xconfig-card-global-badges{display:flex;gap:.45rem;flex-wrap:wrap}
@@ -54063,9 +54005,9 @@ ${buildModernSizeStyle(`#${PANEL_HOST_ID} .ad-xconfig-x01-remaining-score-bar-pr
   var SPECIAL_HIT_HIGHLIGHTS_PREVIEW_STYLE_ID = "ad-xconfig-special-hit-highlights-preview-style";
   var ROOT_OBSERVER_KEY = "xconfig-shell:root-observer";
   var NOTICE_TIMEOUT_MS = 3200;
-  var UPDATE_AUTO_CHECK_INTERVAL_MS2 = 15 * 60 * 1e3;
+  var UPDATE_AUTO_CHECK_INTERVAL_MS = 15 * 60 * 1e3;
   var THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY2 = "theme-global-typography";
-  var LISTENER_KEYS9 = Object.freeze({
+  var LISTENER_KEYS8 = Object.freeze({
     popstate: "xconfig-shell:popstate",
     click: "xconfig-shell:document-click",
     change: "xconfig-shell:document-change",
@@ -54442,7 +54384,7 @@ ${buildModernSizeStyle(`#${PANEL_HOST_ID} .ad-xconfig-x01-remaining-score-bar-pr
       state,
       setNotice,
       queueSync,
-      updateIntervalMs: UPDATE_AUTO_CHECK_INTERVAL_MS2
+      updateIntervalMs: UPDATE_AUTO_CHECK_INTERVAL_MS
     });
     const isManagedNode = createManagedNodeMatcher({
       ids: [
@@ -54639,7 +54581,7 @@ ${buildModernSizeStyle(`#${PANEL_HOST_ID} .ad-xconfig-x01-remaining-score-bar-pr
       domGuards,
       eventBus,
       isManagedNode,
-      listenerKeys: LISTENER_KEYS9,
+      listenerKeys: LISTENER_KEYS8,
       listenerRegistry,
       menuItemId: MENU_ITEM_ID2,
       normalizeLegacyConfigPathIfNeeded: () => routeController?.normalizeLegacyConfigPathIfNeeded(),
@@ -55227,21 +55169,6 @@ ${buildModernSizeStyle(`#${PANEL_HOST_ID} .ad-xconfig-x01-remaining-score-bar-pr
       return;
     }
     const documentRef = windowRef.document || null;
-    const loaderGuardAttribute = "data-adxconfig-loader-started";
-    const rootNode = documentRef?.documentElement || null;
-    if (rootNode?.getAttribute(loaderGuardAttribute) === "1") {
-      if (windowRef.__adXConfig && typeof windowRef.__adXConfig.start === "function") {
-        windowRef.__adXConfig.start();
-        return;
-      }
-    }
-    if (rootNode) {
-      rootNode.setAttribute(loaderGuardAttribute, "1");
-    }
-    if (windowRef.__adXConfig && typeof windowRef.__adXConfig.start === "function") {
-      windowRef.__adXConfig.start();
-      return;
-    }
     try {
       await initializeTampermonkeyRuntime({
         windowRef,

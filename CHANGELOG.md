@@ -12,6 +12,22 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.5.9] - 2026-10-26
+
+### Fixed
+
+- Nutzerwirkung: Ein X01-Visit wertet regelkonform höchstens drei Darts. Ein vierter gemeldeter Dart kann weder den Restscore verändern noch ein Leg beenden; frühere Finishes und Busts bleiben unverändert maßgeblich.
+  Technik: Der reine Visit-Helfer begrenzt die Auswertung auf drei Darts und kennzeichnet weitere Einträge mit `visit-dart-limit`. Unabhängige exhaustive Regel-Orakel prüfen Checkout-Routen, alle physischen Segmente, Out-Modi, Busts sowie Cricket-/Tactics-Scoring und Gewinnerzustände.
+
+### Changed
+
+- Nutzerwirkung: Checkout-Empfehlungen und Board-Ziele bleiben identisch, werden intern aber effizienter ermittelt.
+  Technik: Vorberechnete Reachability-Mengen und eine Machbarkeitsprüfung im Checkout-DFS vermeiden aussichtslose Teilbäume. Exhaustive Vergleiche sichern alle Scores, Out-Modi, Dartanzahlen sowie die exakte geordnete Routengleichheit ab.
+- Nutzerwirkung: Start, Wiederholungsversuche und Fehlerbehandlung des Userscripts sowie die xConfig-Oberfläche behalten ihr bisheriges Verhalten.
+  Technik: Initialisierungs-Guards wurden im Runtime-Einstieg zentralisiert; ein veralteter Kartenstatuspfad, tote Quellteilgraphen und die dazugehörigen ESLint-Ausnahmen wurden entfernt.
+- Nutzerwirkung: Installation und reguläre Tests bleiben unverändert; aufwendige E2E-Signaturbenchmarks laufen nur noch bei ausdrücklich aktiviertem Audit-Modus.
+  Technik: Redundante Syntaxläufe, eine überschattete Playwright-Konfiguration, die doppelte Playwright-Abhängigkeit und der nicht mehr benötigte Artefakt-Cleanup-Workflow wurden entfernt.
+
 ## [3.5.8] - 2026-10-19
 
 ### Changed
@@ -2421,6 +2437,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.5.9]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.8...v3.5.9
 [3.5.8]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.7...v3.5.8
 [3.5.7]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.6...v3.5.7
 [3.5.6]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.5...v3.5.6
