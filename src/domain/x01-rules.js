@@ -16,6 +16,7 @@ function toNumber(value) {
 const CHECKOUT_TOKEN_PATTERN = /DBULL|DB|BULLSEYE|BULL|SB|OB|[TDS]?\d{1,2}/g;
 const EXPLICIT_SEGMENT_PATTERN =
   /\b(?:DBULL|DB|BULLSEYE|BULL|SB|OB|25|[TDS](?:[1-9]|1\d|20|25))\b/g;
+const MAX_DARTS_PER_VISIT = 3;
 
 const SCORING_SEGMENTS = Object.freeze([
   ...Array.from({ length: 20 }, (_value, index) => `S${index + 1}`),
@@ -1075,6 +1076,18 @@ export function applyX01ThrowsToState(options = {}) {
 
   const throwResults = throws.map((throwEntry, index) => {
     const segmentName = normalizeSegmentName(getThrowSegmentName(throwEntry));
+    if (index >= MAX_DARTS_PER_VISIT) {
+      if (stoppedIndex < 0) {
+        stopReason = "visit-dart-limit";
+      }
+      return {
+        index,
+        segmentName,
+        ignored: true,
+        reason: "visit-dart-limit",
+        outcome: null,
+      };
+    }
     if (stoppedIndex >= 0) {
       return {
         index,
