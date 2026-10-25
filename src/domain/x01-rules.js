@@ -416,6 +416,16 @@ const CHECKOUTABLE_SCORES_BY_MODE = Object.freeze({
 const CHECKOUT_ROUTE_CACHE = new Map();
 const PREFERRED_CHECKOUT_ROUTE_CACHE = new Map();
 
+function isCheckoutFinishSegmentForNormalizedMode(segment, normalizedOutMode) {
+  if (normalizedOutMode === "straight") {
+    return true;
+  }
+  if (normalizedOutMode === "double") {
+    return segment.ring === "D";
+  }
+  return segment.ring === "D" || segment.ring === "T";
+}
+
 function getOneDartPreference(segment, outMode) {
   if (!segment) {
     return 99;
@@ -594,40 +604,33 @@ export function getCheckoutRoutesForScore(score, outMode, dartsRemaining = 3) {
   const currentRoute = [];
 
   function visitRoutes(remainingScore, remainingDarts) {
-    if (remainingDarts < 1) {
-      return;
-    }
-
     CHECKOUT_SETUP_SEGMENTS.forEach((segment) => {
-      const outcome = evaluateThrowOutcome({
-        scoreBefore: remainingScore,
-        segmentName: segment.normalized,
-        outMode: normalizedOutMode,
-      });
-      if (outcome.isBust) {
+      const scoreAfter = remainingScore - segment.score;
+      const leavesInvalidRemainder =
+        scoreAfter === 1 && normalizedOutMode !== "straight";
+      const isFinish =
+        scoreAfter === 0 &&
+        isCheckoutFinishSegmentForNormalizedMode(segment, normalizedOutMode);
+      if (scoreAfter < 0 || leavesInvalidRemainder || (scoreAfter === 0 && !isFinish)) {
         return;
       }
 
       currentRoute.push(segment.normalized);
-
-      if (outcome.isFinish) {
+      if (isFinish) {
         routes.push(currentRoute.slice());
-        currentRoute.pop();
-        return;
+      } else {
+        const nextRemainingDarts = remainingDarts - 1;
+        if (
+          nextRemainingDarts >= 1 &&
+          isCheckoutPossibleFromScoreForOutModeWithDarts(
+            scoreAfter,
+            normalizedOutMode,
+            nextRemainingDarts
+          )
+        ) {
+          visitRoutes(scoreAfter, nextRemainingDarts);
+        }
       }
-
-      const nextRemainingDarts = remainingDarts - 1;
-      if (
-        nextRemainingDarts >= 1 &&
-        isCheckoutPossibleFromScoreForOutModeWithDarts(
-          outcome.scoreAfter,
-          normalizedOutMode,
-          nextRemainingDarts
-        )
-      ) {
-        visitRoutes(outcome.scoreAfter, nextRemainingDarts);
-      }
-
       currentRoute.pop();
     });
   }

@@ -42,6 +42,25 @@ const LEGACY_SETUP_SCORES = [
   50,
 ];
 const MAX_CHECKOUT_SCORE_WITH_THREE_DARTS = 180;
+const LEGACY_ROUTE_SEGMENTS = [
+  ...Array.from({ length: 20 }, (_value, index) => ({
+    normalized: `S${index + 1}`,
+    ring: "S",
+    score: index + 1,
+  })),
+  ...Array.from({ length: 20 }, (_value, index) => ({
+    normalized: `D${index + 1}`,
+    ring: "D",
+    score: (index + 1) * 2,
+  })),
+  ...Array.from({ length: 20 }, (_value, index) => ({
+    normalized: `T${index + 1}`,
+    ring: "T",
+    score: (index + 1) * 3,
+  })),
+  { normalized: "S25", ring: "S", score: 25 },
+  { normalized: "BULL", ring: "D", score: 50 },
+];
 
 function getLegacyFinishScores(outMode) {
   if (outMode === "double") {
@@ -87,6 +106,50 @@ function buildLegacyCheckoutFeasibilitySet(outMode, dartsRemaining) {
     });
   });
   return reachableScores;
+}
+
+function isLegacyFinishSegment(segment, outMode) {
+  if (outMode === "straight") {
+    return true;
+  }
+  if (outMode === "double") {
+    return segment.ring === "D";
+  }
+  return segment.ring === "D" || segment.ring === "T";
+}
+
+function getLegacyCheckoutRoutes(score, outMode, dartsRemaining, reachabilityByDarts) {
+  if (score <= 0 || dartsRemaining < 1) {
+    return [];
+  }
+
+  const routes = [];
+  const currentRoute = [];
+
+  function visitRoutes(remainingScore, remainingDarts) {
+    LEGACY_ROUTE_SEGMENTS.forEach((segment) => {
+      const scoreAfter = remainingScore - segment.score;
+      const leavesInvalidRemainder = scoreAfter === 1 && outMode !== "straight";
+      const isFinish = scoreAfter === 0 && isLegacyFinishSegment(segment, outMode);
+      if (scoreAfter < 0 || leavesInvalidRemainder || (scoreAfter === 0 && !isFinish)) {
+        return;
+      }
+
+      currentRoute.push(segment.normalized);
+      if (isFinish) {
+        routes.push(currentRoute.slice());
+      } else {
+        const nextRemainingDarts = remainingDarts - 1;
+        if (nextRemainingDarts >= 1 && reachabilityByDarts[nextRemainingDarts].has(scoreAfter)) {
+          visitRoutes(scoreAfter, nextRemainingDarts);
+        }
+      }
+      currentRoute.pop();
+    });
+  }
+
+  visitRoutes(score, dartsRemaining);
+  return routes;
 }
 
 test("IMPOSSIBLE_CHECKOUT_SCORES include known impossible finishes", () => {
@@ -156,6 +219,27 @@ test("checkout route helpers enumerate valid routes and prefer shortest high-sco
   assert.deepEqual(getPreferredCheckoutRoute(50, "double", 3), ["BULL"]);
   assert.equal(getPreferredCheckoutStep(61, "double", 2), "T19");
   assert.deepEqual(getPreferredCheckoutRoute(60, "master", 1), ["T20"]);
+});
+
+test("checkout DFS preserves every legacy route and its exact order", () => {
+  const outModes = ["straight", "double", "master"];
+
+  outModes.forEach((outMode) => {
+    const reachabilityByDarts = {
+      1: buildLegacyCheckoutFeasibilitySet(outMode, 1),
+      2: buildLegacyCheckoutFeasibilitySet(outMode, 2),
+      3: buildLegacyCheckoutFeasibilitySet(outMode, 3),
+    };
+    for (let dartsRemaining = 0; dartsRemaining <= 3; dartsRemaining += 1) {
+      for (let score = 0; score <= MAX_CHECKOUT_SCORE_WITH_THREE_DARTS; score += 1) {
+        assert.deepEqual(
+          getCheckoutRoutesForScore(score, outMode, dartsRemaining),
+          getLegacyCheckoutRoutes(score, outMode, dartsRemaining, reachabilityByDarts),
+          `score=${score}, outMode=${outMode}, dartsRemaining=${dartsRemaining}`
+        );
+      }
+    }
+  });
 });
 
 test("one-dart checkout helpers resolve expected segments per out mode", () => {
