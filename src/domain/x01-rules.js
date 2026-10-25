@@ -371,69 +371,46 @@ function normalizeDartsRemaining(value, fallbackValue = 3) {
 }
 
 const CHECKOUT_SETUP_SEGMENTS = Object.freeze(getCheckoutSetupSegments());
+const CHECKOUT_SETUP_SCORES = Object.freeze([
+  ...new Set(CHECKOUT_SETUP_SEGMENTS.map((segment) => segment.score)),
+]);
 const CHECKOUT_FINISH_SEGMENTS_BY_MODE = Object.freeze({
   straight: Object.freeze(getCheckoutFinishSegments("straight")),
   double: Object.freeze(getCheckoutFinishSegments("double")),
   master: Object.freeze(getCheckoutFinishSegments("master")),
 });
 
-function buildCheckoutFeasibilitySet(outMode, dartsRemaining) {
-  const normalizedOutMode = normalizeOutMode(outMode);
-  const finishSegments =
-    CHECKOUT_FINISH_SEGMENTS_BY_MODE[normalizedOutMode] ||
-    CHECKOUT_FINISH_SEGMENTS_BY_MODE.straight;
-  const scores = new Set();
-  const normalizedDartsRemaining = normalizeDartsRemaining(dartsRemaining, 3);
+function extendCheckoutFeasibilitySet(previousScores) {
+  const scores = new Set(previousScores);
 
-  if (normalizedDartsRemaining < 1) {
-    return scores;
-  }
-
-  finishSegments.forEach((finishSegment) => {
-    scores.add(finishSegment.score);
-  });
-
-  if (normalizedDartsRemaining < 2) {
-    return scores;
-  }
-
-  CHECKOUT_SETUP_SEGMENTS.forEach((firstSegment) => {
-    finishSegments.forEach((finishSegment) => {
-      scores.add(firstSegment.score + finishSegment.score);
-    });
-  });
-
-  if (normalizedDartsRemaining < 3) {
-    return scores;
-  }
-
-  CHECKOUT_SETUP_SEGMENTS.forEach((firstSegment) => {
-    CHECKOUT_SETUP_SEGMENTS.forEach((secondSegment) => {
-      finishSegments.forEach((finishSegment) => {
-        scores.add(firstSegment.score + secondSegment.score + finishSegment.score);
-      });
+  CHECKOUT_SETUP_SCORES.forEach((setupScore) => {
+    previousScores.forEach((reachableScore) => {
+      scores.add(setupScore + reachableScore);
     });
   });
 
   return scores;
 }
 
+function buildCheckoutFeasibilitySets(outMode) {
+  const normalizedOutMode = normalizeOutMode(outMode);
+  const finishSegments =
+    CHECKOUT_FINISH_SEGMENTS_BY_MODE[normalizedOutMode] ||
+    CHECKOUT_FINISH_SEGMENTS_BY_MODE.straight;
+  const oneDartScores = new Set(finishSegments.map((segment) => segment.score));
+  const twoDartScores = extendCheckoutFeasibilitySet(oneDartScores);
+
+  return Object.freeze({
+    1: oneDartScores,
+    2: twoDartScores,
+    3: extendCheckoutFeasibilitySet(twoDartScores),
+  });
+}
+
 const CHECKOUTABLE_SCORES_BY_MODE = Object.freeze({
-  straight: Object.freeze({
-    1: buildCheckoutFeasibilitySet("straight", 1),
-    2: buildCheckoutFeasibilitySet("straight", 2),
-    3: buildCheckoutFeasibilitySet("straight", 3),
-  }),
-  double: Object.freeze({
-    1: buildCheckoutFeasibilitySet("double", 1),
-    2: buildCheckoutFeasibilitySet("double", 2),
-    3: buildCheckoutFeasibilitySet("double", 3),
-  }),
-  master: Object.freeze({
-    1: buildCheckoutFeasibilitySet("master", 1),
-    2: buildCheckoutFeasibilitySet("master", 2),
-    3: buildCheckoutFeasibilitySet("master", 3),
-  }),
+  straight: buildCheckoutFeasibilitySets("straight"),
+  double: buildCheckoutFeasibilitySets("double"),
+  master: buildCheckoutFeasibilitySets("master"),
 });
 
 const CHECKOUT_ROUTE_CACHE = new Map();

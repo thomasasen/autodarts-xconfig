@@ -34,6 +34,61 @@ import {
   parseCheckoutSuggestionStateForScore,
 } from "../../src/domain/x01-rules.js";
 
+const LEGACY_SETUP_SCORES = [
+  ...Array.from({ length: 20 }, (_value, index) => index + 1),
+  ...Array.from({ length: 20 }, (_value, index) => (index + 1) * 2),
+  ...Array.from({ length: 20 }, (_value, index) => (index + 1) * 3),
+  25,
+  50,
+];
+const MAX_CHECKOUT_SCORE_WITH_THREE_DARTS = 180;
+
+function getLegacyFinishScores(outMode) {
+  if (outMode === "double") {
+    return [
+      ...Array.from({ length: 20 }, (_value, index) => (index + 1) * 2),
+      50,
+    ];
+  }
+  if (outMode === "master") {
+    return [
+      ...Array.from({ length: 20 }, (_value, index) => (index + 1) * 2),
+      ...Array.from({ length: 20 }, (_value, index) => (index + 1) * 3),
+      50,
+    ];
+  }
+  return LEGACY_SETUP_SCORES;
+}
+
+function buildLegacyCheckoutFeasibilitySet(outMode, dartsRemaining) {
+  const finishScores = getLegacyFinishScores(outMode);
+  const reachableScores = new Set();
+  if (dartsRemaining < 1) {
+    return reachableScores;
+  }
+
+  finishScores.forEach((finishScore) => reachableScores.add(finishScore));
+  if (dartsRemaining < 2) {
+    return reachableScores;
+  }
+
+  LEGACY_SETUP_SCORES.forEach((firstScore) => {
+    finishScores.forEach((finishScore) => reachableScores.add(firstScore + finishScore));
+  });
+  if (dartsRemaining < 3) {
+    return reachableScores;
+  }
+
+  LEGACY_SETUP_SCORES.forEach((firstScore) => {
+    LEGACY_SETUP_SCORES.forEach((secondScore) => {
+      finishScores.forEach((finishScore) => {
+        reachableScores.add(firstScore + secondScore + finishScore);
+      });
+    });
+  });
+  return reachableScores;
+}
+
 test("IMPOSSIBLE_CHECKOUT_SCORES include known impossible finishes", () => {
   assert.equal(IMPOSSIBLE_CHECKOUT_SCORES.has(169), true);
   assert.equal(IMPOSSIBLE_CHECKOUT_SCORES.has(170), false);
@@ -60,12 +115,43 @@ test("out-mode-aware checkout feasibility distinguishes straight, double and mas
   assert.equal(isCheckoutPossibleFromScoreForOutModeWithDarts(121, "double", 1), false);
 });
 
+test("checkout reachability matches the legacy calculation exhaustively", () => {
+  const outModes = ["straight", "double", "master"];
+
+  outModes.forEach((outMode) => {
+    for (let dartsRemaining = 0; dartsRemaining <= 3; dartsRemaining += 1) {
+      const legacyReachableScores = buildLegacyCheckoutFeasibilitySet(
+        outMode,
+        dartsRemaining
+      );
+      for (let score = 0; score <= MAX_CHECKOUT_SCORE_WITH_THREE_DARTS; score += 1) {
+        assert.equal(
+          isCheckoutPossibleFromScoreForOutModeWithDarts(score, outMode, dartsRemaining),
+          score > 0 && legacyReachableScores.has(score),
+          `score=${score}, outMode=${outMode}, dartsRemaining=${dartsRemaining}`
+        );
+      }
+
+      assert.equal(
+        isCheckoutPossibleFromScoreForOutModeWithDarts(
+          MAX_CHECKOUT_SCORE_WITH_THREE_DARTS + 1,
+          outMode,
+          dartsRemaining
+        ),
+        false
+      );
+    }
+  });
+});
+
 test("checkout route helpers enumerate valid routes and prefer shortest high-scoring starts", () => {
   const doubleOut80Routes = getCheckoutRoutesForScore(80, "double", 2);
   assert.ok(doubleOut80Routes.some((route) => route.join(">") === "T20>D10"));
   assert.ok(doubleOut80Routes.some((route) => route.join(">") === "D20>D20"));
 
   assert.deepEqual(getPreferredCheckoutRoute(80, "double", 2), ["T20", "D10"]);
+  assert.deepEqual(getPreferredCheckoutRoute(10, "double", 1), ["D5"]);
+  assert.deepEqual(getPreferredCheckoutRoute(22, "double", 1), ["D11"]);
   assert.equal(getPreferredCheckoutStep(120, "double", 3), "T20");
   assert.deepEqual(getPreferredCheckoutRoute(50, "double", 3), ["BULL"]);
   assert.equal(getPreferredCheckoutStep(61, "double", 2), "T19");
