@@ -89,13 +89,9 @@ const PANEL_HOST_ID = "ad-xconfig-panel-host";
 const STYLE_ID = "ad-xconfig-shell-style";
 const PREVIEW_FONTS_STYLE_ID = "ad-xconfig-preview-fonts-style";
 const SPECIAL_HIT_HIGHLIGHTS_PREVIEW_STYLE_ID = "ad-xconfig-special-hit-highlights-preview-style";
-const README_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md";
-const CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/CHANGELOG.md";
 const ROOT_OBSERVER_KEY = "xconfig-shell:root-observer";
 const NOTICE_TIMEOUT_MS = 3200;
 const UPDATE_AUTO_CHECK_INTERVAL_MS = 15 * 60 * 1000;
-const DART_MARKER_DARTS_FEATURE_KEY = "dart-marker-replacer";
-const DART_MARKER_DARTS_DESIGN_SETTING_KEY = "design";
 const THEME_GLOBAL_TYPOGRAPHY_FEATURE_KEY = "theme-global-typography";
 const LISTENER_KEYS = Object.freeze({
   popstate: "xconfig-shell:popstate",

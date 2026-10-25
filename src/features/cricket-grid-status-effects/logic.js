@@ -51,23 +51,11 @@ import {
 import { isProtectedCricketHostNode } from "../cricket-surface/protected-hosts.js";
 import {
   collectLabelNodes as collectLabelNodesFromDiscovery,
-  collectTargetLabelsInNode as collectTargetLabelsInNodeFromDiscovery,
-  filterAtomicLabelNodes as filterAtomicLabelNodesFromDiscovery,
   isInsideTurnPreview as isInsideTurnPreviewFromDiscovery,
-  isNodeVisible as isNodeVisibleFromDiscovery,
   queryAll as queryAllFromDiscovery,
 } from "../cricket-surface/grid-discovery.js";
 import { parseMarksValue, readCellPlayerIndex } from "../cricket-surface/mark-parser.js";
 import { createMeasurementCacheManager } from "../themes/shared/measurement-cache.js";
-
-const GRID_ROOT_SELECTORS = Object.freeze([
-  "#grid",
-  ".ad-ext-cricket-grid",
-  ".ad-ext-crfx-root",
-  ".chakra-grid",
-  "table",
-  "tbody",
-]);
 
 const LABEL_NODE_SELECTORS = Object.freeze([
   "[data-row-label]",
@@ -84,64 +72,13 @@ const LABEL_NODE_SELECTORS = Object.freeze([
 ]);
 
 const gridFxMeasurements = createMeasurementCacheManager();
-const TURN_PREVIEW_ROOT_SELECTOR = "#ad-ext-turn";
 
 function queryAll(rootNode, selector) {
   return queryAllFromDiscovery(rootNode, selector);
 }
 
-function isVisible(node) {
-  return isNodeVisibleFromDiscovery(node);
-}
-
 function isInsideTurnPreview(node) {
   return isInsideTurnPreviewFromDiscovery(node);
-}
-
-function resolveGridRoot(documentRef, cricketRules, targetOrder) {
-  if (!documentRef) {
-    return null;
-  }
-
-  const targetSet = new Set(Array.isArray(targetOrder) ? targetOrder : []);
-  let bestRoot = null;
-  let bestScore = 0;
-
-  for (const selector of GRID_ROOT_SELECTORS) {
-    for (const candidate of queryAll(documentRef, selector)) {
-      if (!isVisible(candidate)) {
-        continue;
-      }
-
-      const labelHits = collectGridRootLabelHits(candidate, cricketRules, targetSet);
-      const score = labelHits.size * 100 + (candidate.tagName === "TABLE" ? 10 : 0);
-      if (score > bestScore) {
-        bestScore = score;
-        bestRoot = candidate;
-      }
-    }
-  }
-
-  return bestRoot;
-}
-
-function collectGridRootLabelHits(candidate, cricketRules, targetSet) {
-  const labelHits = new Set();
-
-  for (const labelSelector of LABEL_NODE_SELECTORS) {
-    for (const node of queryAll(candidate, labelSelector)) {
-      if (isInsideTurnPreview(node) || isProtectedCricketHostNode(node)) {
-        continue;
-      }
-
-      const normalized = normalizeCricketLabelNode(cricketRules, node);
-      if (normalized && targetSet.has(normalized)) {
-        labelHits.add(normalized);
-      }
-    }
-  }
-
-  return labelHits;
 }
 
 function collectLabelNodes(gridRoot, cricketRules, targetSet, getRect = null) {
@@ -171,21 +108,6 @@ function collectLabelNodes(gridRoot, cricketRules, targetSet, getRect = null) {
       badgeNode: resolveBadgeNode(node, labelCell, cricketRules, label, getRect),
     };
   });
-}
-
-function filterAtomicRows(rows) {
-  const entries = Array.isArray(rows) ? rows : [];
-  return filterAtomicLabelNodesFromDiscovery(
-    entries.map((entry) => ({
-      node: entry?.labelNode || null,
-      label: entry?.label || "",
-      entry,
-    }))
-  ).map((entry) => entry.entry);
-}
-
-function collectTargetLabelsInNode(node, cricketRules, targetSet, fallbackLabel = "") {
-  return collectTargetLabelsInNodeFromDiscovery(node, cricketRules, targetSet, fallbackLabel);
 }
 
 function resolveLabelCell(labelNode, cricketRules = null, targetSet = null, fallbackLabel = "") {

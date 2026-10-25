@@ -92,14 +92,9 @@ import {
   SPECIAL_HIT_HIGHLIGHTS_PREVIEW_STEPS,
 } from "./special-hit-highlights-preview-contract.js";
 
-const CONFIG_PATH = "/ad-xconfig";
-const CONFIG_HASH = "#ad-xconfig";
 const MENU_LABEL = "xConfig";
 const README_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/README.md";
 const CHANGELOG_URL = "https://github.com/thomasasen/autodarts-xconfig/blob/main/CHANGELOG.md";
-const ROOT_OBSERVER_KEY = "xconfig-shell:root-observer";
-const NOTICE_TIMEOUT_MS = 3200;
-const UPDATE_AUTO_CHECK_INTERVAL_MS = 15 * 60 * 1000;
 const DART_MARKER_DARTS_FEATURE_KEY = "dart-marker-replacer";
 const DART_MARKER_DARTS_DESIGN_SETTING_KEY = "design";
 const DARTBOARD_MARKER_HIGHLIGHT_FEATURE_KEY = "dartboard-marker-highlight";
@@ -166,24 +161,7 @@ const THEME_GLOBAL_TYPOGRAPHY_FONT_FIELD_KEY = "fontPreset";
 const TURN_DART_DISPLAY_FEATURE_KEY = "turn-dart-display";
 const TURN_DART_DISPLAY_ASSET_FIELD_KEY = "turnDartAssetKey";
 const XCONFIG_COLOR_INPUT_DEFAULT = "#9FDB58";
-const LISTENER_KEYS = Object.freeze({
-  popstate: "xconfig-shell:popstate",
-  click: "xconfig-shell:document-click",
-  change: "xconfig-shell:document-change",
-  keydown: "xconfig-shell:document-keydown",
-  visibilitychange: "xconfig-shell:document-visibilitychange",
-});
-const SIDEBAR_ROUTE_HINTS = new Set([
-  "/lobbies",
-  "/boards",
-  "/matches",
-  "/tournaments",
-  "/statistics",
-  "/plus",
-  "/settings",
-]);
 const descriptorOrder = xconfigDescriptorOrder;
-const shellByWindow = new WeakMap();
 
 function isObjectLike(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);

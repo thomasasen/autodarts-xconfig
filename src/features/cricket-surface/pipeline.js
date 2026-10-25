@@ -20,7 +20,6 @@ import {
   collectLabelNodes as collectLabelNodesFromDiscovery,
   collectSiblingPlayerCells as collectSiblingPlayerCellsFromDiscovery,
   isInsideTurnPreview,
-  isLikelyStructuralPlayerCell as isLikelyStructuralPlayerCellFromDiscovery,
   isNodeVisible,
   queryAll,
   resolveBadgeNode as resolveBadgeNodeFromDiscovery,
@@ -88,7 +87,6 @@ const PLAYER_CELL_SELECTORS = Object.freeze([
 ]);
 
 const KNOWN_SCORING_MODES = new Set(["standard", "cutthroat", "neutral", "unknown"]);
-const TURN_PREVIEW_ROOT_SELECTOR = "#ad-ext-turn";
 const degradedHostDetectionByWindow = new WeakMap();
 
 export function extractMatchRouteId(windowRef, documentRef) {
@@ -659,19 +657,6 @@ function isLikelyPlayerCell(node, cricketRules, targetSet) {
   return false;
 }
 
-function isLikelyStructuralPlayerCell(node, labelNode, cricketRules, targetSet) {
-  if (!isLikelyStructuralPlayerCellFromDiscovery(node, labelNode, cricketRules, targetSet)) {
-    return false;
-  }
-
-  const compactText = String(node?.textContent || "").trim();
-  if (compactText.length > 3 && !hasOwnMarkValue(node, { cricketRules, allowTextMarkValue: false })) {
-    return false;
-  }
-
-  return true;
-}
-
 function collectSiblingPlayerCells(labelNode, cricketRules, targetSet) {
   return collectSiblingPlayerCellsFromDiscovery(labelNode, cricketRules, targetSet, isLikelyPlayerCell);
 }
@@ -739,7 +724,7 @@ function resolveVisiblePlayerCount(documentRef) {
   return visiblePlayers.length > 0 ? visiblePlayers.length : playerNodes.length;
 }
 
-function resolveActivePlayerIndex(gameState, documentRef, playerCount, options = {}) {
+function resolveActivePlayerIndex(gameState, documentRef, playerCount) {
   const stateIndex = Number.isFinite(gameState?.getActivePlayerIndex?.())
     ? Number(gameState.getActivePlayerIndex())
     : 0;
@@ -869,302 +854,6 @@ function resolveTacticsPrecisionMode(gameState, variantRules, documentRef) {
   return "unknown";
 }
 
-function parseTurnTimestamp(value) {
-  if (!value) {
-    return 0;
-  }
-  const parsed = Date.parse(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function selectNewestTurnCandidate(turns = []) {
-  if (!Array.isArray(turns) || !turns.length) {
-    return null;
-  }
-
-  return turns.reduce((best, candidate) => {
-    if (!candidate || typeof candidate !== "object") {
-      return best;
-    }
-    if (!best) {
-      return candidate;
-    }
-
-    const candidateRound = Number.isFinite(candidate?.round) ? candidate.round : -1;
-    const bestRound = Number.isFinite(best?.round) ? best.round : -1;
-    if (candidateRound !== bestRound) {
-      return candidateRound > bestRound ? candidate : best;
-    }
-
-    const candidateTurn = Number.isFinite(candidate?.turn) ? candidate.turn : -1;
-    const bestTurn = Number.isFinite(best?.turn) ? best.turn : -1;
-    if (candidateTurn !== bestTurn) {
-      return candidateTurn > bestTurn ? candidate : best;
-    }
-
-    const candidateTs = parseTurnTimestamp(candidate?.createdAt);
-    const bestTs = parseTurnTimestamp(best?.createdAt);
-    return candidateTs >= bestTs ? candidate : best;
-  }, null);
-}
-
-function getPlayerIdByIndex(match, playerIndex) {
-  if (!match || !Array.isArray(match.players)) {
-    return "";
-  }
-  const resolvedIndex = Number.isFinite(Number(playerIndex))
-    ? Math.max(0, Math.round(Number(playerIndex)))
-    : -1;
-  if (!(resolvedIndex >= 0 && resolvedIndex < match.players.length)) {
-    return "";
-  }
-  const player = match.players[resolvedIndex] || null;
-  return String(player?.id || player?.userId || player?.playerId || "").trim();
-}
-
-function toThrowSignatureParts(throws, cricketRules, targetOrder) {
-  if (!Array.isArray(throws) || !throws.length) {
-    return [];
-  }
-  const targetSet = new Set(Array.isArray(targetOrder) ? targetOrder : []);
-  return throws.map((throwEntry, index) => {
-    const parsed = cricketRules.parseCricketThrowSegment(throwEntry);
-    if (!parsed || (targetSet.size > 0 && !targetSet.has(parsed.label))) {
-      return `unknown-${index}`;
-    }
-    return `${parsed.ring}${parsed.value}`;
-  });
-}
-
-function haveEquivalentThrowSignatures(leftThrows, rightThrows, cricketRules, targetOrder) {
-  const left = toThrowSignatureParts(leftThrows, cricketRules, targetOrder);
-  const right = toThrowSignatureParts(rightThrows, cricketRules, targetOrder);
-  if (left.length !== right.length) {
-    return false;
-  }
-  return left.every((entry, index) => entry === right[index]);
-}
-
-function createActiveThrowPreviewDebug(activeThrows, cricketRules, targetOrder) {
-  return {
-    throwCount: activeThrows.length,
-    applied: false,
-    suppressionReason: "",
-    activeTurnFinished: false,
-    matchedFinishedTurn: false,
-    activeThrowsSignature: toThrowSignatureParts(activeThrows, cricketRules, targetOrder).join(","),
-    activeTurnSignature: "",
-  };
-}
-
-function readActiveTurnPreviewState(gameState, cricketRules, targetOrder) {
-  const activeTurn =
-    gameState && typeof gameState.getActiveTurn === "function"
-      ? gameState.getActiveTurn()
-      : null;
-  if (!activeTurn || typeof activeTurn !== "object") {
-    return {
-      finished: false,
-      signature: "",
-    };
-  }
-
-  return {
-    finished: Boolean(String(activeTurn.finishedAt || "").trim()),
-    signature: toThrowSignatureParts(
-      Array.isArray(activeTurn.throws) ? activeTurn.throws : [],
-      cricketRules,
-      targetOrder
-    ).join(","),
-  };
-}
-
-function listSnapshotTurns(snapshotMatch) {
-  return Array.isArray(snapshotMatch?.turns)
-    ? snapshotMatch.turns.filter((turn) => turn && typeof turn === "object")
-    : [];
-}
-
-function isTurnOwnedByPlayer(turn, playerId) {
-  return String(turn?.playerId || "").trim() === playerId;
-}
-
-function isFinishedTurnWithThrows(turn) {
-  return Boolean(String(turn?.finishedAt || "").trim()) &&
-    Array.isArray(turn?.throws) &&
-    turn.throws.length > 0;
-}
-
-function shouldSuppressPreviewForFinishedSnapshotTurn(
-  snapshotMatch,
-  activePlayerIndex,
-  activeThrows,
-  cricketRules,
-  targetOrder
-) {
-  const activePlayerId = getPlayerIdByIndex(snapshotMatch, activePlayerIndex);
-  if (!activePlayerId) {
-    return false;
-  }
-
-  const turns = listSnapshotTurns(snapshotMatch);
-  const unfinishedTurnsForActivePlayer = turns.filter((turn) => {
-    return isTurnOwnedByPlayer(turn, activePlayerId) && !String(turn.finishedAt || "").trim();
-  });
-  if (unfinishedTurnsForActivePlayer.length > 0) {
-    return false;
-  }
-
-  const newestFinishedTurn = selectNewestTurnCandidate(
-    turns.filter((turn) => {
-      return isTurnOwnedByPlayer(turn, activePlayerId) && isFinishedTurnWithThrows(turn);
-    })
-  );
-  return Boolean(
-    newestFinishedTurn &&
-      haveEquivalentThrowSignatures(
-        newestFinishedTurn.throws,
-        activeThrows,
-        cricketRules,
-        targetOrder
-      )
-  );
-}
-
-function shouldApplyActiveThrowPreview(options = {}) {
-  const gameState = options.gameState;
-  const cricketRules = options.cricketRules;
-  const targetOrder = options.targetOrder;
-  const activeThrows = Array.isArray(options.activeThrows) ? options.activeThrows : [];
-  const activePlayerIndex = Number.isFinite(Number(options.activePlayerIndex))
-    ? Math.max(0, Math.round(Number(options.activePlayerIndex)))
-    : 0;
-  const snapshotMatch = options.snapshotMatch || null;
-
-  const debug = createActiveThrowPreviewDebug(activeThrows, cricketRules, targetOrder);
-
-  if (!activeThrows.length) {
-    debug.suppressionReason = "no-active-throws";
-    return debug;
-  }
-
-  const activeTurnState = readActiveTurnPreviewState(gameState, cricketRules, targetOrder);
-  debug.activeTurnSignature = activeTurnState.signature;
-  debug.activeTurnFinished = activeTurnState.finished;
-
-  if (debug.activeTurnFinished) {
-    debug.suppressionReason = "active-turn-finished";
-    return debug;
-  }
-
-  if (
-    shouldSuppressPreviewForFinishedSnapshotTurn(
-      snapshotMatch,
-      activePlayerIndex,
-      activeThrows,
-      cricketRules,
-      targetOrder
-    )
-  ) {
-    debug.matchedFinishedTurn = true;
-    debug.suppressionReason = "matches-last-finished-turn";
-    return debug;
-  }
-
-  debug.applied = true;
-  return debug;
-}
-
-function readActiveThrowMarksByLabel(gameState, cricketRules, targetOrder, options = {}) {
-  const activeThrows = Array.isArray(gameState?.getActiveThrows?.()) ? gameState.getActiveThrows() : [];
-  const marksByLabel = new Map();
-  const previewDecision = shouldApplyActiveThrowPreview({
-    gameState,
-    cricketRules,
-    targetOrder,
-    activeThrows,
-    activePlayerIndex: options.activePlayerIndex,
-    snapshotMatch: options.snapshotMatch || null,
-  });
-
-  if (!previewDecision.applied) {
-    return {
-      throws: activeThrows,
-      marksByLabel,
-      debug: previewDecision,
-    };
-  }
-
-  activeThrows.forEach((throwEntry) => {
-    const parsed = cricketRules.parseCricketThrowSegment(throwEntry);
-    if (!parsed || !targetOrder.includes(parsed.label)) {
-      return;
-    }
-
-    marksByLabel.set(
-      parsed.label,
-      cricketRules.clampMarks((marksByLabel.get(parsed.label) || 0) + parsed.marks)
-    );
-  });
-
-  return {
-    throws: activeThrows,
-    marksByLabel,
-    debug: previewDecision,
-  };
-}
-
-function readTurnMarksByLabel(gameState, cricketRules, targetOrder, playerCount) {
-  const snapshot = typeof gameState?.getSnapshot === "function" ? gameState.getSnapshot() : null;
-  const match = snapshot?.match;
-
-  if (!match || !Array.isArray(match.players) || !Array.isArray(match.turns)) {
-    return null;
-  }
-
-  const resolvedPlayerCount = Math.max(playerCount, match.players.length);
-  const playerIndexById = new Map();
-  match.players.forEach((player, index) => {
-    const playerId = player?.id || player?.userId || player?.playerId || "";
-    if (playerId) {
-      playerIndexById.set(String(playerId), index);
-    }
-  });
-
-  if (!playerIndexById.size) {
-    return null;
-  }
-
-  let marksByLabel = cricketRules.createEmptyMarksByLabel(targetOrder, resolvedPlayerCount);
-  let hasAnyTurnMarks = false;
-
-  match.turns.forEach((turn) => {
-    if (!turn || typeof turn !== "object" || !Array.isArray(turn.throws) || !turn.throws.length) {
-      return;
-    }
-    // The active unfinished turn is previewed separately via getActiveThrows().
-    if (!String(turn.finishedAt || "").trim()) {
-      return;
-    }
-
-    const playerIndex = playerIndexById.get(String(turn.playerId || ""));
-    if (!Number.isFinite(playerIndex)) {
-      return;
-    }
-
-    hasAnyTurnMarks = true;
-    marksByLabel = cricketRules.applyThrowsToMarksByLabel({
-      targetOrder,
-      playerIndex,
-      playerCount: resolvedPlayerCount,
-      baseMarksByLabel: marksByLabel,
-      throws: turn.throws,
-    });
-  });
-
-  return hasAnyTurnMarks ? marksByLabel : null;
-}
-
 function resolveExpectedGridPlayerCount(documentRef, gameState, grid) {
   if (grid.modern) {
     return grid.headers.length;
@@ -1245,7 +934,6 @@ function buildMarksByLabelSnapshot(options = {}) {
   const cachedStableRows =
     !grid.modern && options.cache?.gridStableRowsByLabel instanceof Map ? options.cache.gridStableRowsByLabel : null;
   const {
-    hasIndexedPlayerColumns,
     labelCellMarkSourceLabels,
     marksByLabel,
     maxPlayerCount,
@@ -1281,9 +969,8 @@ function buildMarksByLabelSnapshot(options = {}) {
     }
   });
 
-  const activePlayerIndex = grid.activePlayerIndex ?? resolveActivePlayerIndex(gameState, documentRef, playerCount, {
-    preferGameStateIndex: hasIndexedPlayerColumns,
-  });
+  const activePlayerIndex = grid.activePlayerIndex ??
+    resolveActivePlayerIndex(gameState, documentRef, playerCount);
   const activeThrows = Array.isArray(gameState?.getActiveThrows?.()) ? gameState.getActiveThrows() : [];
   const activeThrowPreview = {
     marksByLabel: new Map(),
