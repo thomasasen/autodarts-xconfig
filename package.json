@@ -43,8 +43,5 @@
     "esbuild": "^0.28.0",
     "eslint": "^10.4.1",
     "globals": "^17.6.0"
-  },
-  "dependencies": {
-    "playwright": "^1.60.0"
   }
 }
