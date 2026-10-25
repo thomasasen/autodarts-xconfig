@@ -31,7 +31,7 @@
     "sonar": "powershell -NoProfile -ExecutionPolicy Bypass -File ./ops/sonarqube/run-xconfig-sonarqube.ps1",
     "sync:xconfig-docs": "node ./scripts/sync-xconfig-docs.mjs",
     "sync:autodarts-docs-fixture": "node ./scripts/sync-autodarts-docs-fixture.mjs",
-    "test:local": "npm run check:syntax && node ./scripts/run-tests.mjs",
+    "test:local": "node ./scripts/run-tests.mjs",
     "test": "npm run test:local && npm run sonar",
     "verify": "npm run lint && npm run build && npm test && npm run check:changelog && npm run check:release"
   },

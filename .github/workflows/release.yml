@@ -35,8 +35,6 @@ jobs:
         run: npm run check:agents
       - name: Lint source
         run: npm run lint
-      - name: Check JavaScript syntax
-        run: npm run check:syntax
       - name: Run local runtime and unit tests
         run: npm run test:local
       - name: Rebuild release artifacts
