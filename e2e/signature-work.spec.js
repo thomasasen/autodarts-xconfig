@@ -3,14 +3,15 @@ import { build } from "esbuild";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 
-test("measure unchanged UI signatures with supported large image configurations", async ({ page }, testInfo) => {
+test("preserve UI signatures and optionally measure large image configurations", async ({ page }, testInfo) => {
+  const auditEnabled = Boolean(process.env.XCONFIG_AUDIT_DIR);
   const bundle = await build({ stdin: { contents: `
     import * as signatures from "./src/features/xconfig-ui/render-signature.js";
     window.signatureWork = signatures;
   `, resolveDir: process.cwd() }, bundle: true, write: false, format: "iife", platform: "browser" });
   await page.setContent("<!doctype html><main></main>");
   await page.addScriptTag({ content: bundle.outputFiles[0].text });
-  const metrics = await page.evaluate(async () => {
+  const metrics = await page.evaluate(async ({ auditEnabled }) => {
     const api = window.signatureWork;
     const plain = api.buildShellRenderSignature;
     const local = api.createShellRenderSignatureBuilder?.() || plain;
@@ -25,9 +26,8 @@ test("measure unchanged UI signatures with supported large image configurations"
       for (let iteration = 0; iteration < 100; iteration++) signature = builder(state, features, true);
       return { elapsedMs: performance.now() - start, serializedCharacters: signature.length, calls: 100 };
     }
-    plain(state, features, true); local(state, features, true);
-    const legacy = sample(plain);
-    const current = sample(local);
+    let legacy = null;
+    let current = null;
     async function frames(builder) {
       const intervals = [];
       let previous;
@@ -39,19 +39,39 @@ test("measure unchanged UI signatures with supported large image configurations"
       }
       return intervals;
     }
+    let legacyFrameIntervals = [];
+    let currentFrameIntervals = [];
+    if (auditEnabled) {
+      plain(state, features, true);
+      local(state, features, true);
+      legacy = sample(plain);
+      current = sample(local);
+      legacyFrameIntervals = await frames(plain);
+      currentFrameIntervals = await frames(local);
+    }
     const reference = local(state, features, true);
     const retained = local(state, features.map((feature) => ({ ...feature, config: { ...feature.config } })), true) === reference;
     features[1].config.turnDartImageDataUrl += "C";
     const detectsExactAssetChange = local(state, features, true) !== reference;
-    return { legacy, current, retained, detectsExactAssetChange,
-      legacyFrameIntervals: await frames(plain), currentFrameIntervals: await frames(local),
+    return { auditEnabled, legacy, current, retained, detectsExactAssetChange,
+      legacyFrameIntervals, currentFrameIntervals,
       configStillContainsImage: features[0].config.backgroundImageDataUrl.startsWith("data:image/png;base64,") };
-  });
+  }, { auditEnabled });
+  expect(metrics.auditEnabled).toBe(auditEnabled);
   expect(metrics.retained).toBe(true);
   expect(metrics.detectsExactAssetChange).toBe(true);
   expect(metrics.configStillContainsImage).toBe(true);
-  if (process.env.XCONFIG_AUDIT_DIR) {
+  if (auditEnabled) {
+    expect(metrics.legacy?.calls).toBe(100);
+    expect(metrics.current?.calls).toBe(100);
+    expect(metrics.legacyFrameIntervals).toHaveLength(29);
+    expect(metrics.currentFrameIntervals).toHaveLength(29);
     await writeFile(path.join(process.env.XCONFIG_AUDIT_DIR, `${process.env.XCONFIG_AUDIT_PHASE || "current"}-signature-work.json`), JSON.stringify(metrics, null, 2));
+  } else {
+    expect(metrics.legacy).toBeNull();
+    expect(metrics.current).toBeNull();
+    expect(metrics.legacyFrameIntervals).toEqual([]);
+    expect(metrics.currentFrameIntervals).toEqual([]);
   }
   await testInfo.attach("signature-work-and-frame-intervals", { body: JSON.stringify(metrics), contentType: "application/json" });
 });
