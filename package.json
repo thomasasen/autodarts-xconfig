@@ -31,7 +31,12 @@
     "sonar": "powershell -NoProfile -ExecutionPolicy Bypass -File ./ops/sonarqube/run-xconfig-sonarqube.ps1",
     "sync:xconfig-docs": "node ./scripts/sync-xconfig-docs.mjs",
     "sync:autodarts-docs-fixture": "node ./scripts/sync-autodarts-docs-fixture.mjs",
+    "test:coverage:domain": "node ./scripts/check-domain-coverage.mjs",
     "test:local": "node ./scripts/run-tests.mjs",
+    "test:e2e": "playwright test",
+    "test:quality:full": "node ./scripts/run-full-test-gate.mjs",
+    "test:mutation:domain": "stryker run",
+    "test:mutation:domain:dry": "stryker run --dryRunOnly",
     "test": "npm run test:local && npm run sonar",
     "verify": "npm run lint && npm run build && npm test && npm run check:changelog && npm run check:release"
   },
@@ -39,6 +44,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.61.0",
+    "@stryker-mutator/core": "^10.1.1",
     "@types/node": "^25.9.1",
     "esbuild": "^0.28.0",
     "eslint": "^10.4.1",

@@ -399,7 +399,7 @@ test("P0 foreign match state is quarantined atomically", () => {
   assert.equal(resolved.coherence, "dom-preferred");
   assert.equal(resolved.gameStateUsable, false);
   assert.equal(resolved.activeScore, 60);
-  assert.equal(resolved.outMode, "Master Out");
+  assert.equal(resolved.outMode, "master");
   assert.equal(resolved.throwCount, 0);
   assert.equal(resolved.dartsRemaining, 3);
   assert.equal(resolved.activePlayerIndex, 0);
@@ -556,7 +556,10 @@ for (const [fromMode, toMode] of [
 ]) {
   test(`P1 match boundary ${fromMode} to ${toMode} does not retain prior semantics`, () => {
     const scenario = createScenario({ score: 40, route: ["D20"], outMode: fromMode });
-    assert.equal(resolveX01CheckoutContext(scenario).outMode, fromMode);
+    assert.equal(
+      resolveX01CheckoutContext(scenario).outMode,
+      x01Rules.normalizeOutMode(fromMode)
+    );
 
     scenario.windowRef.location.pathname = "/matches/new-match";
     scenario.score.textContent = toMode === "Master Out" ? "60" : "40";
@@ -566,7 +569,7 @@ for (const [fromMode, toMode] of [
 
     assert.equal(resolved.coherence, "dom-preferred");
     assert.equal(resolved.matchId, "new-match");
-    assert.equal(resolved.outMode, toMode);
+    assert.equal(resolved.outMode, x01Rules.normalizeOutMode(toMode));
     assert.equal(resolved.throwCount, 0);
     assert.equal(resolved.diagnostics.foreignMatchState, true);
   });
@@ -674,7 +677,7 @@ test("race 10 equal scores cannot hide foreign out-mode turn and player state", 
 
   assert.equal(resolved.coherence, "dom-preferred");
   assert.equal(resolved.activeScore, 60);
-  assert.equal(resolved.outMode, "Master Out");
+  assert.equal(resolved.outMode, "master");
   assert.equal(resolved.throwCount, 0);
   assert.equal(resolved.activePlayerIndex, 0);
   assert.equal(resolved.diagnostics.foreignMatchState, true);

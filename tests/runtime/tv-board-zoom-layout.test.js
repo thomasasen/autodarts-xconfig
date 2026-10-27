@@ -1084,7 +1084,8 @@ test("tv-board-zoom converges when a second zoom state reads an already-transfor
   assert.equal(String(targetNode.style.transform || ""), firstTransform);
 });
 
-test("tv-board-zoom delayed reset clears zoom classes and restores host overflow", async () => {
+test("tv-board-zoom delayed reset clears zoom classes and restores host overflow", (context) => {
+  context.mock.timers.enable({ apis: ["setTimeout"] });
   const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomFixture();
   const state = createZoomState();
   const speedConfig = {
@@ -1108,7 +1109,7 @@ test("tv-board-zoom delayed reset clears zoom classes and restores host overflow
   assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);
 
   resetZoom(speedConfig, state);
-  await new Promise((resolve) => setTimeout(resolve, 80));
+  context.mock.timers.tick(80);
 
   assert.equal(state.zoomedElement, null);
   assert.equal(state.zoomHost, null);
@@ -1117,7 +1118,8 @@ test("tv-board-zoom delayed reset clears zoom classes and restores host overflow
   assert.equal(hostNode.style.getPropertyValue("overflow"), "visible");
 });
 
-test("tv-board-zoom delayed reset preserves host styles changed during release", async () => {
+test("tv-board-zoom delayed reset preserves host styles changed during release", (context) => {
+  context.mock.timers.enable({ apis: ["setTimeout"] });
   const { documentRef, windowRef, hostNode, targetNode, boardSvg } = createZoomFixture();
   const state = createZoomState();
   const speedConfig = {
@@ -1138,7 +1140,7 @@ test("tv-board-zoom delayed reset preserves host styles changed during release",
   resetZoom(speedConfig, state);
   hostNode.style.setProperty("overflow", "auto");
   targetNode.style.setProperty("transform", "translateX(4px)");
-  await new Promise((resolve) => setTimeout(resolve, 80));
+  context.mock.timers.tick(80);
 
   assert.equal(hostNode.style.getPropertyValue("overflow"), "auto");
   assert.equal(targetNode.style.getPropertyValue("transform"), "translateX(4px)");

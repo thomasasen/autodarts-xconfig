@@ -1608,11 +1608,13 @@ function createFakeWindow(options = {}) {
         return Date.now();
       },
     },
-    getComputedStyle() {
+    getComputedStyle(node) {
+      const readStyle = (propertyName, fallback) =>
+        node?.style?.getPropertyValue?.(propertyName) || fallback;
       return {
-        display: "",
-        visibility: "",
-        opacity: "1",
+        display: readStyle("display", ""),
+        visibility: readStyle("visibility", ""),
+        opacity: readStyle("opacity", "1"),
       };
     },
     open(url) {

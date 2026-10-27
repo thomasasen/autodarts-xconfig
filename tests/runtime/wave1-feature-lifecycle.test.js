@@ -107,6 +107,18 @@ function runtimeBootstrapAudio(windowRef) {
   };
 }
 
+function hydrateDoubleOut(runtime, score = 40, throws = []) {
+  runtime.context.gameState.applyMatch({
+    id: "wave1-lifecycle-match",
+    variant: "X01",
+    player: 0,
+    players: [{ id: "player-1" }],
+    gameScores: [score],
+    settings: { outMode: "Double Out" },
+    turns: [{ playerId: "player-1", score, throws }],
+  });
+}
+
 test("checkout-target-highlights mounts idempotently and cleans up style/observer state", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
@@ -116,6 +128,7 @@ test("checkout-target-highlights mounts idempotently and cleans up style/observe
     config: createSingleFeatureConfig("checkoutTargetHighlights"),
   });
 
+  hydrateDoubleOut(runtime, 170);
   runtime.start();
   runtime.start();
   await wait(25);
@@ -130,6 +143,7 @@ test("checkout-target-highlights mounts idempotently and cleans up style/observe
 });
 test("checkout-suggestion-styles mounts idempotently and removes classes on cleanup", async () => {
   const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "32";
   documentRef.suggestionElement.textContent = "D16";
   const windowRef = createFakeWindow({ documentRef });
   const runtime = createBootstrap({
@@ -142,6 +156,7 @@ test("checkout-suggestion-styles mounts idempotently and removes classes on clea
     }),
   });
 
+  hydrateDoubleOut(runtime, 32);
   runtime.start();
   runtime.start();
   await wait(25);
@@ -173,6 +188,7 @@ test("tv-board-zoom registers managed listeners and releases them on cleanup", a
     }),
   });
 
+  hydrateDoubleOut(runtime, 170);
   runtime.start();
   runtime.start();
   await wait(5);
@@ -210,6 +226,7 @@ test("avg-trend-arrow mounts idempotently and removes owned style", async () => 
 
 test("special-hit-highlights mounts idempotently and removes decorations on cleanup", async () => {
   const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "110";
   documentRef.throwTextElement.textContent = "T20";
   const windowRef = createFakeWindow({ documentRef });
   const runtime = createBootstrap({
@@ -221,6 +238,7 @@ test("special-hit-highlights mounts idempotently and removes decorations on clea
     }),
   });
 
+  hydrateDoubleOut(runtime, 110, [{ segment: { name: "T20" }, score: 60 }]);
   runtime.start();
   runtime.start();
   await wait(25);

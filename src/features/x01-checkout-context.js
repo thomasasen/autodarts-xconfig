@@ -290,9 +290,12 @@ function normalizeOutModeForComparison(value, x01Rules) {
   if (!normalizedInput) {
     return "";
   }
-  return String(x01Rules?.normalizeOutMode?.(normalizedInput) || normalizedInput)
-    .trim()
-    .toLowerCase();
+  if (typeof x01Rules?.normalizeOutMode === "function") {
+    return String(x01Rules.normalizeOutMode(normalizedInput) || "")
+      .trim()
+      .toLowerCase();
+  }
+  return normalizedInput.toLowerCase();
 }
 
 function normalizeVariantText(value) {
@@ -894,12 +897,12 @@ function isCandidateX01Active(candidate, gameState = null) {
   }) === true;
 }
 
-function hasAtomicSemantics(selected, routeMatchId, modernSurface) {
-  if (!selected || (!routeMatchId && !modernSurface?.variantNode)) {
-    return true;
+function hasAtomicSemantics(selected, x01Rules) {
+  if (!selected) {
+    return false;
   }
   return Number.isFinite(selected.activeScore) &&
-    Boolean(normalizeOutMode(selected.outMode)) &&
+    Boolean(normalizeOutModeForComparison(selected.outMode, x01Rules)) &&
     Number.isFinite(selected.dartsRemaining);
 }
 
@@ -1104,8 +1107,7 @@ export function resolveX01CheckoutContext(context = {}) {
   const active = activeByDom || activeByState;
   const selectedHasAtomicSemantics = hasAtomicSemantics(
     selected,
-    routeMatchId,
-    modernSurface
+    x01Rules
   );
   const actionable = active && Boolean(selected) && selectedHasAtomicSemantics &&
     decision !== "pending" && decision !== "conflict";
@@ -1122,7 +1124,9 @@ export function resolveX01CheckoutContext(context = {}) {
     rememberSelectedCandidate(history, selected, stateCandidate, domCandidate);
   }
   const activeScore = actionable ? selected.activeScore : Number.NaN;
-  const outMode = actionable ? normalizeOutMode(selected.outMode) : "";
+  const outMode = actionable
+    ? normalizeOutModeForComparison(selected.outMode, x01Rules)
+    : "";
   const dartsRemaining = actionable
     ? normalizeDartsRemaining(selected.dartsRemaining)
     : Number.NaN;

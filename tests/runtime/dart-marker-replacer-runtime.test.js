@@ -1538,6 +1538,16 @@ test("dart-marker-replacer runtime remount keeps a single overlay instance", asy
     config: createSingleFeatureRuntimeConfig(),
   });
 
+  runtime.context.gameState.applyMatch({
+    id: "dart-marker-remount-match",
+    variant: "X01",
+    player: 0,
+    players: [{ id: "player-1" }],
+    gameScores: [301],
+    settings: { outMode: "Double Out" },
+    turns: [],
+  });
+
   runtime.start();
   runtime.start();
   await waitForCondition(

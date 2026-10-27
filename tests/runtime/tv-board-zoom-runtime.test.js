@@ -1059,7 +1059,7 @@ test("tv-board-zoom applies a direct finish zoom at runtime for D5 in finish-onl
   }
 });
 
-test("tv-board-zoom applies a visible checkout after reload before game-state hydration", async () => {
+test("tv-board-zoom waits for coherent game-state hydration before applying a visible checkout", async () => {
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "4";
   documentRef.suggestionElement.textContent = "D2";
@@ -1069,12 +1069,15 @@ test("tv-board-zoom applies a visible checkout after reload before game-state hy
   timers.installOnWindow(windowRef);
   timers.installGlobals();
   const { hostNode, targetNode } = installZoomFixture(documentRef);
+  let activeScore = null;
+  let outMode = "";
+  let gameStateListener = () => {};
   const gameState = {
     isX01Variant() {
       return true;
     },
     getOutMode() {
-      return "";
+      return outMode;
     },
     getActiveTurn() {
       return null;
@@ -1083,19 +1086,31 @@ test("tv-board-zoom applies a visible checkout after reload before game-state hy
       return [];
     },
     getActiveScore() {
-      return null;
+      return activeScore;
     },
     getSnapshot() {
       return null;
     },
-    subscribe() {
-      return () => {};
+    subscribe(listener) {
+      gameStateListener = listener;
+      return () => {
+        gameStateListener = () => {};
+      };
     },
   };
 
   const cleanup = startTvBoardZoom({ documentRef, windowRef, gameState });
 
   try {
+    timers.advance(25);
+
+    assert.equal(targetNode.classList.contains(ZOOM_CLASS), false);
+    assert.equal(hostNode.classList.contains(ZOOM_HOST_CLASS), false);
+    assert.equal(String(targetNode.style.transform || ""), "");
+
+    activeScore = 4;
+    outMode = "Double Out";
+    gameStateListener();
     timers.advance(25);
 
     assert.equal(targetNode.classList.contains(ZOOM_CLASS), true);

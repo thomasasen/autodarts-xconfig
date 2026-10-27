@@ -1392,6 +1392,8 @@ test("checkout-target-highlights selects next, finish or all segments from the a
       },
       gameState: {
         isX01Variant: () => true,
+        getActiveScore: () => 96,
+        getActiveThrows: () => [],
         getOutMode: () => "Double Out",
         subscribe() {
           return () => {};
@@ -1486,6 +1488,7 @@ test("checkout-target-highlights finish mode falls back to the current one-dart 
     gameState: {
       isX01Variant: () => true,
       getActiveScore: () => 36,
+      getActiveThrows: () => [],
       getOutMode: () => "Double Out",
       subscribe() {
         return () => {};
@@ -1558,6 +1561,7 @@ test("checkout-target-highlights next mode overrides an implausible route-first 
     gameState: {
       isX01Variant: () => true,
       getActiveScore: () => 50,
+      getActiveThrows: () => [],
       getOutMode: () => "Double Out",
       subscribe() {
         return () => {};
@@ -1643,6 +1647,7 @@ test("checkout-target-highlights finish mode stays empty for a valid visible S10
     gameState: {
       isX01Variant: () => true,
       getActiveScore: () => 50,
+      getActiveThrows: () => [],
       getOutMode: () => "Double Out",
       subscribe() {
         return () => {};
@@ -1827,6 +1832,7 @@ test("checkout-target-highlights ignores prior throw suggestions and targets vis
     gameState: {
       isX01Variant: () => true,
       getActiveScore: () => 82,
+      getActiveThrows: () => [],
       getOutMode: () => "Double Out",
       subscribe() {
         return () => {};
@@ -2066,6 +2072,7 @@ test("checkout-target-highlights next mode falls back to the active score checko
     gameState: {
       isX01Variant: () => true,
       getActiveScore: () => 50,
+      getActiveThrows: () => [],
       getOutMode: () => "Double Out",
       subscribe() {
         return () => {};
@@ -2150,6 +2157,7 @@ test("checkout-target-highlights next mode renders direct double finishes when n
       gameState: {
         isX01Variant: () => true,
         getActiveScore: () => activeScore,
+        getActiveThrows: () => [],
         getOutMode: () => "Double Out",
         subscribe() {
           return () => {};
@@ -2350,6 +2358,7 @@ test("checkout-target-highlights reapplies retained targets onto a replaced boar
     gameState: {
       isX01Variant: () => true,
       getActiveScore: () => 96,
+      getActiveThrows: () => [],
       getOutMode: () => "Double Out",
       subscribe() {
         return () => {};
@@ -2430,6 +2439,8 @@ test("checkout-target-highlights emits debug snapshots for render and no-route s
     },
     gameState: {
       isX01Variant: () => true,
+      getActiveScore: () => 40,
+      getActiveThrows: () => [],
       getOutMode: () => "Double Out",
       subscribe() {
         return () => {};
@@ -2503,6 +2514,8 @@ test("checkout-target-highlights emits debug snapshots for render and no-route s
     },
     gameState: {
       isX01Variant: () => true,
+      getActiveScore: () => 181,
+      getActiveThrows: () => [],
       getOutMode: () => "Double Out",
       subscribe() {
         return () => {};
@@ -2562,6 +2575,7 @@ test("checkout-target-highlights emits debug snapshots for render and no-route s
 
 test("checkout-target-highlights still renders when the suggestion node text exists but its rect collapses", () => {
   const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "40";
   documentRef.suggestionElement.textContent = "D20";
   documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 0, height: 0 };
   appendBoardFixture(documentRef);
@@ -2576,6 +2590,9 @@ test("checkout-target-highlights still renders when the suggestion node text exi
     },
     gameState: {
       isX01Variant: () => true,
+      getActiveScore: () => 40,
+      getActiveThrows: () => [],
+      getOutMode: () => "Double Out",
       subscribe() {
         return () => {};
       },
@@ -2645,6 +2662,7 @@ test("checkout-target-highlights rerenders after board replacement even when sug
 
   const firstBoard = createBoard();
   documentRef.main.appendChild(firstBoard.svg);
+  documentRef.activeScoreElement.textContent = "40";
   documentRef.suggestionElement.textContent = "D20";
 
   const cleanup = initializeCheckoutTargetHighlights({
@@ -2656,6 +2674,9 @@ test("checkout-target-highlights rerenders after board replacement even when sug
     },
     gameState: {
       isX01Variant: () => true,
+      getActiveScore: () => 40,
+      getActiveThrows: () => [],
+      getOutMode: () => "Double Out",
       subscribe() {
         return () => {};
       },
@@ -2718,6 +2739,7 @@ test("checkout-target-highlights rerenders after board replacement even when sug
 test("checkout-target-highlights rerenders onto a replaced board when suggestion and variant stay unchanged", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
+  documentRef.activeScoreElement.textContent = "40";
   documentRef.suggestionElement.textContent = "D20";
   const firstBoard = appendBoardFixture(documentRef);
   const scheduleCounter = { count: 0 };
@@ -2732,6 +2754,9 @@ test("checkout-target-highlights rerenders onto a replaced board when suggestion
     },
     gameState: {
       isX01Variant: () => true,
+      getActiveScore: () => 40,
+      getActiveThrows: () => [],
+      getOutMode: () => "Double Out",
       subscribe() {
         return () => {};
       },

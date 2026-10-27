@@ -353,7 +353,7 @@ test("x01 checkout context rejects a lagging DOM route after state progress", ()
   assert.notDeepEqual(resolved.checkoutSurface.authoritativeRouteSegments, ["T20", "D20"]);
 });
 
-test("x01 checkout context falls back to DOM-only score truth when no game-state score exists", () => {
+test("x01 checkout context keeps score-only DOM truth non-actionable without an out mode", () => {
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "32";
 
@@ -363,11 +363,28 @@ test("x01 checkout context falls back to DOM-only score truth when no game-state
     gameState: null,
   });
 
-  assert.equal(resolved.activeScore, 32);
+  assert.equal(Number.isNaN(resolved.activeScore), true);
   assert.equal(resolved.domScore, 32);
-  assert.equal(resolved.actionable, true);
-  assert.equal(resolved.coherence, "dom-preferred");
+  assert.equal(resolved.actionable, false);
   assert.equal(Number.isNaN(resolved.gameStateScore), true);
+});
+
+test("x01 checkout context rejects a nonempty unknown out mode", () => {
+  const documentRef = new FakeDocument();
+  documentRef.activeScoreElement.textContent = "20";
+
+  const resolved = resolveX01CheckoutContext({
+    documentRef,
+    windowRef: createFakeWindow({ documentRef }),
+    domOutMode: "mystery",
+    dartsRemaining: 3,
+    x01Rules,
+  });
+
+  assert.equal(resolved.actionable, false);
+  assert.equal(resolved.outMode, "");
+  assert.equal(Number.isNaN(resolved.activeScore), true);
+  assert.equal(resolved.diagnostics.reason, "incomplete-atomic-semantics");
 });
 
 test("x01 checkout context falls back to game-state score truth when no DOM score is available", () => {

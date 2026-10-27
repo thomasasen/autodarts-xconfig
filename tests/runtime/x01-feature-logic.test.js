@@ -457,14 +457,14 @@ test("tv-board-zoom resolves direct checkout zoom intents for low double finishe
   });
 });
 
-test("tv-board-zoom recovers a visible direct checkout while the active turn hydrates", () => {
+test("tv-board-zoom waits for atomic semantics before recovering a visible direct checkout", () => {
   const documentRef = new FakeDocument();
   documentRef.activeScoreElement.textContent = "4";
   documentRef.suggestionElement.textContent = "D2";
   documentRef.suggestionElement.__rect = { left: 320, top: 16, width: 180, height: 48 };
   const windowRef = createFakeWindow({ documentRef });
 
-  const intent = computeZoomIntent({
+  const pendingIntent = computeZoomIntent({
     gameState: createX01GameState({
       activeScore: null,
       outMode: "",
@@ -482,7 +482,27 @@ test("tv-board-zoom recovers a visible direct checkout while the active turn hyd
     nowTs: 1100,
   });
 
-  assert.deepEqual(intent, { reason: "checkout", segment: "D2" });
+  assert.equal(pendingIntent, null);
+
+  const hydratedIntent = computeZoomIntent({
+    gameState: createX01GameState({
+      activeScore: 4,
+      outMode: "Double Out",
+      activeTurn: { throws: [] },
+      activeThrows: [],
+    }),
+    x01Rules,
+    state: createZoomState(),
+    documentRef,
+    windowRef,
+    featureConfig: {
+      checkoutZoomEnabled: true,
+      checkoutZoomTarget: "finish-only",
+    },
+    nowTs: 1101,
+  });
+
+  assert.deepEqual(hydratedIntent, { reason: "checkout", segment: "D2" });
 });
 
 test("tv-board-zoom hydration fallback requires a matching visible direct checkout", () => {

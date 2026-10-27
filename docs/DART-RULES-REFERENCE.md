@@ -4,16 +4,25 @@
 
 Primärquellen:
 
-1. Autodarts X01: `https://autodarts.diy/Game-Settings/X01/`
-2. Autodarts Cricket: `https://autodarts.diy/Game-Settings/cricket/`
-3. DARTSLIVE 01 Games: `https://www.dartslive.com/enjoy/en/rule/01games/`
+1. DRA Rulebook 2026, gültig seit 31. März 2026: `https://www.thedra.co.uk/dra-rulebook`
+   - Throw/Visit: 6.2.6
+   - Bounce-/Fall-out ohne Re-throw: 6.2.7
+   - 501, Bull, Bust und Game Shot: 6.3.1 bis 6.3.3 sowie 6.3.10 und 6.3.11
+2. Autodarts X01: `https://autodarts.diy/Game-Settings/X01/`
+3. Autodarts Cricket: `https://autodarts.diy/Game-Settings/cricket/`
 4. DARTSLIVE Standard Cricket: `https://www.dartslive.com/enjoy/en/rule/s_cricket/`
 5. DARTSLIVE Cut Throat: `https://www.dartslive.com/enjoy/en/rule/cutthroat/`
 
 Sekundärquellen für Randfälle:
 
-6. Dartbase Tactics: `https://www.dartbase.com/Sect2/Tactics.html`
-7. DartsOn No Score Cricket: `https://dartson.app/rules/no-score-cricket/`
+6. DARTSLIVE 01 Games: `https://www.dartslive.com/enjoy/en/rule/01games/`
+7. Dartbase Tactics: `https://www.dartbase.com/Sect2/Tactics.html`
+8. DartsOn No Score Cricket: `https://dartson.app/rules/no-score-cricket/`
+
+Die DRA/PDC-Regeln sind die maßgebliche Quelle für Steel-Dart-Throw- und
+Standard-X01-Regeln. Autodarts dokumentiert zusätzliche X01-Varianten und
+Cricket. Cricket/Tactics wird nicht als PDC-Regel ausgegeben. Die maschinenlesbare,
+versionierte Testbasis liegt in `tests/fixtures/rules/steel-dart-rules.json`.
 
 ## X01
 
@@ -22,6 +31,8 @@ Sekundärquellen für Randfälle:
 - X01 startet mit einem festen Restwert; im Repository werden mindestens `121`, `170`, `301`, `501`, `701` und `901` als gültige Base-Scores behandelt.
 - Jeder Dart zieht seinen Punktewert vom Restwert ab.
 - Das Leg endet nur dann, wenn exakt `0` erreicht wird und der letzte Dart zum aktiven Out-Modus passt.
+- Ein Visit enthält höchstens drei Darts und endet vorher bei Game Shot oder Bust.
+- `MISS`/Bounce-out erzielt `0`, verbraucht aber einen Dart; es gibt keinen Re-throw.
 
 ### Segmente und Punkte
 
@@ -37,6 +48,8 @@ Sekundärquellen für Randfälle:
 - `straight`: jedes gültige Segment darf finishen.
 - `double`: nur ein Double darf finishen; `BULL = 50` gilt dabei als Double.
 - `master`: Double oder Triple dürfen finishen; `BULL = 50` bleibt gültig.
+- Fehlende oder unbekannte Out-Modi werden nicht geraten: Checkout-Auswertung und
+  Feature-Aktionen bleiben bis zu einem bekannten Modus inaktiv.
 
 ### Bust
 
@@ -50,8 +63,9 @@ Sekundärquellen für Randfälle:
 ### Zielmenge
 
 - Standard-Cricket nutzt `20`, `19`, `18`, `17`, `16`, `15`, `BULL`.
-- Tactics nutzt dieselbe Mark-Logik, erweitert die Zielmenge aber auf `20..10` plus `BULL`.
-- `DOUBLE` und `TRIPLE` dürfen als Host-/DOM-Kompatibilitätslabels erkannt werden, sind aber keine offizielle Tactics-Zielmenge.
+- Das Autodarts-xConfig-Tactics-Profil nutzt dieselbe Mark-Logik und die
+  Projekt-Zielmenge `20..10` plus `BULL`; dies ist kein PDC/DRA-Regelprofil.
+- `DOUBLE` und `TRIPLE` dürfen als Host-/DOM-Kompatibilitätslabels erkannt werden, gehören aber nicht zur Domain-Zielmenge des xConfig-Tactics-Profils.
 - Tactics-Token wie `strict` und `slop` werden als kompatible Submodus-Hinweise eingeordnet; ohne belegte Autodarts-Abweichung wird keine zusätzliche Projekt-Semantik erzwungen.
 
 ### Marks
@@ -74,6 +88,8 @@ Sekundärquellen für Randfälle:
 - Standard-Cricket: alle Ziele schließen und mindestens gleichauf oder vorne liegen.
 - Cut-Throat: Überschusspunkte gehen an offene Gegner; niedrigster Punktestand gewinnt.
 - No-Score / Practice: Punkte sind irrelevant, nur das Schließen aller Ziele zählt.
+- Ein statischer Snapshot mit mehreren vollständig geschlossenen Spielern ist ohne
+  Abschlussreihenfolge mehrdeutig und wird nicht als regelkonformes Unentschieden gewertet.
 
 ## Bekannte Systemgrenze
 

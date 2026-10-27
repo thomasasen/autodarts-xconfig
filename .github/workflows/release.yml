@@ -28,6 +28,9 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Verify checked-out commit
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
       - name: Validate tag and package parity
         if: github.ref_type == 'tag'
         run: npm run check:release -- --tag "${GITHUB_REF_NAME}"
@@ -37,6 +40,14 @@ jobs:
         run: npm run lint
       - name: Run local runtime and unit tests
         run: npm run test:local
+      - name: Enforce domain coverage floors
+        run: npm run test:coverage:domain
+      - name: Enforce domain mutation score
+        run: npm run test:mutation:domain
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: Run Chromium integration tests
+        run: npx playwright test --project=chromium
       - name: Rebuild release artifacts
         run: npm run build
       - name: Validate changelog

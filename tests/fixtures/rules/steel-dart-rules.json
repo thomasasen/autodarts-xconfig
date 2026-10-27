@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "verifiedAt": "2026-10-26",
+  "sources": {
+    "dra-2026": {
+      "scope": "PDC/DRA steel-dart match play and X01",
+      "title": "DRA Rules 2026 - in force from 31st March 2026",
+      "url": "https://www.thedra.co.uk/dra-rulebook",
+      "version": "2026",
+      "sections": ["6.2.6", "6.2.7", "6.3.1", "6.3.2", "6.3.3", "6.3.10", "6.3.11"]
+    },
+    "autodarts-x01": {
+      "scope": "Autodarts X01 variants",
+      "title": "Autodarts X01 game settings",
+      "url": "https://autodarts.diy/Game-Settings/X01/",
+      "version": "retrieved-2026-10-26"
+    },
+    "autodarts-cricket": {
+      "scope": "Autodarts Cricket",
+      "title": "Autodarts Cricket game settings",
+      "url": "https://autodarts.diy/Game-Settings/cricket/",
+      "version": "retrieved-2026-10-26"
+    },
+    "xconfig-tactics": {
+      "scope": "autodarts-xconfig Tactics domain contract",
+      "title": "Repository Tactics target contract",
+      "version": "1"
+    }
+  },
+  "conformanceCases": {
+    "x01Visits": [
+      {
+        "id": "miss-then-double-finish",
+        "scoreBefore": 40,
+        "outMode": "double",
+        "throws": ["MISS", "D20"],
+        "expected": { "scoreAfter": 0, "isFinish": true, "isBust": false, "stopReason": "finished" }
+      },
+      {
+        "id": "fourth-dart-cannot-finish",
+        "scoreBefore": 40,
+        "outMode": "double",
+        "throws": ["MISS", "MISS", "MISS", "D20"],
+        "expected": { "scoreAfter": 40, "isFinish": false, "isBust": false, "stopReason": "visit-dart-limit" }
+      },
+      {
+        "id": "unknown-out-mode-fails-closed",
+        "scoreBefore": 20,
+        "outMode": "mystery",
+        "throws": ["S20"],
+        "expected": { "scoreAfter": 20, "isFinish": false, "isBust": false, "stopReason": "unknown-out-mode" }
+      }
+    ],
+    "outModes": [
+      { "input": "Double Out", "expected": "double" },
+      { "input": "Master Out", "expected": "master" },
+      { "input": "Straight Out", "expected": "straight" },
+      { "input": "mystery", "expected": "" }
+    ],
+    "cricketVisits": [
+      {
+        "id": "cricket-fourth-dart-is-ignored",
+        "profile": "autodartsCricket",
+        "throws": ["T20", "T19", "T18", "T17"],
+        "expectedMarks": { "20": 3, "19": 3, "18": 3, "17": 0 },
+        "stopReason": "visit-dart-limit"
+      },
+      {
+        "id": "tactics-fourth-dart-is-ignored",
+        "profile": "xconfigTactics",
+        "throws": ["T14", "T13", "T12", "T11"],
+        "expectedMarks": { "14": 3, "13": 3, "12": 3, "11": 0 },
+        "stopReason": "visit-dart-limit"
+      }
+    ]
+  },
+  "profiles": {
+    "pdcDraX01": {
+      "outModes": ["double"],
+      "maxDartsPerVisit": 3,
+      "rules": [
+        {
+          "id": "dra-6.2.6-three-dart-visit",
+          "source": "dra-2026",
+          "section": "6.2.6",
+          "examples": ["T20,T20,T20"],
+          "counterExamples": ["T20,T20,T20,D1"]
+        },
+        {
+          "id": "dra-6.2.7-bounce-no-rethrow",
+          "source": "dra-2026",
+          "section": "6.2.7",
+          "examples": ["MISS,D20"],
+          "counterExamples": ["MISS is ignored without consuming a dart"]
+        },
+        {
+          "id": "dra-6.3-x01-double-out-bust",
+          "source": "dra-2026",
+          "sections": ["6.3.1", "6.3.2", "6.3.3", "6.3.10", "6.3.11"],
+          "examples": ["40:D20", "50:BULL", "100:T20,D20"],
+          "counterExamples": ["20:S20", "61:T20"]
+        }
+      ]
+    },
+    "autodartsX01": {
+      "outModes": ["straight", "double", "master"],
+      "rules": [
+        {
+          "id": "autodarts-x01-explicit-out-mode",
+          "source": "autodarts-x01",
+          "examples": ["Straight Out", "Double Out", "Master Out"],
+          "counterExamples": ["empty", "mystery", "double-in"]
+        }
+      ]
+    },
+    "autodartsCricket": {
+      "targets": ["20", "19", "18", "17", "16", "15", "BULL"],
+      "maxDartsPerVisit": 3,
+      "rules": [
+        {
+          "id": "autodarts-cricket-three-dart-turn",
+          "source": "autodarts-cricket",
+          "examples": ["T20,T19,T18"],
+          "counterExamples": ["T20,T19,T18,T17"]
+        }
+      ]
+    },
+    "xconfigTactics": {
+      "targets": ["20", "19", "18", "17", "16", "15", "14", "13", "12", "11", "10", "BULL"],
+      "compatibilityOnlyTargets": ["DOUBLE", "TRIPLE"],
+      "maxDartsPerVisit": 3,
+      "rules": [
+        {
+          "id": "xconfig-tactics-complete-target-set",
+          "source": "xconfig-tactics",
+          "examples": ["20..10+BULL are closed"],
+          "counterExamples": ["only 20 is closed", "DOUBLE and TRIPLE count as win targets"]
+        }
+      ]
+    }
+  }
+}

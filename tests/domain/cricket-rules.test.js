@@ -106,9 +106,12 @@ test("clampMarks normalizes values to range 0..3", () => {
 test("parseCricketMarkValue supports numeric and symbolic cricket mark notations", () => {
   assert.equal(parseCricketMarkValue("0"), 0);
   assert.equal(parseCricketMarkValue("2"), 2);
+  assert.equal(parseCricketMarkValue(" 2 "), 2);
   assert.equal(parseCricketMarkValue("3"), 3);
   assert.equal(parseCricketMarkValue("(3)"), 3);
+  assert.equal(parseCricketMarkValue("mark:1"), 1);
   assert.equal(parseCricketMarkValue("marks:2"), 2);
+  assert.equal(parseCricketMarkValue("marks : 2"), 2);
   assert.equal(parseCricketMarkValue("/"), 1);
   assert.equal(parseCricketMarkValue("|"), 1);
   assert.equal(parseCricketMarkValue("X"), 2);
@@ -117,6 +120,17 @@ test("parseCricketMarkValue supports numeric and symbolic cricket mark notations
   assert.equal(parseCricketMarkValue("S19"), null);
   assert.equal(parseCricketMarkValue("36"), null);
   assert.equal(parseCricketMarkValue("60"), null);
+  assert.equal(parseCricketMarkValue("2players"), null);
+  assert.equal(parseCricketMarkValue("1.8"), null);
+  assert.equal(parseCricketMarkValue("prefix(3)"), null);
+  assert.equal(parseCricketMarkValue("(3)tail"), null);
+  assert.equal(parseCricketMarkValue("textXnoise"), null);
+  assert.equal(parseCricketMarkValue("Xtail"), null);
+  assert.equal(parseCricketMarkValue("tailX"), null);
+  assert.equal(parseCricketMarkValue("/tail"), null);
+  assert.equal(parseCricketMarkValue("tail/"), null);
+  assert.equal(parseCricketMarkValue("⊗tail"), null);
+  assert.equal(parseCricketMarkValue("tail⊗"), null);
   assert.equal(parseCricketMarkValue("✕"), 2);
   assert.equal(parseCricketMarkValue("⊗"), 3);
   assert.equal(parseCricketMarkValue(""), null);
@@ -124,6 +138,13 @@ test("parseCricketMarkValue supports numeric and symbolic cricket mark notations
 });
 
 test("parseCricketThrowSegment normalizes cricket hits, bull aliases and points", () => {
+  assert.deepEqual(parseCricketThrowSegment("S1"), {
+    ring: "S",
+    value: 1,
+    marks: 1,
+    label: "1",
+    points: 1,
+  });
   assert.deepEqual(parseCricketThrowSegment({ segment: { name: "T20" } }), {
     ring: "T",
     value: 20,
@@ -162,6 +183,9 @@ test("parseCricketThrowSegment normalizes cricket hits, bull aliases and points"
       points: 40,
     }
   );
+  assert.equal(parseCricketThrowSegment("xT20"), null);
+  assert.equal(parseCricketThrowSegment("T20x"), null);
+  assert.equal(parseCricketThrowSegment("S0"), null);
   assert.equal(parseCricketThrowSegment({ segment: { name: "T25" } }), null);
 });
 
@@ -293,7 +317,7 @@ test("neutral or unknown scoring mode follows the same tactical state machine", 
   assert.equal(unknownStates.get("20").danger, true);
 });
 
-test("applyThrowsToMarksByLabel applies capped marks per player", () => {
+test("applyThrowsToMarksByLabel caps marks and ignores the fourth dart", () => {
   const baseMarks = createEmptyMarksByLabel(TACTICS_TARGET_ORDER, 2);
   const next = applyThrowsToMarksByLabel({
     targetOrder: TACTICS_TARGET_ORDER,
@@ -309,8 +333,172 @@ test("applyThrowsToMarksByLabel applies capped marks per player", () => {
 
   assert.equal(next["20"][1], 3);
   assert.equal(next["17"][1], 3);
-  assert.equal(next.BULL[1], 2);
+  assert.equal(next.BULL[1], 0);
   assert.equal(next["20"][0], 0);
+});
+
+test("Cricket and Tactics consume at most three dart positions in every scoring mode", () => {
+  [
+    { gameMode: "Cricket", scoringMode: "standard", targetOrder: CRICKET_TARGET_ORDER },
+    { gameMode: "Cricket", scoringMode: "cut-throat", targetOrder: CRICKET_TARGET_ORDER },
+    { gameMode: "Cricket", scoringMode: "no-score", targetOrder: CRICKET_TARGET_ORDER },
+    { gameMode: "Tactics", scoringMode: "standard", targetOrder: TACTICS_TARGET_ORDER },
+  ].forEach(({ gameMode, scoringMode, targetOrder }) => {
+    const baseMarksByLabel = createEmptyMarksByLabel(targetOrder, 2);
+    const baseline = structuredClone(baseMarksByLabel);
+    const result = applyCricketThrowsToState({
+      gameMode,
+      scoringMode,
+      targetOrder,
+      playerIndex: 0,
+      playerCount: 2,
+      baseMarksByLabel,
+      throws: ["MISS", "T20", "T19", "T18"],
+    });
+
+    assert.deepEqual(baseMarksByLabel, baseline, `${gameMode}/${scoringMode}: input immutable`);
+    assert.equal(result.nextMarksByLabel["20"][0], 3, `${gameMode}/${scoringMode}: dart 2`);
+    assert.equal(result.nextMarksByLabel["19"][0], 3, `${gameMode}/${scoringMode}: dart 3`);
+    assert.equal(result.nextMarksByLabel["18"][0], 0, `${gameMode}/${scoringMode}: dart 4`);
+    assert.equal(result.throwResults[0].reason, "miss");
+    assert.deepEqual(result.throwResults[3], {
+      index: 3,
+      segmentName: "T18",
+      ignored: true,
+      reason: "visit-dart-limit",
+    });
+    assert.equal(result.stopReason, "visit-dart-limit");
+  });
+});
+
+test("Cricket throw results preserve supported string and descriptor forms", () => {
+  const cases = [
+    { throwEntry: "S20", segmentName: "S20", expectedMarks: 1 },
+    { throwEntry: { segment: { name: "D20" } }, segmentName: "D20", expectedMarks: 2 },
+    { throwEntry: { segmentName: "T20" }, segmentName: "T20", expectedMarks: 3 },
+    { throwEntry: { name: "S20" }, segmentName: "S20", expectedMarks: 1 },
+  ];
+
+  cases.forEach(({ throwEntry, segmentName, expectedMarks }) => {
+    const result = applyCricketThrowsToState({
+      gameMode: "Cricket",
+      scoringMode: "no-score",
+      playerCount: 2,
+      throws: [throwEntry],
+    });
+
+    assert.equal(result.nextMarksByLabel["20"][0], expectedMarks, segmentName);
+    assert.deepEqual(result.throwResults, [
+      {
+        index: 0,
+        segmentName,
+        ignored: false,
+        reason: "marks-applied",
+      },
+    ]);
+  });
+});
+
+test("misses, invalid segments and non-target hits each consume a Cricket dart position", () => {
+  const result = applyCricketThrowsToState({
+    gameMode: "Cricket",
+    scoringMode: "standard",
+    playerCount: 2,
+    throws: ["MISS", "BOGUS", "S14", "T20"],
+  });
+
+  assert.deepEqual(result.throwResults, [
+    { index: 0, segmentName: "MISS", ignored: false, reason: "miss" },
+    { index: 1, segmentName: "BOGUS", ignored: false, reason: "invalid-segment" },
+    { index: 2, segmentName: "S14", ignored: false, reason: "non-target-segment" },
+    { index: 3, segmentName: "T20", ignored: true, reason: "visit-dart-limit" },
+  ]);
+  assert.equal(result.nextMarksByLabel["20"][0], 0);
+  assert.equal(result.stopReason, "visit-dart-limit");
+});
+
+test("null throw data fails closed but still consumes its Cricket dart position", () => {
+  const result = applyCricketThrowsToState({
+    gameMode: "Cricket",
+    scoringMode: "no-score",
+    playerCount: 2,
+    throws: [null, "T20"],
+  });
+
+  assert.deepEqual(result.throwResults, [
+    { index: 0, segmentName: "", ignored: false, reason: "invalid-segment" },
+    { index: 1, segmentName: "T20", ignored: false, reason: "marks-applied" },
+  ]);
+  assert.equal(result.nextMarksByLabel["20"][0], 3);
+});
+
+test("Tactics target order is inferred from base marks when metadata is absent", () => {
+  const result = applyCricketThrowsToState({
+    scoringMode: "no-score",
+    playerCount: 2,
+    baseMarksByLabel: {
+      "10": [0, 0],
+      BULL: [0, 0],
+    },
+    throws: ["S10"],
+  });
+
+  assert.deepEqual(result.targetOrder, TACTICS_TARGET_ORDER);
+  assert.equal(result.nextMarksByLabel["10"][0], 1);
+  assert.deepEqual(result.throwResults, [
+    { index: 0, segmentName: "S10", ignored: false, reason: "marks-applied" },
+  ]);
+});
+
+test("Cricket visit stop reasons distinguish zero, exactly three and excess darts", () => {
+  const emptyVisit = applyCricketThrowsToState({
+    gameMode: "Cricket",
+    scoringMode: "no-score",
+    playerCount: 2,
+    throws: [],
+  });
+  const completeVisit = applyCricketThrowsToState({
+    gameMode: "Cricket",
+    scoringMode: "no-score",
+    playerCount: 2,
+    throws: ["MISS", "MISS", "MISS"],
+  });
+
+  assert.equal(emptyVisit.stopReason, "no-throws");
+  assert.deepEqual(emptyVisit.throwResults, []);
+  assert.equal(completeVisit.stopReason, "throws-exhausted");
+  assert.deepEqual(
+    completeVisit.throwResults.map(({ index, ignored, reason }) => ({ index, ignored, reason })),
+    [
+      { index: 0, ignored: false, reason: "miss" },
+      { index: 1, ignored: false, reason: "miss" },
+      { index: 2, ignored: false, reason: "miss" },
+    ]
+  );
+});
+
+test("fourth-dart Cricket overflow cannot award points", () => {
+  ["standard", "cut-throat"].forEach((scoringMode) => {
+    const result = applyCricketThrowsToState({
+      gameMode: "Cricket",
+      scoringMode,
+      targetOrder: CRICKET_TARGET_ORDER,
+      playerIndex: 0,
+      playerCount: 2,
+      baseMarksByLabel: {
+        ...createEmptyMarksByLabel(CRICKET_TARGET_ORDER, 2),
+        "20": [3, 0],
+      },
+      throws: ["T20", "T20", "T20", "T20"],
+    });
+
+    assert.deepEqual(
+      result.scoreDeltaByPlayer,
+      scoringMode === "standard" ? [180, 0] : [0, 180]
+    );
+    assert.equal(result.scoringEvents.length, 3);
+    assert.equal(result.throwResults[3].reason, "visit-dart-limit");
+  });
 });
 
 test("standard cricket awards overflow only to the active player while opponents stay open", () => {
@@ -335,7 +523,21 @@ test("standard cricket awards overflow only to the active player while opponents
   assert.equal(result.nextMarksByLabel["19"][0], 3);
   assert.deepEqual(result.scoreDeltaByPlayer, [40, 0]);
   assert.equal(result.scoringEvents.length, 1);
-  assert.deepEqual(result.scoringEvents[0].recipients, [{ playerIndex: 0, delta: 40 }]);
+  assert.deepEqual(result.scoringEvents[0], {
+    label: "20",
+    ring: "T",
+    marks: 3,
+    appliedMarks: 1,
+    overflowMarks: 2,
+    baseScore: 20,
+    totalPoints: 40,
+    playerIndex: 0,
+    recipients: [{ playerIndex: 0, delta: 40 }],
+  });
+  assert.deepEqual(result.throwResults, [
+    { index: 0, segmentName: "T20", ignored: false, reason: "scored" },
+    { index: 1, segmentName: "T19", ignored: false, reason: "marks-applied" },
+  ]);
 });
 
 test("cut-throat awards overflow to each still-open opponent", () => {
@@ -382,6 +584,9 @@ test("neutral mode keeps marks but never creates scoring deltas", () => {
   assert.equal(result.nextMarksByLabel["20"][0], 3);
   assert.deepEqual(result.scoreDeltaByPlayer, [0, 0]);
   assert.equal(result.scoringEvents.length, 0);
+  assert.deepEqual(result.throwResults, [
+    { index: 0, segmentName: "T20", ignored: false, reason: "marks-applied" },
+  ]);
 });
 
 test("bull overflow scores 25 per extra bull mark and stops when everyone is closed", () => {
@@ -424,6 +629,9 @@ test("bull overflow scores 25 per extra bull mark and stops when everyone is clo
 
   assert.equal(deadBull.nextMarksByLabel.BULL[0], 3);
   assert.deepEqual(deadBull.scoreDeltaByPlayer, [0, 0]);
+  assert.deepEqual(deadBull.throwResults, [
+    { index: 0, segmentName: "BULL", ignored: false, reason: "marks-applied" },
+  ]);
 });
 
 test("diffMarksByLabel reports deltas and increases per target", () => {
@@ -867,7 +1075,7 @@ test("evaluateCricketWinState resolves standard, cut-throat and neutral winners"
   assert.deepEqual(cutThroatWin.winnerIndexes, [1]);
   assert.equal(cutThroatWin.playerStates[1].leading, true);
 
-  const neutralTie = evaluateCricketWinState({
+  const ambiguousNeutralSnapshot = evaluateCricketWinState({
     targetOrder: CRICKET_TARGET_ORDER,
     scoringMode: "no-score",
     scoresByPlayer: [100, 10],
@@ -881,9 +1089,102 @@ test("evaluateCricketWinState resolves standard, cut-throat and neutral winners"
       BULL: [3, 3],
     },
   });
-  assert.equal(neutralTie.hasWinner, true);
-  assert.equal(neutralTie.isTie, true);
-  assert.deepEqual(neutralTie.winnerIndexes, [0, 1]);
+  assert.equal(ambiguousNeutralSnapshot.hasWinner, false);
+  assert.equal(ambiguousNeutralSnapshot.isTie, false);
+  assert.equal(ambiguousNeutralSnapshot.ambiguousTerminalState, true);
+  assert.deepEqual(ambiguousNeutralSnapshot.winnerCandidateIndexes, [0, 1]);
+  assert.deepEqual(ambiguousNeutralSnapshot.winnerIndexes, []);
+  assert.deepEqual(
+    ambiguousNeutralSnapshot.playerStates.map((state) => state.winner),
+    [false, false]
+  );
+
+  for (const invalidLastThrowPlayerIndex of [null, "", false, "1", 9]) {
+    const unresolvedSnapshot = evaluateCricketWinState({
+      targetOrder: CRICKET_TARGET_ORDER,
+      scoringMode: "no-score",
+      lastThrowPlayerIndex: invalidLastThrowPlayerIndex,
+      marksByLabel: Object.fromEntries(
+        CRICKET_TARGET_ORDER.map((label) => [label, [3, 3]])
+      ),
+    });
+    assert.equal(unresolvedSnapshot.ambiguousTerminalState, true);
+    assert.deepEqual(unresolvedSnapshot.winnerIndexes, []);
+  }
+
+  const resolvedNeutralSnapshot = evaluateCricketWinState({
+    targetOrder: CRICKET_TARGET_ORDER,
+    scoringMode: "no-score",
+    scoresByPlayer: [100, 10],
+    lastThrowPlayerIndex: 1,
+    marksByLabel: Object.fromEntries(
+      CRICKET_TARGET_ORDER.map((label) => [label, [3, 3]])
+    ),
+  });
+  assert.equal(resolvedNeutralSnapshot.ambiguousTerminalState, false);
+  assert.deepEqual(resolvedNeutralSnapshot.winnerIndexes, [1]);
+  assert.deepEqual(
+    resolvedNeutralSnapshot.playerStates.map((state) => state.winner),
+    [false, true]
+  );
+});
+
+test("winner resolution requires the scoring leader even when every player has closed", () => {
+  const closedMarks = Object.fromEntries(
+    CRICKET_TARGET_ORDER.map((label) => [label, [3, 3]])
+  );
+  const standard = evaluateCricketWinState({
+    gameMode: "Cricket",
+    scoringMode: "standard",
+    scoresByPlayer: [45, 30],
+    marksByLabel: closedMarks,
+  });
+  const cutThroat = evaluateCricketWinState({
+    gameMode: "Cricket",
+    scoringMode: "cut-throat",
+    scoresByPlayer: [45, 30],
+    marksByLabel: closedMarks,
+  });
+
+  assert.deepEqual(standard.winnerCandidateIndexes, [0]);
+  assert.deepEqual(standard.winnerIndexes, [0]);
+  assert.deepEqual(
+    standard.playerStates.map(({ leading, winner }) => ({ leading, winner })),
+    [
+      { leading: true, winner: true },
+      { leading: false, winner: false },
+    ]
+  );
+  assert.deepEqual(cutThroat.winnerCandidateIndexes, [1]);
+  assert.deepEqual(cutThroat.winnerIndexes, [1]);
+  assert.deepEqual(
+    cutThroat.playerStates.map(({ leading, winner }) => ({ leading, winner })),
+    [
+      { leading: false, winner: false },
+      { leading: true, winner: true },
+    ]
+  );
+});
+
+test("a last throw from a non-candidate cannot resolve an ambiguous neutral snapshot", () => {
+  const marksByLabel = Object.fromEntries(
+    CRICKET_TARGET_ORDER.map((label) => [label, [3, 0, 3]])
+  );
+  const result = evaluateCricketWinState({
+    gameMode: "Cricket",
+    scoringMode: "no-score",
+    lastThrowPlayerIndex: 1,
+    marksByLabel,
+  });
+
+  assert.deepEqual(result.winnerCandidateIndexes, [0, 2]);
+  assert.equal(result.ambiguousTerminalState, true);
+  assert.equal(result.hasWinner, false);
+  assert.deepEqual(result.winnerIndexes, []);
+  assert.deepEqual(
+    result.playerStates.map((state) => state.winner),
+    [false, false, false]
+  );
 });
 
 test("evaluateCricketWinState keeps unknown scoring mode neutral for leading/winner flags", () => {
@@ -927,9 +1228,27 @@ test("evaluateCricketWinState ignores DOUBLE and TRIPLE for tactics target count
     scoringMode: "neutral",
   });
 
-  assert.deepEqual(result.targetOrder, ["20"]);
+  assert.deepEqual(result.targetOrder, TACTICS_TARGET_ORDER);
   assert.equal(result.playerStates[0].closedTargetCount, 1);
-  assert.equal(result.playerStates[0].allTargetsClosed, true);
+  assert.equal(result.playerStates[0].remainingTargets, 11);
+  assert.equal(result.playerStates[0].allTargetsClosed, false);
+  assert.equal(result.hasWinner, false);
   assert.equal(result.playerStates[1].closedTargetCount, 0);
   assert.equal(result.playerStates[1].allTargetsClosed, false);
+});
+
+test("evaluateCricketWinState cannot declare a winner from a partial Cricket snapshot", () => {
+  const result = evaluateCricketWinState({
+    gameMode: "Cricket",
+    targetOrder: ["20"],
+    marksByLabel: { "20": [3, 0] },
+    scoresByPlayer: [20, 0],
+    scoringMode: "standard",
+  });
+
+  assert.deepEqual(result.targetOrder, CRICKET_TARGET_ORDER);
+  assert.equal(result.playerStates[0].closedTargetCount, 1);
+  assert.equal(result.playerStates[0].remainingTargets, 6);
+  assert.equal(result.playerStates[0].allTargetsClosed, false);
+  assert.equal(result.hasWinner, false);
 });

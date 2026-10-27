@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { USERSCRIPT_ASSET_LOADERS } from "../scripts/userscript-build-config.mjs";
 
 let bundle;
+
 test.beforeAll(async () => {
   const result = await build({ stdin: { contents: `
     import * as highlight from "./src/features/dartboard-marker-highlight/logic.js";
@@ -157,16 +158,18 @@ for (const order of ["tools-first", "xconfig-first"]) {
     test.fail(order === "xconfig-first", "Known Tools frame rewrite conflict; production interception unchanged");
     await page.setContent("<!doctype html><main></main>");
     await page.addScriptTag({ content: bundle });
-    const result = await page.evaluate((installOrder) => {
+    const result = await page.evaluate(async (installOrder) => {
       const api = window.combinations;
       const native = Object.getOwnPropertyDescriptor(MessageEvent.prototype, "data");
+      let toolsCalls = 0;
       // Model the pinned Tools wrapper's delivered-frame rewrite, without importing its rules.
       function installTools() {
         const previous = Object.getOwnPropertyDescriptor(MessageEvent.prototype, "data");
         Object.defineProperty(MessageEvent.prototype, "data", { ...previous, get() {
+          toolsCalls += 1;
           const raw = previous.get.call(this);
           const frame = JSON.parse(raw);
-          frame.data.gameScores = [40, 60];
+          frame.data.gameScores = [toolsCalls, 60];
           frame.data.turns[0].busted = true;
           frame.data.turns[0].turnBusted = true;
           return JSON.stringify(frame);
@@ -183,13 +186,15 @@ for (const order of ["tools-first", "xconfig-first"]) {
       } }) });
       Object.defineProperty(event, "currentTarget", { value: target });
       const delivered = JSON.parse(event.data);
+      await Promise.resolve();
       const score = store.getActiveScore();
       store.stop();
       Object.defineProperty(MessageEvent.prototype, "data", native);
-      return { deliveredScore: delivered.data.gameScores[0], observedScore: score };
+      return { deliveredScore: delivered.data.gameScores[0], observedScore: score, toolsCalls };
     }, order);
     await testInfo.attach("delivered-versus-observed-frame", { body: JSON.stringify(result), contentType: "application/json" });
     expect(result.observedScore).toBe(result.deliveredScore);
+    expect(result.toolsCalls).toBe(1);
   });
 }
 

@@ -1,0 +1,33 @@
+name: Domain Mutation Tests
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 3 * * 1"
+
+jobs:
+  mutation-tests:
+    name: X01 and Cricket mutation score
+    timeout-minutes: 180
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run domain mutation tests
+        run: npm run test:mutation:domain
+      - name: Upload mutation diagnostics
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: domain-mutation-report-${{ github.sha }}
+          path: reports/mutation/
+          if-no-files-found: ignore
+          retention-days: 7

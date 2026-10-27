@@ -265,6 +265,19 @@ test("runtime public config API persists updates and survives feature toggles", 
   };
   windowRef.confetti = function fakeConfetti() {};
   const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  void new windowRef.MessageEvent(JSON.stringify({
+    channel: "autodarts.matches",
+    topic: "runtime-config-match.state",
+    data: {
+      id: "runtime-config-match",
+      variant: "X01",
+      player: 0,
+      players: [{ id: "player-1" }],
+      gameScores: [40],
+      settings: { outMode: "Double Out" },
+      turns: [],
+    },
+  }), new windowRef.WebSocket()).data;
 
   await wait(5);
 

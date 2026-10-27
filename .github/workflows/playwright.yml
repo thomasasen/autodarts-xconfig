@@ -5,14 +5,39 @@ on:
   pull_request:
     branches: [ main, master ]
 jobs:
-  test:
-    timeout-minutes: 60
+  node-tests:
+    name: Node tests and domain coverage
+    timeout-minutes: 30
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
       with:
-        node-version: lts/*
+        node-version: 24
+        cache: npm
+    - name: Install dependencies
+      run: npm ci
+    - name: Lint source and tests
+      run: npm run lint
+    - name: Run runtime and unit tests
+      run: npm run test:local
+    - name: Enforce domain coverage floors
+      run: npm run test:coverage:domain
+
+  test:
+    name: Chromium integration tests
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 24
+        cache: npm
     - name: Install dependencies
       run: npm ci
     - name: Install Playwright Browsers

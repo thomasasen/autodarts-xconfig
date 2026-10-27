@@ -98,6 +98,7 @@ function expectedThrowOutcome(scoreBefore, segment, outMode) {
     scoredPoints: segment.score,
     isBust,
     isFinish: reason === "finished",
+    consumesDart: true,
     reason,
   };
 }
@@ -292,6 +293,21 @@ test("X01 visits stop on game shot or bust and restore the visit-start score on 
       outMode: "double",
       throws: ["T20", "T20", "T20"],
       expected: { scoreAfter: 121, total: 180, bust: false, finish: false, stop: "throws-exhausted", ignored: [] },
+    },
+    {
+      label: "miss consumes dart one before checkout",
+      scoreBefore: 100,
+      outMode: "double",
+      throws: ["MISS", "T20", "D20"],
+      expected: { scoreAfter: 0, total: 100, bust: false, finish: true, stop: "finished", ignored: [] },
+    },
+    {
+      label: "three misses do not grant a fourth dart",
+      scoreBefore: 40,
+      outMode: "double",
+      throws: ["MISS", "MISS", "MISS", "D20"],
+      expected: { scoreAfter: 40, total: 0, bust: false, finish: false, stop: "visit-dart-limit", ignored: [3] },
+      limitIndex: 3,
     },
     {
       label: "fourth dart cannot score in one visit",

@@ -1,13 +1,22 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 
 import {
   applyCricketThrowsToState,
-  CRICKET_TARGET_ORDER,
   evaluateCricketWinState,
   getCricketTargetBaseScore,
-  TACTICS_TARGET_ORDER,
 } from "../../src/domain/cricket-rules.js";
+
+const rulesManifest = JSON.parse(
+  await readFile(new URL("../fixtures/rules/steel-dart-rules.json", import.meta.url), "utf8")
+);
+const CRICKET_TARGET_ORDER = Object.freeze(
+  rulesManifest.profiles.autodartsCricket.targets.slice()
+);
+const TACTICS_TARGET_ORDER = Object.freeze(
+  rulesManifest.profiles.xconfigTactics.targets.slice()
+);
 
 const SCORING_MODES = Object.freeze([
   { input: "standard", normalized: "standard" },
@@ -248,9 +257,16 @@ test("Cricket and Autodarts Tactics winner states match closure and score rules 
                 allTargetsClosed
               ),
             }));
-            const winnerIndexes = expectedPlayers
+            const winnerCandidateIndexes = expectedPlayers
               .filter(({ winner }) => winner)
               .map(({ playerIndex }) => playerIndex);
+            const ambiguousTerminalState = winnerCandidateIndexes.length > 1;
+            const winnerIndexes = ambiguousTerminalState ? [] : winnerCandidateIndexes;
+            if (ambiguousTerminalState) {
+              expectedPlayers.forEach((player) => {
+                player.winner = false;
+              });
+            }
             const context = `${gameMode}, players=${playerCount}, closed=${closedByPlayer.join("/")}, scores=${scoresByPlayer.join("/")}, mode=${input}`;
 
             assert.deepEqual(result.targetOrder, targetOrder, `${context}: targets`);
@@ -260,7 +276,17 @@ test("Cricket and Autodarts Tactics winner states match closure and score rules 
             assert.deepEqual(result.playerStates, expectedPlayers, `${context}: player states`);
             assert.deepEqual(result.winnerIndexes, winnerIndexes, `${context}: winners`);
             assert.equal(result.hasWinner, winnerIndexes.length > 0, `${context}: has winner`);
-            assert.equal(result.isTie, winnerIndexes.length > 1, `${context}: snapshot tie`);
+            assert.equal(result.isTie, false, `${context}: legal games cannot tie`);
+            assert.equal(
+              result.ambiguousTerminalState,
+              ambiguousTerminalState,
+              `${context}: ambiguous terminal snapshot`
+            );
+            assert.deepEqual(
+              result.winnerCandidateIndexes,
+              winnerCandidateIndexes,
+              `${context}: winner candidates`
+            );
           });
         });
       });

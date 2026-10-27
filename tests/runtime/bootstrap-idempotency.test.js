@@ -20,6 +20,18 @@ async function waitFor(check, { timeoutMs = 160, intervalMs = 5 } = {}) {
   return Boolean(check());
 }
 
+function hydrateDoubleOut(runtime, score = 40) {
+  runtime.context.gameState.applyMatch({
+    id: "bootstrap-test-match",
+    variant: "X01",
+    player: 0,
+    players: [{ id: "player-1" }],
+    gameScores: [score],
+    settings: { outMode: "Double Out" },
+    turns: [],
+  });
+}
+
 test("bootstrap start/stop are idempotent and keep a single runtime namespace", () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });
@@ -81,6 +93,7 @@ test("feature mount/unmount cycle does not leak DOM highlight artifacts", async 
     },
   });
 
+  hydrateDoubleOut(runtime);
   runtime.start();
   assert.equal(
     await waitFor(() => documentRef.activeScoreElement.classList.contains(HIGHLIGHT_CLASS)),
@@ -135,6 +148,7 @@ test("config updates remount affected mounted features without duplicating obser
     },
   });
 
+  hydrateDoubleOut(runtime);
   runtime.start();
   assert.equal(
     await waitFor(() => documentRef.activeScoreElement.classList.contains("ad-ext-checkout-possible--grow-only")),

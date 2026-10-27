@@ -21,6 +21,7 @@ export const TACTICS_TARGET_ORDER = [
 ];
 
 export const TACTICS_EXTRA_TARGETS = ["DOUBLE", "TRIPLE"];
+const MAX_DARTS_PER_VISIT = 3;
 export const CRICKET_DISCOVERY_TARGET_ORDER = [
   ...TACTICS_TARGET_ORDER,
   ...TACTICS_EXTRA_TARGETS,
@@ -211,6 +212,9 @@ function normalizeSegmentName(segment) {
 }
 
 function readSegmentDescriptor(throwEntry) {
+  if (typeof throwEntry === "string") {
+    return { name: throwEntry };
+  }
   if (!throwEntry || typeof throwEntry !== "object") {
     return null;
   }
@@ -221,7 +225,9 @@ function readSegmentDescriptor(throwEntry) {
 }
 
 function buildSegmentNameFromDescriptor(segment) {
-  const name = normalizeSegmentName(segment?.name || segment?.segment || segment?.label || "");
+  const name = normalizeSegmentName(
+    segment?.name || segment?.segmentName || segment?.segment || segment?.label || ""
+  );
   if (name) {
     return name;
   }
@@ -318,9 +324,8 @@ export function parseCricketMarkValue(value) {
     return null;
   }
 
-  const direct = Number.parseInt(raw, 10);
-  if (Number.isFinite(direct) && direct >= 0 && direct <= 3) {
-    return clampMarks(direct);
+  if (/^[0-3]$/.test(raw)) {
+    return Number(raw);
   }
 
   const normalized = raw
@@ -332,13 +337,13 @@ export function parseCricketMarkValue(value) {
   }
 
   // Dedicated symbols used in legacy and current cricket scoreboards.
-  if (/[\u2A02\u2297\u29BB]/u.test(normalized)) {
+  if (/^[\u2A02\u2297\u29BB]$/u.test(normalized)) {
     return 3;
   }
-  if (/[\u00D7\u2715\u2716\u2573X]/u.test(normalized)) {
+  if (/^[\u00D7\u2715\u2716\u2573X]$/u.test(normalized)) {
     return 2;
   }
-  if (normalized.includes("/") || normalized.includes("|")) {
+  if (/^[/|]$/.test(normalized)) {
     return 1;
   }
   // Guard against throw/score tokens like "D18", "T20", "36", "60".
@@ -346,10 +351,10 @@ export function parseCricketMarkValue(value) {
     return null;
   }
 
-  // Accept a single standalone mark digit wrapped by non-digits.
-  const digit = /^\D*([0-3])\D*$/.exec(normalized);
+  // Accept only the explicit wrappers observed in cricket mark surfaces.
+  const digit = /^(?:\(([0-3])\)|MARKS?:([0-3]))$/.exec(normalized);
   if (digit) {
-    return clampMarks(Number.parseInt(digit[1], 10));
+    return Number(digit[1] ?? digit[2]);
   }
 
   return null;
@@ -541,10 +546,37 @@ export function applyCricketThrowsToState(options = {}) {
   const scoringModeNormalized = resolveScoringModeNormalized(options);
   const scoringEvents = [];
 
-  throws.forEach((throwEntry) => {
+  const throwResults = throws.map((throwEntry, index) => {
+    const segmentName = normalizeSegmentName(
+      typeof throwEntry === "string"
+        ? throwEntry
+        : throwEntry?.segment?.name || throwEntry?.segmentName || throwEntry?.name
+    );
+    if (index >= MAX_DARTS_PER_VISIT) {
+      return {
+        index,
+        segmentName,
+        ignored: true,
+        reason: "visit-dart-limit",
+      };
+    }
+
     const parsed = parseCricketThrowSegment(throwEntry);
-    if (!parsed || !explicitTargetOrder.includes(parsed.label)) {
-      return;
+    if (!parsed) {
+      return {
+        index,
+        segmentName,
+        ignored: false,
+        reason: segmentName === "MISS" ? "miss" : "invalid-segment",
+      };
+    }
+    if (!explicitTargetOrder.includes(parsed.label)) {
+      return {
+        index,
+        segmentName,
+        ignored: false,
+        reason: "non-target-segment",
+      };
     }
 
     const marksByPlayer = nextMarksByLabel[parsed.label];
@@ -557,13 +589,23 @@ export function applyCricketThrowsToState(options = {}) {
 
     const openOpponentIndexes = getOpenOpponentIndexes(marksByPlayer, playerIndex);
     if (!(overflowMarks > 0) || !openOpponentIndexes.length) {
-      return;
+      return {
+        index,
+        segmentName,
+        ignored: false,
+        reason: "marks-applied",
+      };
     }
 
     const baseScore = getCricketTargetBaseScore(parsed.label);
     const totalPoints = overflowMarks * baseScore;
     if (!(totalPoints > 0)) {
-      return;
+      return {
+        index,
+        segmentName,
+        ignored: false,
+        reason: "marks-applied",
+      };
     }
 
     const recipients = [];
@@ -577,7 +619,12 @@ export function applyCricketThrowsToState(options = {}) {
         recipients.push({ playerIndex: opponentIndex, delta: totalPoints });
       });
     } else {
-      return;
+      return {
+        index,
+        segmentName,
+        ignored: false,
+        reason: "marks-applied",
+      };
     }
 
     scoringEvents.push({
@@ -591,6 +638,13 @@ export function applyCricketThrowsToState(options = {}) {
       playerIndex,
       recipients,
     });
+
+    return {
+      index,
+      segmentName,
+      ignored: false,
+      reason: "scored",
+    };
   });
 
   return {
@@ -599,6 +653,12 @@ export function applyCricketThrowsToState(options = {}) {
     scoreDeltaByPlayer,
     scoringModeNormalized,
     scoringEvents,
+    stopReason: throws.length > MAX_DARTS_PER_VISIT
+      ? "visit-dart-limit"
+      : throws.length
+        ? "throws-exhausted"
+        : "no-throws",
+    throwResults,
   };
 }
 
@@ -762,7 +822,8 @@ function resolveTargetOrderForWinState(options = {}) {
     ? options.targetOrder.filter(Boolean)
     : [];
   if (explicitTargetOrder.length) {
-    return sanitizeTargetOrderForMode(explicitTargetOrder, options.gameMode, true);
+    const modeFamily = getResolvedModeFamily(options.gameMode, explicitTargetOrder);
+    return getTargetOrderByGameMode(modeFamily);
   }
 
   const inferredMode = inferCricketGameModeByLabels(Object.keys(options.marksByLabel || {}));
@@ -830,9 +891,25 @@ export function evaluateCricketWinState(options = {}) {
     };
   });
 
-  const winnerIndexes = playerStates
+  const candidateWinnerIndexes = playerStates
     .filter((playerState) => playerState.winner)
     .map((playerState) => playerState.playerIndex);
+  const lastThrowPlayerIndex = Number.isInteger(options.lastThrowPlayerIndex)
+    ? options.lastThrowPlayerIndex
+    : null;
+  const hasValidLastThrowWinner = Number.isInteger(lastThrowPlayerIndex) &&
+    candidateWinnerIndexes.includes(lastThrowPlayerIndex);
+  const ambiguousTerminalState = candidateWinnerIndexes.length > 1 &&
+    !hasValidLastThrowWinner;
+  const winnerIndexes = ambiguousTerminalState
+    ? []
+    : hasValidLastThrowWinner
+      ? [lastThrowPlayerIndex]
+      : candidateWinnerIndexes;
+
+  playerStates.forEach((playerState) => {
+    playerState.winner = winnerIndexes.includes(playerState.playerIndex);
+  });
 
   return {
     targetOrder,
@@ -841,7 +918,9 @@ export function evaluateCricketWinState(options = {}) {
     highestScore,
     lowestScore,
     hasWinner: winnerIndexes.length > 0,
-    isTie: winnerIndexes.length > 1,
+    isTie: false,
+    ambiguousTerminalState,
+    winnerCandidateIndexes: candidateWinnerIndexes,
     winnerIndexes,
     playerStates,
   };

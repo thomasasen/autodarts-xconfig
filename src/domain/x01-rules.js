@@ -32,6 +32,10 @@ export function normalizeSegmentName(value) {
     return "";
   }
 
+  if (raw === "MISS") {
+    return "MISS";
+  }
+
   if (raw === "DB" || raw === "DBULL" || raw === "BULLSEYE" || raw === "BULL") {
     return "BULL";
   }
@@ -71,6 +75,15 @@ export function parseSegment(normalizedSegmentName) {
   const normalized = normalizeSegmentName(normalizedSegmentName);
   if (!normalized) {
     return null;
+  }
+
+  if (normalized === "MISS") {
+    return {
+      normalized,
+      ring: "MISS",
+      value: 0,
+      score: 0,
+    };
   }
 
   if (normalized === "BULL") {
@@ -298,33 +311,26 @@ export function isSingleBullThrowEntry(throwEntry) {
 export function normalizeOutMode(value) {
   const normalized = String(value || "")
     .trim()
-    .toLowerCase();
+    .toLowerCase()
+    .replaceAll(/[\s_-]+/g, " ");
 
   if (!normalized) {
-    return "straight";
+    return "";
   }
 
-  if (normalized.includes("master")) {
+  if (["master", "master out", "mo"].includes(normalized)) {
     return "master";
   }
 
-  if (normalized.includes("double")) {
+  if (["double", "double out", "do"].includes(normalized)) {
     return "double";
   }
 
-  if (normalized.includes("straight") || normalized.includes("single")) {
+  if (["straight", "straight out", "single", "single out", "so"].includes(normalized)) {
     return "straight";
   }
 
-  if (normalized === "mo") {
-    return "master";
-  }
-
-  if (normalized === "do") {
-    return "double";
-  }
-
-  return "straight";
+  return "";
 }
 
 function getCheckoutFinishSegments(outMode) {
@@ -574,7 +580,10 @@ export function isCheckoutPossibleFromScoreForOutModeWithDarts(score, outMode, d
   }
 
   const scoreSetByDarts =
-    CHECKOUTABLE_SCORES_BY_MODE[normalizedOutMode] || CHECKOUTABLE_SCORES_BY_MODE.straight;
+    CHECKOUTABLE_SCORES_BY_MODE[normalizedOutMode];
+  if (!scoreSetByDarts) {
+    return false;
+  }
   const scoreSet = scoreSetByDarts[normalizedDartsRemaining] || scoreSetByDarts[3];
   return scoreSet.has(numeric);
 }
@@ -591,7 +600,12 @@ export function getCheckoutRoutesForScore(score, outMode, dartsRemaining = 3) {
   const numeric = toNumber(score);
   const normalizedOutMode = normalizeOutMode(outMode);
   const normalizedDartsRemaining = normalizeDartsRemaining(dartsRemaining, 3);
-  if (!Number.isFinite(numeric) || numeric <= 0 || normalizedDartsRemaining < 1) {
+  if (
+    !Number.isFinite(numeric) ||
+    numeric <= 0 ||
+    normalizedDartsRemaining < 1 ||
+    !normalizedOutMode
+  ) {
     return [];
   }
 
@@ -647,7 +661,12 @@ export function getPreferredCheckoutRoute(score, outMode, dartsRemaining = 3) {
   const numeric = toNumber(score);
   const normalizedOutMode = normalizeOutMode(outMode);
   const normalizedDartsRemaining = normalizeDartsRemaining(dartsRemaining, 3);
-  if (!Number.isFinite(numeric) || numeric <= 0 || normalizedDartsRemaining < 1) {
+  if (
+    !Number.isFinite(numeric) ||
+    numeric <= 0 ||
+    normalizedDartsRemaining < 1 ||
+    !normalizedOutMode
+  ) {
     return [];
   }
 
@@ -682,9 +701,10 @@ export function getOneDartCheckoutSegmentsForOutMode(score, outMode) {
   }
 
   const normalizedOutMode = normalizeOutMode(outMode);
-  const finishSegments =
-    CHECKOUT_FINISH_SEGMENTS_BY_MODE[normalizedOutMode] ||
-    CHECKOUT_FINISH_SEGMENTS_BY_MODE.straight;
+  const finishSegments = CHECKOUT_FINISH_SEGMENTS_BY_MODE[normalizedOutMode];
+  if (!finishSegments) {
+    return [];
+  }
 
   return finishSegments
     .filter((segment) => segment.score === numeric)
@@ -718,6 +738,9 @@ export function isSensibleThirdT20Score(remainingScore, outMode = "double") {
   const numeric = toNumber(remainingScore);
   if (!Number.isFinite(numeric)) {
     return true;
+  }
+  if (!normalizeOutMode(outMode)) {
+    return false;
   }
 
   const evaluation = evaluateThrowOutcome({
@@ -860,7 +883,7 @@ export function getSuggestionOneDartCheckoutSegmentForOutMode(text, outMode) {
 export function parseCheckoutSuggestionState(text, outMode = "double") {
   const normalized = normalizeCheckoutSuggestionText(text);
 
-  if (!normalized) {
+  if (!normalized || !normalizeOutMode(outMode)) {
     return null;
   }
 
@@ -889,7 +912,7 @@ export function parseCheckoutSuggestionStateForScore(
 ) {
   const normalized = normalizeCheckoutSuggestionText(text);
 
-  if (!normalized) {
+  if (!normalized || !normalizeOutMode(outMode)) {
     return null;
   }
 
@@ -963,6 +986,9 @@ export function canFinishWithSegment(remainingScore, segmentName, outMode) {
   }
 
   const normalizedOutMode = normalizeOutMode(outMode);
+  if (!normalizedOutMode) {
+    return false;
+  }
   if (normalizedOutMode === "straight") {
     return true;
   }
@@ -975,13 +1001,25 @@ export function canFinishWithSegment(remainingScore, segmentName, outMode) {
     return parsedSegment.ring === "D" || parsedSegment.ring === "T";
   }
 
-  return true;
+  return false;
 }
 
 export function evaluateThrowOutcome(options = {}) {
   const scoreBefore = toNumber(options.scoreBefore);
   const parsedSegment = parseSegment(options.segmentName);
   const normalizedOutMode = normalizeOutMode(options.outMode);
+
+  if (!normalizedOutMode) {
+    return {
+      scoreBefore,
+      scoreAfter: scoreBefore,
+      scoredPoints: 0,
+      isBust: false,
+      isFinish: false,
+      consumesDart: false,
+      reason: "unknown-out-mode",
+    };
+  }
 
   if (!Number.isFinite(scoreBefore) || scoreBefore <= 0 || !parsedSegment) {
     return {
@@ -990,7 +1028,20 @@ export function evaluateThrowOutcome(options = {}) {
       scoredPoints: 0,
       isBust: false,
       isFinish: false,
+      consumesDart: false,
       reason: "invalid-input",
+    };
+  }
+
+  if (parsedSegment.normalized === "MISS") {
+    return {
+      scoreBefore,
+      scoreAfter: scoreBefore,
+      scoredPoints: 0,
+      isBust: false,
+      isFinish: false,
+      consumesDart: true,
+      reason: "miss",
     };
   }
 
@@ -1002,6 +1053,7 @@ export function evaluateThrowOutcome(options = {}) {
       scoredPoints: parsedSegment.score,
       isBust: true,
       isFinish: false,
+      consumesDart: true,
       reason: "below-zero",
     };
   }
@@ -1013,6 +1065,7 @@ export function evaluateThrowOutcome(options = {}) {
       scoredPoints: parsedSegment.score,
       isBust: true,
       isFinish: false,
+      consumesDart: true,
       reason: "left-on-one",
     };
   }
@@ -1026,6 +1079,7 @@ export function evaluateThrowOutcome(options = {}) {
         scoredPoints: parsedSegment.score,
         isBust: true,
         isFinish: false,
+        consumesDart: true,
         reason: "invalid-finish-segment",
       };
     }
@@ -1036,6 +1090,7 @@ export function evaluateThrowOutcome(options = {}) {
       scoredPoints: parsedSegment.score,
       isBust: false,
       isFinish: true,
+      consumesDart: true,
       reason: "finished",
     };
   }
@@ -1046,6 +1101,7 @@ export function evaluateThrowOutcome(options = {}) {
     scoredPoints: parsedSegment.score,
     isBust: false,
     isFinish: false,
+    consumesDart: true,
     reason: "scored",
   };
 }
@@ -1055,7 +1111,7 @@ export function applyX01ThrowsToState(options = {}) {
   const normalizedOutMode = normalizeOutMode(options.outMode);
   const throws = Array.isArray(options.throws) ? options.throws : [];
 
-  if (!Number.isFinite(scoreBefore) || scoreBefore <= 0) {
+  if (!Number.isFinite(scoreBefore) || scoreBefore <= 0 || !normalizedOutMode) {
     return {
       scoreBefore,
       scoreAfter: scoreBefore,
@@ -1063,7 +1119,7 @@ export function applyX01ThrowsToState(options = {}) {
       totalScoredPoints: 0,
       isBust: false,
       isFinish: false,
-      stopReason: "invalid-input",
+      stopReason: normalizedOutMode ? "invalid-input" : "unknown-out-mode",
       throwResults: [],
     };
   }
