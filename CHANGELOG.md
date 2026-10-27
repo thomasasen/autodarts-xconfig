@@ -12,6 +12,20 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.5.10] - 2026-10-27
+
+### Fixed
+
+- Nutzerwirkung: X01-Checkout-Hinweise, Board-Ziele und Zoom reagieren nicht mehr auf einen fehlenden oder unbekannten Out-Modus; ein `MISS` verbraucht regelkonform einen Dart mit null Punkten und ohne Wiederholungswurf.
+  Technik: Die Domain-Regeln akzeptieren nur ausdrücklich erkannte Straight-, Double- und Master-Out-Tokens, bleiben andernfalls fail-closed und führen `MISS` als eigenes Nullsegment mit Dartverbrauch.
+- Nutzerwirkung: Cricket und Tactics werten höchstens drei Darts pro Visit und melden bei unvollständigen oder chronologisch mehrdeutigen Spielständen keinen verfrühten Gewinner.
+  Technik: Spätere Darts erhalten `visit-dart-limit`, Gewinner werden gegen die vollständige kanonische Zielmenge geprüft und mehrfache Abschlusskandidaten nur mit eindeutigem letzten Werfer aufgelöst; Mark-Werte werden enger gegen beobachtete Formate validiert.
+
+### Changed
+
+- Nutzerwirkung: Das Spielverhalten bleibt außerhalb der korrigierten Regelkanten unverändert; Regelabweichungen sollen künftig bereits vor einer Veröffentlichung erkannt werden.
+  Technik: Unabhängige X01-/Cricket-Orakel, ein versioniertes Regelmanifest, Coverage- und Mutation-Gates, FakeDOM-Chromium-Parität sowie begrenzt parallele Node-Tests erweitern die lokale, Pull-Request- und Release-Validierung.
+
 ## [3.5.9] - 2026-10-26
 
 ### Fixed
@@ -2437,6 +2451,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.5.10]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.9...v3.5.10
 [3.5.9]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.8...v3.5.9
 [3.5.8]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.7...v3.5.8
 [3.5.7]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.6...v3.5.7

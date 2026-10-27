@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         autodarts-xconfig
 // @namespace    https://github.com/thomasasen/autodarts-xconfig
-// @version      3.5.9
+// @version      3.5.10
 // @description  Modular, side-effect resistant Tampermonkey runtime for Autodarts enhancements.
 // @author       Thomas Asen
 // @license      MIT
@@ -4737,6 +4737,9 @@
     if (!raw) {
       return "";
     }
+    if (raw === "MISS") {
+      return "MISS";
+    }
     if (raw === "DB" || raw === "DBULL" || raw === "BULLSEYE" || raw === "BULL") {
       return "BULL";
     }
@@ -4759,6 +4762,14 @@
     const normalized = normalizeSegmentName(normalizedSegmentName);
     if (!normalized) {
       return null;
+    }
+    if (normalized === "MISS") {
+      return {
+        normalized,
+        ring: "MISS",
+        value: 0,
+        score: 0
+      };
     }
     if (normalized === "BULL") {
       return {
@@ -4939,26 +4950,20 @@
     return false;
   }
   function normalizeOutMode(value) {
-    const normalized = String(value || "").trim().toLowerCase();
+    const normalized = String(value || "").trim().toLowerCase().replaceAll(/[\s_-]+/g, " ");
     if (!normalized) {
-      return "straight";
+      return "";
     }
-    if (normalized.includes("master")) {
+    if (["master", "master out", "mo"].includes(normalized)) {
       return "master";
     }
-    if (normalized.includes("double")) {
+    if (["double", "double out", "do"].includes(normalized)) {
       return "double";
     }
-    if (normalized.includes("straight") || normalized.includes("single")) {
+    if (["straight", "straight out", "single", "single out", "so"].includes(normalized)) {
       return "straight";
     }
-    if (normalized === "mo") {
-      return "master";
-    }
-    if (normalized === "do") {
-      return "double";
-    }
-    return "straight";
+    return "";
   }
   function getCheckoutFinishSegments(outMode) {
     const normalizedOutMode = normalizeOutMode(outMode);
@@ -5155,7 +5160,10 @@
     if (normalizedDartsRemaining < 1) {
       return false;
     }
-    const scoreSetByDarts = CHECKOUTABLE_SCORES_BY_MODE[normalizedOutMode] || CHECKOUTABLE_SCORES_BY_MODE.straight;
+    const scoreSetByDarts = CHECKOUTABLE_SCORES_BY_MODE[normalizedOutMode];
+    if (!scoreSetByDarts) {
+      return false;
+    }
     const scoreSet = scoreSetByDarts[normalizedDartsRemaining] || scoreSetByDarts[3];
     return scoreSet.has(numeric);
   }
@@ -5169,7 +5177,7 @@
     const numeric = toNumber(score);
     const normalizedOutMode = normalizeOutMode(outMode);
     const normalizedDartsRemaining = normalizeDartsRemaining(dartsRemaining, 3);
-    if (!Number.isFinite(numeric) || numeric <= 0 || normalizedDartsRemaining < 1) {
+    if (!Number.isFinite(numeric) || numeric <= 0 || normalizedDartsRemaining < 1 || !normalizedOutMode) {
       return [];
     }
     const cacheKey = `${numeric}:${normalizedOutMode}:${normalizedDartsRemaining}`;
@@ -5212,7 +5220,7 @@
     const numeric = toNumber(score);
     const normalizedOutMode = normalizeOutMode(outMode);
     const normalizedDartsRemaining = normalizeDartsRemaining(dartsRemaining, 3);
-    if (!Number.isFinite(numeric) || numeric <= 0 || normalizedDartsRemaining < 1) {
+    if (!Number.isFinite(numeric) || numeric <= 0 || normalizedDartsRemaining < 1 || !normalizedOutMode) {
       return [];
     }
     const cacheKey = `${numeric}:${normalizedOutMode}:${normalizedDartsRemaining}`;
@@ -5238,7 +5246,10 @@
       return [];
     }
     const normalizedOutMode = normalizeOutMode(outMode);
-    const finishSegments = CHECKOUT_FINISH_SEGMENTS_BY_MODE[normalizedOutMode] || CHECKOUT_FINISH_SEGMENTS_BY_MODE.straight;
+    const finishSegments = CHECKOUT_FINISH_SEGMENTS_BY_MODE[normalizedOutMode];
+    if (!finishSegments) {
+      return [];
+    }
     return finishSegments.filter((segment) => segment.score === numeric).sort((left, right) => compareOneDartSegments(left, right, normalizedOutMode)).map((segment) => segment.normalized);
   }
   function getPreferredOneDartCheckoutSegment(score, outMode) {
@@ -5262,6 +5273,9 @@
     const numeric = toNumber(remainingScore);
     if (!Number.isFinite(numeric)) {
       return true;
+    }
+    if (!normalizeOutMode(outMode)) {
+      return false;
     }
     const evaluation = evaluateThrowOutcome({
       scoreBefore: numeric,
@@ -5379,7 +5393,7 @@
   }
   function parseCheckoutSuggestionState(text2, outMode = "double") {
     const normalized = normalizeCheckoutSuggestionText(text2);
-    if (!normalized) {
+    if (!normalized || !normalizeOutMode(outMode)) {
       return null;
     }
     if (/NO\s*(OUT|CHECKOUT|SHOT)/.test(normalized)) {
@@ -5397,7 +5411,7 @@
   }
   function parseCheckoutSuggestionStateForScore(text2, score, outMode = "double", dartsRemaining = null) {
     const normalized = normalizeCheckoutSuggestionText(text2);
-    if (!normalized) {
+    if (!normalized || !normalizeOutMode(outMode)) {
       return null;
     }
     if (/NO\s*(OUT|CHECKOUT|SHOT)/.test(normalized)) {
@@ -5453,6 +5467,9 @@
       return false;
     }
     const normalizedOutMode = normalizeOutMode(outMode);
+    if (!normalizedOutMode) {
+      return false;
+    }
     if (normalizedOutMode === "straight") {
       return true;
     }
@@ -5462,12 +5479,23 @@
     if (normalizedOutMode === "master") {
       return parsedSegment.ring === "D" || parsedSegment.ring === "T";
     }
-    return true;
+    return false;
   }
   function evaluateThrowOutcome(options = {}) {
     const scoreBefore = toNumber(options.scoreBefore);
     const parsedSegment = parseSegment(options.segmentName);
     const normalizedOutMode = normalizeOutMode(options.outMode);
+    if (!normalizedOutMode) {
+      return {
+        scoreBefore,
+        scoreAfter: scoreBefore,
+        scoredPoints: 0,
+        isBust: false,
+        isFinish: false,
+        consumesDart: false,
+        reason: "unknown-out-mode"
+      };
+    }
     if (!Number.isFinite(scoreBefore) || scoreBefore <= 0 || !parsedSegment) {
       return {
         scoreBefore,
@@ -5475,7 +5503,19 @@
         scoredPoints: 0,
         isBust: false,
         isFinish: false,
+        consumesDart: false,
         reason: "invalid-input"
+      };
+    }
+    if (parsedSegment.normalized === "MISS") {
+      return {
+        scoreBefore,
+        scoreAfter: scoreBefore,
+        scoredPoints: 0,
+        isBust: false,
+        isFinish: false,
+        consumesDart: true,
+        reason: "miss"
       };
     }
     const scoreAfter = scoreBefore - parsedSegment.score;
@@ -5486,6 +5526,7 @@
         scoredPoints: parsedSegment.score,
         isBust: true,
         isFinish: false,
+        consumesDart: true,
         reason: "below-zero"
       };
     }
@@ -5496,6 +5537,7 @@
         scoredPoints: parsedSegment.score,
         isBust: true,
         isFinish: false,
+        consumesDart: true,
         reason: "left-on-one"
       };
     }
@@ -5508,6 +5550,7 @@
           scoredPoints: parsedSegment.score,
           isBust: true,
           isFinish: false,
+          consumesDart: true,
           reason: "invalid-finish-segment"
         };
       }
@@ -5517,6 +5560,7 @@
         scoredPoints: parsedSegment.score,
         isBust: false,
         isFinish: true,
+        consumesDart: true,
         reason: "finished"
       };
     }
@@ -5526,6 +5570,7 @@
       scoredPoints: parsedSegment.score,
       isBust: false,
       isFinish: false,
+      consumesDart: true,
       reason: "scored"
     };
   }
@@ -5533,7 +5578,7 @@
     const scoreBefore = toNumber(options.scoreBefore);
     const normalizedOutMode = normalizeOutMode(options.outMode);
     const throws = Array.isArray(options.throws) ? options.throws : [];
-    if (!Number.isFinite(scoreBefore) || scoreBefore <= 0) {
+    if (!Number.isFinite(scoreBefore) || scoreBefore <= 0 || !normalizedOutMode) {
       return {
         scoreBefore,
         scoreAfter: scoreBefore,
@@ -5541,7 +5586,7 @@
         totalScoredPoints: 0,
         isBust: false,
         isFinish: false,
-        stopReason: "invalid-input",
+        stopReason: normalizedOutMode ? "invalid-input" : "unknown-out-mode",
         throwResults: []
       };
     }
@@ -5660,6 +5705,7 @@
     "BULL"
   ];
   var TACTICS_EXTRA_TARGETS = ["DOUBLE", "TRIPLE"];
+  var MAX_DARTS_PER_VISIT2 = 3;
   var CRICKET_DISCOVERY_TARGET_ORDER = [
     ...TACTICS_TARGET_ORDER,
     ...TACTICS_EXTRA_TARGETS
@@ -5806,13 +5852,18 @@
     return raw;
   }
   function readSegmentDescriptor(throwEntry) {
+    if (typeof throwEntry === "string") {
+      return { name: throwEntry };
+    }
     if (!throwEntry || typeof throwEntry !== "object") {
       return null;
     }
     return throwEntry.segment && typeof throwEntry.segment === "object" ? throwEntry.segment : throwEntry;
   }
   function buildSegmentNameFromDescriptor(segment) {
-    const name = normalizeSegmentName2(segment?.name || segment?.segment || segment?.label || "");
+    const name = normalizeSegmentName2(
+      segment?.name || segment?.segmentName || segment?.segment || segment?.label || ""
+    );
     if (name) {
       return name;
     }
@@ -5887,29 +5938,28 @@
     if (!raw) {
       return null;
     }
-    const direct = Number.parseInt(raw, 10);
-    if (Number.isFinite(direct) && direct >= 0 && direct <= 3) {
-      return clampMarks(direct);
+    if (/^[0-3]$/.test(raw)) {
+      return Number(raw);
     }
     const normalized = raw.replaceAll(/\s+/g, "").toUpperCase();
     if (!normalized) {
       return null;
     }
-    if (/[\u2A02\u2297\u29BB]/u.test(normalized)) {
+    if (/^[\u2A02\u2297\u29BB]$/u.test(normalized)) {
       return 3;
     }
-    if (/[\u00D7\u2715\u2716\u2573X]/u.test(normalized)) {
+    if (/^[\u00D7\u2715\u2716\u2573X]$/u.test(normalized)) {
       return 2;
     }
-    if (normalized.includes("/") || normalized.includes("|")) {
+    if (/^[/|]$/.test(normalized)) {
       return 1;
     }
     if (/^[SDT]\s*\d{1,2}$/i.test(normalized)) {
       return null;
     }
-    const digit = /^\D*([0-3])\D*$/.exec(normalized);
+    const digit = /^(?:\(([0-3])\)|MARKS?:([0-3]))$/.exec(normalized);
     if (digit) {
-      return clampMarks(Number.parseInt(digit[1], 10));
+      return Number(digit[1] ?? digit[2]);
     }
     return null;
   }
@@ -6043,10 +6093,34 @@
     const scoreDeltaByPlayer = Array.from({ length: playerCount }, () => 0);
     const scoringModeNormalized = resolveScoringModeNormalized(options);
     const scoringEvents = [];
-    throws.forEach((throwEntry) => {
+    const throwResults = throws.map((throwEntry, index) => {
+      const segmentName = normalizeSegmentName2(
+        typeof throwEntry === "string" ? throwEntry : throwEntry?.segment?.name || throwEntry?.segmentName || throwEntry?.name
+      );
+      if (index >= MAX_DARTS_PER_VISIT2) {
+        return {
+          index,
+          segmentName,
+          ignored: true,
+          reason: "visit-dart-limit"
+        };
+      }
       const parsed = parseCricketThrowSegment(throwEntry);
-      if (!parsed || !explicitTargetOrder.includes(parsed.label)) {
-        return;
+      if (!parsed) {
+        return {
+          index,
+          segmentName,
+          ignored: false,
+          reason: segmentName === "MISS" ? "miss" : "invalid-segment"
+        };
+      }
+      if (!explicitTargetOrder.includes(parsed.label)) {
+        return {
+          index,
+          segmentName,
+          ignored: false,
+          reason: "non-target-segment"
+        };
       }
       const marksByPlayer = nextMarksByLabel[parsed.label];
       const currentMarks = clampMarks(marksByPlayer[playerIndex] || 0);
@@ -6056,12 +6130,22 @@
       marksByPlayer[playerIndex] = clampMarks(currentMarks + appliedMarks);
       const openOpponentIndexes = getOpenOpponentIndexes(marksByPlayer, playerIndex);
       if (!(overflowMarks > 0) || !openOpponentIndexes.length) {
-        return;
+        return {
+          index,
+          segmentName,
+          ignored: false,
+          reason: "marks-applied"
+        };
       }
       const baseScore = getCricketTargetBaseScore(parsed.label);
       const totalPoints = overflowMarks * baseScore;
       if (!(totalPoints > 0)) {
-        return;
+        return {
+          index,
+          segmentName,
+          ignored: false,
+          reason: "marks-applied"
+        };
       }
       const recipients = [];
       if (scoringModeNormalized === "standard") {
@@ -6073,7 +6157,12 @@
           recipients.push({ playerIndex: opponentIndex, delta: totalPoints });
         });
       } else {
-        return;
+        return {
+          index,
+          segmentName,
+          ignored: false,
+          reason: "marks-applied"
+        };
       }
       scoringEvents.push({
         label: parsed.label,
@@ -6086,13 +6175,27 @@
         playerIndex,
         recipients
       });
+      return {
+        index,
+        segmentName,
+        ignored: false,
+        reason: "scored"
+      };
     });
+    let stopReason = "no-throws";
+    if (throws.length > MAX_DARTS_PER_VISIT2) {
+      stopReason = "visit-dart-limit";
+    } else if (throws.length) {
+      stopReason = "throws-exhausted";
+    }
     return {
       targetOrder: explicitTargetOrder,
       nextMarksByLabel,
       scoreDeltaByPlayer,
       scoringModeNormalized,
-      scoringEvents
+      scoringEvents,
+      stopReason,
+      throwResults
     };
   }
   function applyThrowsToMarksByLabel(options = {}) {
@@ -6223,7 +6326,8 @@
   function resolveTargetOrderForWinState(options = {}) {
     const explicitTargetOrder = Array.isArray(options.targetOrder) ? options.targetOrder.filter(Boolean) : [];
     if (explicitTargetOrder.length) {
-      return sanitizeTargetOrderForMode(explicitTargetOrder, options.gameMode, true);
+      const modeFamily = getResolvedModeFamily(options.gameMode, explicitTargetOrder);
+      return getTargetOrderByGameMode(modeFamily);
     }
     const inferredMode = inferCricketGameModeByLabels(Object.keys(options.marksByLabel || {}));
     return getTargetOrderByGameMode(options.gameMode || inferredMode);
@@ -6277,7 +6381,19 @@
         winner
       };
     });
-    const winnerIndexes = playerStates.filter((playerState) => playerState.winner).map((playerState) => playerState.playerIndex);
+    const candidateWinnerIndexes = playerStates.filter((playerState) => playerState.winner).map((playerState) => playerState.playerIndex);
+    const lastThrowPlayerIndex = Number.isInteger(options.lastThrowPlayerIndex) ? options.lastThrowPlayerIndex : null;
+    const hasValidLastThrowWinner = Number.isInteger(lastThrowPlayerIndex) && candidateWinnerIndexes.includes(lastThrowPlayerIndex);
+    const ambiguousTerminalState = candidateWinnerIndexes.length > 1 && !hasValidLastThrowWinner;
+    let winnerIndexes = candidateWinnerIndexes;
+    if (ambiguousTerminalState) {
+      winnerIndexes = [];
+    } else if (hasValidLastThrowWinner) {
+      winnerIndexes = [lastThrowPlayerIndex];
+    }
+    playerStates.forEach((playerState) => {
+      playerState.winner = winnerIndexes.includes(playerState.playerIndex);
+    });
     return {
       targetOrder,
       scoringModeNormalized,
@@ -6285,7 +6401,9 @@
       highestScore,
       lowestScore,
       hasWinner: winnerIndexes.length > 0,
-      isTie: winnerIndexes.length > 1,
+      isTie: false,
+      ambiguousTerminalState,
+      winnerCandidateIndexes: candidateWinnerIndexes,
       winnerIndexes,
       playerStates
     };
@@ -8060,7 +8178,10 @@
     if (!normalizedInput) {
       return "";
     }
-    return String(x01Rules?.normalizeOutMode?.(normalizedInput) || normalizedInput).trim().toLowerCase();
+    if (typeof x01Rules?.normalizeOutMode === "function") {
+      return String(x01Rules.normalizeOutMode(normalizedInput) || "").trim().toLowerCase();
+    }
+    return normalizedInput.toLowerCase();
   }
   function normalizeVariantText(value) {
     return String(value || "").replaceAll(/\s+/g, " ").trim();
@@ -8582,11 +8703,11 @@
       allowNumeric: true
     }) === true;
   }
-  function hasAtomicSemantics(selected, routeMatchId, modernSurface) {
-    if (!selected || !routeMatchId && !modernSurface?.variantNode) {
-      return true;
+  function hasAtomicSemantics(selected, x01Rules) {
+    if (!selected) {
+      return false;
     }
-    return Number.isFinite(selected.activeScore) && Boolean(normalizeOutMode2(selected.outMode)) && Number.isFinite(selected.dartsRemaining);
+    return Number.isFinite(selected.activeScore) && Boolean(normalizeOutModeForComparison(selected.outMode, x01Rules)) && Number.isFinite(selected.dartsRemaining);
   }
   function applyDecisionDiagnostics(options) {
     const {
@@ -8770,8 +8891,7 @@
     const active = activeByDom || activeByState;
     const selectedHasAtomicSemantics = hasAtomicSemantics(
       selected,
-      routeMatchId,
-      modernSurface
+      x01Rules
     );
     const actionable = active && Boolean(selected) && selectedHasAtomicSemantics && decision !== "pending" && decision !== "conflict";
     applyDecisionDiagnostics({
@@ -8786,7 +8906,7 @@
       rememberSelectedCandidate(history, selected, stateCandidate, domCandidate);
     }
     const activeScore = actionable ? selected.activeScore : Number.NaN;
-    const outMode = actionable ? normalizeOutMode2(selected.outMode) : "";
+    const outMode = actionable ? normalizeOutModeForComparison(selected.outMode, x01Rules) : "";
     const dartsRemaining = actionable ? normalizeDartsRemaining3(selected.dartsRemaining) : Number.NaN;
     const routeUsable = actionable && (decision !== "state-preferred" || usedUnidentifiedStateFallback);
     const semanticRouteSegments = routeUsable ? routeSegments : [];
@@ -40610,7 +40730,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
 
   // src/core/bootstrap.js
   var GLOBAL_NAMESPACE_KEY = "__adXConfig";
-  var API_VERSION = "3.5.9";
+  var API_VERSION = "3.5.10";
   var STARTUP_DEFER_INTERVAL_MS = 16;
   function getWindowTimerApi(windowRef) {
     let setTimeoutRef = null;
