@@ -647,17 +647,20 @@ export function applyCricketThrowsToState(options = {}) {
     };
   });
 
+  let stopReason = "no-throws";
+  if (throws.length > MAX_DARTS_PER_VISIT) {
+    stopReason = "visit-dart-limit";
+  } else if (throws.length) {
+    stopReason = "throws-exhausted";
+  }
+
   return {
     targetOrder: explicitTargetOrder,
     nextMarksByLabel,
     scoreDeltaByPlayer,
     scoringModeNormalized,
     scoringEvents,
-    stopReason: throws.length > MAX_DARTS_PER_VISIT
-      ? "visit-dart-limit"
-      : throws.length
-        ? "throws-exhausted"
-        : "no-throws",
+    stopReason,
     throwResults,
   };
 }
@@ -901,11 +904,12 @@ export function evaluateCricketWinState(options = {}) {
     candidateWinnerIndexes.includes(lastThrowPlayerIndex);
   const ambiguousTerminalState = candidateWinnerIndexes.length > 1 &&
     !hasValidLastThrowWinner;
-  const winnerIndexes = ambiguousTerminalState
-    ? []
-    : hasValidLastThrowWinner
-      ? [lastThrowPlayerIndex]
-      : candidateWinnerIndexes;
+  let winnerIndexes = candidateWinnerIndexes;
+  if (ambiguousTerminalState) {
+    winnerIndexes = [];
+  } else if (hasValidLastThrowWinner) {
+    winnerIndexes = [lastThrowPlayerIndex];
+  }
 
   playerStates.forEach((playerState) => {
     playerState.winner = winnerIndexes.includes(playerState.playerIndex);

@@ -4,7 +4,9 @@ import assert from "node:assert/strict";
 import {
   applyCricketThrowsToState,
   applyThrowsToMarksByLabel,
+  CRICKET_DISCOVERY_TARGET_ORDER,
   CRICKET_TARGET_ORDER,
+  TACTICS_EXTRA_TARGETS,
   TACTICS_TARGET_ORDER,
   clampMarks,
   computeTargetStates,
@@ -78,6 +80,11 @@ test("normalizeCricketLabel supports bull aliases and tactics labels", () => {
 });
 
 test("target order and mode inference separate cricket from tactics", () => {
+  assert.deepEqual(TACTICS_EXTRA_TARGETS, ["DOUBLE", "TRIPLE"]);
+  assert.deepEqual(CRICKET_DISCOVERY_TARGET_ORDER, [
+    ...TACTICS_TARGET_ORDER,
+    ...TACTICS_EXTRA_TARGETS,
+  ]);
   assert.deepEqual(getTargetOrderByGameMode("Cricket"), CRICKET_TARGET_ORDER);
   assert.deepEqual(getTargetOrderByGameMode("Tactics"), TACTICS_TARGET_ORDER);
   assert.equal(inferCricketGameModeByLabels(["20", "19", "BULL"]), "cricket");
