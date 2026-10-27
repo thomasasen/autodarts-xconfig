@@ -181,12 +181,21 @@ function installBoardFixture(documentRef, markerSpecs = [], options = {}) {
   const viewportNode = options.viewportClasses
     ? documentRef.createElement("div")
     : null;
+  let circularViewportNode = null;
   if (viewportNode) {
     options.viewportClasses.forEach((className) => viewportNode.classList.add(className));
+    if (options.circularViewport) {
+      circularViewportNode = documentRef.createElement("div");
+      circularViewportNode.setAttribute("role", "img");
+      circularViewportNode.setAttribute("aria-label", "Dartboard");
+      circularViewportNode.classList.add("rounded-full", "overflow-hidden");
+      circularViewportNode.__rect = options.circularViewportRect || options.viewportRect;
+      viewportNode.appendChild(circularViewportNode);
+    }
     if (options.viewportRect) {
       viewportNode.__rect = options.viewportRect;
     }
-    viewportNode.appendChild(svg);
+    (circularViewportNode || viewportNode).appendChild(svg);
     documentRef.main.appendChild(viewportNode);
   } else {
     documentRef.main.appendChild(svg);
@@ -197,6 +206,7 @@ function installBoardFixture(documentRef, markerSpecs = [], options = {}) {
     boardGroup,
     markers,
     viewportNode,
+    circularViewportNode,
   };
 }
 
@@ -922,6 +932,58 @@ test("dart-marker-replacer clips overlay to board viewport boundaries", () => {
   assert.equal(values.length, 4);
   values.forEach((value) => assert.ok(value > 0));
   assert.equal(overlay.style.webkitClipPath, clipPath);
+
+  clearDartMarkerReplacerState(state);
+});
+
+test("dart-marker-replacer clips zoomed darts to the circular native board surface", () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const fixture = installBoardFixture(
+    documentRef,
+    [
+      {
+        cx: 10,
+        cy: 20,
+        r: 5,
+        getMatrix: () => ({ a: 1, b: 0, c: 0, d: 1, e: 540, f: 320 }),
+      },
+    ],
+    {
+      svgRect: { left: 250, top: 60, width: 500, height: 500 },
+      viewportClasses: ["ad-ext-tv-board-zoom-host"],
+      viewportRect: { left: 260, top: 70, width: 460, height: 460 },
+      circularViewportRect: { left: 280, top: 90, width: 420, height: 420 },
+      circularViewport: true,
+    }
+  );
+
+  const state = createDartMarkerReplacerState(windowRef);
+  updateDartMarkerReplacer({
+    documentRef,
+    state,
+    visualConfig: VISUAL_CONFIG,
+  });
+
+  const overlay = documentRef.getElementById(OVERLAY_ID);
+  const clipPath = String(overlay?.style?.clipPath || "");
+  assert.equal(fixture.circularViewportNode.parentElement, fixture.viewportNode);
+  assert.match(
+    clipPath,
+    /^inset\((?:[\d.]+px ){3}[\d.]+px round 50%\)$/
+  );
+  assert.equal(overlay.style.webkitClipPath, clipPath);
+  const [top, right, bottom, left] = clipPath
+    .replace(/^inset\(/, "")
+    .replace(/ round 50%\)$/, "")
+    .split(" ")
+    .map((token) => Number.parseFloat(token.replace("px", "")));
+  const overlayRect = overlay.getBoundingClientRect();
+  const circularRect = fixture.circularViewportNode.getBoundingClientRect();
+  approxEqual(overlayRect.left + left, circularRect.left);
+  approxEqual(overlayRect.top + top, circularRect.top);
+  approxEqual(overlayRect.right - right, circularRect.right);
+  approxEqual(overlayRect.bottom - bottom, circularRect.bottom);
 
   clearDartMarkerReplacerState(state);
 });

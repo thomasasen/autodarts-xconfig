@@ -98,9 +98,16 @@ function createLayoutFixture(options = {}) {
   const controlsSlot = fixture.node(stage, "div", "w-0 min-w-full");
   const controlsWrap = fixture.node(controlsSlot, "div", "flex justify-center");
   const controlBar = fixture.node(controlsWrap, "div", "relative flex bg-blue");
-  fixture.node(controlBar, "button", "input-mode", "Input");
-  fixture.node(controlBar, "button", "undo", "Undo");
-  fixture.node(controlBar, "button", "next", "Next");
+  let controlsSpacer = null;
+  let controlsActions = controlBar;
+  if (options.wrappedControls) {
+    controlsSpacer = fixture.node(controlBar, "div", "flex-1");
+    controlsActions = fixture.node(controlBar, "div", "flex gap-2");
+  } else {
+    fixture.node(controlBar, "button", "input-mode", "Input");
+  }
+  const undoButton = fixture.node(controlsActions, "button", "undo", "Undo");
+  const nextButton = fixture.node(controlsActions, "button", "next", "Next");
   const playerCount = options.playerCount || 3;
   const activeIndex = options.activeIndex ?? 0;
   const players = Array.from({ length: playerCount }, (_, index) =>
@@ -116,6 +123,10 @@ function createLayoutFixture(options = {}) {
     boardSlot,
     controlsSlot,
     controlBar,
+    controlsSpacer,
+    controlsActions,
+    undoButton,
+    nextButton,
     players,
   };
 }
@@ -235,7 +246,9 @@ test("board-focus geometry maximizes the board and keeps readable player rows", 
   assert.match(buildThemeGameLayoutStyleText(), /@keyframes ad-ext-game-layout-hit-pulse\{[\s\S]*?0%,100%\{opacity:\.42\}[\s\S]*?50%\{opacity:\.62\}/);
   assert.match(buildThemeGameLayoutStyleText(), /prefers-reduced-motion:reduce[^}]*dart-segment-blink[^}]*animation:none!important[^}]*opacity:\.52!important/);
   assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-controls-slot="true"[^}]*justify-self:center!important/);
-  assert.match(buildThemeGameLayoutStyleText(), />:nth-child\(2\)\{display:none!important\}/);
+  assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-control-spacer="true"[^}]*display:none!important/);
+  assert.match(buildThemeGameLayoutStyleText(), /data-ad-ext-game-layout-control-actions="true"[^}]*display:flex!important/);
+  assert.doesNotMatch(buildThemeGameLayoutStyleText(), />:nth-child\(2\)\{display:none!important\}/);
   assert.match(buildThemeGameLayoutStyleText(), /grid-template-columns:var\(--ad-game-layout-rail-width\) minmax\(0,1fr\)!important/);
   assert.match(buildThemeGameLayoutStyleText(), /grid-template-columns:minmax\(0,1fr\) minmax\(calc\(150px \* var\(--ad-game-layout-player-scale\)\),max-content\) auto!important/);
   assert.match(buildThemeGameLayoutStyleText(), /grid-template-rows:minmax\(0,1fr\) auto!important/);
@@ -1020,6 +1033,30 @@ test("game-layout reveals idle controls for five seconds after the last mouse mo
   fixture.documentRef.dispatchEvent(new FakeEvent("mousemove"));
   timers.advance(5000);
   assert.equal(visible(), null);
+});
+
+test("game-layout preserves Undo and next-leg actions in the current wrapped control bar", () => {
+  const fixture = createLayoutFixture({ wrappedControls: true });
+  const config = createRuntimeConfig({
+    featureToggles: { "themes.gameLayout": true },
+    features: { themes: { gameLayout: { enabled: true } } },
+  });
+  const cleanup = mountThemeGameLayout(mountContext(config, fixture));
+
+  assert.equal(
+    fixture.controlsSpacer.getAttribute("data-ad-ext-game-layout-control-spacer"),
+    "true"
+  );
+  assert.equal(
+    fixture.controlsActions.getAttribute("data-ad-ext-game-layout-control-actions"),
+    "true"
+  );
+  assert.equal(fixture.controlsActions.contains(fixture.undoButton), true);
+  assert.equal(fixture.controlsActions.contains(fixture.nextButton), true);
+
+  cleanup();
+  assert.equal(fixture.controlsSpacer.getAttribute("data-ad-ext-game-layout-control-spacer"), null);
+  assert.equal(fixture.controlsActions.getAttribute("data-ad-ext-game-layout-control-actions"), null);
 });
 
 test("game-layout falls back completely for small and ambiguous surfaces", () => {

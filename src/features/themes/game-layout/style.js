@@ -245,9 +245,14 @@ export function buildThemeGameLayoutStyleText() {
 }
 [data-ad-ext-game-layout-control-bar="true"][data-ad-ext-game-layout-controls-visible="true"]{opacity:1!important}
 [data-ad-ext-game-layout-control-bar="true"]>*{width:auto!important;min-width:0!important}
-[data-ad-ext-game-layout-control-bar="true"]>:first-child{width:40px!important;flex:0 0 40px!important}
-[data-ad-ext-game-layout-control-bar="true"]>:nth-child(2){display:none!important}
-[data-ad-ext-game-layout-control-bar="true"]>:last-child{width:auto!important;margin-top:0!important;flex:0 0 auto!important}
+[data-ad-ext-game-layout-control-spacer="true"]{display:none!important}
+[data-ad-ext-game-layout-control-actions="true"]{
+  display:flex!important;
+  width:auto!important;
+  margin-top:0!important;
+  margin-left:auto!important;
+  flex:0 0 auto!important;
+}
 [data-ad-ext-game-layout-control-bar="true"] button{
   width:auto!important;
   min-width:40px!important;

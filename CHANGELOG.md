@@ -12,6 +12,15 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.5.11] - 2026-10-27
+
+### Fixed
+
+- Nutzerwirkung: Die Bedienfelder zum Korrigieren beziehungsweise Rückgängigmachen eines Wurfs und zum Fortsetzen nach einem Leg bleiben auch in der aktuellen verschachtelten Autodarts-Steuerleiste sichtbar.
+  Technik: Das Game-Layout kennzeichnet Aktionsgruppen und leere Abstandshalter semantisch und blendet nur den tatsächlich leeren Abstandshalter aus, statt sich auf die Position eines Wrapper-Elements zu verlassen.
+- Nutzerwirkung: Dart-Grafiken bleiben im TV-Board-Zoom innerhalb des sichtbaren runden Board-Ausschnitts und ragen nicht mehr über dessen Rand hinaus.
+  Technik: Der Dart-Marker-Replacer bevorzugt den semantisch gekennzeichneten Dartboard-Viewport und übernimmt dessen runde Geometrie als Clip-Grenze für die Overlay-Ebene.
+
 ## [3.5.10] - 2026-10-27
 
 ### Fixed
@@ -2451,6 +2460,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.5.11]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.10...v3.5.11
 [3.5.10]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.9...v3.5.10
 [3.5.9]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.8...v3.5.9
 [3.5.8]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.7...v3.5.8

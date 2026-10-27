@@ -270,17 +270,23 @@ function removeAttributeIfPresent(node, name) {
   return true;
 }
 
-function resolveClipViewportNode(boardSvg) {
+function resolveClipViewport(boardSvg) {
   if (!boardSvg || typeof boardSvg.closest !== "function") {
     return null;
   }
 
-  return (
+  const circularBoard = boardSvg.closest('[role="img"][aria-label="Dartboard"]');
+  if (circularBoard) {
+    return { node: circularBoard, round: true };
+  }
+
+  const node = (
     boardSvg.closest(".ad-ext-tv-board-zoom-host") ||
     boardSvg.closest(".ad-ext-theme-board-viewport") ||
     boardSvg.closest(".css-tqsk66") ||
     null
   );
+  return node ? { node, round: false } : null;
 }
 
 function clearOverlayClipPath(overlay) {
@@ -298,7 +304,7 @@ function clampToRange(value, minValue, maxValue) {
   return Math.min(maxValue, Math.max(minValue, value));
 }
 
-function applyOverlayViewportClip(overlay, overlayRect, viewportRect) {
+function applyOverlayViewportClip(overlay, overlayRect, viewportRect, options = {}) {
   if (!overlay?.style || !overlayRect || !viewportRect) {
     clearOverlayClipPath(overlay);
     return "";
@@ -338,7 +344,8 @@ function applyOverlayViewportClip(overlay, overlayRect, viewportRect) {
     return "";
   }
 
-  const clipPath = `inset(${top.toFixed(2)}px ${right.toFixed(2)}px ${bottom.toFixed(2)}px ${left.toFixed(2)}px)`;
+  const rounding = options.round === true ? " round 50%" : "";
+  const clipPath = `inset(${top.toFixed(2)}px ${right.toFixed(2)}px ${bottom.toFixed(2)}px ${left.toFixed(2)}px${rounding})`;
   setStyleIfChanged(overlay.style, "clipPath", clipPath);
   setStyleIfChanged(overlay.style, "webkitClipPath", clipPath);
   return clipPath;
@@ -1731,8 +1738,11 @@ export function updateDartMarkerReplacer(options = {}) {
   const dartImageSource = resolveDartDesignAsset(visualConfig.designKey);
   const paddingPx = getOverlayPadding(dartLength, visualConfig);
   const overlayRect = updateOverlayLayout(overlay, boardRect, paddingPx);
-  const clipViewportRect = getNodeRect(resolveClipViewportNode(board.svg));
-  const clipPath = applyOverlayViewportClip(overlay, overlayRect, clipViewportRect);
+  const clipViewport = resolveClipViewport(board.svg);
+  const clipViewportRect = getNodeRect(clipViewport?.node);
+  const clipPath = applyOverlayViewportClip(overlay, overlayRect, clipViewportRect, {
+    round: clipViewport?.round === true,
+  });
   const boardCenter = {
     x: boardRect.left + boardRect.width / 2 - overlayRect.left,
     y: boardRect.top + boardRect.height / 2 - overlayRect.top,

@@ -30,6 +30,8 @@ const MANAGED_ATTRIBUTES = Object.freeze([
   "data-ad-ext-game-layout-board-frame",
   "data-ad-ext-game-layout-controls-slot",
   "data-ad-ext-game-layout-control-bar",
+  "data-ad-ext-game-layout-control-actions",
+  "data-ad-ext-game-layout-control-spacer",
   "data-ad-ext-game-layout-controls-visible",
   "data-ad-ext-game-layout-cricket-stage",
   "data-ad-ext-game-layout-player-column",
@@ -254,6 +256,24 @@ function revealManagedPlayersForDiscovery(state) {
   });
 }
 
+function markControlBarStructure(state, controlBar) {
+  Array.from(controlBar?.children || []).forEach((child) => {
+    const isDirectAction = child.matches?.("button") === true;
+    const isActionGroup = !isDirectAction && Boolean(child.querySelector?.("button"));
+    const isEmptySpacer = !isDirectAction && !isActionGroup &&
+      !String(child.textContent || "").trim() &&
+      Number(child.children?.length || 0) === 0;
+    if (!isActionGroup && !isEmptySpacer) return;
+    rememberNode(state, child);
+    setMarker(
+      child,
+      isActionGroup
+        ? "data-ad-ext-game-layout-control-actions"
+        : "data-ad-ext-game-layout-control-spacer"
+    );
+  });
+}
+
 function markSurface(state, surface, metrics, options = {}) {
   const mark = (node, attribute, value = "true") => {
     rememberNode(state, node);
@@ -287,6 +307,7 @@ function markSurface(state, surface, metrics, options = {}) {
   mark(surface.boardFrame, "data-ad-ext-game-layout-board-frame");
   mark(surface.controlsSlot, "data-ad-ext-game-layout-controls-slot");
   mark(surface.controlBar, "data-ad-ext-game-layout-control-bar");
+  markControlBarStructure(state, surface.controlBar);
   surface.playerColumns.forEach((column) => mark(column, "data-ad-ext-game-layout-player-column"));
 
   let nextPlayerY = GAME_LAYOUT_PADDING + metrics.turnHeight + GAME_LAYOUT_TURN_PLAYER_GAP;
@@ -415,6 +436,7 @@ export function mountThemeGameLayout(context = {}) {
             rememberNode(appliedState, node);
             setMarker(node, attribute);
           });
+          markControlBarStructure(appliedState, cricketControls.controlBar);
           controlBar = cricketControls.controlBar;
           if (controlsTimer !== null) setMarker(controlBar, "data-ad-ext-game-layout-controls-visible");
           return;

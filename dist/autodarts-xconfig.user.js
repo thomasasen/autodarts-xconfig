@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         autodarts-xconfig
 // @namespace    https://github.com/thomasasen/autodarts-xconfig
-// @version      3.5.10
+// @version      3.5.11
 // @description  Modular, side-effect resistant Tampermonkey runtime for Autodarts enhancements.
 // @author       Thomas Asen
 // @license      MIT
@@ -29430,11 +29430,16 @@ html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] #${OVERLAY_ID3} * {
     node.removeAttribute(name);
     return true;
   }
-  function resolveClipViewportNode(boardSvg) {
+  function resolveClipViewport(boardSvg) {
     if (!boardSvg || typeof boardSvg.closest !== "function") {
       return null;
     }
-    return boardSvg.closest(".ad-ext-tv-board-zoom-host") || boardSvg.closest(".ad-ext-theme-board-viewport") || boardSvg.closest(".css-tqsk66") || null;
+    const circularBoard = boardSvg.closest('[role="img"][aria-label="Dartboard"]');
+    if (circularBoard) {
+      return { node: circularBoard, round: true };
+    }
+    const node = boardSvg.closest(".ad-ext-tv-board-zoom-host") || boardSvg.closest(".ad-ext-theme-board-viewport") || boardSvg.closest(".css-tqsk66") || null;
+    return node ? { node, round: false } : null;
   }
   function clearOverlayClipPath(overlay) {
     if (!overlay?.style) {
@@ -29449,7 +29454,7 @@ html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] #${OVERLAY_ID3} * {
     }
     return Math.min(maxValue, Math.max(minValue, value));
   }
-  function applyOverlayViewportClip(overlay, overlayRect, viewportRect) {
+  function applyOverlayViewportClip(overlay, overlayRect, viewportRect, options = {}) {
     if (!overlay?.style || !overlayRect || !viewportRect) {
       clearOverlayClipPath(overlay);
       return "";
@@ -29485,7 +29490,8 @@ html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] #${OVERLAY_ID3} * {
       clearOverlayClipPath(overlay);
       return "";
     }
-    const clipPath = `inset(${top.toFixed(2)}px ${right.toFixed(2)}px ${bottom.toFixed(2)}px ${left.toFixed(2)}px)`;
+    const rounding = options.round === true ? " round 50%" : "";
+    const clipPath = `inset(${top.toFixed(2)}px ${right.toFixed(2)}px ${bottom.toFixed(2)}px ${left.toFixed(2)}px${rounding})`;
     setStyleIfChanged2(overlay.style, "clipPath", clipPath);
     setStyleIfChanged2(overlay.style, "webkitClipPath", clipPath);
     return clipPath;
@@ -30644,8 +30650,11 @@ html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] #${OVERLAY_ID3} * {
     const dartImageSource = resolveDartDesignAsset(visualConfig.designKey);
     const paddingPx = getOverlayPadding(dartLength, visualConfig);
     const overlayRect = updateOverlayLayout(overlay, boardRect, paddingPx);
-    const clipViewportRect = getNodeRect2(resolveClipViewportNode(board.svg));
-    const clipPath = applyOverlayViewportClip(overlay, overlayRect, clipViewportRect);
+    const clipViewport = resolveClipViewport(board.svg);
+    const clipViewportRect = getNodeRect2(clipViewport?.node);
+    const clipPath = applyOverlayViewportClip(overlay, overlayRect, clipViewportRect, {
+      round: clipViewport?.round === true
+    });
     const boardCenter = {
       x: boardRect.left + boardRect.width / 2 - overlayRect.left,
       y: boardRect.top + boardRect.height / 2 - overlayRect.top
@@ -38316,9 +38325,14 @@ ${MODERN_ACTIVE_PLAYER_SURFACE_SELECTORS2.join(",\n")} {
 }
 [data-ad-ext-game-layout-control-bar="true"][data-ad-ext-game-layout-controls-visible="true"]{opacity:1!important}
 [data-ad-ext-game-layout-control-bar="true"]>*{width:auto!important;min-width:0!important}
-[data-ad-ext-game-layout-control-bar="true"]>:first-child{width:40px!important;flex:0 0 40px!important}
-[data-ad-ext-game-layout-control-bar="true"]>:nth-child(2){display:none!important}
-[data-ad-ext-game-layout-control-bar="true"]>:last-child{width:auto!important;margin-top:0!important;flex:0 0 auto!important}
+[data-ad-ext-game-layout-control-spacer="true"]{display:none!important}
+[data-ad-ext-game-layout-control-actions="true"]{
+  display:flex!important;
+  width:auto!important;
+  margin-top:0!important;
+  margin-left:auto!important;
+  flex:0 0 auto!important;
+}
 [data-ad-ext-game-layout-control-bar="true"] button{
   width:auto!important;
   min-width:40px!important;
@@ -38563,6 +38577,8 @@ ${MODERN_ACTIVE_PLAYER_SURFACE_SELECTORS2.join(",\n")} {
     "data-ad-ext-game-layout-board-frame",
     "data-ad-ext-game-layout-controls-slot",
     "data-ad-ext-game-layout-control-bar",
+    "data-ad-ext-game-layout-control-actions",
+    "data-ad-ext-game-layout-control-spacer",
     "data-ad-ext-game-layout-controls-visible",
     "data-ad-ext-game-layout-cricket-stage",
     "data-ad-ext-game-layout-player-column",
@@ -38762,6 +38778,19 @@ ${MODERN_ACTIVE_PLAYER_SURFACE_SELECTORS2.join(",\n")} {
       }
     });
   }
+  function markControlBarStructure(state, controlBar) {
+    Array.from(controlBar?.children || []).forEach((child) => {
+      const isDirectAction = child.matches?.("button") === true;
+      const isActionGroup = !isDirectAction && Boolean(child.querySelector?.("button"));
+      const isEmptySpacer = !isDirectAction && !isActionGroup && !String(child.textContent || "").trim() && Number(child.children?.length || 0) === 0;
+      if (!isActionGroup && !isEmptySpacer) return;
+      rememberNode(state, child);
+      setMarker(
+        child,
+        isActionGroup ? "data-ad-ext-game-layout-control-actions" : "data-ad-ext-game-layout-control-spacer"
+      );
+    });
+  }
   function markSurface(state, surface, metrics, options = {}) {
     const mark = (node, attribute, value = "true") => {
       rememberNode(state, node);
@@ -38794,6 +38823,7 @@ ${MODERN_ACTIVE_PLAYER_SURFACE_SELECTORS2.join(",\n")} {
     mark(surface.boardFrame, "data-ad-ext-game-layout-board-frame");
     mark(surface.controlsSlot, "data-ad-ext-game-layout-controls-slot");
     mark(surface.controlBar, "data-ad-ext-game-layout-control-bar");
+    markControlBarStructure(state, surface.controlBar);
     surface.playerColumns.forEach((column) => mark(column, "data-ad-ext-game-layout-player-column"));
     let nextPlayerY = GAME_LAYOUT_PADDING + metrics.turnHeight + GAME_LAYOUT_TURN_PLAYER_GAP;
     players.forEach((player, index) => {
@@ -38909,6 +38939,7 @@ ${MODERN_ACTIVE_PLAYER_SURFACE_SELECTORS2.join(",\n")} {
               rememberNode(appliedState, node);
               setMarker(node, attribute);
             });
+            markControlBarStructure(appliedState, cricketControls.controlBar);
             controlBar = cricketControls.controlBar;
             if (controlsTimer !== null) setMarker(controlBar, "data-ad-ext-game-layout-controls-visible");
             return;
@@ -40730,7 +40761,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
 
   // src/core/bootstrap.js
   var GLOBAL_NAMESPACE_KEY = "__adXConfig";
-  var API_VERSION = "3.5.10";
+  var API_VERSION = "3.5.11";
   var STARTUP_DEFER_INTERVAL_MS = 16;
   function getWindowTimerApi(windowRef) {
     let setTimeoutRef = null;
