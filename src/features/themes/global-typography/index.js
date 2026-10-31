@@ -1,6 +1,8 @@
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../../core/dom-mutation-filter.js";
 import { createFeatureMountHarness } from "../../shared/feature-mount-harness.js";
 import { isThemeGameContextActive } from "../shared/theme-utils.js";
+import { maintainMatchStyleOrder } from "../shared/match-style-order.js";
+import { createPlayerGlowController } from "./player-glow.js";
 import {
   STYLE_ID,
   TOOLS_SHADOW_STYLE_ID,
@@ -59,6 +61,10 @@ function ensureToolsShadowStyle(documentRef, cssText) {
     }
 
     let styleNode = getShadowNodeById(shadowRoot, TOOLS_SHADOW_STYLE_ID);
+    if (styleNode && String(styleNode.tagName).toLowerCase() !== "style") {
+      styleNode.remove();
+      styleNode = null;
+    }
     if (!styleNode) {
       styleNode = documentRef.createElement("style");
       styleNode.id = TOOLS_SHADOW_STYLE_ID;
@@ -138,40 +144,49 @@ export function mountThemeGlobalTypography(context = {}) {
     return { featureConfig, cssText };
   }
 
+  const glow = createPlayerGlowController(documentRef);
   function removeStyle() {
+    glow.clear();
     domGuards.removeNodeById(STYLE_ID);
     removeToolsShadowStyles(documentRef);
   }
 
+  function expectedStyleText() {
+    const { featureConfig, cssText } = readTypographyConfig();
+    return featureConfig?.enabled && resolveThemeGlobalTypographyActiveTheme({ documentRef, windowRef }) ? cssText : "";
+  }
+
+  function checkHealth() {
+    const expected = expectedStyleText();
+    const matches = (styleNode) => expected
+      ? String(styleNode?.tagName).toLowerCase() === "style" && styleNode.textContent === expected
+      : !styleNode;
+    return matches(documentRef.getElementById(STYLE_ID)) &&
+      queryToolsHosts(documentRef).every((host) => !host.shadowRoot ||
+        matches(getShadowNodeById(host.shadowRoot, TOOLS_SHADOW_STYLE_ID))) && glow.checkHealth();
+  }
+
+  function updateTypography() {
+    const { featureConfig, cssText } = readTypographyConfig();
+
+    if (!featureConfig?.enabled || !resolveThemeGlobalTypographyActiveTheme({ documentRef, windowRef }) || !cssText) {
+      removeStyle();
+      return;
+    }
+
+    const existing = documentRef.getElementById(STYLE_ID);
+    if (existing && String(existing.tagName).toLowerCase() !== "style") existing.remove();
+    const styleNode = domGuards.ensureStyle(STYLE_ID, cssText);
+    maintainMatchStyleOrder(styleNode);
+    ensureToolsShadowStyle(documentRef, cssText);
+    glow.update(featureConfig.glowMode !== "off" && Boolean(featureConfig.glowMode));
+  }
+
   const harness = createFeatureMountHarness(context, {
     isSupported: ({ documentRef: nextDocumentRef }) => Boolean(nextDocumentRef && domGuards),
-    update: () => {
-      const { featureConfig, cssText } = readTypographyConfig();
-
-      if (!featureConfig?.enabled) {
-        removeStyle();
-        return;
-      }
-
-      if (!resolveThemeGlobalTypographyActiveTheme({
-        documentRef,
-        windowRef,
-      })) {
-        removeStyle();
-        return;
-      }
-
-      if (!cssText) {
-        removeStyle();
-        return;
-      }
-
-      const styleNode = domGuards.ensureStyle(STYLE_ID, cssText);
-      if (styleNode?.parentNode && typeof styleNode.parentNode.appendChild === "function") {
-        styleNode.parentNode.appendChild(styleNode);
-      }
-      ensureToolsShadowStyle(documentRef, cssText);
-    },
+    checkHealth,
+    repairHealth: () => { updateTypography(); return checkHealth(); },
+    update: updateTypography,
   });
   if (!harness) {
     return () => {};

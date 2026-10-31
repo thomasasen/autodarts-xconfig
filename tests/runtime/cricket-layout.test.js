@@ -10,6 +10,7 @@ import { FakeDocument, createFakeWindow } from "./fake-dom.js";
 import { createDomGuards } from "../../src/core/dom-guards.js";
 import { createObserverRegistry } from "../../src/core/observer-registry.js";
 import { createListenerRegistry } from "../../src/core/listener-registry.js";
+import { createPlayerGlowController } from "../../src/features/themes/global-typography/player-glow.js";
 
 function fixture(players = 4, tactics = false, columnMajor = false) {
   const documentRef = new FakeDocument();
@@ -59,6 +60,23 @@ function fixture(players = 4, tactics = false, columnMajor = false) {
     config: { getFeatureConfig: () => config }, helpers: { createRafScheduler: (callback) => ({ schedule: callback, cancel() {} }) } };
   return { documentRef, windowRef, grid, headers, rows, observers, listeners, context, setConfig: (value) => { config = normalizeCricketLayoutConfig(value); } };
 }
+
+test("Cricket and Tactics glow tracks the semantic active header without touching target cells", () => {
+  for (const tactics of [false, true]) {
+    const host = fixture(4, tactics);
+    const glow = createPlayerGlowController(host.documentRef);
+    glow.update(true);
+    assert.ok(host.headers[0].querySelector(".ad-xconfig-player-glow"));
+    assert.equal(host.rows.some((row) => row.cells.some((cell) => cell.querySelector(".ad-xconfig-player-glow"))), false);
+    host.headers[0].classList.remove("bg-raspberry-slush-diagonal");
+    host.headers[1].classList.add("bg-raspberry-slush-diagonal");
+    glow.update(true);
+    assert.equal(host.headers[0].querySelector(".ad-xconfig-player-glow"), null);
+    assert.ok(host.headers[1].querySelector(".ad-xconfig-player-glow"));
+    glow.clear();
+    assert.equal(host.headers[1].querySelector(".ad-xconfig-player-glow"), null);
+  }
+});
 
 test("recommended Cricket effects are calm and opt-in while existing default switches stay compatible", () => {
   const grid = createRecommendedFeatureConfig("cricketGridStatusEffects");

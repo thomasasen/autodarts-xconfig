@@ -14,6 +14,7 @@ import {
   buildThemeGlobalTypographyStyleText,
 } from "../../src/features/themes/global-typography/style.js";
 import { buildThemeVisualSettingsCss } from "../../src/features/themes/shared/theme-visuals.js";
+import { maintainMatchStyleOrder } from "../../src/features/themes/shared/match-style-order.js";
 import { mountTurnDartDisplay } from "../../src/features/turn-dart-display/index.js";
 import {
   MODERN_TURN_DART_PLACEHOLDER_CLASS,
@@ -43,6 +44,29 @@ function mountContext(config, documentRef, windowRef) {
     helpers: { createRafScheduler: createImmediateSchedulerFactory() },
   };
 }
+
+test("theme overrides follow new host styles without repeatedly swapping owned styles", () => {
+  const documentRef = new FakeDocument();
+  const background = documentRef.createElement("style");
+  background.id = "ad-ext-theme-global-background-style";
+  const typography = documentRef.createElement("style");
+  typography.id = "ad-ext-theme-global-typography-style";
+  documentRef.head.appendChild(background);
+  documentRef.head.appendChild(typography);
+  maintainMatchStyleOrder(background);
+  assert.deepEqual(documentRef.head.children, [background, typography]);
+  const host = documentRef.createElement("link");
+  host.setAttribute("rel", "stylesheet");
+  documentRef.head.appendChild(host);
+  maintainMatchStyleOrder(background);
+  maintainMatchStyleOrder(typography);
+  assert.deepEqual(documentRef.head.children, [host, background, typography]);
+  for (let iteration = 0; iteration < 3; iteration++) {
+    maintainMatchStyleOrder(background);
+    maintainMatchStyleOrder(typography);
+  }
+  assert.deepEqual(documentRef.head.children, [host, background, typography]);
+});
 
 test("global background, typography and turn darts build isolated CSS", () => {
   const typographyCss = buildThemeGlobalTypographyStyleText({
@@ -225,6 +249,7 @@ test("remaining score size profiles are responsive, score-only and auto stays na
     assert.match(css, /clamp\([^;]+cqi[^;]+dvh[^;]+\)/, profile);
     assert.match(css, /\.ad-ext-player-score/, profile);
     assert.match(css, /\.font-number\.overflow-hidden/, profile);
+    assert.match(css, /font-size: calc\(var\(--ad-ext-theme-remaining-score-font-size\) \* var\(--adx-text-scale, 1\)\) !important/, profile);
     assert.doesNotMatch(css, /\.ad-ext-player-name[^}]+font-size/s, profile);
     assert.doesNotMatch(css, /\.ad-ext-turn-points[^}]+font-size/s, profile);
   }
@@ -264,6 +289,52 @@ test("global typography updates remaining score size at runtime and restores aut
   windowRef.dispatchEvent(new FakeEvent("resize", { bubbles: false, target: windowRef }));
   assert.equal(documentRef.getElementById(TYPOGRAPHY_STYLE_ID), null);
   cleanup();
+});
+
+test("typography watchdog restores missing or replaced CSS without recreating active glow effects", () => {
+  for (const glowMode of ["off", "pulse"]) {
+    const f = createModernX01Fixture();
+    const config = createRuntimeConfig({ features: { themes: { globalTypography: {
+      enabled: true, fontPreset: "system", scoreColor: "#ABCDEF", glowMode, glowIntensity: 50,
+    } } } });
+    const ctx = mountContext(config, f.documentRef, f.windowRef);
+    let health = null;
+    const snapshot = { phase: "ready", generation: 1 };
+    ctx.turnLifecycle = { refresh: () => snapshot, ensureCurrent: () => snapshot, register: () => () => {} };
+    ctx.watchdog = { register(entry) { health = entry; return () => { health = null; }; } };
+    const cleanup = mountThemeGlobalTypography(ctx);
+    const expected = f.documentRef.getElementById(TYPOGRAPHY_STYLE_ID).textContent;
+    const glow = f.card.querySelector(".ad-xconfig-player-glow");
+    assert.equal(health.check(snapshot), true);
+
+    f.documentRef.getElementById(TYPOGRAPHY_STYLE_ID).remove();
+    assert.equal(health.check(snapshot), false);
+    health.repair(snapshot);
+    assert.equal(f.documentRef.getElementById(TYPOGRAPHY_STYLE_ID).textContent, expected);
+    assert.equal(f.card.querySelector(".ad-xconfig-player-glow"), glow);
+
+    f.documentRef.getElementById(TYPOGRAPHY_STYLE_ID).textContent = "/* replaced by another extension */";
+    assert.equal(health.check(snapshot), false);
+    health.repair(snapshot);
+    assert.equal(health.check(snapshot), true);
+    assert.equal(f.documentRef.getElementById(TYPOGRAPHY_STYLE_ID).textContent, expected);
+
+    f.documentRef.getElementById(TYPOGRAPHY_STYLE_ID).remove();
+    const wrongNode = f.node(f.documentRef.head, "div");
+    wrongNode.id = TYPOGRAPHY_STYLE_ID;
+    assert.equal(health.check(snapshot), false);
+    health.repair(snapshot);
+    assert.equal(f.documentRef.getElementById(TYPOGRAPHY_STYLE_ID).tagName.toLowerCase(), "style");
+    assert.equal(health.check(snapshot), true);
+
+    config.setFeatureEnabled("themes.globalTypography", false);
+    health.repair(snapshot);
+    assert.equal(f.documentRef.getElementById(TYPOGRAPHY_STYLE_ID), null);
+    assert.equal(f.card.querySelector(".ad-xconfig-player-glow"), null);
+    assert.equal(health.check(snapshot), true);
+    cleanup();
+    assert.equal(health, null);
+  }
 });
 
 test("global modules mount independently on matches and clean up after a route change", () => {

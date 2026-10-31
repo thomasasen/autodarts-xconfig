@@ -6,6 +6,7 @@ import { createDomGuards } from "../../src/core/dom-guards.js";
 import { createListenerRegistry } from "../../src/core/listener-registry.js";
 import { createObserverRegistry } from "../../src/core/observer-registry.js";
 import { mountThemeGameLayout } from "../../src/features/themes/game-layout/index.js";
+import { createScreenProfileController, resolveScreenSurface } from "../../src/features/themes/game-layout/screen-profiles.js";
 import {
   GAME_LAYOUT_RAIL_MAX_WIDTH,
   calculateBoardFocusLayout,
@@ -155,6 +156,116 @@ function setActivePlayer(fixture, activeIndex) {
     player.card.classList.add(index === activeIndex ? "bg-raspberry-slush-diagonal" : "bg-black-80");
   });
 }
+
+test("screen profiles keep native cards, controls and geometry intact across orientation and DOM replacement", () => {
+  const f = createLayoutFixture();
+  const ctx = mountContext(createRuntimeConfig({}), f);
+  const profiles = createScreenProfileController(ctx);
+  const nativeViewBox = f.layers[0].getAttribute("viewBox");
+  assert.ok(resolveScreenSurface(f.documentRef));
+  profiles.update({ screenProfile: "auto", boardShare: 60, textScale: 120 });
+  assert.equal(f.root.getAttribute("data-adx-screen-profile"), "desktop");
+  assert.equal(f.root.style.getPropertyValue("--adx-board-share"), "60%");
+  assert.equal(f.undoButton.isConnected, true);
+  assert.equal(f.nextButton.isConnected, true);
+  assert.equal(f.players.every((player) => player.card.isConnected), true);
+  f.root.__rect.width = 800;
+  profiles.update({ screenProfile: "auto" });
+  assert.equal(f.root.getAttribute("data-adx-screen-profile"), "portrait");
+  f.root.removeAttribute("data-adx-screen-profile");
+  assert.equal(profiles.checkHealth(), false);
+  profiles.update({ screenProfile: "tv" });
+  assert.equal(profiles.checkHealth(), true);
+  assert.equal(f.layers[0].getAttribute("viewBox"), nativeViewBox);
+  profiles.clear(); profiles.clear();
+  assert.equal(f.root.getAttribute("data-adx-screen-profile"), null);
+  assert.equal(f.root.style.getPropertyValue("--adx-board-share"), "");
+});
+
+test("screen profile outer arrangement supports score-based game families without changing their values", () => {
+  for (const variant of ["X01", "Gotcha", "Bermuda", "Shanghai", "Count Up", "Around the Clock", "Round the World", "Segment Training", "Random Checkout", "Killer"]) {
+    const f = createLayoutFixture({ playerCount: 4, activeIndex: 2 });
+    const ctx = mountContext(createRuntimeConfig({}), f, createGameStateHarness({ variant }));
+    const profiles = createScreenProfileController(ctx);
+    const scores = f.players.map((player) => player.score.textContent);
+    profiles.update({ screenProfile: "portrait", playerOrder: "active-first" });
+    assert.equal(f.root.getAttribute("data-adx-screen-profile"), "portrait", variant);
+    assert.deepEqual(f.players.map((player) => player.score.textContent), scores, variant);
+    assert.equal(f.undoButton.isConnected, true);
+    assert.deepEqual(f.players.map((player) => player.item.style.getPropertyValue("--adx-player-row")),
+      variant === "X01" ? ["3", "4", "1", "2"] : ["1", "2", "3", "4"], variant);
+    profiles.clear();
+  }
+});
+
+test("screen profiles keep directly mounted player cards as complete grid items and restore them", () => {
+  const f = createLayoutFixture({ playerCount: 3, activeIndex: 1 });
+  f.players.forEach((player) => f.root.appendChild(player.card));
+  f.leftColumn.remove();
+  f.rightColumn.remove();
+  const profiles = createScreenProfileController(mountContext(createRuntimeConfig({}), f,
+    createGameStateHarness({ variant: "Gotcha" })));
+  for (const screenProfile of ["desktop", "portrait", "tv"]) {
+    profiles.update({ screenProfile, playerOrder: "active-first" });
+    assert.equal(f.root.getAttribute("data-adx-screen-profile"), screenProfile);
+    assert.deepEqual(f.players.map((player) => player.card.getAttribute("data-adx-screen-part")), ["player", "player", "player"]);
+    assert.deepEqual(f.players.map((player) => player.card.style.getPropertyValue("--adx-player-row")), ["1", "2", "3"]);
+    assert.equal(f.undoButton.isConnected, true);
+  }
+  profiles.update({ screenProfile: "legacy" });
+  assert.equal(f.root.getAttribute("data-adx-screen-profile"), null);
+  assert.equal(f.players.every((player) => player.card.getAttribute("data-adx-screen-part") === null), true);
+  assert.equal(f.players.every((player) => player.card.style.getPropertyValue("--adx-player-row") === ""), true);
+});
+
+test("screen profiles fall back to native layout when several players share an inseparable grid item", () => {
+  const f = createLayoutFixture({ playerCount: 4 });
+  const profiles = createScreenProfileController(mountContext(createRuntimeConfig({}), f));
+  profiles.update({ screenProfile: "desktop" });
+  assert.equal(f.root.getAttribute("data-adx-screen-profile"), "desktop");
+  const shared = f.node(f.leftColumn, "div", "native-player-group");
+  f.players.slice(0, 2).forEach((player) => shared.appendChild(player.item));
+  assert.equal(resolveScreenSurface(f.documentRef), null);
+  profiles.update({ screenProfile: "portrait" });
+  assert.equal(f.root.getAttribute("data-adx-screen-profile"), null);
+  assert.equal(f.players.every((player) => player.card.isConnected), true);
+  assert.equal(f.players.every((player) => player.item.getAttribute("data-adx-screen-part") === null), true);
+  assert.equal(f.undoButton.isConnected, true);
+  assert.equal(profiles.checkHealth(), true);
+});
+
+test("screen profiles recover when a statistic is replaced inside an unchanged player card", () => {
+  const f = createLayoutFixture();
+  const profiles = createScreenProfileController(mountContext(createRuntimeConfig({}), f));
+  profiles.update({ screenProfile: "desktop", showAverages: false });
+  const oldAverage = f.players[0].content.querySelector(".average");
+  const replacement = f.node(f.players[0].content, "div", "average", "Leg 71.0 / Match 65.0");
+  f.players[0].content.insertBefore(replacement, oldAverage);
+  oldAverage.remove();
+  assert.equal(profiles.checkHealth(), false);
+  profiles.update({ screenProfile: "desktop", showAverages: false });
+  assert.equal(profiles.checkHealth(), true);
+  assert.equal(replacement.getAttribute("data-adx-stat"), "average");
+  assert.equal(oldAverage.getAttribute("data-adx-stat"), null);
+  profiles.clear();
+  assert.equal(replacement.getAttribute("data-adx-stat"), null);
+});
+
+test("new X01 screen profiles preserve active-first ordering and leg-starter identity", () => {
+  const f = createLayoutFixture({ playerCount: 3, activeIndex: 1 });
+  const gameState = createGameStateHarness({ variant: "X01", match: { players: [
+    { index: 2, name: "PLAYER 3" }, { index: 0, name: "PLAYER 1" }, { index: 1, name: "PLAYER 2" },
+  ] } });
+  const profiles = createScreenProfileController(mountContext(createRuntimeConfig({}), f, gameState));
+  profiles.update({ screenProfile: "desktop", playerOrder: "active-first", showLegStarter: true });
+  assert.equal(f.players[1].item.style.getPropertyValue("--adx-player-row"), "1");
+  assert.equal(f.players[2].card.getAttribute("data-adx-leg-starter"), "true");
+  setActivePlayer(f, 2);
+  profiles.update({ screenProfile: "portrait", playerOrder: "active-first", showLegStarter: true });
+  assert.equal(f.players[2].item.style.getPropertyValue("--adx-player-row"), "1");
+  profiles.clear();
+  assert.equal(f.players[1].item.style.getPropertyValue("--adx-player-row"), "");
+});
 
 function mountContext(config, fixture, gameState = createGameStateHarness()) {
   return {

@@ -12,6 +12,27 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.6.0] - 2026-10-31
+
+### Added
+
+- Nutzerwirkung: Spiel-Layouts bieten Desktop-, TV- und Hochformatprofile sowie eine automatische Auswahl mit einstellbarem Board-Anteil, Textgröße und sichtbaren Statistiken. Die bisherige Darstellung bleibt für bestehende Installationen erhalten.
+  Technik: Eine gemeinsame Layoutsteuerung übernimmt die äußere Anordnung; Cricket und Tactics behalten ihre eigene Tabellenformatierung. Fehlende Oberflächenteile führen zum sicheren Rückfall auf die native Darstellung.
+- Nutzerwirkung: Das echte Board-Livebild lässt sich optional schärfen und im Kontrast zurückhaltend verbessern. Board-Surrounds und ein optionaler Randglanz beziehungsweise sanftes Pulsieren heben den aktiven Spieler hervor.
+  Technik: Ein SVG-Filter bearbeitet ausschließlich das Kamerabild ohne zusätzliche Kameraverbindung oder Frame-Kopien. Surrounds liegen außerhalb der unveränderten Board-Geometrie; Glow berücksichtigt reduzierte Bewegung sowie BUST- und Gewinnerzustände.
+- Nutzerwirkung: 78 öffentliche Community-Designs und 34 Surround-Einträge ergänzen die bisherigen Vorlagen. Die Galerie bietet Suche, Herkunft und kleine, sofort offline verfügbare Vorschaubilder; Surround und Glow werden nur auf Wunsch übernommen.
+  Technik: Der dokumentierte Quellstand wird in native xConfig-Eigenschaften übersetzt. Ein gemeinsamer Generator trennt Vorlagendaten von ihrer Aufbereitung und fasst identische Standardwerte zusammen; fremdes Layout-CSS wird nicht ausgeführt.
+
+### Changed
+
+- Nutzerwirkung: Vollständige Vorlagenbilder werden erst bei Bedarf geladen und stehen danach auch offline zur Verfügung. Bei Download- oder Speicherfehlern bleibt die bisherige Auswahl erhalten und kann erneut angewendet werden.
+  Technik: Größen- und SHA-256-geprüfte Originale stammen aus dem festen GitHub-Versionstag und werden getrennt von Einstellungen im Tampermonkey-Speicher nach Inhalts-Hash gespeichert. Das Userscript bleibt unter dem unveränderten 25-MiB-Limit; der Release-Workflow prüft vor der Bereitstellung alle Originaldateien am Tag.
+
+### Fixed
+
+- Nutzerwirkung: Dart-Grafiken bleiben bei Profilwechseln und Größenänderungen am Board ausgerichtet; Hintergründe und Schriftgestaltung vertragen sich bei gemeinsamem Betrieb zuverlässiger.
+  Technik: Begrenzte Resize-Beobachtung führt bestehende Marker ohne erneute Fluganimation nach. Eine idempotente gemeinsame Stylesheet-Reihenfolge verhindert konkurrierende Observer-Reparaturen.
+
 ## [3.5.11] - 2026-10-27
 
 ### Fixed
@@ -2460,6 +2481,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.6.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.11...v3.6.0
 [3.5.11]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.10...v3.5.11
 [3.5.10]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.9...v3.5.10
 [3.5.9]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.8...v3.5.9

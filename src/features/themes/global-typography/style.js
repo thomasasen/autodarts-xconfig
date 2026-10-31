@@ -7,6 +7,8 @@ import {
   hexColorToRgba,
   normalizeHexColor,
 } from "../../../shared/hex-color-utils.js";
+import { buildPlayerGlowStyle } from "./player-glow.js";
+import { COMMUNITY_PRESETS } from "../../../shared/community-designs.js";
 import {
   MODERN_PLAYER_SCORE_SELECTOR,
   MODERN_PLAYER_SURFACE_SELECTOR,
@@ -152,7 +154,7 @@ function appendRemainingScoreSizeRules(blocks, profile) {
   max-inline-size: 100% !important;
   block-size: 1em !important;
   overflow: visible !important;
-  font-size: var(${REMAINING_SCORE_SIZE_VAR}) !important;
+  font-size: calc(var(${REMAINING_SCORE_SIZE_VAR}) * var(--adx-text-scale, 1)) !important;
   line-height: 1 !important;
 }`
   );
@@ -163,9 +165,23 @@ export function buildThemeGlobalTypographyStyleText(featureConfig = {}) {
   const selectors = getThemeGlobalTypographySelectors(featureConfig.applyTo);
   const colorDeclarations = buildThemeGlobalTypographyColorDeclarations(featureConfig);
   const blocks = [];
+  const community = COMMUNITY_PRESETS.find((entry) => entry.key === featureConfig.communityPresetKey);
+  if (community) {
+    if (featureConfig.fontPreset === "system" && /^[\w\s,'"-]+$/.test(community.fontFamily)) {
+      blocks.push(`${selectors.join(",")} {font-family:${community.fontFamily}!important}`);
+    }
+    const surface = community.surfaceStyle;
+    const safe = (value) => value && !/[{};]|url\s*\(|@/i.test(value) ? value : "";
+    const declarations = [safe(surface.border) && `border:${surface.border}`, safe(surface.radius) && `border-radius:${surface.radius}`].filter(Boolean);
+    if (declarations.length) {
+      const declarationText = declarations.map((value) => value + "!important").join(";");
+      blocks.push(`${MODERN_PLAYER_SURFACE_SELECTOR} {${declarationText}}`);
+    }
+  }
+  blocks.push(buildPlayerGlowStyle(featureConfig));
   let imports = "";
 
-  if (preset && Array.isArray(selectors) && selectors.length) {
+  if (preset && Array.isArray(selectors) && selectors.length && !(community && featureConfig.fontPreset === "system")) {
     const remoteUrl = preset.remote
       ? buildThemeGlobalTypographyBunnyUrl(preset.familyName)
       : "";

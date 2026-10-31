@@ -9,6 +9,7 @@ export function mountThemeGlobalBackground(context = {}) {
     featureKey: FEATURE_KEY,
     configKey: CONFIG_KEY,
     styleId: STYLE_ID,
+    allowMenu: true,
     buildStyleText: buildThemeGlobalBackgroundStyleText,
   });
 }

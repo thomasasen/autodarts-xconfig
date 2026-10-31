@@ -1,4 +1,7 @@
+import { COMMUNITY_ASSET_FILES } from "./community-designs.js";
+
 export const THEME_PRESET_ASSET_FILES = Object.freeze({
+  ...COMMUNITY_ASSET_FILES,
   "british-flag": "british-flag.jpg",
   cyberpunk: "cyberpunk.jpg",
   matrix: "matrix.png",

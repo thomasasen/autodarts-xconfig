@@ -17,6 +17,13 @@ import { CRICKET_STATUS_STYLE_OPTIONS, CRICKET_STATUS_EMPHASIS_OPTIONS, CRICKET_
 const X01_REMAINING_SCORE_BAR_COLOR_CYCLE_PREVIEW_EFFECT =
   "x01-remaining-score-bar-color-cycle";
 
+import { SCREEN_PROFILES, GLOW_MODES } from "../../shared/presentation-config.js";
+import { COMMUNITY_PRESETS, COMMUNITY_SURROUNDS } from "../../shared/community-designs.js";
+
+function rangeField(key, label, min, max, valueStep = 1, options = []) {
+  return Object.freeze({ key, label, control: "range", min, max, step: valueStep, options });
+}
+
 function checkboxField(key, label, fieldOptions = {}) {
   return Object.freeze({
     key,
@@ -270,7 +277,7 @@ const THEME_GLOBAL_TEMPLATE_PRESET_SECTIONS = Object.freeze([
 ]);
 
 const THEME_GLOBAL_TEMPLATE_PRESET_FIELDS = Object.freeze(
-  THEME_GLOBAL_TEMPLATE_PRESET_SECTIONS.flatMap((section) =>
+  [...THEME_GLOBAL_TEMPLATE_PRESET_SECTIONS, { label: "Community · Autodarts Layouts", keys: COMMUNITY_PRESETS.map((preset) => preset.key) }].flatMap((section) =>
     section.keys.map((presetKey) => {
       const preset = THEME_GLOBAL_TEMPLATE_PRESETS.find((entry) => entry.key === presetKey);
       return actionField("applyThemeGlobalPreset", preset.label, {
@@ -285,17 +292,25 @@ const THEME_GLOBAL_TEMPLATE_PRESET_FIELDS = Object.freeze(
 );
 
 export const xconfigDescriptors = Object.freeze([
+  descriptorEntry({ featureKey: "live-board-enhancement", readmeAnchor: "live-board-enhancement", description: "Schärft das vorhandene Board-Livebild, ohne die Darterkennung zu verändern.", fields: [
+    rangeField("intensity", "Stärke", 0, 100, 1, [{ value: 30, label: "Dezent" }, { value: 60, label: "Deutlich" }]), DEBUG_FIELD,
+  ] }),
+  descriptorEntry({ featureKey: "board-surround", readmeAnchor: "board-surround", description: "Zeigt einen lokal gespeicherten Surround hinter dem Board.", fields: [
+    selectField("design", "Surround", [{ value: "preset", label: "Zugewiesenes Vorlagenmotiv", disabled: true }, ...COMMUNITY_SURROUNDS.map((entry) => ({ value: entry.key, label: entry.label }))]),
+    rangeField("sizePercent", "Größe (%)", 110, 170), DEBUG_FIELD,
+  ] }),
   descriptorEntry({
     featureKey: "theme-global-presets",
     readmeAnchor: "theme-global-presets",
     cardType: "action",
-    fields: THEME_GLOBAL_TEMPLATE_PRESET_FIELDS,
+    fields: [checkboxField("includeSurround", "Surround übernehmen"), checkboxField("includeGlow", "Glow übernehmen"), ...THEME_GLOBAL_TEMPLATE_PRESET_FIELDS],
   }),
   descriptorEntry({
     featureKey: "theme-global-background",
     readmeAnchor: "theme-global-background",
     fields: [
       selectField("backgroundDisplayMode", "Bildanpassung", BACKGROUND_DISPLAY_OPTIONS),
+      checkboxField("applyMenuBackground", "Menühintergrund der Vorlage anwenden"),
       selectField("backgroundOpacity", "Sichtbarkeit des Hintergrundbilds", BACKGROUND_OPACITY_OPTIONS),
       selectField("playerFieldTransparency", "Durchsichtigkeit der Spielerfelder", PLAYER_FIELD_TRANSPARENCY_OPTIONS),
       actionField("uploadThemeBackground", "Hintergrundbild hochladen", {
@@ -313,6 +328,9 @@ export const xconfigDescriptors = Object.freeze([
     readmeAnchor: "template-global-typography",
     description: "Spielübergreifende Schrift und Farben für Scores, Würfe und Namen.",
     fields: [
+      selectField("glowMode", "Aktiver Spieler: Glow", GLOW_MODES, { section: "Glow" }),
+      colorField("glowColor", "Glow-Farbe", { section: "Glow" }),
+      rangeField("glowIntensity", "Glow-Stärke", 0, 100),
       selectField("fontPreset", "Schriftart", THEME_GLOBAL_TYPOGRAPHY_FONT_PRESETS, {
         section: "Schrift",
       }),
@@ -353,6 +371,11 @@ export const xconfigDescriptors = Object.freeze([
     featureKey: "theme-game-layout",
     readmeAnchor: "theme-game-layout",
     fields: [
+      selectField("screenProfile", "Bildschirmprofil", SCREEN_PROFILES),
+      rangeField("boardShare", "Board-Anteil (%)", 30, 75),
+      rangeField("textScale", "Textgröße (%)", 80, 150),
+      checkboxField("showAverages", "AVG / MPR anzeigen"),
+      checkboxField("showStatistics", "Nebenstatistiken anzeigen"),
       selectField(
         "playerOrder",
         "Spielerreihenfolge",

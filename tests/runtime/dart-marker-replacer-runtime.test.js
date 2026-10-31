@@ -1260,6 +1260,145 @@ test("dart-marker-replacer reacts to scroll, resize, and mutation triggers witho
   assert.equal(Boolean(documentRef.getElementById(OVERLAY_ID)), false);
 });
 
+test("dart-marker-replacer follows board-only resize without replaying flights and disconnects its observer", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const observers = [];
+  windowRef.ResizeObserver = class {
+    constructor(callback) { this.callback = callback; this.targets = new Set(); this.disconnected = false; observers.push(this); }
+    observe(node) { this.targets.add(node); }
+    disconnect() { this.disconnected = true; }
+  };
+  const matrix = { a: 1, b: 0, c: 0, d: 1, e: 400, f: 350 };
+  const fixture = installBoardFixture(documentRef, [{ cx: 0, cy: 0, r: 5, getMatrix: () => matrix }]);
+  const cleanup = initializeDartMarkerReplacer({
+    documentRef, windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: { observers: createObserverRegistry(), listeners: createListenerRegistry() },
+    config: { getFeatureConfig: () => ({ design: "autodarts", animateDarts: true, hideOriginalMarkers: false }) },
+    gameState: { subscribe: () => () => {} },
+    helpers: { createRafScheduler },
+  });
+  await wait(20);
+  const observer = observers.at(-1);
+  assert.ok(observer.targets.has(fixture.svg));
+  assert.ok(observer.targets.size <= 4, "observe only the selected board, its geometric hosts and profile stage");
+  const image = getDartImages(documentRef)[0];
+  const flight = documentRef.querySelector(`.${DART_CONTAINER_CLASS}`);
+  const initialX = image.getAttribute("x");
+  const flightCount = flight.__animations.length;
+  assert.ok(flightCount > 0);
+  Object.assign(fixture.svg.__rect, { width: 300, height: 300 });
+  Object.assign(matrix, { e: 200, f: 175 });
+  observer.callback([{ target: fixture.svg }]);
+  await wait(20);
+  assert.ok(getDartImages(documentRef)[0] === image, "resize must keep the existing dart image");
+  assert.notEqual(image.getAttribute("x"), initialX);
+  assert.equal(flight.__animations.length, flightCount, "layout repair must not replay the throw");
+  assert.equal(observers.length, 1, "unchanged board identity must reuse its observer");
+  cleanup();
+  assert.equal(observer.disconnected, true);
+  assert.ok(documentRef.getElementById(OVERLAY_ID) === null, "cleanup removes the overlay");
+  observer.callback([{ target: fixture.svg }]);
+  await wait(20);
+  assert.ok(documentRef.getElementById(OVERLAY_ID) === null, "a queued resize must not rehydrate after teardown");
+});
+
+test("dart-marker-replacer follows typography stage resize while board dimensions remain unchanged", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const observers = [];
+  windowRef.ResizeObserver = class {
+    constructor(callback) { this.callback = callback; this.targets = new Set(); observers.push(this); }
+    observe(node) { this.targets.add(node); }
+    disconnect() { this.disconnected = true; }
+  };
+  const matrix = { a: 1, b: 0, c: 0, d: 1, e: 400, f: 350 };
+  const fixture = installBoardFixture(documentRef, [{ cx: 0, cy: 0, r: 5, getMatrix: () => matrix }]);
+  const stage = documentRef.createElement("section");
+  stage.setAttribute("data-adx-screen-part", "board");
+  documentRef.main.appendChild(stage);
+  stage.appendChild(fixture.svg);
+  const cleanup = initializeDartMarkerReplacer({
+    documentRef, windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: { observers: createObserverRegistry(), listeners: createListenerRegistry() },
+    config: { getFeatureConfig: () => ({ design: "autodarts", animateDarts: true, hideOriginalMarkers: false }) },
+    gameState: { subscribe: () => () => {} }, helpers: { createRafScheduler },
+  });
+  try {
+    await wait(20);
+    const observer = observers.at(-1);
+    assert.ok(observer.targets.has(stage), "the profile stage owns the turn row above the board");
+    assert.ok(observer.targets.size <= 4);
+    const image = getDartImages(documentRef)[0];
+    const flight = documentRef.querySelector(`.${DART_CONTAINER_CLASS}`);
+    const flightCount = flight.__animations.length;
+    const top = parseFloat(documentRef.getElementById(OVERLAY_ID).style.top);
+    const boardWidth = fixture.svg.__rect.width;
+    matrix.f += 5;
+    fixture.svg.__rect.top += 5;
+    stage.__rect.height += 5;
+    observer.callback([{ target: stage }]);
+    await wait(20);
+    assert.equal(fixture.svg.__rect.width, boardWidth);
+    assert.equal(parseFloat(documentRef.getElementById(OVERLAY_ID).style.top), top + 5);
+    assert.ok(getDartImages(documentRef)[0] === image);
+    assert.equal(flight.__animations.length, flightCount);
+    assert.equal(observers.length, 1);
+  } finally { cleanup(); }
+  assert.equal(observers.at(-1).disconnected, true);
+});
+
+test("dart-marker-replacer follows portrait translation at unchanged board size across layout ancestor replacement", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef });
+  const matrix = { a: 1, b: 0, c: 0, d: 1, e: 400, f: 350 };
+  const fixture = installBoardFixture(documentRef, [{ cx: 0, cy: 0, r: 5, getMatrix: () => matrix }]);
+  const cleanup = initializeDartMarkerReplacer({
+    documentRef, windowRef,
+    domGuards: createDomGuards({ documentRef }),
+    registries: { observers: createObserverRegistry(), listeners: createListenerRegistry() },
+    config: { getFeatureConfig: () => ({ design: "autodarts", animateDarts: true, hideOriginalMarkers: false }) },
+    gameState: { subscribe: () => () => {} },
+    helpers: { createRafScheduler },
+  });
+  try {
+    await wait(20);
+    const image = getDartImages(documentRef)[0];
+    const flight = documentRef.querySelector(`.${DART_CONTAINER_CLASS}`);
+    const initialX = image.getAttribute("x");
+    const initialOverlayLeft = documentRef.getElementById(OVERLAY_ID).style.left;
+    const flightCount = flight.__animations.length;
+    matrix.e += 150;
+    fixture.svg.__rect.left += 150;
+    documentRef.main.setAttribute("data-adx-screen-profile", "portrait");
+    documentRef.flushMutations([{ type: "attributes", attributeName: "data-adx-screen-profile", target: documentRef.main }]);
+    await wait(20);
+    assert.ok(getDartImages(documentRef)[0] === image);
+    assert.notEqual(documentRef.getElementById(OVERLAY_ID).style.left, initialOverlayLeft);
+    assert.equal(image.getAttribute("x"), initialX, "pure translation moves the overlay, retaining local dart geometry");
+    assert.equal(flight.__animations.length, flightCount);
+
+    const wrapper = documentRef.createElement("section");
+    documentRef.main.appendChild(wrapper);
+    wrapper.appendChild(fixture.svg);
+    documentRef.flushMutations([{ type: "childList", target: documentRef.main, addedNodes: [wrapper], removedNodes: [fixture.svg] }]);
+    await wait(20);
+    const beforeSecondMove = documentRef.getElementById(OVERLAY_ID).style.left;
+    matrix.e += 60;
+    fixture.svg.__rect.left += 60;
+    wrapper.setAttribute("data-adx-screen-profile", "desktop");
+    documentRef.flushMutations([{ type: "attributes", attributeName: "data-adx-screen-profile", target: wrapper }]);
+    await wait(20);
+    assert.notEqual(documentRef.getElementById(OVERLAY_ID).style.left, beforeSecondMove);
+    assert.ok(getDartImages(documentRef)[0] === image);
+    assert.equal(flight.__animations.length, flightCount);
+  } finally {
+    cleanup();
+  }
+});
+
 test("dart-marker-replacer ignores unrelated document churn outside the X01 board surface", async () => {
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef });

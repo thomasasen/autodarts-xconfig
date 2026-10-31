@@ -13,8 +13,55 @@ import { normalizeRuntimeConfig } from "../../src/config/runtime-config.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
 import { getFeatureCatalogEntryByFeatureKey } from "../../src/shared/feature-catalog.js";
 import { buildFeatureSettingPatch } from "../../src/features/xconfig-ui/path-utils.js";
+import { COMMUNITY_PRESETS, COMMUNITY_SURROUNDS } from "../../src/shared/community-designs.js";
 
 const SMALL_PNG = "data:image/png;base64,iVBORw0KGgo=";
+
+test("screen profiles, live image settings, surround and glow survive backup round trips", () => {
+  const initial = normalizeRuntimeConfig({ features: {
+    themes: { gameLayout: { enabled: true, screenProfile: "portrait", boardShare: 63, textScale: 121, showAverages: false }, globalTypography: { glowMode: "pulse", glowColor: "#abcdef", glowIntensity: 47 }, globalPresets: { includeGlow: true, includeSurround: true } },
+    liveBoardEnhancement: { enabled: true, intensity: 57 },
+    boardSurround: { enabled: true, design: "winmau-blade6", sizePercent: 151 },
+  } });
+  const exported = createSettingsExport(initial, { descriptors: xconfigDescriptors });
+  const imported = analyzeSettingsImport(exported.payload, normalizeRuntimeConfig(), { descriptors: xconfigDescriptors, mode: "replace" });
+  assert.ok(imported.config);
+  assert.equal(imported.config.features.themes.gameLayout.screenProfile, "portrait");
+  assert.equal(imported.config.features.themes.gameLayout.boardShare, 63);
+  assert.equal(imported.config.features.liveBoardEnhancement.intensity, 57);
+  assert.equal(imported.config.features.boardSurround.sizePercent, 151);
+  assert.equal(imported.config.features.themes.globalTypography.glowIntensity, 47);
+});
+
+test("community template identity and preset-only surround assets survive compact backups", () => {
+  const preset = COMMUNITY_PRESETS.find((entry) => entry.surroundAssetKey &&
+    !COMMUNITY_SURROUNDS.some((surround) => surround.assetKey === entry.surroundAssetKey));
+  assert.ok(preset, "fixture requires a template surround outside the standalone surround catalogue");
+  const initial = normalizeRuntimeConfig({ featureToggles: {
+    "themes.globalBackground": true, "themes.globalTypography": true, boardSurround: true,
+  }, features: {
+    themes: {
+      globalBackground: { enabled: true, communityPresetKey: preset.key, backgroundAssetKey: preset.backgroundAssets.game },
+      globalTypography: { enabled: true, communityPresetKey: preset.key, glowMode: "pulse", glowColor: "#123456", glowIntensity: 67 },
+      globalPresets: { includeGlow: true, includeSurround: true },
+    },
+    boardSurround: { enabled: true, design: "preset", assetKey: preset.surroundAssetKey, sizePercent: 169 },
+  } });
+  for (const includeAssets of [true, false]) {
+    const exported = createSettingsExport(initial, { descriptors: xconfigDescriptors, includeAssets });
+    assert.equal(exported.payload.features.boardSurround.settings.design, "preset");
+    assert.equal(exported.payload.features.boardSurround.settings.assetKey, preset.surroundAssetKey);
+    const imported = analyzeSettingsImport(exported.payload, normalizeRuntimeConfig(), { descriptors: xconfigDescriptors, mode: "replace" });
+    assert.ok(imported.config);
+    for (const key of ["globalBackground", "globalTypography", "globalPresets"]) {
+      assert.deepEqual(imported.config.features.themes[key], initial.features.themes[key]);
+    }
+    assert.deepEqual(imported.config.features.boardSurround, initial.features.boardSurround);
+    for (const key of ["themes.globalBackground", "themes.globalTypography", "boardSurround"]) {
+      assert.equal(imported.config.featureToggles[key], true);
+    }
+  }
+});
 const TURN_DART_DESIGNER_CONFIG = Object.freeze({
   version: 1,
   parts: Object.freeze({

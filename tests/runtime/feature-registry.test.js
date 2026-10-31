@@ -22,7 +22,7 @@ test("feature registry ignores duplicate feature keys deterministically", () => 
   const features = registry.getDefinitions();
 
   assert.equal(features.length, defaultFeatureDefinitions.length);
-  assert.equal(features[0].title, "Finishbaren Restscore hervorheben");
+  assert.equal(features.find((feature) => feature.featureKey === "checkout-score-highlight")?.title, "Finishbaren Restscore hervorheben");
 });
 
 test("feature registry lists runtime metadata against snapshots", () => {
@@ -43,11 +43,12 @@ test("feature registry lists runtime metadata against snapshots", () => {
   });
 
   assert.equal(listed.length, defaultFeatureDefinitions.length);
-  assert.equal(listed[0].featureKey, "checkout-score-highlight");
-  assert.equal(listed[0].enabled, true);
-  assert.equal(listed[0].mounted, true);
-  assert.deepEqual(listed[0].variants, ["x01"]);
-  assert.equal(typeof listed[0].startupTiming, "string");
+  const checkout = listed.find((feature) => feature.featureKey === "checkout-score-highlight");
+  assert.ok(checkout);
+  assert.equal(checkout.enabled, true);
+  assert.equal(checkout.mounted, true);
+  assert.deepEqual(checkout.variants, ["x01"]);
+  assert.equal(typeof checkout.startupTiming, "string");
   assert.equal(listed.some((feature) => feature.featureKey === "tv-board-zoom"), true);
   assert.equal(listed.some((feature) => feature.featureKey === "active-player-sweep"), false);
   assert.equal(listed.some((feature) => feature.featureKey === "special-hit-highlights"), true);

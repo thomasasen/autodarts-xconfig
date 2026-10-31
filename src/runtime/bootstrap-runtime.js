@@ -12,11 +12,14 @@ import { setNestedValue, splitFeaturePath } from "../config/feature-path-utils.j
 import { API_VERSION, createBootstrap } from "../core/bootstrap.js";
 import {
   createRecommendedRuntimeConfig,
+  createRuntimeConfig,
   normalizeRuntimeConfig,
 } from "../config/runtime-config.js";
 import { createFeatureRegistry } from "../features/feature-registry.js";
 import { ensureXConfigUi } from "../features/xconfig-ui/index.js";
 import { xconfigDescriptors } from "../features/xconfig-ui/descriptors.js";
+import { configureThemePresetAssets, ensureThemePresetAsset, hydrateThemePresetAssets, resolveThemePresetAsset } from "#theme-preset-assets";
+import { readThemeAssetView, requiredThemeAssetKeys } from "../shared/theme-asset-selection.js";
 import {
   normalizeThemeBackgroundHost,
   VALID_THEME_BACKGROUND_HOSTS,
@@ -91,18 +94,57 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       localStorageRef: options.localStorageRef,
       windowRef,
     });
+    const modernStorage = typeof GM === "undefined" ? null : GM;
+    const gmGetValue = options.gmGetValue || modernStorage?.getValue?.bind(modernStorage) || (typeof GM_getValue === "function" ? GM_getValue : null);
+    const gmSetValue = options.gmSetValue || modernStorage?.setValue?.bind(modernStorage) || (typeof GM_setValue === "function" ? GM_setValue : null);
     const configStore = createConfigStore({
       windowRef,
       localStorageRef,
-      gmGetValue:
-        options.gmGetValue ||
-        (typeof GM_getValue === "function" ? GM_getValue : null),
-      gmSetValue:
-        options.gmSetValue ||
-        (typeof GM_setValue === "function" ? GM_setValue : null),
+      gmGetValue,
+      gmSetValue,
       lockManager: resolveLockManager(options, windowRef),
     });
 
+    configureThemePresetAssets({
+      gmGetValue,
+      gmSetValue,
+      gmRequest: options.gmRequest || (typeof GM_xmlhttpRequest === "function" ? GM_xmlhttpRequest : null),
+    });
+    let runtime = null;
+    let failedAssetOperation = null;
+    const assetView = () => readThemeAssetView(windowRef, documentRef, runtime?.getSnapshot?.().gameState || {});
+    async function withAssetRetry(operation) {
+      try {
+        const result = await operation();
+        failedAssetOperation = null;
+        return result;
+      } catch (error) {
+        if (error?.code === "THEME_ASSET_FAILED") failedAssetOperation = () => withAssetRetry(operation);
+        throw error;
+      }
+    }
+    function changedAssetSelection(current, next) {
+      const backgroundKey = "themes.globalBackground";
+      const backgroundChanged = current.featureToggles?.[backgroundKey] !== next.featureToggles?.[backgroundKey] ||
+        JSON.stringify(current.features?.themes?.globalBackground) !== JSON.stringify(next.features?.themes?.globalBackground);
+      const surroundChanged = current.featureToggles?.boardSurround !== next.featureToggles?.boardSurround ||
+        JSON.stringify(current.features?.boardSurround) !== JSON.stringify(next.features?.boardSurround);
+      return { ...next, featureToggles: { ...next.featureToggles,
+        [backgroundKey]: backgroundChanged && Boolean(next.featureToggles?.[backgroundKey] ?? next.features?.themes?.globalBackground?.enabled),
+        boardSurround: surroundChanged && Boolean(next.featureToggles?.boardSurround ?? next.features?.boardSurround?.enabled),
+      } };
+    }
+    async function prepareVisibleAssets(candidate) {
+      for (let attempt = 0; attempt < 6; attempt++) {
+        const required = requiredThemeAssetKeys(candidate, { ...assetView(), activating: true });
+        await Promise.all(required.map(ensureThemePresetAsset));
+        const latest = requiredThemeAssetKeys(candidate, { ...assetView(), activating: true });
+        if (latest.every((key) => Boolean(resolveThemePresetAsset(key)))) return;
+      }
+      const error = new Error("Die Ansicht hat während des Ladens mehrfach gewechselt. Bitte erneut versuchen.");
+      error.code = "THEME_ASSET_FAILED";
+      throw error;
+    }
     let initialConfig = null;
     try {
       initialConfig = await configStore.load();
@@ -120,12 +162,14 @@ export async function initializeTampermonkeyRuntime(options = {}) {
         error
       );
     }
+    // Only read already stored images at startup. Downloads happen after the UI mounts.
+    await hydrateThemePresetAssets(requiredThemeAssetKeys(initialConfig, assetView())).catch(() => {});
     const featureRegistry = createFeatureRegistry({
       debug: Boolean(options.debug),
       definitions: options.featureDefinitions,
     });
 
-    const runtime = createBootstrap({
+    runtime = createBootstrap({
       windowRef,
       documentRef,
       config: initialConfig,
@@ -227,11 +271,23 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       return configStore.load();
     }
 
-    async function saveConfig(partialConfig = {}) {
-      const nextConfig = await configStore.update(partialConfig);
+    async function persistConfigPatch(patch) {
+      const transaction = await configStore.transact(async (currentConfig) => {
+        const candidate = createRuntimeConfig(currentConfig);
+        candidate.update(patch);
+        const next = candidate.getNormalized();
+        await prepareVisibleAssets(changedAssetSelection(currentConfig, next));
+        return { config: next };
+      });
+      const nextConfig = transaction.config;
       rememberStoredConfigSnapshot();
       runtime.updateConfig(nextConfig);
       return runtime.getSnapshot();
+    }
+
+    async function saveConfig(partialConfig = {}) {
+      const patch = structuredClone(partialConfig);
+      return withAssetRetry(() => persistConfigPatch(patch));
     }
 
     async function resetConfig() {
@@ -270,27 +326,39 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       return analysis.report;
     }
 
-    async function importSettings(payload, options = {}) {
-      const transaction = await configStore.transact((currentConfig) => {
+    async function persistSettingsImport(payload, options) {
+      const transaction = await configStore.transact(async (currentConfig) => {
         const analysis = analyzeSettingsImport(payload, currentConfig, {
           ...options,
           appVersion: API_VERSION,
           descriptors: xconfigDescriptors,
         });
-        return {
-          config: analysis.report.status === "ready" ? analysis.config : null,
-          result: analysis.report,
-        };
-      });
+        if (analysis.report.status === "ready") {
+          await prepareVisibleAssets(analysis.config);
+        }
+          return {
+            config: analysis.report.status === "ready" ? analysis.config : null,
+            result: analysis.report,
+          };
+        });
 
-      if (transaction.persisted) {
-        rememberStoredConfigSnapshot();
-        runtime.updateConfig(transaction.config);
-      }
-      return {
-        report: transaction.result,
-        snapshot: runtime.getSnapshot(),
-      };
+        if (transaction.persisted) {
+          rememberStoredConfigSnapshot();
+          runtime.updateConfig(transaction.config);
+        }
+        return {
+          report: transaction.result,
+          snapshot: runtime.getSnapshot(),
+        };
+    }
+
+    async function importSettings(payload, options = {}) {
+      return withAssetRetry(() => persistSettingsImport(payload, options));
+    }
+
+    async function retryThemeAssets() {
+      if (failedAssetOperation) return failedAssetOperation();
+      return Promise.all(requiredThemeAssetKeys(await configStore.load(), { ...assetView(), activating: true }).map(ensureThemePresetAsset));
     }
 
     async function persistentSetFeatureEnabled(featureRef, enabled) {
@@ -304,10 +372,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
         null;
       const configKey = featureState?.configKey || normalizedFeatureRef;
 
-      const nextConfig = await configStore.update(buildFeatureEnabledPatch(configKey, enabled));
-      rememberStoredConfigSnapshot();
-      runtime.updateConfig(nextConfig);
-      return runtime.getSnapshot();
+      return saveConfig(buildFeatureEnabledPatch(configKey, enabled));
     }
 
     async function setThemeBackgroundImage(themeKey, dataUrl) {
@@ -321,7 +386,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
         return runtime.getSnapshot();
       }
 
-      const nextConfig = await configStore.update({
+      return saveConfig({
         features: {
           themes: {
             [normalizedThemeKey]: {
@@ -331,9 +396,6 @@ export async function initializeTampermonkeyRuntime(options = {}) {
         },
       });
 
-      rememberStoredConfigSnapshot();
-      runtime.updateConfig(nextConfig);
-      return runtime.getSnapshot();
     }
 
     async function clearThemeBackgroundImage(themeKey) {
@@ -342,7 +404,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
         return runtime.getSnapshot();
       }
 
-      const nextConfig = await configStore.update({
+      return saveConfig({
         features: {
           themes: {
             [normalizedThemeKey]: {
@@ -352,9 +414,6 @@ export async function initializeTampermonkeyRuntime(options = {}) {
         },
       });
 
-      rememberStoredConfigSnapshot();
-      runtime.updateConfig(nextConfig);
-      return runtime.getSnapshot();
     }
 
     function listFeatures() {
@@ -366,6 +425,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       stop: stopRuntimeWithStorageSync,
       getConfig,
       saveConfig,
+      retryThemeAssets,
       resetConfig,
       applyRecommendedDefaults,
       createSettingsExport,
@@ -409,6 +469,7 @@ export async function initializeTampermonkeyRuntime(options = {}) {
       stop: stopRuntimeWithStorageSync,
       getConfig,
       saveConfig,
+      retryThemeAssets,
       resetConfig,
       applyRecommendedDefaults,
       createSettingsExport,

@@ -114,10 +114,15 @@ function Invoke-Scanner {
       return
     }
 
-    $npx = Get-Command npx -ErrorAction SilentlyContinue
+    # npm's PowerShell shim re-parses dynamic invocations incorrectly. Prefer
+    # the Windows command shim so scanner arguments are forwarded unchanged.
+    $npx = Get-Command npx.cmd -ErrorAction SilentlyContinue
+    if (-not $npx) {
+      $npx = Get-Command npx -ErrorAction SilentlyContinue
+    }
     if ($npx) {
       Write-Host "Running SonarQube analysis with npx sonarqube-scanner."
-      & $npx.Source --yes sonarqube-scanner "-Dsonar.qualitygate.wait=true"
+      & ($npx.Source) --yes sonarqube-scanner "-Dsonar.qualitygate.wait=true"
       if ($LASTEXITCODE -ne 0) {
         throw "SonarQube npx scanner failed with exit code $LASTEXITCODE."
       }

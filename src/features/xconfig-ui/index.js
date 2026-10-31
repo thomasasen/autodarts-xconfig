@@ -1,4 +1,5 @@
 import { getXConfigDescriptor } from "./descriptors.js";
+import { subscribeThemePresetAssets } from "#theme-preset-assets";
 import {
   openUserscriptInstall,
   readStoredUpdateStatus,
@@ -187,6 +188,7 @@ function ensureXConfigShell(options = {}) {
   let renderController = null;
   let actionController = null;
   let lifecycleController = null;
+  let unsubscribeAssets = () => {};
   let effectPreviewController = null;
   let typographyPreviewFontController = null;
   let x01RemainingScoreBarPreviewController = null;
@@ -209,7 +211,7 @@ function ensureXConfigShell(options = {}) {
       actionLabel: String(action?.label || "").trim(),
     };
     clearNoticeTimer();
-    if (state.notice.message && typeof windowRef.setTimeout === "function") {
+    if (state.notice.message && state.notice.action !== "retryThemeAssets" && typeof windowRef.setTimeout === "function") {
       state.noticeTimer = windowRef.setTimeout(() => {
         state.notice = { type: "", message: "" };
         state.noticeTimer = null;
@@ -764,6 +766,11 @@ function ensureXConfigShell(options = {}) {
     },
     onDocumentPointerout: (event) => effectPreviewController?.handlePreviewEndEvent(event),
     onMounted: () => {
+      unsubscribeAssets = subscribeThemePresetAssets((event) => {
+        if (event.state === "loading") setNotice("info", "Design-Bild wird geladen …");
+        if (event.state === "ready") setNotice("success", "Design-Bild geladen.");
+        if (event.state === "error") setNotice("error", event.error.message, { action: "retryThemeAssets", label: "Erneut versuchen" });
+      });
       reducedMotionNoticeController.start();
       domGuards.ensureStyle(
         SPECIAL_HIT_HIGHLIGHTS_PREVIEW_STYLE_ID,
@@ -772,6 +779,7 @@ function ensureXConfigShell(options = {}) {
       retainElectricPreviewFilters();
     },
     onTeardown: () => {
+      unsubscribeAssets();
       reducedMotionNoticeController.stop();
       effectPreviewController?.stopActivePreview();
       x01RemainingScoreBarPreviewController?.stop();

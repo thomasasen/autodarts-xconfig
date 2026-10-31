@@ -1,8 +1,9 @@
 import { resolveBoardStyleDesignAsset } from "#feature-assets";
-import { resolveThemePresetAsset } from "#theme-preset-assets";
+import { resolveThemePresetPreview } from "#theme-preset-assets";
 import { resolveXConfigPreviewAsset } from "#xconfig-preview-assets";
 import { THEME_GLOBAL_TEMPLATE_PRESETS } from "../../shared/theme-global-template-presets.js";
 import { resolveThemeBackgroundPreviewUrl } from "./theme-background.js";
+import { COMMUNITY_SURROUNDS } from "../../shared/community-designs.js";
 
 function findFeature(features, featureKey) {
   return (Array.isArray(features) ? features : []).find(
@@ -53,6 +54,7 @@ export function resolveThemeGlobalPresetState(features, preset) {
   const backgroundFeature = findFeature(features, "theme-global-background");
   const typographyFeature = findFeature(features, "theme-global-typography");
   const backgroundConfig = backgroundFeature?.config || {};
+  if (preset.communityPresetKey && backgroundConfig.communityPresetKey !== preset.communityPresetKey) return "";
   const typographyConfig = typographyFeature?.config || {};
   if (String(backgroundConfig.backgroundImageDataUrl || "").trim()) {
     return "";
@@ -89,7 +91,7 @@ function resolveThemeGlobalPresetMatch(features) {
 
 function resolveRepresentativeThemeGlobalPreset() {
   return THEME_GLOBAL_TEMPLATE_PRESETS.find(
-    (preset) => Boolean(resolveThemePresetAsset(preset.backgroundAssetKey))
+    (preset) => Boolean(resolveThemePresetPreview(preset.backgroundAssetKey))
   ) || THEME_GLOBAL_TEMPLATE_PRESETS[0] || null;
 }
 
@@ -99,7 +101,7 @@ function resolveThemeGlobalPresetsPreview(features) {
   return {
     kind: "theme-global-presets",
     url:
-      resolveThemePresetAsset(preset?.backgroundAssetKey) ||
+      resolveThemePresetPreview(preset?.backgroundAssetKey) ||
       resolveXConfigPreviewAsset("theme-global-presets"),
     preset,
     state: match.state,
@@ -173,6 +175,11 @@ const FEATURE_PREVIEW_RESOLVERS = Object.freeze({
 
 export function resolveFeatureCardPreview(feature, features = []) {
   const featureKey = String(feature?.featureKey || "").trim();
+  if (featureKey === "live-board-enhancement") return { kind: "board", url: resolveBoardStyleDesignAsset("winmau-blade-6-tc") };
+  if (featureKey === "board-surround") {
+    const design = COMMUNITY_SURROUNDS.find((entry) => entry.key === feature.config?.design) || COMMUNITY_SURROUNDS[0];
+    return { kind: "board", url: resolveThemePresetPreview(feature.config?.assetKey || design.assetKey) };
+  }
   const featurePreview = FEATURE_PREVIEW_RESOLVERS[featureKey]?.(feature, features);
   if (featurePreview?.url) {
     return featurePreview;

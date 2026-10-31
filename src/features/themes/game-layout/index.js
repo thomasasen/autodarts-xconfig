@@ -17,6 +17,7 @@ import {
 import { createGameLayoutPlayerTransitionController } from "./player-transition.js";
 import { resolveModernCricketGameControlsSurface, resolveModernX01GameLayoutSurface } from "./surface.js";
 import { STYLE_ID, buildThemeGameLayoutStyleText } from "./style.js";
+import { createScreenProfileController } from "./screen-profiles.js";
 
 const FEATURE_KEY = "theme-game-layout";
 const CONFIG_KEY = "themes.gameLayout";
@@ -406,17 +407,31 @@ export function mountThemeGameLayout(context = {}) {
 
   if (!documentRef || !domGuards) return () => {};
 
+  const screenProfiles = createScreenProfileController({ ...context, documentRef, windowRef, domGuards, schedule: () => harness.schedule() });
   const harness = createFeatureMountHarness(context, {
     isSupported: () => true,
+    checkHealth: screenProfiles.checkHealth,
+    repairHealth: () => { screenProfiles.update(config?.getFeatureConfig?.(CONFIG_KEY) || {}); return screenProfiles.checkHealth(); },
     update: () => {
       const featureConfig = config?.getFeatureConfig?.(CONFIG_KEY);
       if (!featureConfig?.enabled || !isThemeGameContextActive({ documentRef, windowRef })) {
+        screenProfiles.clear();
         clearAppliedState(appliedState);
         resetControls();
         resetLayoutTracking();
         domGuards.removeNodeById(STYLE_ID);
         return;
       }
+
+      if (featureConfig.screenProfile && featureConfig.screenProfile !== "legacy") {
+        clearAppliedState(appliedState);
+        resetControls();
+        resetLayoutTracking();
+        domGuards.removeNodeById(STYLE_ID);
+        screenProfiles.update(featureConfig);
+        return;
+      }
+      screenProfiles.clear();
 
       // Host discovery filters invisible cards. Remove only our own visibility
       // marker while reading, then reapply the complete window before painting.
@@ -614,6 +629,7 @@ export function mountThemeGameLayout(context = {}) {
   harness.subscribeToGameState();
   harness.schedule();
   return harness.createCleanup(() => {
+    screenProfiles.clear();
     resetControls();
     resetLayoutTracking();
     clearAppliedState(appliedState);

@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { build } from "esbuild";
 
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
@@ -11,6 +12,8 @@ import {
   THEME_PRESET_ASSET_KEYS,
 } from "../../src/shared/theme-preset-assets.manifest.js";
 import { resolveThemePresetAsset } from "../../src/shared/theme-preset-assets.node.js";
+import { THEME_PREVIEW_FILES } from "../../src/shared/theme-previews.manifest.js";
+import { THEME_ASSET_CATALOG } from "../../src/shared/theme-asset-catalog.js";
 import { USERSCRIPT_ASSET_LOADERS } from "../../scripts/userscript-build-config.mjs";
 
 const themePresetAssetDirectory = path.resolve(process.cwd(), "src", "assets", "theme-presets");
@@ -71,7 +74,7 @@ test("theme preset definitions and bundled wallpaper manifest stay aligned", () 
   const presetAssetKeys = THEME_GLOBAL_TEMPLATE_PRESETS
     .map((preset) => preset.backgroundAssetKey)
     .filter(Boolean);
-  assert.deepEqual(presetAssetKeys, THEME_PRESET_ASSET_KEYS);
+  for (const key of presetAssetKeys) assert.ok(THEME_PRESET_ASSET_KEYS.includes(key), `missing wallpaper ${key}`);
   addedWallpaperKeys.forEach((assetKey) => {
     assert.ok(THEME_PRESET_ASSET_KEYS.includes(assetKey), `missing ${assetKey} in manifest`);
     assert.match(
@@ -80,8 +83,9 @@ test("theme preset definitions and bundled wallpaper manifest stay aligned", () 
     );
   });
 
-  const manifestFiles = Object.values(THEME_PRESET_ASSET_FILES).sort();
-  const bundledFiles = readdirSync(themePresetAssetDirectory)
+  const manifestFiles = [...Object.values(THEME_PRESET_ASSET_FILES), ...new Set(Object.values(THEME_PREVIEW_FILES).map((file) => "previews/" + file))].sort();
+  const bundledFiles = readdirSync(themePresetAssetDirectory, { recursive: true })
+    .map((fileName) => fileName.replaceAll(path.sep, "/"))
     .filter((fileName) => /\.(?:jpe?g|png|webp)$/i.test(fileName))
     .sort();
   assert.deepEqual(bundledFiles, manifestFiles);
@@ -126,7 +130,7 @@ test("new preset wallpapers fit the display and userscript size budgets", () => 
   assert.ok(totalBytes <= 1.8 * 1024 * 1024, `new preset wallpapers use ${totalBytes} bytes`);
 });
 
-test("browser resolver bundles every theme preset wallpaper without writing dist", async () => {
+test("browser resolver bundles only complete small previews and leaves originals in the checksum catalogue", async () => {
   const result = await build({
     entryPoints: [browserAssetEntry],
     bundle: true,
@@ -137,10 +141,26 @@ test("browser resolver bundles every theme preset wallpaper without writing dist
     legalComments: "none",
     loader: USERSCRIPT_ASSET_LOADERS,
     write: false,
+    metafile: true,
     logLevel: "silent",
   });
   const outputText = result.outputFiles.map((file) => file.text).join("\n");
   const bundledImageDataUrls = outputText.match(/data:image\/(?:jpeg|png|webp);base64,/g) || [];
 
   assert.equal(bundledImageDataUrls.length, THEME_PRESET_ASSET_KEYS.length);
+  for (const file of Object.values(THEME_PRESET_ASSET_FILES)) {
+    assert.equal(Object.hasOwn(result.metafile.inputs, "src/assets/theme-presets/" + file), false, file);
+  }
+  let totalBytes = 0;
+  for (const [key, preview] of Object.entries(THEME_PREVIEW_FILES)) {
+    const bytes = readFileSync(path.join(themePresetAssetDirectory, "previews", preview));
+    const size = readWebpDimensions(bytes);
+    assert.ok(size.width <= 256 && size.height <= 256, key);
+    assert.ok(THEME_ASSET_CATALOG[key]?.sha256 && THEME_ASSET_CATALOG[key]?.bytes > 0, key);
+    const original = readFileSync(path.join(themePresetAssetDirectory, THEME_PRESET_ASSET_FILES[key]));
+    assert.equal(THEME_ASSET_CATALOG[key].sha256, createHash("sha256").update(original).digest("hex"), key);
+    assert.equal(THEME_ASSET_CATALOG[key].bytes, original.length, key);
+    totalBytes += bytes.length;
+  }
+  assert.ok(totalBytes < 2 * 1024 * 1024, `preview bytes: ${totalBytes}`);
 });

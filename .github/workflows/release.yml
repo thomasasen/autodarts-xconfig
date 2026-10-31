@@ -34,6 +34,9 @@ jobs:
       - name: Validate tag and package parity
         if: github.ref_type == 'tag'
         run: npm run check:release -- --tag "${GITHUB_REF_NAME}"
+      - name: Verify tagged design images before staging a release
+        if: github.ref_type == 'tag'
+        run: node scripts/check-theme-library.mjs --remote --tag "${GITHUB_REF_NAME}"
       - name: Validate agent instructions
         run: npm run check:agents
       - name: Lint source

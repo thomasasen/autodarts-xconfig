@@ -1,0 +1,2969 @@
+{
+  "presetDefaults": {
+    "source": "https://github.com/jumbo1250/Autodarts-Webinterface-Installation/blob/main/latest/theme.zip",
+    "description": "Übernommenes Community-Design mit lokal gespeicherten Bildern.",
+    "fontPreset": "system",
+    "applyTo": [
+      "scores",
+      "throws",
+      "names"
+    ],
+    "backgroundOpacity": 70,
+    "playerFieldTransparency": 10,
+    "activePlayerTintIntensity": 10,
+    "glowMode": "pulse"
+  },
+  "presets": [
+    {
+      "key": "community-adrian-lewis",
+      "label": "Adrian Lewis",
+      "author": "Peter Rottmann",
+      "sourceFile": "theme/Adrian_Lewis.css",
+      "formats": [
+        "landscape"
+      ],
+      "fontFamily": "system-ui, sans-serif",
+      "accentColor": "#22c55e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#eeeeee",
+      "throwLabelColor": "#ffffff",
+      "backgroundAssetKey": "community-55fa6c1071c5c532cf38",
+      "backgroundAssets": {
+        "game": "community-55fa6c1071c5c532cf38",
+        "cricket": "community-41e1a73a541ced4c7fad",
+        "portrait": "",
+        "menu": "community-204ccca1a3e0d9c96407"
+      },
+      "previewAssetKey": "community-3502dacb2e49943f75ac",
+      "surfaceStyle": {
+        "player": "rgba(40, 40, 40, 0.70)",
+        "active": "rgba(40, 40, 40, 0.70)",
+        "panel": "rgba(40, 40, 40, 0.65)",
+        "border": "1px solid rgba(0, 0, 0, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#22c55e",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-board-advantage",
+      "label": "Board Advantage",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Board_Advantage.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#646464",
+      "scoreColor": "#ffaa0a",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#ffaa0a",
+      "backgroundAssetKey": "community-f8af138afe5ef41623e2",
+      "backgroundAssets": {
+        "game": "community-f8af138afe5ef41623e2",
+        "cricket": "community-f8af138afe5ef41623e2",
+        "portrait": "community-a17693e65a6020e39086",
+        "menu": "community-f8af138afe5ef41623e2"
+      },
+      "previewAssetKey": "community-9546a61cbfce9976b576",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(80, 80, 80, 0.9) 0%,\r\n rgba(0, 20, 20, 0.9) 60%,\r\n rgba(0, 0, 0, 0.7) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(5, 80, 6, 0.9) 0%,\r\n rgba(2, 40, 4, 0.9) 85%,\r\n rgba(0, 0, 0, 0.7) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(20, 20, 20, 0.1) 0%,\r\n rgba(10, 10, 10, 0.6) 60%,\r\n rgba(0, 0, 0, 0.1) 100%)",
+        "border": "1px solid rgba(250, 170, 10, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#faaa0a",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-board-black",
+      "label": "Board Black",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Board_Black.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#1e1e1e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-19e79cf2cc5cadecacdb",
+      "backgroundAssets": {
+        "game": "community-19e79cf2cc5cadecacdb",
+        "cricket": "community-19e79cf2cc5cadecacdb",
+        "portrait": "community-2d70aeea1ff9294cf1c9",
+        "menu": "community-19e79cf2cc5cadecacdb"
+      },
+      "previewAssetKey": "community-c775424e97db678a1378",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(80, 80, 80, 0.9) 0%,\r\n rgba(20, 20, 20, 0.9) 85%,\r\n rgba(0, 0, 0, 0.3) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(150, 150, 150, 0.9) 0%,\r\n rgba(20, 20, 20, 0.9) 85%,\r\n rgba(0, 0, 0, 0.3) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.1) 0%,\r\n rgba(20, 20, 20, 0.6) 60%,\r\n rgba(0, 0, 0, 0.1) 100%)",
+        "border": "1px solid rgba(90, 90, 90, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-board-blue",
+      "label": "Board Blue",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Board_Blue.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#0032aa",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#00b4ff",
+      "backgroundAssetKey": "community-cad48f8e5f8fb4003477",
+      "backgroundAssets": {
+        "game": "community-cad48f8e5f8fb4003477",
+        "cricket": "community-cad48f8e5f8fb4003477",
+        "portrait": "community-3a8e567036d34caebf4a",
+        "menu": "community-cad48f8e5f8fb4003477"
+      },
+      "previewAssetKey": "community-04bd1827875dc857a21d",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(10, 30, 130, 0.9) 0%,\r\n rgba(0, 10, 60, 0.9) 60%,\r\n rgba(0, 0, 0, 0.3) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(20, 90, 210, 0.9) 0%,\r\n rgba(0, 20, 80, 0.9) 85%,\r\n rgba(0, 0, 0, 0.3) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 20, 80, 0.1) 0%,\r\n rgba(0, 10, 60, 0.6) 60%,\r\n rgba(0, 0, 0, 0.1) 100%)",
+        "border": "1px solid rgba(0, 90, 210, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-board-green",
+      "label": "Board Green",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Board_Green.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#00500a",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#00c800",
+      "backgroundAssetKey": "community-089754c8adbb4c573da1",
+      "backgroundAssets": {
+        "game": "community-089754c8adbb4c573da1",
+        "cricket": "community-089754c8adbb4c573da1",
+        "portrait": "community-5fbcd629e69a809db5e9",
+        "menu": "community-089754c8adbb4c573da1"
+      },
+      "previewAssetKey": "community-c93fc7b760c0b23ff802",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 80, 10, 0.9) 0%,\r\n rgba(20, 20, 20, 0.9) 85%,\r\n rgba(0, 0, 0, 0.3) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 190, 10, 0.9) 0%,\r\n rgba(20, 20, 20, 0.9) 85%,\r\n rgba(0, 0, 0, 0.3) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.1) 0%,\r\n rgba(20, 20, 20, 0.6) 60%,\r\n rgba(0, 0, 0, 0.1) 100%)",
+        "border": "1px solid rgba(0, 150, 20, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-board-lemon",
+      "label": "Board Lemon",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Board_Lemon.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#fad200",
+      "backgroundAssetKey": "community-81234238403134e8d289",
+      "backgroundAssets": {
+        "game": "community-81234238403134e8d289",
+        "cricket": "community-81234238403134e8d289",
+        "portrait": "community-a310140c45580dcc73c4",
+        "menu": "community-81234238403134e8d289"
+      },
+      "previewAssetKey": "community-369b0f7df98cfdf13e94",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.9) 0%,\r\n rgba(0, 0, 0, 0.9) 85%,\r\n rgba(0, 0, 0, 0.3) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(250, 210, 0, 0.9) 0%,\r\n rgba(20, 20, 20, 0.9) 85%,\r\n rgba(0, 0, 0, 0.3) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.1) 0%,\r\n rgba(20, 20, 20, 0.6) 60%,\r\n rgba(0, 0, 0, 0.1) 100%)",
+        "border": "1px solid rgba(250, 220, 90, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-board-orange",
+      "label": "Board Orange",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Board_Orange.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#3c0000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#fa5000",
+      "backgroundAssetKey": "community-fb79527acbceea3995b1",
+      "backgroundAssets": {
+        "game": "community-fb79527acbceea3995b1",
+        "cricket": "community-fb79527acbceea3995b1",
+        "portrait": "community-149c9890604d1cefcf65",
+        "menu": "community-fb79527acbceea3995b1"
+      },
+      "previewAssetKey": "community-d460dedf2cd1a017afec",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(80, 20, 5, 0.9) 0%,\r\n rgba(80, 0, 0, 0.9) 85%,\r\n rgba(0, 0, 0, 0.3) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(220, 50, 0, 0.9) 0%,\r\n rgba(80, 20, 20, 0.9) 85%,\r\n rgba(0, 0, 0, 0.3) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.1) 0%,\r\n rgba(20, 20, 20, 0.6) 60%,\r\n rgba(0, 0, 0, 0.1) 100%)",
+        "border": "1px solid rgba(200, 70, 0, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-board-purple",
+      "label": "Board Purple",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Board_Purple.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#500064",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#dc00dc",
+      "backgroundAssetKey": "community-ea9dacc031b3f25a80b6",
+      "backgroundAssets": {
+        "game": "community-ea9dacc031b3f25a80b6",
+        "cricket": "community-ea9dacc031b3f25a80b6",
+        "portrait": "community-aac495e9939c01c569f0",
+        "menu": "community-ea9dacc031b3f25a80b6"
+      },
+      "previewAssetKey": "community-3a45a29b9480481a3c6d",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(80, 0, 100, 0.9) 0%,\r\n rgba(20, 20, 20, 0.9) 85%,\r\n rgba(0, 0, 0, 0.3) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(160, 0, 160, 0.9) 0%,\r\n rgba(20, 20, 20, 0.9) 85%,\r\n rgba(0, 0, 0, 0.3) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.1) 0%,\r\n rgba(20, 20, 20, 0.6) 60%,\r\n rgba(0, 0, 0, 0.1) 100%)",
+        "border": "1px solid rgba(120, 0, 120, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-bulls-advantage",
+      "label": "Bulls Advantage",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Bulls_Advantage.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#28281e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#fae696",
+      "backgroundAssetKey": "community-f4ad4458c20f2c972887",
+      "backgroundAssets": {
+        "game": "community-f4ad4458c20f2c972887",
+        "cricket": "community-f4ad4458c20f2c972887",
+        "portrait": "community-f4ad4458c20f2c972887",
+        "menu": "community-e088366189d413e48a41"
+      },
+      "previewAssetKey": "community-2c19cd4556df78d1b760",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(20, 20, 8, 0) 0%,\r\n rgba(24, 20, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(140, 130, 100, 0) 0%,\r\n rgba(150, 140, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(24, 20, 0, 0.6) 20%,\r\n rgba(24, 20, 0, 0.8) 80%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "0px solid rgba(220, 220, 150, 0.5)",
+        "radius": "14px"
+      },
+      "glowColor": "#ffffff",
+      "surroundAssetKey": "community-02fa10c38d970dad1e1d"
+    },
+    {
+      "key": "community-ad-bulls-advantage-new",
+      "label": "Bulls Advantage New",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Bulls_Advantage_New.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#28281e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#fae696",
+      "backgroundAssetKey": "community-f4ad4458c20f2c972887",
+      "backgroundAssets": {
+        "game": "community-f4ad4458c20f2c972887",
+        "cricket": "community-f4ad4458c20f2c972887",
+        "portrait": "community-f4ad4458c20f2c972887",
+        "menu": "community-e088366189d413e48a41"
+      },
+      "previewAssetKey": "community-c987a7011d8e657c7f25",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(20, 20, 8, 0) 0%,\r\n rgba(24, 20, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(140, 130, 100, 0) 0%,\r\n rgba(150, 140, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(24, 20, 0, 0.6) 20%,\r\n rgba(24, 20, 0, 0.8) 80%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "0px solid rgba(220, 220, 150, 0.5)",
+        "radius": "14px"
+      },
+      "glowColor": "#ffffff",
+      "surroundAssetKey": "community-a90c723c37543a5007b2"
+    },
+    {
+      "key": "community-ad-clean-green",
+      "label": "Clean Green",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Clean_Green.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#00ff00",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#00ff00",
+      "backgroundAssetKey": "community-e6b3491c02ef815b8a2a",
+      "backgroundAssets": {
+        "game": "community-e6b3491c02ef815b8a2a",
+        "cricket": "community-e6b3491c02ef815b8a2a",
+        "portrait": "",
+        "menu": "community-e6b3491c02ef815b8a2a"
+      },
+      "previewAssetKey": "community-731dc4fcaf0ef217d834",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "1px solid rgba(50, 50, 50, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#00ff00",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-clean-lemon",
+      "label": "Clean Lemon",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Clean_Lemon.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffff00",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#ffff00",
+      "backgroundAssetKey": "community-e6b3491c02ef815b8a2a",
+      "backgroundAssets": {
+        "game": "community-e6b3491c02ef815b8a2a",
+        "cricket": "community-e6b3491c02ef815b8a2a",
+        "portrait": "",
+        "menu": "community-e6b3491c02ef815b8a2a"
+      },
+      "previewAssetKey": "community-0592c0c34e0fe5814c43",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "1px solid rgba(50, 50, 50, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#ffff00",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-clean-red",
+      "label": "Clean Red",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Clean_Red.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ff0000",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#ff0000",
+      "backgroundAssetKey": "community-e6b3491c02ef815b8a2a",
+      "backgroundAssets": {
+        "game": "community-e6b3491c02ef815b8a2a",
+        "cricket": "community-e6b3491c02ef815b8a2a",
+        "portrait": "",
+        "menu": "community-e6b3491c02ef815b8a2a"
+      },
+      "previewAssetKey": "community-8cfb21c50f165a9c68d0",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "1px solid rgba(50, 50, 50, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#ff0000",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-clean-white",
+      "label": "Clean White",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Clean_White.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-e6b3491c02ef815b8a2a",
+      "backgroundAssets": {
+        "game": "community-e6b3491c02ef815b8a2a",
+        "cricket": "community-e6b3491c02ef815b8a2a",
+        "portrait": "",
+        "menu": "community-e6b3491c02ef815b8a2a"
+      },
+      "previewAssetKey": "community-cfafcc8dbd5a2dae8b50",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "1px solid rgba(50, 50, 50, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-green-forest",
+      "label": "Green Forest",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Green_Forest.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#001e00",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8dcc8",
+      "backgroundAssetKey": "community-cc238efd4cd642c5f048",
+      "backgroundAssets": {
+        "game": "community-cc238efd4cd642c5f048",
+        "cricket": "community-cc238efd4cd642c5f048",
+        "portrait": "community-fdfc64fdc6cbc6696849",
+        "menu": "community-cc238efd4cd642c5f048"
+      },
+      "previewAssetKey": "community-fbc781a567c4c341190c",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 30, 0, 0.6) 0%,\r\n rgba(40, 60, 24, 0.6) 50%,\r\n rgba(0, 0, 0, 0.7) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 55, 0, 0.6) 0%,\r\n rgba(80, 185, 50, 0.6) 50%,\r\n rgba(0, 0, 0, 0.7) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.3) 0%,\r\n rgba(0, 30, 0, 0.8) 50%,\r\n rgba(0, 0, 0, 0.3) 100%)",
+        "border": "1px solid rgba(100, 100, 100, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#ffffff",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-green-highlands",
+      "label": "Green Highlands",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Green_Highlands.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#001e00",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8dcc8",
+      "backgroundAssetKey": "community-95a5ecd36430319f10b9",
+      "backgroundAssets": {
+        "game": "community-95a5ecd36430319f10b9",
+        "cricket": "community-95a5ecd36430319f10b9",
+        "portrait": "community-0db736ae3b7c95b099a4",
+        "menu": "community-95a5ecd36430319f10b9"
+      },
+      "previewAssetKey": "community-e256f28900ebdfeb7d3d",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 30, 0, 0.6) 0%,\r\n rgba(40, 60, 24, 0.6) 50%,\r\n rgba(0, 0, 0, 0.7) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 55, 0, 0.6) 0%,\r\n rgba(80, 185, 50, 0.6) 50%,\r\n rgba(0, 0, 0, 0.7) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.3) 0%,\r\n rgba(0, 30, 0, 0.8) 50%,\r\n rgba(0, 0, 0, 0.3) 100%)",
+        "border": "1px solid rgba(100, 100, 100, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#ffffff",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-green-leaves",
+      "label": "Green Leaves",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Green_Leaves.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#001e00",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8dcc8",
+      "backgroundAssetKey": "community-687e1b02ec1f62fd9e23",
+      "backgroundAssets": {
+        "game": "community-687e1b02ec1f62fd9e23",
+        "cricket": "community-687e1b02ec1f62fd9e23",
+        "portrait": "community-cc781d54dc01d0e0dbd8",
+        "menu": "community-687e1b02ec1f62fd9e23"
+      },
+      "previewAssetKey": "community-e6c6fca8838d77443eff",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 30, 0, 0.6) 0%,\r\n rgba(40, 60, 24, 0.6) 50%,\r\n rgba(0, 0, 0, 0.7) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 55, 0, 0.6) 0%,\r\n rgba(80, 185, 50, 0.6) 50%,\r\n rgba(0, 0, 0, 0.7) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.3) 0%,\r\n rgba(0, 30, 0, 0.8) 50%,\r\n rgba(0, 0, 0, 0.3) 100%)",
+        "border": "1px solid rgba(100, 100, 100, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#ffffff",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-logo-al-green",
+      "label": "Logo AL Green",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Logo_AL_Green.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#00dcc8",
+      "backgroundAssetKey": "community-789cebf880dce2b0d62f",
+      "backgroundAssets": {
+        "game": "community-789cebf880dce2b0d62f",
+        "cricket": "community-789cebf880dce2b0d62f",
+        "portrait": "community-cae70028aa6981a2daf1",
+        "menu": "community-789cebf880dce2b0d62f"
+      },
+      "previewAssetKey": "community-258fa7e0ece08f06b0f5",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.6) 0%,\r\n rgba(0, 40, 20, 0.9) 50%,\r\n rgba(0, 0, 0, 0.6) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.8) 0%,\r\n rgba(0, 90, 40, 0.9) 50%,\r\n rgba(0, 0, 0, 0.8) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.3) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0.3) 100%)",
+        "border": "2px solid rgba(100, 85, 70, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#af9c88",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-logo-al-petrol",
+      "label": "Logo AL Petrol",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Logo_AL_Petrol.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#00dcc8",
+      "backgroundAssetKey": "community-1bf7468d287549bfdacf",
+      "backgroundAssets": {
+        "game": "community-1bf7468d287549bfdacf",
+        "cricket": "community-1bf7468d287549bfdacf",
+        "portrait": "community-6ffeaf5214e90f6f9399",
+        "menu": "community-1bf7468d287549bfdacf"
+      },
+      "previewAssetKey": "community-7ba19d42d81090556091",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.6) 0%,\r\n rgba(0, 40, 40, 0.9) 50%,\r\n rgba(0, 0, 0, 0.6) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.8) 0%,\r\n rgba(0, 90, 80, 0.9) 50%,\r\n rgba(0, 0, 0, 0.8) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.3) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0.3) 100%)",
+        "border": "2px solid rgba(100, 85, 70, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#af9c88",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-logo-al-purple",
+      "label": "Logo AL Purple",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Logo_AL_Purple.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#00dcc8",
+      "backgroundAssetKey": "community-77421231704dfc851740",
+      "backgroundAssets": {
+        "game": "community-77421231704dfc851740",
+        "cricket": "community-77421231704dfc851740",
+        "portrait": "community-5d651cf117e9f5ba61b0",
+        "menu": "community-77421231704dfc851740"
+      },
+      "previewAssetKey": "community-9eee417be8b9191a89c3",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.6) 0%,\r\n rgba(40, 0, 30, 0.9) 50%,\r\n rgba(0, 0, 0, 0.6) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.8) 0%,\r\n rgba(150, 0, 90, 0.9) 50%,\r\n rgba(0, 0, 0, 0.8) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.3) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0.3) 100%)",
+        "border": "2px solid rgba(100, 85, 70, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#af9c88",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-neutral-blue",
+      "label": "Neutral Blue",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Neutral_Blue.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000032",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-62b3ce04c12044f8dbbf",
+      "backgroundAssets": {
+        "game": "community-62b3ce04c12044f8dbbf",
+        "cricket": "community-62b3ce04c12044f8dbbf",
+        "portrait": "",
+        "menu": "community-62b3ce04c12044f8dbbf"
+      },
+      "previewAssetKey": "community-1b2169c5a2c2d07660ba",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "1px solid rgba(0, 0, 50, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-neutral-brown",
+      "label": "Neutral Brown",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Neutral_Brown.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#321400",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-26589fa87dab182a4bda",
+      "backgroundAssets": {
+        "game": "community-26589fa87dab182a4bda",
+        "cricket": "community-26589fa87dab182a4bda",
+        "portrait": "",
+        "menu": "community-26589fa87dab182a4bda"
+      },
+      "previewAssetKey": "community-dce2dabe6bb58743496c",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "1px solid rgba(50, 20, 0, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-neutral-green",
+      "label": "Neutral Green",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Neutral_Green.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#003200",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-e08592130b3b7519b1e6",
+      "backgroundAssets": {
+        "game": "community-e08592130b3b7519b1e6",
+        "cricket": "community-e08592130b3b7519b1e6",
+        "portrait": "",
+        "menu": "community-e08592130b3b7519b1e6"
+      },
+      "previewAssetKey": "community-f061a77a35a31bb5300d",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "1px solid rgba(0, 50, 0, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-neutral-grey",
+      "label": "Neutral Grey",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Neutral_Grey.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-7a151f81dc9d82d0392e",
+      "backgroundAssets": {
+        "game": "community-7a151f81dc9d82d0392e",
+        "cricket": "community-7a151f81dc9d82d0392e",
+        "portrait": "",
+        "menu": "community-7a151f81dc9d82d0392e"
+      },
+      "previewAssetKey": "community-68b67d4f70071cde22f4",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "1px solid rgba(50, 50, 50, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-neutral-mint",
+      "label": "Neutral Mint",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Neutral_Mint.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#003232",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-51d19818c89e81c0bab7",
+      "backgroundAssets": {
+        "game": "community-51d19818c89e81c0bab7",
+        "cricket": "community-51d19818c89e81c0bab7",
+        "portrait": "",
+        "menu": "community-51d19818c89e81c0bab7"
+      },
+      "previewAssetKey": "community-b41d715b5f4c1cdce8c3",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "1px solid rgba(0, 50, 50, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-neutral-purple",
+      "label": "Neutral Purple",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Neutral_Purple.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#320032",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-a553a9d021e26877d038",
+      "backgroundAssets": {
+        "game": "community-a553a9d021e26877d038",
+        "cricket": "community-a553a9d021e26877d038",
+        "portrait": "",
+        "menu": "community-a553a9d021e26877d038"
+      },
+      "previewAssetKey": "community-c5ecb9a700f0f28fe5cb",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "1px solid rgba(50, 0, 50, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-neutral-red",
+      "label": "Neutral Red",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Neutral_Red.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#320000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-a019c43d4f7490d46edd",
+      "backgroundAssets": {
+        "game": "community-a019c43d4f7490d46edd",
+        "cricket": "community-a019c43d4f7490d46edd",
+        "portrait": "",
+        "menu": "community-a019c43d4f7490d46edd"
+      },
+      "previewAssetKey": "community-2a59d4223be41944edf8",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "1px solid rgba(50, 0, 0, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-new-barrels-color",
+      "label": "New Barrels Color",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_New_Barrels_Color.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#00dcc8",
+      "backgroundAssetKey": "community-be525f85bfc634e6a868",
+      "backgroundAssets": {
+        "game": "community-be525f85bfc634e6a868",
+        "cricket": "community-be525f85bfc634e6a868",
+        "portrait": "community-e4a3162563bb594e3283",
+        "menu": "community-be525f85bfc634e6a868"
+      },
+      "previewAssetKey": "community-086860cc0d96488b7e08",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(110, 70, 30, 0.7) 0%,\r\n rgba(60, 45, 30, 0.9) 50%,\r\n rgba(0, 0, 0, 0.7) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(150, 0, 90, 0.8) 0%,\r\n rgba(60, 0, 30, 0.9) 50%,\r\n rgba(0, 0, 0, 0.8) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.6) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0.6) 100%)",
+        "border": "2px solid rgba(100, 85, 70, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-new-barrels-dark",
+      "label": "New Barrels Dark",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_New_Barrels_Dark.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-fff8e1c8e442a470c869",
+      "backgroundAssets": {
+        "game": "community-fff8e1c8e442a470c869",
+        "cricket": "community-fff8e1c8e442a470c869",
+        "portrait": "community-a76de4094e5edfb3c5b5",
+        "menu": "community-fff8e1c8e442a470c869"
+      },
+      "previewAssetKey": "community-6ce6d360bf96599829fd",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.7) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0.7) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.8) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0.8) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.6) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0.6) 100%)",
+        "border": "1px solid rgba(90, 90, 90, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-panel-black",
+      "label": "Panel Black",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Panel_Black.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-923ccc3d265bbbca1bed",
+      "backgroundAssets": {
+        "game": "community-923ccc3d265bbbca1bed",
+        "cricket": "community-923ccc3d265bbbca1bed",
+        "portrait": "community-8ddd54892258a843eb77",
+        "menu": "community-923ccc3d265bbbca1bed"
+      },
+      "previewAssetKey": "community-f420556ce171e6cc1616",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(50, 50, 50, 0.5) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(30, 30, 30, 0.6) 50%,\r\n rgba(20, 20, 20, 0) 100%)",
+        "border": "1px solid rgba(90, 90, 90, 0.80)",
+        "radius": "5px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-panel-dark",
+      "label": "Panel Dark",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Panel_Dark.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#3c1e0f",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-5edba13d98a16642582b",
+      "backgroundAssets": {
+        "game": "community-5edba13d98a16642582b",
+        "cricket": "community-5edba13d98a16642582b",
+        "portrait": "community-281bce717f21517bc888",
+        "menu": "community-5edba13d98a16642582b"
+      },
+      "previewAssetKey": "community-375206f02dbb246ca447",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(60, 30, 15, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(30, 15, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(30, 15, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(60, 30, 15, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "1px solid rgba(200, 170, 150, 0.80)",
+        "radius": "5px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-panel-grey",
+      "label": "Panel Grey",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Panel_Grey.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-a6812dc2ac630db9d77d",
+      "backgroundAssets": {
+        "game": "community-a6812dc2ac630db9d77d",
+        "cricket": "community-a6812dc2ac630db9d77d",
+        "portrait": "community-151cd5613a8b26e8e9bb",
+        "menu": "community-a6812dc2ac630db9d77d"
+      },
+      "previewAssetKey": "community-caef8931f747f086664e",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(50, 50, 50, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(50, 50, 50, 0.6) 50%,\r\n rgba(20, 20, 20, 0) 100%)",
+        "border": "1px solid rgba(90, 90, 90, 0.80)",
+        "radius": "5px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-panel-light",
+      "label": "Panel Light",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Panel_Light.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#2d2823",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-9f9faa13b6cc4af424a3",
+      "backgroundAssets": {
+        "game": "community-9f9faa13b6cc4af424a3",
+        "cricket": "community-9f9faa13b6cc4af424a3",
+        "portrait": "community-016bd3ab13597eaafc01",
+        "menu": "community-9f9faa13b6cc4af424a3"
+      },
+      "previewAssetKey": "community-de17f4af02772040c7b4",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(45, 40, 35, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(15, 10, 3, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(15, 10, 3, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(15, 10, 3, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "1px solid rgba(220, 190, 150, 0.80)",
+        "radius": "5px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-panel-mid",
+      "label": "Panel Mid",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Panel_Mid.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#3c280f",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-7bf518a3af31cd329be5",
+      "backgroundAssets": {
+        "game": "community-7bf518a3af31cd329be5",
+        "cricket": "community-7bf518a3af31cd329be5",
+        "portrait": "community-564b134f11b45464065f",
+        "menu": "community-7bf518a3af31cd329be5"
+      },
+      "previewAssetKey": "community-9a938a2967e60ce9a8d3",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(60, 40, 15, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(30, 15, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(30, 15, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(60, 40, 15, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "1px solid rgba(220, 190, 150, 0.80)",
+        "radius": "5px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-precise180-endorphine",
+      "label": "Precise180 Endorphine",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Precise180_Endorphine.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-e6b3491c02ef815b8a2a",
+      "backgroundAssets": {
+        "game": "community-e6b3491c02ef815b8a2a",
+        "cricket": "community-e6b3491c02ef815b8a2a",
+        "portrait": "community-e6b3491c02ef815b8a2a",
+        "menu": "community-fe92aac2445e2ca04b4f"
+      },
+      "previewAssetKey": "community-12737c6ce4c68d08d4c7",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(50, 50, 55, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(150, 150, 160, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(50, 50, 55, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "0px solid rgba(50, 50, 50, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": "community-1be2a8c27e2db28e80dc"
+    },
+    {
+      "key": "community-ad-precise180-endorphine-grey",
+      "label": "Precise180 Endorphine Grey",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Precise180_Endorphine_Grey.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#646464",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#fafafa",
+      "backgroundAssetKey": "community-86015dab6fb7885ebd2d",
+      "backgroundAssets": {
+        "game": "community-86015dab6fb7885ebd2d",
+        "cricket": "community-86015dab6fb7885ebd2d",
+        "portrait": "community-86015dab6fb7885ebd2d",
+        "menu": "community-7366bb46656dbaea2f46"
+      },
+      "previewAssetKey": "community-9ee601e2554a7467b50c",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(50, 50, 55, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(150, 150, 160, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(50, 50, 55, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "0px solid rgba(50, 50, 50, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": "community-e70d72676f73dc1b1599"
+    },
+    {
+      "key": "community-ad-precise180-endorphine-light",
+      "label": "Precise180 Endorphine Light",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Precise180_Endorphine_Light.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#646464",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#fafafa",
+      "backgroundAssetKey": "community-86015dab6fb7885ebd2d",
+      "backgroundAssets": {
+        "game": "community-86015dab6fb7885ebd2d",
+        "cricket": "community-86015dab6fb7885ebd2d",
+        "portrait": "community-86015dab6fb7885ebd2d",
+        "menu": "community-7366bb46656dbaea2f46"
+      },
+      "previewAssetKey": "community-89f9f6364cd4063bd04a",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(50, 50, 55, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(150, 150, 160, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(50, 50, 55, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "0px solid rgba(50, 50, 50, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": "community-d05c5bda6a8813f51af9"
+    },
+    {
+      "key": "community-ad-precise180-northern-lights",
+      "label": "Precise180 Northern Lights",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Precise180_Northern_Lights.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#82a0dc",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#fac8ff",
+      "backgroundAssetKey": "community-a42d2deb20604f371edd",
+      "backgroundAssets": {
+        "game": "community-a42d2deb20604f371edd",
+        "cricket": "community-a42d2deb20604f371edd",
+        "portrait": "community-a42d2deb20604f371edd",
+        "menu": "community-80b5630a3a02766e3168"
+      },
+      "previewAssetKey": "community-fbdf5d0072efb5ef7cc9",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(40, 0, 50, 0) 0%,\r\n rgba(130, 160, 220, 0.2) 50%,\r\n rgba(40, 0, 50, 0) 100%)",
+        "active": "linear-gradient(\r\n        90deg,\r\n        rgba(40, 0, 50, 0) 0%,\r\n        rgba(130, 160, 220, 0.8) 50%,\r\n        rgba(40, 0, 50, 0) 100%\r\n    )",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(40, 0, 50, 0) 0%,\r\n rgba(130, 160, 220, 0.2) 50%,\r\n rgba(40, 0, 50, 0) 100%)",
+        "border": "0px solid rgba(90, 50, 90, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#82a0dc",
+      "surroundAssetKey": "community-522653f65813ed356348"
+    },
+    {
+      "key": "community-ad-precise180-polychrome",
+      "label": "Precise180 Polychrome",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Precise180_Polychrome.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#00cdfa",
+      "backgroundAssetKey": "community-e779a52b94f1ef14c5a5",
+      "backgroundAssets": {
+        "game": "community-e779a52b94f1ef14c5a5",
+        "cricket": "community-e779a52b94f1ef14c5a5",
+        "portrait": "community-e779a52b94f1ef14c5a5",
+        "menu": "community-0cb615abff455ad6b225"
+      },
+      "previewAssetKey": "community-ee3c8cd0bc061d338ccf",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(40, 60, 160, 0.2) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 255, 150, 0.2) 0%,\r\n rgba(255, 210, 0, 0.9) 50%,\r\n rgba(255, 0, 0, 0.1) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(40, 60, 160, 0.2) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "0px solid rgba(80, 80, 110, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#ffd296",
+      "surroundAssetKey": "community-5c6b111497eb8518a4eb"
+    },
+    {
+      "key": "community-ad-precise180-spectrum",
+      "label": "Precise180 Spectrum",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Precise180_Spectrum.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#00ffc8",
+      "backgroundAssetKey": "community-5e66425db7cbc570d9fd",
+      "backgroundAssets": {
+        "game": "community-5e66425db7cbc570d9fd",
+        "cricket": "community-5e66425db7cbc570d9fd",
+        "portrait": "community-5e66425db7cbc570d9fd",
+        "menu": "community-c0a69a974fa043d8d1f9"
+      },
+      "previewAssetKey": "community-c5b9ba063b6a81c524b5",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(40, 60, 160, 0.2) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 240, 180, 0.7) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(40, 60, 160, 0.2) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "0px solid rgba(80, 80, 80, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#00f0b4",
+      "surroundAssetKey": "community-98ac740083587a08c00d"
+    },
+    {
+      "key": "community-ad-precise180-subterra",
+      "label": "Precise180 Subterra",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Precise180_Subterra.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-e6b3491c02ef815b8a2a",
+      "backgroundAssets": {
+        "game": "community-e6b3491c02ef815b8a2a",
+        "cricket": "community-e6b3491c02ef815b8a2a",
+        "portrait": "community-e6b3491c02ef815b8a2a",
+        "menu": "community-77b1dee81fbdb8485a66"
+      },
+      "previewAssetKey": "community-2a57ddba89a88b90902e",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(50, 50, 50, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(150, 150, 150, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(50, 50, 50, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "0px solid rgba(50, 50, 50, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": "community-f42c5a7adb3edef77896"
+    },
+    {
+      "key": "community-ad-precise180-subterra-light",
+      "label": "Precise180 Subterra Light",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Precise180_Subterra_Light.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-e6b3491c02ef815b8a2a",
+      "backgroundAssets": {
+        "game": "community-e6b3491c02ef815b8a2a",
+        "cricket": "community-e6b3491c02ef815b8a2a",
+        "portrait": "community-e6b3491c02ef815b8a2a",
+        "menu": "community-77b1dee81fbdb8485a66"
+      },
+      "previewAssetKey": "community-b2da23129a55e6093a05",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(50, 50, 50, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(150, 150, 150, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(50, 50, 50, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "0px solid rgba(50, 50, 50, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": "community-d539f68a6e8dfa96219d"
+    },
+    {
+      "key": "community-ad-real-board-advantage",
+      "label": "Real Board Advantage",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Real_Board_Advantage.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#55fa64",
+      "backgroundAssetKey": "community-e6b3491c02ef815b8a2a",
+      "backgroundAssets": {
+        "game": "community-e6b3491c02ef815b8a2a",
+        "cricket": "community-e6b3491c02ef815b8a2a",
+        "portrait": "community-e6b3491c02ef815b8a2a",
+        "menu": "community-3722c57cb81c88f07875"
+      },
+      "previewAssetKey": "community-f3238bf6cac26b51b1c4",
+      "surfaceStyle": {
+        "player": "linear-gradient(\n 90deg,\n rgba(0, 0, 0, 0.7) 0%,\n rgba(20, 80, 30, 0.7) 50%,\n rgba(0, 0, 0, 0.7) 100%)",
+        "active": "linear-gradient(\n 90deg,\n rgba(0, 0, 0, 0.7) 0%,\n rgba(50, 200, 80, 0.7) 50%,\n rgba(0, 0, 0, 0.7) 100%\n)",
+        "panel": "linear-gradient(\n 180deg,\n rgba(0, 80, 0, 0.4) 0%,\n rgba(0, 0, 0, 0.3) 50%,\n rgba(0, 0, 0, 0) 100%)",
+        "border": "2px solid rgba(20, 80, 30, 1)",
+        "radius": "14px"
+      },
+      "glowColor": "#c8aa32",
+      "surroundAssetKey": "community-a006ada6faef163a7748"
+    },
+    {
+      "key": "community-ad-real-board-regular",
+      "label": "Real Board Regular",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Real_Board_Regular.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#55fa64",
+      "backgroundAssetKey": "community-e6b3491c02ef815b8a2a",
+      "backgroundAssets": {
+        "game": "community-e6b3491c02ef815b8a2a",
+        "cricket": "community-e6b3491c02ef815b8a2a",
+        "portrait": "community-e6b3491c02ef815b8a2a",
+        "menu": "community-62823f1559c5c41dd648"
+      },
+      "previewAssetKey": "community-00cf0ae7fbf2f1b0586d",
+      "surfaceStyle": {
+        "player": "linear-gradient(\n 90deg,\n rgba(0, 0, 0, 0.7) 0%,\n rgba(10, 40, 15, 0.7) 50%,\n rgba(0, 0, 0, 0.7) 100%)",
+        "active": "linear-gradient(\n 90deg,\n rgba(0, 0, 0, 0.7) 0%,\n rgba(20, 80, 30, 0.7) 50%,\n rgba(0, 0, 0, 0.7) 100%\n)",
+        "panel": "linear-gradient(\n 180deg,\n rgba(0, 40, 0, 0.4) 0%,\n rgba(0, 0, 0, 0.3) 50%,\n rgba(0, 0, 0, 0) 100%)",
+        "border": "2px solid rgba(0, 0, 0, 1)",
+        "radius": "14px"
+      },
+      "glowColor": "#ffc89b",
+      "surroundAssetKey": "community-2943874a86f244140aff"
+    },
+    {
+      "key": "community-ad-squares-black",
+      "label": "Squares Black",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Squares_Black.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-c06a3c68ba7664ab9dd1",
+      "backgroundAssets": {
+        "game": "community-c06a3c68ba7664ab9dd1",
+        "cricket": "community-c06a3c68ba7664ab9dd1",
+        "portrait": "community-834f7a045bef32370958",
+        "menu": "community-c06a3c68ba7664ab9dd1"
+      },
+      "previewAssetKey": "community-b35d2fb0081664144056",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 180deg,\r\n rgba(0, 0, 0, 0.9) 0%,\r\n rgba(50, 50, 50, 0.9) 50%,\r\n rgba(0, 0, 0, 0.8) 100%)",
+        "active": "linear-gradient(\r\n 180deg,\r\n rgba(0, 0, 0, 0.9) 0%,\r\n rgba(120, 120, 120, 0.9) 50%,\r\n rgba(0, 0, 0, 0.8) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 180deg,\r\n rgba(0, 0, 0, 0.6) 0%,\r\n rgba(50, 50, 50, 0.6) 50%,\r\n rgba(20, 20, 20, 0.8) 100%)",
+        "border": "1px solid rgba(90, 90, 90, 0.80)",
+        "radius": "5px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-stage-allypally1",
+      "label": "Stage AllyPally1",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Stage_AllyPally1.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000508",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#ffc350",
+      "backgroundAssetKey": "community-16731a0ae7c12febfd49",
+      "backgroundAssets": {
+        "game": "community-16731a0ae7c12febfd49",
+        "cricket": "community-16731a0ae7c12febfd49",
+        "portrait": "community-6cfea80d0ac037d208d2",
+        "menu": "community-88ac2304d2d5600983ba"
+      },
+      "previewAssetKey": "community-b73fa846f737c8d2efcc",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 5, 40, 0.7) 0%,\r\n rgba(0, 5, 8, 0.9) 50%,\r\n rgba(0, 0, 0, 0.7) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 5, 40, 0.8) 0%,\r\n rgba(0, 5, 8, 0.9) 50%,\r\n rgba(0, 0, 0, 0.8) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0) 20%,\r\n rgba(0, 0, 0, 0) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "2px solid rgba(195, 145, 80, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#ffffff",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-stage-allypally2",
+      "label": "Stage AllyPally2",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Stage_AllyPally2.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000706",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#00f5b4",
+      "backgroundAssetKey": "community-8202de8ec4a0a3d8fbc0",
+      "backgroundAssets": {
+        "game": "community-8202de8ec4a0a3d8fbc0",
+        "cricket": "community-8202de8ec4a0a3d8fbc0",
+        "portrait": "community-cf5a6ba41e19134af0e4",
+        "menu": "community-677bcecfeec6b5308f9c"
+      },
+      "previewAssetKey": "community-1f13a5cf845db8dd8ace",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 7, 6, 0.6) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0.6) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 70, 40, 0.6) 0%,\r\n rgba(0, 7, 6, 0.6) 50%,\r\n rgba(0, 0, 0, 0.6) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0) 20%,\r\n rgba(0, 0, 0, 0) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "2px solid rgba(0, 70, 40, 0.6)",
+        "radius": "14px"
+      },
+      "glowColor": "#ffffff",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-stage-premierleague",
+      "label": "Stage Premier League",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Stage_PremierLeague.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#28281e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#dcc896",
+      "backgroundAssetKey": "community-815ddccd0e6be1574ce3",
+      "backgroundAssets": {
+        "game": "community-815ddccd0e6be1574ce3",
+        "cricket": "community-815ddccd0e6be1574ce3",
+        "portrait": "community-f778b45c38d11310dc1b",
+        "menu": "community-5ab0e22b58fac571ef0c"
+      },
+      "previewAssetKey": "community-95d77bd4d79bc49e03b7",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(20, 20, 8, 0.6) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0.6) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(140, 130, 100, 0.8) 0%,\r\n rgba(55, 40, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0.6) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(20, 18, 10, 0.6) 20%,\r\n rgba(20, 18, 10, 0.8) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "2px solid rgba(220, 200, 150, 0.5)",
+        "radius": "14px"
+      },
+      "glowColor": "#ffffff",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-vintage-black",
+      "label": "Vintage Black",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Vintage_Black.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#bebebe",
+      "backgroundAssetKey": "community-d8d4e9c0df5ae0e23dfb",
+      "backgroundAssets": {
+        "game": "community-d8d4e9c0df5ae0e23dfb",
+        "cricket": "community-d8d4e9c0df5ae0e23dfb",
+        "portrait": "community-6256a432bcbcac5fcdf8",
+        "menu": "community-d8d4e9c0df5ae0e23dfb"
+      },
+      "previewAssetKey": "community-a169564348de8600fa48",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.9) 0%,\r\n rgba(40, 40, 40, 0.7) 50%,\r\n rgba(0, 0, 00, 0.9) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.9) 0%,\r\n rgba(100, 100, 100, 0.8) 50%,\r\n rgba(0, 0, 0, 0.9) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.1) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0.1) 100%)",
+        "border": "1px solid rgba(40, 40, 40, 0.7)",
+        "radius": "14px"
+      },
+      "glowColor": "#c8c8c8",
+      "surroundAssetKey": "community-543334d9ddd64a1dd670"
+    },
+    {
+      "key": "community-ad-vintage-fire",
+      "label": "Vintage Fire",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Vintage_Fire.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#1e0000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#fa5a00",
+      "backgroundAssetKey": "community-b713af363a95bfa57ce6",
+      "backgroundAssets": {
+        "game": "community-b713af363a95bfa57ce6",
+        "cricket": "community-b713af363a95bfa57ce6",
+        "portrait": "community-500ae2a1a3afba3947dc",
+        "menu": "community-b713af363a95bfa57ce6"
+      },
+      "previewAssetKey": "community-cf3a7d909f15c697e769",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(30, 0, 0, 0.9) 0%,\r\n rgba(120, 50, 10, 0.7) 50%,\r\n rgba(30, 0, 0, 0.9) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(30, 0, 0, 0.9) 0%,\r\n rgba(115, 30, 0, 0.8) 50%,\r\n rgba(30, 0, 0, 0.9) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.1) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0.1) 100%)",
+        "border": "1px solid rgba(120, 50, 10, 0.7)",
+        "radius": "14px"
+      },
+      "glowColor": "#ff5a00",
+      "surroundAssetKey": "community-13939d3737295b76d5e2"
+    },
+    {
+      "key": "community-ad-vintage-fire-and-ice",
+      "label": "Vintage Fire and Ice",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Vintage_Fire_and_Ice.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#fa0000",
+      "backgroundAssetKey": "community-0e3165394ccab095a50a",
+      "backgroundAssets": {
+        "game": "community-0e3165394ccab095a50a",
+        "cricket": "community-0e3165394ccab095a50a",
+        "portrait": "community-74af6422eb43e534a8c4",
+        "menu": "community-0e3165394ccab095a50a"
+      },
+      "previewAssetKey": "community-31afda897799e3b37c31",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 30, 55, 0.9) 0%,\r\n rgba(0, 80, 135, 0.7) 50%,\r\n rgba(0, 30, 55, 0.9) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(30, 0, 0, 0.9) 0%,\r\n rgba(115, 30, 0, 0.8) 50%,\r\n rgba(30, 0, 0, 0.9) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.1) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0.1) 100%)",
+        "border": "1px solid rgba(0, 170, 250, 0.7)",
+        "radius": "14px"
+      },
+      "glowColor": "#ff5a00",
+      "surroundAssetKey": "community-2061a47f790a89959bc4"
+    },
+    {
+      "key": "community-ad-vintage-ice",
+      "label": "Vintage Ice",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Vintage_Ice.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000f1e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#00beff",
+      "backgroundAssetKey": "community-a649a93ff3efcc2f23e0",
+      "backgroundAssets": {
+        "game": "community-a649a93ff3efcc2f23e0",
+        "cricket": "community-a649a93ff3efcc2f23e0",
+        "portrait": "community-e1b601c2fbb1712b3095",
+        "menu": "community-a649a93ff3efcc2f23e0"
+      },
+      "previewAssetKey": "community-3219990ce1fdac04e809",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 5, 30, 0.9) 0%,\r\n rgba(0, 90, 120, 0.7) 50%,\r\n rgba(0, 5, 30, 0.9) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 5, 30, 0.9) 0%,\r\n rgba(0, 170, 220, 0.8) 50%,\r\n rgba(0, 5, 30, 0.9) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.1) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0.1) 100%)",
+        "border": "1px solid rgba(0, 90, 120, 0.7)",
+        "radius": "14px"
+      },
+      "glowColor": "#00aadc",
+      "surroundAssetKey": "community-ebca4d1f298ad0d1e447"
+    },
+    {
+      "key": "community-ad-vintage-nature",
+      "label": "Vintage Nature",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Vintage_Nature.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#3c1e0f",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8aa96",
+      "backgroundAssetKey": "community-302f40880bd6f2f52749",
+      "backgroundAssets": {
+        "game": "community-302f40880bd6f2f52749",
+        "cricket": "community-302f40880bd6f2f52749",
+        "portrait": "community-c60855e49ad0d6c6be16",
+        "menu": "community-302f40880bd6f2f52749"
+      },
+      "previewAssetKey": "community-b5fae7f546e15f14a7a8",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(15, 7, 3, 0.9) 0%,\r\n rgba(60, 30, 15, 0.7) 50%,\r\n rgba(15, 7, 3, 0.9) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(30, 50, 5, 0.9) 0%,\r\n rgba(100, 160, 35, 0.8) 50%,\r\n rgba(0, 0, 0, 0.9) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0.1) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0.1) 100%)",
+        "border": "1px solid rgba(60, 30, 15, 0.7)",
+        "radius": "14px"
+      },
+      "glowColor": "#9bff37",
+      "surroundAssetKey": "community-80b5adecc0afb642b61c"
+    },
+    {
+      "key": "community-ad-winmau-blade360",
+      "label": "Winmau Blade360",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Winmau_Blade360.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-96babf4ef6796aa613c8",
+      "backgroundAssets": {
+        "game": "community-96babf4ef6796aa613c8",
+        "cricket": "community-96babf4ef6796aa613c8",
+        "portrait": "community-96babf4ef6796aa613c8",
+        "menu": "community-c5fef21f461fcd28e73e"
+      },
+      "previewAssetKey": "community-c0fc569b53f51b079941",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.5) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "0px solid rgba(50, 50, 50, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": "community-ad513bc89399fc6b5a16"
+    },
+    {
+      "key": "community-ad-winmau-blade6",
+      "label": "Winmau Blade6",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Winmau_Blade6.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#640000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#fa0000",
+      "backgroundAssetKey": "community-5fa447b1dd8e93e0b37e",
+      "backgroundAssets": {
+        "game": "community-5fa447b1dd8e93e0b37e",
+        "cricket": "community-5fa447b1dd8e93e0b37e",
+        "portrait": "community-5fa447b1dd8e93e0b37e",
+        "menu": "community-73ba213ba63115ce869d"
+      },
+      "previewAssetKey": "community-faee6d69d16b7987e5e6",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(50, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(150, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(50, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "0px solid rgba(150, 0, 0, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": "community-a863075f9ff36f1f7c4d"
+    },
+    {
+      "key": "community-ad-winmau-force-black",
+      "label": "Winmau Force Black",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Winmau_Force_Black.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#000000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-96babf4ef6796aa613c8",
+      "backgroundAssets": {
+        "game": "community-96babf4ef6796aa613c8",
+        "cricket": "community-96babf4ef6796aa613c8",
+        "portrait": "community-96babf4ef6796aa613c8",
+        "menu": "community-c5fef21f461fcd28e73e"
+      },
+      "previewAssetKey": "community-fe5f6e1fbd8f2468592a",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.5) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 1) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "0px solid rgba(50, 50, 50, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": "community-8b0789f5114a7319548e"
+    },
+    {
+      "key": "community-ad-winmau-force-blue",
+      "label": "Winmau Force Blue",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Winmau_Force_Blue.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#001464",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-0743d09d8afe8d422634",
+      "backgroundAssets": {
+        "game": "community-0743d09d8afe8d422634",
+        "cricket": "community-0743d09d8afe8d422634",
+        "portrait": "community-0743d09d8afe8d422634",
+        "menu": "community-e3714982eb8bd1fc03f5"
+      },
+      "previewAssetKey": "community-7aa66426486304edc48e",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 10, 50, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 40, 150, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 10, 50, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "0px solid rgba(100, 150, 250, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": "community-c85bf2b2bed1835f8f50"
+    },
+    {
+      "key": "community-ad-winmau-force-green",
+      "label": "Winmau Force Green",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Winmau_Force_Green.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#78c800",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-193888dcf963f1992b10",
+      "backgroundAssets": {
+        "game": "community-193888dcf963f1992b10",
+        "cricket": "community-193888dcf963f1992b10",
+        "portrait": "community-193888dcf963f1992b10",
+        "menu": "community-6dcbe9ee93237f3a373f"
+      },
+      "previewAssetKey": "community-52f07e109ae1b0add49e",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(10, 50, 10, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(120, 200, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(10, 50, 10, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "0px solid rgba(100, 250, 100, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": "community-98f3d8a7163a151b47cf"
+    },
+    {
+      "key": "community-ad-winmau-force-red",
+      "label": "Winmau Force Red",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Winmau_Force_Red.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#640000",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-4925050aa9e1e0de204b",
+      "backgroundAssets": {
+        "game": "community-4925050aa9e1e0de204b",
+        "cricket": "community-4925050aa9e1e0de204b",
+        "portrait": "community-4925050aa9e1e0de204b",
+        "menu": "community-95d01acdb5a6c5a7c640"
+      },
+      "previewAssetKey": "community-d48c3b9c85352eb0c734",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(50, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(150, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(50, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "0px solid rgba(150, 0, 0, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": "community-02e79011e6d1991460f9"
+    },
+    {
+      "key": "community-ad-winmau-force-white",
+      "label": "Winmau White",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Winmau_Force_White.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#646464",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#fafafa",
+      "backgroundAssetKey": "community-7a151f81dc9d82d0392e",
+      "backgroundAssets": {
+        "game": "community-7a151f81dc9d82d0392e",
+        "cricket": "community-7a151f81dc9d82d0392e",
+        "portrait": "community-7a151f81dc9d82d0392e",
+        "menu": "community-45d337d924316e05c0e4"
+      },
+      "previewAssetKey": "community-64319aceee5a0cb11f66",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 1) 50%,\r\n rgba(0, 0, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "0px solid rgba(50, 50, 50, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": "community-8dd8a5088d75ea496338"
+    },
+    {
+      "key": "community-ad-wood-dark",
+      "label": "Wood Dark",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Wood_Dark.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#3c1e0f",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-8bafcf8cfadc9d47e021",
+      "backgroundAssets": {
+        "game": "community-8bafcf8cfadc9d47e021",
+        "cricket": "community-8bafcf8cfadc9d47e021",
+        "portrait": "community-27095f3c1edfde8f9b4b",
+        "menu": "community-8bafcf8cfadc9d47e021"
+      },
+      "previewAssetKey": "community-1e33fed9d804fcfb3a88",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(60, 30, 15, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(30, 15, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(30, 15, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(60, 30, 15, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "1px solid rgba(200, 170, 150, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-wood-light",
+      "label": "Wood Light",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Wood_Light.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#2d2823",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-e519628ac79b11b0bef3",
+      "backgroundAssets": {
+        "game": "community-e519628ac79b11b0bef3",
+        "cricket": "community-e519628ac79b11b0bef3",
+        "portrait": "community-6e63d327dfa36d42debb",
+        "menu": "community-e519628ac79b11b0bef3"
+      },
+      "previewAssetKey": "community-52fd98d786b4588f6c09",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(45, 40, 35, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(15, 10, 3, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(15, 10, 3, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(15, 10, 3, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "1px solid rgba(220, 190, 150, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-ad-wood-mid",
+      "label": "Wood Mid",
+      "author": "Tobias Boege / Autodarts Layouts",
+      "sourceFile": "theme/AD_Wood_Mid.css",
+      "formats": [
+        "landscape",
+        "portrait"
+      ],
+      "fontFamily": "Helvetica, sans-serif",
+      "accentColor": "#3c280f",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#ffffff",
+      "throwLabelColor": "#c8c8c8",
+      "backgroundAssetKey": "community-37b8a9c8ed30a51369d2",
+      "backgroundAssets": {
+        "game": "community-37b8a9c8ed30a51369d2",
+        "cricket": "community-37b8a9c8ed30a51369d2",
+        "portrait": "community-68ca9878b42268987f38",
+        "menu": "community-37b8a9c8ed30a51369d2"
+      },
+      "previewAssetKey": "community-9c19c0f09ce19371dc11",
+      "surfaceStyle": {
+        "player": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(60, 40, 15, 0.9) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "active": "linear-gradient(\r\n 90deg,\r\n rgba(30, 15, 0, 0) 0%,\r\n rgba(0, 0, 0, 0.9) 50%,\r\n rgba(30, 15, 0, 0) 100%\r\n)",
+        "panel": "linear-gradient(\r\n 90deg,\r\n rgba(0, 0, 0, 0) 0%,\r\n rgba(60, 40, 15, 0.6) 50%,\r\n rgba(0, 0, 0, 0) 100%)",
+        "border": "1px solid rgba(220, 190, 150, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#fafafa",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-arena",
+      "label": "Arena",
+      "author": "Peter Rottmann",
+      "sourceFile": "theme/Arena.css",
+      "formats": [
+        "landscape"
+      ],
+      "fontFamily": "system-ui, sans-serif",
+      "accentColor": "#22c55e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#eeeeee",
+      "throwLabelColor": "#ffffff",
+      "backgroundAssetKey": "community-1e7b92dd057ec38f24b9",
+      "backgroundAssets": {
+        "game": "community-1e7b92dd057ec38f24b9",
+        "cricket": "community-6184458222c477de6d55",
+        "portrait": "",
+        "menu": "community-1e7b92dd057ec38f24b9"
+      },
+      "previewAssetKey": "community-499d9cbc1f93f7e85f96",
+      "surfaceStyle": {
+        "player": "rgba(40, 40, 40, 0.70)",
+        "active": "rgba(40, 40, 40, 0.70)",
+        "panel": "rgba(40, 40, 40, 0.65)",
+        "border": "1px solid rgba(96, 96, 96, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#22c55e",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-austria-v2",
+      "label": "Austria v2",
+      "author": "Peter Rottmann",
+      "sourceFile": "theme/Austria_v2.css",
+      "formats": [
+        "landscape"
+      ],
+      "fontFamily": "system-ui, sans-serif",
+      "accentColor": "#22c55e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#eeeeee",
+      "throwLabelColor": "#ffffff",
+      "backgroundAssetKey": "community-06087e552d0f5e507e0d",
+      "backgroundAssets": {
+        "game": "community-06087e552d0f5e507e0d",
+        "cricket": "community-06087e552d0f5e507e0d",
+        "portrait": "",
+        "menu": "community-9f50bf214f51bf48f6e7"
+      },
+      "previewAssetKey": "community-45ef031149642e7cb960",
+      "surfaceStyle": {
+        "player": "rgba(40, 40, 40, 0.70)",
+        "active": "rgba(40, 40, 40, 0.70)",
+        "panel": "rgba(40, 40, 40, 0.65)",
+        "border": "1px solid rgba(165, 132, 72, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#22c55e",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-black-stage",
+      "label": "Black Stage",
+      "author": "Peter Rottmann",
+      "sourceFile": "theme/Black_Stage.css",
+      "formats": [
+        "landscape"
+      ],
+      "fontFamily": "system-ui, sans-serif",
+      "accentColor": "#22c55e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#eeeeee",
+      "throwLabelColor": "#ffffff",
+      "backgroundAssetKey": "community-afa3f95bd7d1585e5c26",
+      "backgroundAssets": {
+        "game": "community-afa3f95bd7d1585e5c26",
+        "cricket": "community-c0008ec1b51b66e07858",
+        "portrait": "",
+        "menu": "community-3d2f018574d1bd9bc4dc"
+      },
+      "previewAssetKey": "community-fab2a4dd36beb877a476",
+      "surfaceStyle": {
+        "player": "rgba(40, 40, 40, 0.70)",
+        "active": "rgba(40, 40, 40, 0.70)",
+        "panel": "rgba(40, 40, 40, 0.65)",
+        "border": "1px solid rgba(192, 192, 192, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#22c55e",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-championc-green",
+      "label": "Championc green",
+      "author": "Peter Rottmann",
+      "sourceFile": "theme/Championc_green.css",
+      "formats": [
+        "landscape"
+      ],
+      "fontFamily": "system-ui, sans-serif",
+      "accentColor": "#22c55e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#eeeeee",
+      "throwLabelColor": "#ffffff",
+      "backgroundAssetKey": "community-f1303c29f89214437498",
+      "backgroundAssets": {
+        "game": "community-f1303c29f89214437498",
+        "cricket": "community-8fd0075f8e9550552236",
+        "portrait": "",
+        "menu": "community-5e289e018520589fbe00"
+      },
+      "previewAssetKey": "community-01c161608fb1e5a0fb82",
+      "surfaceStyle": {
+        "player": "rgba(40, 40, 40, 0.70)",
+        "active": "rgba(40, 40, 40, 0.70)",
+        "panel": "rgba(40, 40, 40, 0.65)",
+        "border": "1px solid rgba(255, 255, 255, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#22c55e",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-circus-tavern",
+      "label": "Circus Tavern",
+      "author": "Peter Rottmann",
+      "sourceFile": "theme/Circus_Tavern.css",
+      "formats": [
+        "landscape"
+      ],
+      "fontFamily": "system-ui, sans-serif",
+      "accentColor": "#22c55e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#eeeeee",
+      "throwLabelColor": "#ffffff",
+      "backgroundAssetKey": "community-2fba67357b30edf74ce2",
+      "backgroundAssets": {
+        "game": "community-2fba67357b30edf74ce2",
+        "cricket": "community-8ec9a9706975087c2867",
+        "portrait": "",
+        "menu": "community-9f92e761d7a8b9826b40"
+      },
+      "previewAssetKey": "community-86396216fd9877244703",
+      "surfaceStyle": {
+        "player": "rgba(40, 40, 40, 0.70)",
+        "active": "rgba(40, 40, 40, 0.70)",
+        "panel": "rgba(40, 40, 40, 0.65)",
+        "border": "1px solid rgba(165, 132, 72, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#22c55e",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-darthistory",
+      "label": "DartHistory",
+      "author": "Peter Rottmann",
+      "sourceFile": "theme/DartHistory.css",
+      "formats": [
+        "landscape"
+      ],
+      "fontFamily": "system-ui, sans-serif",
+      "accentColor": "#22c55e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#eeeeee",
+      "throwLabelColor": "#ffffff",
+      "backgroundAssetKey": "community-e524658e4894d779ccb7",
+      "backgroundAssets": {
+        "game": "community-e524658e4894d779ccb7",
+        "cricket": "community-a9a5cb9424c2d7d95984",
+        "portrait": "",
+        "menu": "community-35a566cfd6243115482e"
+      },
+      "previewAssetKey": "community-02f9f375250467afa60a",
+      "surfaceStyle": {
+        "player": "rgba(40, 40, 40, 0.70)",
+        "active": "rgba(40, 40, 40, 0.70)",
+        "panel": "rgba(40, 40, 40, 0.65)",
+        "border": "1px solid rgba(111, 78, 55, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#22c55e",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-faro-anubis",
+      "label": "Faro Anubis",
+      "author": "Peter Rottmann",
+      "sourceFile": "theme/Faro_Anubis.css",
+      "formats": [
+        "landscape"
+      ],
+      "fontFamily": "system-ui, sans-serif",
+      "accentColor": "#22c55e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#eeeeee",
+      "throwLabelColor": "#ffffff",
+      "backgroundAssetKey": "community-0bc88fe88e1226f50d53",
+      "backgroundAssets": {
+        "game": "community-0bc88fe88e1226f50d53",
+        "cricket": "community-c032bdc0d357c1add465",
+        "portrait": "",
+        "menu": "community-58fd1240f3cf605af669"
+      },
+      "previewAssetKey": "community-8be275d7f8cb792c5f6c",
+      "surfaceStyle": {
+        "player": "rgba(40, 40, 40, 0.70)",
+        "active": "rgba(40, 40, 40, 0.70)",
+        "panel": "rgba(40, 40, 40, 0.65)",
+        "border": "1px solid rgba(165, 132, 72, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#22c55e",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-fi-yingyang",
+      "label": "FI YingYang",
+      "author": "Peter Rottmann",
+      "sourceFile": "theme/FI_YingYang.css",
+      "formats": [
+        "landscape"
+      ],
+      "fontFamily": "system-ui, sans-serif",
+      "accentColor": "#22c55e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#eeeeee",
+      "throwLabelColor": "#ffffff",
+      "backgroundAssetKey": "community-40013a7674fab57fa6d8",
+      "backgroundAssets": {
+        "game": "community-40013a7674fab57fa6d8",
+        "cricket": "community-a33a889503acdd32461c",
+        "portrait": "",
+        "menu": "community-9158e5b1e36282abc15c"
+      },
+      "previewAssetKey": "community-fce46713f35c666af781",
+      "surfaceStyle": {
+        "player": "rgba(40, 40, 40, 0.70)",
+        "active": "rgba(40, 40, 40, 0.70)",
+        "panel": "rgba(40, 40, 40, 0.65)",
+        "border": "1px solid rgba(128, 128, 128, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#22c55e",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-german",
+      "label": "GERMAN",
+      "author": "Peter Rottmann",
+      "sourceFile": "theme/GERMAN.css",
+      "formats": [
+        "landscape"
+      ],
+      "fontFamily": "system-ui, sans-serif",
+      "accentColor": "#22c55e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#eeeeee",
+      "throwLabelColor": "#ffffff",
+      "backgroundAssetKey": "community-0619128de13242ff7ed4",
+      "backgroundAssets": {
+        "game": "community-0619128de13242ff7ed4",
+        "cricket": "community-0619128de13242ff7ed4",
+        "portrait": "",
+        "menu": "community-2877c5a7178c2e4dde2b"
+      },
+      "previewAssetKey": "community-04211918e9612d0b847d",
+      "surfaceStyle": {
+        "player": "rgba(40, 40, 40, 0.70)",
+        "active": "rgba(40, 40, 40, 0.70)",
+        "panel": "rgba(40, 40, 40, 0.65)",
+        "border": "1px solid rgba(190, 170, 125, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#22c55e",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-german-2",
+      "label": "GERMAN 2",
+      "author": "Peter Rottmann",
+      "sourceFile": "theme/GERMAN_2.css",
+      "formats": [
+        "landscape"
+      ],
+      "fontFamily": "system-ui, sans-serif",
+      "accentColor": "#22c55e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#eeeeee",
+      "throwLabelColor": "#ffffff",
+      "backgroundAssetKey": "community-a7e83b2570666c9b70f9",
+      "backgroundAssets": {
+        "game": "community-a7e83b2570666c9b70f9",
+        "cricket": "community-a7e83b2570666c9b70f9",
+        "portrait": "",
+        "menu": "community-a7e83b2570666c9b70f9"
+      },
+      "previewAssetKey": "community-9fde5aad43499b4eb4bb",
+      "surfaceStyle": {
+        "player": "rgba(40, 40, 40, 0.70)",
+        "active": "rgba(40, 40, 40, 0.70)",
+        "panel": "rgba(40, 40, 40, 0.65)",
+        "border": "1px solid rgba(190, 170, 125, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#22c55e",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-mdmg",
+      "label": "MDMG",
+      "author": "Peter Rottmann",
+      "sourceFile": "theme/MDMG.css",
+      "formats": [
+        "landscape"
+      ],
+      "fontFamily": "system-ui, sans-serif",
+      "accentColor": "#22c55e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#eeeeee",
+      "throwLabelColor": "#ffffff",
+      "backgroundAssetKey": "community-76aac89efead18907c5b",
+      "backgroundAssets": {
+        "game": "community-76aac89efead18907c5b",
+        "cricket": "community-7dd3198d87ee48b55531",
+        "portrait": "",
+        "menu": "community-f1d175f2db593c96133c"
+      },
+      "previewAssetKey": "community-5093e8340682dec83f7e",
+      "surfaceStyle": {
+        "player": "rgba(40, 40, 40, 0.70)",
+        "active": "rgba(40, 40, 40, 0.70)",
+        "panel": "rgba(40, 40, 40, 0.65)",
+        "border": "1px solid rgba(192, 192, 192, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#22c55e",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-old-style",
+      "label": "OLD STYLE",
+      "author": "Peter Rottmann",
+      "sourceFile": "theme/OLD_STYLE.css",
+      "formats": [
+        "landscape"
+      ],
+      "fontFamily": "system-ui, sans-serif",
+      "accentColor": "#22c55e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#eeeeee",
+      "throwLabelColor": "#ffffff",
+      "backgroundAssetKey": "community-030d4dc7d0d8cb4003e8",
+      "backgroundAssets": {
+        "game": "community-030d4dc7d0d8cb4003e8",
+        "cricket": "community-030d4dc7d0d8cb4003e8",
+        "portrait": "",
+        "menu": "community-8a7df1e7e48cb9e5bcff"
+      },
+      "previewAssetKey": "community-4738d23a156d1208aaf4",
+      "surfaceStyle": {
+        "player": "rgba(40, 40, 40, 0.70)",
+        "active": "rgba(40, 40, 40, 0.70)",
+        "panel": "rgba(40, 40, 40, 0.65)",
+        "border": "1px solid rgba(190, 168, 125, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#22c55e",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-olymp",
+      "label": "Olymp",
+      "author": "Peter Rottmann",
+      "sourceFile": "theme/Olymp.css",
+      "formats": [
+        "landscape"
+      ],
+      "fontFamily": "system-ui, sans-serif",
+      "accentColor": "#22c55e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#eeeeee",
+      "throwLabelColor": "#ffffff",
+      "backgroundAssetKey": "community-dac6d7b264ccee18cef3",
+      "backgroundAssets": {
+        "game": "community-dac6d7b264ccee18cef3",
+        "cricket": "community-4cc9a87caa9d9102931d",
+        "portrait": "",
+        "menu": "community-74d5277cfd8295fe8c8f"
+      },
+      "previewAssetKey": "community-756fad5aca6ddeeed9eb",
+      "surfaceStyle": {
+        "player": "rgba(40, 40, 40, 0.70)",
+        "active": "rgba(40, 40, 40, 0.70)",
+        "panel": "rgba(40, 40, 40, 0.65)",
+        "border": "1px solid rgba(0, 0, 0, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#22c55e",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-price-clayton",
+      "label": "Price Clayton",
+      "author": "Peter Rottmann",
+      "sourceFile": "theme/Price_Clayton.css",
+      "formats": [
+        "landscape"
+      ],
+      "fontFamily": "system-ui, sans-serif",
+      "accentColor": "#22c55e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#eeeeee",
+      "throwLabelColor": "#ffffff",
+      "backgroundAssetKey": "community-b6391a06158801321383",
+      "backgroundAssets": {
+        "game": "community-b6391a06158801321383",
+        "cricket": "community-7321c64ca7ae25dfe088",
+        "portrait": "",
+        "menu": "community-5f0f505e9db530280702"
+      },
+      "previewAssetKey": "community-353c92e1763efd954797",
+      "surfaceStyle": {
+        "player": "rgba(40, 40, 40, 0.70)",
+        "active": "rgba(40, 40, 40, 0.70)",
+        "panel": "rgba(40, 40, 40, 0.65)",
+        "border": "1px solid rgba(105, 105, 105, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#22c55e",
+      "surroundAssetKey": ""
+    },
+    {
+      "key": "community-sunshine",
+      "label": "Sunshine",
+      "author": "Peter Rottmann",
+      "sourceFile": "theme/Sunshine.css",
+      "formats": [
+        "landscape"
+      ],
+      "fontFamily": "system-ui, sans-serif",
+      "accentColor": "#22c55e",
+      "scoreColor": "#ffffff",
+      "secondaryTextColor": "#eeeeee",
+      "throwLabelColor": "#ffffff",
+      "backgroundAssetKey": "community-dae4aa760a61fa85fb70",
+      "backgroundAssets": {
+        "game": "community-dae4aa760a61fa85fb70",
+        "cricket": "community-2015ce4c0402e96c7c2d",
+        "portrait": "",
+        "menu": "community-003791fa1e728b1311f3"
+      },
+      "previewAssetKey": "community-0624d80aac64d829c61a",
+      "surfaceStyle": {
+        "player": "rgba(40, 40, 40, 0.70)",
+        "active": "rgba(40, 40, 40, 0.70)",
+        "panel": "rgba(40, 40, 40, 0.65)",
+        "border": "1px solid rgba(0, 0, 0, 0.80)",
+        "radius": "14px"
+      },
+      "glowColor": "#22c55e",
+      "surroundAssetKey": ""
+    }
+  ],
+  "surroundDefaults": {},
+  "surrounds": [
+    {
+      "key": "bulls-advantage",
+      "label": "Bulls Advantage",
+      "assetKey": "community-02fa10c38d970dad1e1d",
+      "sourceUrl": "https://tobyleif.com/images/bulls.webp"
+    },
+    {
+      "key": "bulls-advantage-new",
+      "label": "Bulls Advantage New",
+      "assetKey": "community-a90c723c37543a5007b2",
+      "sourceUrl": "https://tobyleif.com/images/bullsadvantagenew.webp"
+    },
+    {
+      "key": "bulls-flying-mullets",
+      "label": "Bulls Flying Mullets",
+      "assetKey": "community-ccf136bd3b1adb6a53bb",
+      "sourceUrl": "https://tobyleif.com/images/bullsflyingmullets.webp"
+    },
+    {
+      "key": "bulls-black",
+      "label": "Bulls Black",
+      "assetKey": "community-5fd10e26d367921f0e7b",
+      "sourceUrl": "https://tobyleif.com/images/bullsschwarz.webp"
+    },
+    {
+      "key": "precise180-endorphine",
+      "label": "Precise180 Endorphine",
+      "assetKey": "community-1be2a8c27e2db28e80dc",
+      "sourceUrl": "https://tobyleif.com/images/endorphine.webp"
+    },
+    {
+      "key": "precise180-endorphine-grey",
+      "label": "Precise180 Endorphine Grey",
+      "assetKey": "community-e70d72676f73dc1b1599",
+      "sourceUrl": "https://tobyleif.com/images/endorphinedunkel.webp"
+    },
+    {
+      "key": "precise180-endorphine-white",
+      "label": "Precise180 Endorphine White",
+      "assetKey": "community-d05c5bda6a8813f51af9",
+      "sourceUrl": "https://tobyleif.com/images/endorphinehell.webp"
+    },
+    {
+      "key": "precise180-northern-lights",
+      "label": "Precise180 Northern Lights",
+      "assetKey": "community-522653f65813ed356348",
+      "sourceUrl": "https://tobyleif.com/images/northern.webp"
+    },
+    {
+      "key": "precise180-polychrome",
+      "label": "Precise180 Polychrome",
+      "assetKey": "community-5c6b111497eb8518a4eb",
+      "sourceUrl": "https://tobyleif.com/images/polychrome.webp"
+    },
+    {
+      "key": "precise180-spectrum",
+      "label": "Precise180 Spectrum",
+      "assetKey": "community-98ac740083587a08c00d",
+      "sourceUrl": "https://tobyleif.com/images/spectrum.webp"
+    },
+    {
+      "key": "precise180-subterra",
+      "label": "Precise180 Subterra",
+      "assetKey": "community-f42c5a7adb3edef77896",
+      "sourceUrl": "https://tobyleif.com/images/subterra.webp"
+    },
+    {
+      "key": "precise180-subterra-light",
+      "label": "Precise180 Subterra Light",
+      "assetKey": "community-d539f68a6e8dfa96219d",
+      "sourceUrl": "https://tobyleif.com/images/subterralight.webp"
+    },
+    {
+      "key": "red-dragon-black",
+      "label": "Red Dragon Black",
+      "assetKey": "community-ace01d1e1894003f4938",
+      "sourceUrl": "https://tobyleif.com/images/rdblack.webp"
+    },
+    {
+      "key": "red-dragon-clayton",
+      "label": "Red Dragon Clayton",
+      "assetKey": "community-e0e3d46a625ae7fe2826",
+      "sourceUrl": "https://tobyleif.com/images/clayton.webp"
+    },
+    {
+      "key": "red-dragon-cool-hand",
+      "label": "Red Dragon Cool Hand",
+      "assetKey": "community-4ecdaf24cfbfdf2daa1e",
+      "sourceUrl": "https://tobyleif.com/images/coolhand.webp"
+    },
+    {
+      "key": "red-dragon-iceman",
+      "label": "Red Dragon Iceman",
+      "assetKey": "community-59e3777181a2b673f295",
+      "sourceUrl": "https://tobyleif.com/images/iceman.webp"
+    },
+    {
+      "key": "red-dragon-snakebite",
+      "label": "Red Dragon Snakebite",
+      "assetKey": "community-89b0fca7c43607549532",
+      "sourceUrl": "https://tobyleif.com/images/snakebite.webp"
+    },
+    {
+      "key": "shot-bully-boy",
+      "label": "Shot Bully Boy",
+      "assetKey": "community-aff37a51338fbcaf05f2",
+      "sourceUrl": "https://tobyleif.com/images/bullyboy.webp"
+    },
+    {
+      "key": "target-nuke",
+      "label": "Target Nuke",
+      "assetKey": "community-848d0a3688b6b42a1164",
+      "sourceUrl": "https://tobyleif.com/images/littler.webp"
+    },
+    {
+      "key": "target-notched-grey",
+      "label": "Target Notched Grey",
+      "assetKey": "community-fee3b9fc49ef5c1892e9",
+      "sourceUrl": "https://tobyleif.com/images/notchedgrey.webp"
+    },
+    {
+      "key": "target-star-wars",
+      "label": "Target Star Wars",
+      "assetKey": "community-52f4d0a497fa3d4aae51",
+      "sourceUrl": "https://tobyleif.com/images/starwars.webp"
+    },
+    {
+      "key": "target-tor",
+      "label": "Target Tor",
+      "assetKey": "community-1de23a3f78b2940c16db",
+      "sourceUrl": "https://tobyleif.com/images/tor.webp"
+    },
+    {
+      "key": "winmau-blade6",
+      "label": "Winmau Blade6",
+      "assetKey": "community-a863075f9ff36f1f7c4d",
+      "sourceUrl": "https://tobyleif.com/images/blade6.webp"
+    },
+    {
+      "key": "winmau-blade360",
+      "label": "Winmau Blade360",
+      "assetKey": "community-ad513bc89399fc6b5a16",
+      "sourceUrl": "https://tobyleif.com/images/blade360.webp"
+    },
+    {
+      "key": "winmau-advanced-red",
+      "label": "Winmau Advanced Red",
+      "assetKey": "community-32da78913d5dde867a98",
+      "sourceUrl": "https://tobyleif.com/images/advancedred.webp"
+    },
+    {
+      "key": "winmau-advanced-black-red",
+      "label": "Winmau Advanced Black Red",
+      "assetKey": "community-93a5240947f52e38c7b9",
+      "sourceUrl": "https://tobyleif.com/images/advancedblackred.webp"
+    },
+    {
+      "key": "winmau-advanced-green",
+      "label": "Winmau Advanced Green",
+      "assetKey": "community-446f3fb5149bb8abea6c",
+      "sourceUrl": "https://tobyleif.com/images/advancedgreen.webp"
+    },
+    {
+      "key": "winmau-advanced-black-green",
+      "label": "Winmau Advanced Black Green",
+      "assetKey": "community-17e4a300f3b22c1c6712",
+      "sourceUrl": "https://tobyleif.com/images/advancedblackgreen.webp"
+    },
+    {
+      "key": "winmau-force-black",
+      "label": "Winmau Force Black",
+      "assetKey": "community-8b0789f5114a7319548e",
+      "sourceUrl": "https://tobyleif.com/images/winmaublack.webp"
+    },
+    {
+      "key": "winmau-force-blue",
+      "label": "Winmau Force Blue",
+      "assetKey": "community-c85bf2b2bed1835f8f50",
+      "sourceUrl": "https://tobyleif.com/images/winmaublue.webp"
+    },
+    {
+      "key": "winmau-force-green",
+      "label": "Winmau Force Green",
+      "assetKey": "community-98f3d8a7163a151b47cf",
+      "sourceUrl": "https://tobyleif.com/images/winmaugreen.webp"
+    },
+    {
+      "key": "winmau-force-red",
+      "label": "Winmau Force Red",
+      "assetKey": "community-02e79011e6d1991460f9",
+      "sourceUrl": "https://tobyleif.com/images/winmaured.webp"
+    },
+    {
+      "key": "winmau-force-white",
+      "label": "Winmau Force White",
+      "assetKey": "community-edddab9a4ff3e681d6fd",
+      "sourceUrl": "https://tobyleif.com/images/winmauwhite2.webp"
+    },
+    {
+      "key": "winmau-mvg",
+      "label": "Winmau MVG",
+      "assetKey": "community-42f5754d1687f129a96f",
+      "sourceUrl": "https://tobyleif.com/images/mvg.webp"
+    }
+  ],
+  "assets": {
+    "community-55fa6c1071c5c532cf38": "community/55fa6c1071c5c532cf388163909c13898ae94106b8f9d1347b6fc6eb5c7b66e4.webp",
+    "community-41e1a73a541ced4c7fad": "community/41e1a73a541ced4c7fad3e573dff93d5d7850ee8990db85f36c8efcef52f7e87.webp",
+    "community-204ccca1a3e0d9c96407": "community/204ccca1a3e0d9c964073212c507332c66e970f84c26d820f1a801fbc81bb413.webp",
+    "community-3502dacb2e49943f75ac": "community/3502dacb2e49943f75acc319d34ff3ac40f751a801c5d95b045289efd40e8c0f.webp",
+    "community-f8af138afe5ef41623e2": "community/f8af138afe5ef41623e26b04192b95921135f66456b515d0a296fd39bb0d959a.webp",
+    "community-a17693e65a6020e39086": "community/a17693e65a6020e39086a3d3d0f2fdfa10fce1631a3d52461922cfab8051c246.webp",
+    "community-9546a61cbfce9976b576": "community/9546a61cbfce9976b57608bd3338e1705b04dfe0834643edd4e4d697b2bd62d0.webp",
+    "community-19e79cf2cc5cadecacdb": "community/19e79cf2cc5cadecacdb292cd4692338f7157f4b7f9745919c2c4d1836af39ef.webp",
+    "community-2d70aeea1ff9294cf1c9": "community/2d70aeea1ff9294cf1c94207c824feb114e60dfb19af4d5d1ee8d31f37307cd5.webp",
+    "community-c775424e97db678a1378": "community/c775424e97db678a13787fb1026bc2bce59732ad5e34818a9d00a217596f1eae.webp",
+    "community-cad48f8e5f8fb4003477": "community/cad48f8e5f8fb40034773e6111f18f73b8d12017ce28953575827fcf58257968.webp",
+    "community-3a8e567036d34caebf4a": "community/3a8e567036d34caebf4a6e1dc6f9b751a9ab440f807d71580d02293d72b279e8.webp",
+    "community-04bd1827875dc857a21d": "community/04bd1827875dc857a21d0efa08cb301dc3f2fb0cacc811daee72c7379c1752bd.webp",
+    "community-089754c8adbb4c573da1": "community/089754c8adbb4c573da133abe0afd108e7846fedae25d2c457323ff0adfbf1e9.webp",
+    "community-5fbcd629e69a809db5e9": "community/5fbcd629e69a809db5e94e68924e3664f946c53262c00fc297220fd2f6a554e3.webp",
+    "community-c93fc7b760c0b23ff802": "community/c93fc7b760c0b23ff802aacfe3c95b61c6709b057c56523d1386af7388e34c68.webp",
+    "community-81234238403134e8d289": "community/81234238403134e8d289e89391283b29337944d47ab69b3fe16e5f260f2dd2d0.webp",
+    "community-a310140c45580dcc73c4": "community/a310140c45580dcc73c4aabe3497708283ca4c949940f6eb6df39ccc9d3b5e6d.webp",
+    "community-369b0f7df98cfdf13e94": "community/369b0f7df98cfdf13e943a841069bb59761352217ea3752d1a69f7730cda7ffe.webp",
+    "community-fb79527acbceea3995b1": "community/fb79527acbceea3995b140725996d5db48171add59efdf8a4caaf6d0d5f01c69.webp",
+    "community-149c9890604d1cefcf65": "community/149c9890604d1cefcf6503a102e365531ea20370533f7af616e969d9ce634cb2.webp",
+    "community-d460dedf2cd1a017afec": "community/d460dedf2cd1a017afec403ac39694bd90972c4486c69a1a6da45e0583e81bb7.webp",
+    "community-ea9dacc031b3f25a80b6": "community/ea9dacc031b3f25a80b64cea9f30fd1bbb4fd2d3f141ac41f9d52ed52c36253c.webp",
+    "community-aac495e9939c01c569f0": "community/aac495e9939c01c569f007c7dc1b163e78fee6b5477aab0ab80c4badc307edfa.webp",
+    "community-3a45a29b9480481a3c6d": "community/3a45a29b9480481a3c6dc0f651fa7b839abc4b79a08c848e43b6bff74df7179c.webp",
+    "community-f4ad4458c20f2c972887": "community/f4ad4458c20f2c972887e8bab962c8117e189ad1df6ea05507719fb35778b648.webp",
+    "community-e088366189d413e48a41": "community/e088366189d413e48a4172685d62042a5f40f68f5bcf9c95654406450be5d097.webp",
+    "community-2c19cd4556df78d1b760": "community/2c19cd4556df78d1b76079a3b26ef942cc719e874ae2f93473498453f24240e6.webp",
+    "community-02fa10c38d970dad1e1d": "community/02fa10c38d970dad1e1d97478aa5a47111ee652f968308e7707a8c629ae1ac39.webp",
+    "community-c987a7011d8e657c7f25": "community/c987a7011d8e657c7f2564db3794fd8c7e2672317877c232144e07004846fd9d.webp",
+    "community-a90c723c37543a5007b2": "community/a90c723c37543a5007b2feb36e9e439a591f9bec3bb52254b3d1becdd039307e.webp",
+    "community-e6b3491c02ef815b8a2a": "community/e6b3491c02ef815b8a2ac1592dcd9c71a79d4215a822be466051fc1b6c7e9352.webp",
+    "community-731dc4fcaf0ef217d834": "community/731dc4fcaf0ef217d83434de27dff8de2c0abc3c7fef145bb78d1c50a76838cd.webp",
+    "community-0592c0c34e0fe5814c43": "community/0592c0c34e0fe5814c43152c2a5934bc101740a73d60f415a96567fa7545b4bf.webp",
+    "community-8cfb21c50f165a9c68d0": "community/8cfb21c50f165a9c68d0c740396e108c66af262a0195a60af6ecdc2905f91357.webp",
+    "community-cfafcc8dbd5a2dae8b50": "community/cfafcc8dbd5a2dae8b50777abca1878c6560b682fc39a438c5c2cbfa2529aa79.webp",
+    "community-cc238efd4cd642c5f048": "community/cc238efd4cd642c5f0483718d3a30e1012de1c2e1fce3c263777f1ab3db26922.webp",
+    "community-fdfc64fdc6cbc6696849": "community/fdfc64fdc6cbc6696849b48d33e49235f7568e3bb5fbf3a6787a9cc0e7c39ebd.webp",
+    "community-fbc781a567c4c341190c": "community/fbc781a567c4c341190c8c9a6847df9e35bfb54dd9c82a4b87a5828c423e5266.webp",
+    "community-95a5ecd36430319f10b9": "community/95a5ecd36430319f10b984d9f7fe8810bc6e8f96987ff5feedd2e6e4ba8e7760.webp",
+    "community-0db736ae3b7c95b099a4": "community/0db736ae3b7c95b099a41ca491b2f21f3dc4573c3f1cb7cbb46e3ed8df9e9f96.webp",
+    "community-e256f28900ebdfeb7d3d": "community/e256f28900ebdfeb7d3dd1de1be941de620128271d60b2d2fb6038026e5abed0.webp",
+    "community-687e1b02ec1f62fd9e23": "community/687e1b02ec1f62fd9e23ef07a7bade7d45b5762de791bd778b8e6bca8d87aec6.webp",
+    "community-cc781d54dc01d0e0dbd8": "community/cc781d54dc01d0e0dbd8fdccc51bbbc7e5664ab392029d827c5681e51c207633.webp",
+    "community-e6c6fca8838d77443eff": "community/e6c6fca8838d77443eff255890ed2cd8f26139271a33ef88706291a1ae0da872.webp",
+    "community-789cebf880dce2b0d62f": "community/789cebf880dce2b0d62f3dad083f330e98f66704925e5b3970b76283317f3163.webp",
+    "community-cae70028aa6981a2daf1": "community/cae70028aa6981a2daf12c24046cfb69677277b8a758b56afba231d7e6fab45d.webp",
+    "community-258fa7e0ece08f06b0f5": "community/258fa7e0ece08f06b0f54e441ecdc80b10515ae884dd1dbc42c0594bf2b3bac6.webp",
+    "community-1bf7468d287549bfdacf": "community/1bf7468d287549bfdacf2cf127cf5969cb64735f804cb977bbd620d510aa7493.webp",
+    "community-6ffeaf5214e90f6f9399": "community/6ffeaf5214e90f6f9399cd3511ea7b964ef4cff8d0c7c28a8a8c354ec868d9f0.webp",
+    "community-7ba19d42d81090556091": "community/7ba19d42d810905560916cde4f9ad74c58463c9c8c31c899dc17bee2ef686949.webp",
+    "community-77421231704dfc851740": "community/77421231704dfc8517405ddf32a6698b621623d6be077ee250705c5bbf484f14.webp",
+    "community-5d651cf117e9f5ba61b0": "community/5d651cf117e9f5ba61b018dee3a28ce52ed7f78e47b922e664872638caf9582f.webp",
+    "community-9eee417be8b9191a89c3": "community/9eee417be8b9191a89c31631fc32c27df930ee0208e8350abd68981e079bfbe5.webp",
+    "community-62b3ce04c12044f8dbbf": "community/62b3ce04c12044f8dbbfd1baed478aa9d0a3617560f8012be0f9cdd97c9445aa.webp",
+    "community-1b2169c5a2c2d07660ba": "community/1b2169c5a2c2d07660ba0d79cdace87a9cb90b04b13b6404b79be436e92adcd3.webp",
+    "community-26589fa87dab182a4bda": "community/26589fa87dab182a4bda3879dd7cd512a27577b031044767f635841206e7a312.webp",
+    "community-dce2dabe6bb58743496c": "community/dce2dabe6bb58743496c0620e0e1d2b6656840f5c8af87ce27893909bdb58809.webp",
+    "community-e08592130b3b7519b1e6": "community/e08592130b3b7519b1e6877d9891845be3849f4545a9b7a5418c299bd5054aa0.webp",
+    "community-f061a77a35a31bb5300d": "community/f061a77a35a31bb5300d48f7a842ab19a78814394b3286da7829937efa52f711.webp",
+    "community-7a151f81dc9d82d0392e": "community/7a151f81dc9d82d0392eee099bc83a52b919fd83aadd436c43163879d249b362.webp",
+    "community-68b67d4f70071cde22f4": "community/68b67d4f70071cde22f4190bdde13d3f8e2e299df2ce11b7d021a2dc977b04c8.webp",
+    "community-51d19818c89e81c0bab7": "community/51d19818c89e81c0bab7186fa0cbafc1ec0e48dce9b7369d43f1373b526b2614.webp",
+    "community-b41d715b5f4c1cdce8c3": "community/b41d715b5f4c1cdce8c3787dc9da3719a4606e24a75d7beae50cedb209fa1fc3.webp",
+    "community-a553a9d021e26877d038": "community/a553a9d021e26877d0388689fa7b068b108e2304378d6274b296827c79ceb504.webp",
+    "community-c5ecb9a700f0f28fe5cb": "community/c5ecb9a700f0f28fe5cb1b7cd8813424dae434ba47779f21ce8c1e5c716b36b7.webp",
+    "community-a019c43d4f7490d46edd": "community/a019c43d4f7490d46eddbccd2935b2efe26d7349dc55e16a6b8bae2148c28a3c.webp",
+    "community-2a59d4223be41944edf8": "community/2a59d4223be41944edf811db1a974c5a12f80303e61bb6b9136c18434dd6b056.webp",
+    "community-be525f85bfc634e6a868": "community/be525f85bfc634e6a8682070cf5aa7bf6d4973c0a2916b1eb3177dc69aaf0e2b.webp",
+    "community-e4a3162563bb594e3283": "community/e4a3162563bb594e3283a52a3b89f2dea2b5ad09b0cc5d63a6d47de297bfedba.webp",
+    "community-086860cc0d96488b7e08": "community/086860cc0d96488b7e089d3bdb67d1e13c827751a9d6d833b2577c520917d5c3.webp",
+    "community-fff8e1c8e442a470c869": "community/fff8e1c8e442a470c8699b7ab3df1947b9a1f7e66206c51ae0906f0436c74a4a.webp",
+    "community-a76de4094e5edfb3c5b5": "community/a76de4094e5edfb3c5b56ece7caa59064ab163ad4a79fbece6575f93b724de74.webp",
+    "community-6ce6d360bf96599829fd": "community/6ce6d360bf96599829fdd442c98f422009701f51d900a8eca85dcc2664dd71b4.webp",
+    "community-923ccc3d265bbbca1bed": "community/923ccc3d265bbbca1bedf95c9c7abbc1335dacdb3d33692f5fece36c3d06010f.webp",
+    "community-8ddd54892258a843eb77": "community/8ddd54892258a843eb772dbda7e22a7ea40111549e22cb2ac4be40f3436d23c7.webp",
+    "community-f420556ce171e6cc1616": "community/f420556ce171e6cc1616673c2c98aadedafbf6718eb41268447f6637a353cbe7.webp",
+    "community-5edba13d98a16642582b": "community/5edba13d98a16642582b44d43281baba929f61c37f28b35b5f002c3e39dea407.webp",
+    "community-281bce717f21517bc888": "community/281bce717f21517bc888b61b3811d25fecfc86882501ae8829e39837e0dc7130.webp",
+    "community-375206f02dbb246ca447": "community/375206f02dbb246ca4476dd29bc9272316c05cfd8bf4a350f06d1c648181a318.webp",
+    "community-a6812dc2ac630db9d77d": "community/a6812dc2ac630db9d77d54fa96917c70c8ec12fd3677e4307e12a9f5ec4a1237.webp",
+    "community-151cd5613a8b26e8e9bb": "community/151cd5613a8b26e8e9bbe84737e10a3e56c75bffb324b1d5ae6ee06de299ff41.webp",
+    "community-caef8931f747f086664e": "community/caef8931f747f086664ea004b0dc9d435d29d3c187b14cba4a83d404b26a2248.webp",
+    "community-9f9faa13b6cc4af424a3": "community/9f9faa13b6cc4af424a3725d44376c89d380f5ac7cf52ec72c674d2ae52ec63e.webp",
+    "community-016bd3ab13597eaafc01": "community/016bd3ab13597eaafc0170b393361c898eabd7f87d4ab9d0623ee6e457da40b2.webp",
+    "community-de17f4af02772040c7b4": "community/de17f4af02772040c7b447e8a5f69460ca576c8d2ae282e1e403cbada59432a0.webp",
+    "community-7bf518a3af31cd329be5": "community/7bf518a3af31cd329be5e8b55b89b4b9a27c624bf7c17b7d781b716dff762ad0.webp",
+    "community-564b134f11b45464065f": "community/564b134f11b45464065fff38d70d2e8033408d64178eef04b8ae28d9936bb03f.webp",
+    "community-9a938a2967e60ce9a8d3": "community/9a938a2967e60ce9a8d343e181e3c39563793e4e54760fc9fc87cdec6e460d37.webp",
+    "community-fe92aac2445e2ca04b4f": "community/fe92aac2445e2ca04b4f5e8fbec20cbc4ed4bbaea60e419bf4549b6d4629a230.webp",
+    "community-12737c6ce4c68d08d4c7": "community/12737c6ce4c68d08d4c70b4907daa9b5922e7617db84fd3640218fe62b37dcdd.webp",
+    "community-1be2a8c27e2db28e80dc": "community/1be2a8c27e2db28e80dcefe71a3b80413f2afde51c74c2c64a758f70b8951906.webp",
+    "community-86015dab6fb7885ebd2d": "community/86015dab6fb7885ebd2ddadb40c9ec969e6802da882071694d581b15ea9253b4.webp",
+    "community-7366bb46656dbaea2f46": "community/7366bb46656dbaea2f460106744d9f6565b24ba888e3b05a4206e8eec3ce4abe.webp",
+    "community-9ee601e2554a7467b50c": "community/9ee601e2554a7467b50c0e3a3a12ca0ffa0847159d33a0b0c9b80cb12eceeb44.webp",
+    "community-e70d72676f73dc1b1599": "community/e70d72676f73dc1b159994a04e96e5859343a57eca6b5993a71f3c7609fce6a1.webp",
+    "community-89f9f6364cd4063bd04a": "community/89f9f6364cd4063bd04a9989f3096273cb38286e84fc1150e5258dde79f6b9cc.webp",
+    "community-d05c5bda6a8813f51af9": "community/d05c5bda6a8813f51af911a6135907b780badb9cf7402a62bbf8ccf64c6e196f.webp",
+    "community-a42d2deb20604f371edd": "community/a42d2deb20604f371edd0faae13cafee51251a35081c7d3b47dff5137b3be462.webp",
+    "community-80b5630a3a02766e3168": "community/80b5630a3a02766e31688f0a2b6972023b63d88f823ba27ec725149a37accb2e.webp",
+    "community-fbdf5d0072efb5ef7cc9": "community/fbdf5d0072efb5ef7cc9008dd1981eafe8051472e4b9abf327029860fb82e335.webp",
+    "community-522653f65813ed356348": "community/522653f65813ed3563483a7dd359696090215205d53ec49a5f024da0ee0d3ab3.webp",
+    "community-e779a52b94f1ef14c5a5": "community/e779a52b94f1ef14c5a5c096b6068e2360ebfda565d7d0fb62b484c1b2df17d9.webp",
+    "community-0cb615abff455ad6b225": "community/0cb615abff455ad6b2251146590582b7b06f4f0af138fbc825e818edcf519a20.webp",
+    "community-ee3c8cd0bc061d338ccf": "community/ee3c8cd0bc061d338ccfd64406daffd062e5cc2f0835e14c7043ea7b8f9e9348.webp",
+    "community-5c6b111497eb8518a4eb": "community/5c6b111497eb8518a4eb609ab69502c9bfed8afa6d5c646f5847cc1550b3376b.webp",
+    "community-5e66425db7cbc570d9fd": "community/5e66425db7cbc570d9fdf6a137f27d564c712cfb4ce9c4dc6e84fd9d7be7d12a.webp",
+    "community-c0a69a974fa043d8d1f9": "community/c0a69a974fa043d8d1f9b60b1ea9d5002188c05ac43ebf91d2f13451a58bf86e.webp",
+    "community-c5b9ba063b6a81c524b5": "community/c5b9ba063b6a81c524b5b86c737ccb2128297a9d20a6b2a1e6955e83bbb4cb2d.webp",
+    "community-98ac740083587a08c00d": "community/98ac740083587a08c00d00f107aa3bf9822651c8d7cd830c41293e56765ec4c2.webp",
+    "community-77b1dee81fbdb8485a66": "community/77b1dee81fbdb8485a664780a9a173dcd8e2ad626f3780c33ef0fb5e4a9535ce.webp",
+    "community-2a57ddba89a88b90902e": "community/2a57ddba89a88b90902e673f2c724ee8298d415a683079e9d175d8b4138768cd.webp",
+    "community-f42c5a7adb3edef77896": "community/f42c5a7adb3edef778965a0fd174b9d31e88859c2863612a53b23710f8c17e35.webp",
+    "community-b2da23129a55e6093a05": "community/b2da23129a55e6093a054d9dcb3be61a1793c2e7cf8655ee237c3521438b32ce.webp",
+    "community-d539f68a6e8dfa96219d": "community/d539f68a6e8dfa96219deefa9d7b95ca3038895b0f39fc54979eab7e389dda50.webp",
+    "community-3722c57cb81c88f07875": "community/3722c57cb81c88f078759c5fe630c0fe76785bef72595e2f2a3c991b1a2ee4ee.webp",
+    "community-f3238bf6cac26b51b1c4": "community/f3238bf6cac26b51b1c4e761399698c7dfab0c8c25cf0c089af9b1cd82343183.webp",
+    "community-a006ada6faef163a7748": "community/a006ada6faef163a77483561996944a57cd77479089f96bf80f71db0df3d0427.webp",
+    "community-62823f1559c5c41dd648": "community/62823f1559c5c41dd6484066cbdb5708536b8eb0cfdafbaf700efb16fa3d40e0.webp",
+    "community-00cf0ae7fbf2f1b0586d": "community/00cf0ae7fbf2f1b0586dcffc5ba547f8bd14200bc020e6d7858e9c26f2fbcdaf.webp",
+    "community-2943874a86f244140aff": "community/2943874a86f244140aff100121e7e611078f75efcb9653d1679ccfc738ba2593.webp",
+    "community-c06a3c68ba7664ab9dd1": "community/c06a3c68ba7664ab9dd133756d7e345b3679691bf99b856ee93b99f0415687ac.webp",
+    "community-834f7a045bef32370958": "community/834f7a045bef32370958a9ad456cf888251815aeeae6cd0a5a621865683e947e.webp",
+    "community-b35d2fb0081664144056": "community/b35d2fb00816641440562c28411c1910e431f54428817e0a16c52f3093907a2d.webp",
+    "community-16731a0ae7c12febfd49": "community/16731a0ae7c12febfd49501130fbee4e17e6e11fd67cddaaae0a636bf8e38d00.webp",
+    "community-6cfea80d0ac037d208d2": "community/6cfea80d0ac037d208d2bf80b1bcdae711d4caa727ab556aa4c919371a9a96b8.webp",
+    "community-88ac2304d2d5600983ba": "community/88ac2304d2d5600983ba78ce20a086735881a43d101c3d749da498b624d0ac0b.webp",
+    "community-b73fa846f737c8d2efcc": "community/b73fa846f737c8d2efccdda223d47db31a44e051745ec62d764250bf27b3e08f.webp",
+    "community-8202de8ec4a0a3d8fbc0": "community/8202de8ec4a0a3d8fbc0d255a158fa2f2d2a5b1783553b6f48b8333c3d613089.webp",
+    "community-cf5a6ba41e19134af0e4": "community/cf5a6ba41e19134af0e4bea0e9dd0ac484dd38997bd3b9e65925591f6097d7ef.webp",
+    "community-677bcecfeec6b5308f9c": "community/677bcecfeec6b5308f9c6794148018783629d9c459f2362d1204ebc3667ac4b4.webp",
+    "community-1f13a5cf845db8dd8ace": "community/1f13a5cf845db8dd8ace9fb7222f9d414a62fab813bc6aec9349655e2c54f814.webp",
+    "community-815ddccd0e6be1574ce3": "community/815ddccd0e6be1574ce3771e6fd2be6f4668b31c2a6be77125cbb3c0ee6892b1.webp",
+    "community-f778b45c38d11310dc1b": "community/f778b45c38d11310dc1b1f17ebe67682fec68a478f4110b1b6564a7d47aa5290.webp",
+    "community-5ab0e22b58fac571ef0c": "community/5ab0e22b58fac571ef0cc916fef7dcce5c4665877036a98ff393f746b693d0da.webp",
+    "community-95d77bd4d79bc49e03b7": "community/95d77bd4d79bc49e03b730a1187018506497fc20cf18abc08b7b7748ee623d2e.webp",
+    "community-d8d4e9c0df5ae0e23dfb": "community/d8d4e9c0df5ae0e23dfba82a52f609f669980014bba101fd649453777afd7661.webp",
+    "community-6256a432bcbcac5fcdf8": "community/6256a432bcbcac5fcdf869971adec0ad04aa6008a5cdf16f9ba6ea2d8e6beef3.webp",
+    "community-a169564348de8600fa48": "community/a169564348de8600fa48ba29c0423c3f821b706b40d449ac57daff26f716bcb5.webp",
+    "community-543334d9ddd64a1dd670": "community/543334d9ddd64a1dd670ee3dba228a0c217c52b133a42264ec572569f90ef88f.webp",
+    "community-b713af363a95bfa57ce6": "community/b713af363a95bfa57ce68a9f2376283699e6e963fc3f8bb04930655cf96fa40d.webp",
+    "community-500ae2a1a3afba3947dc": "community/500ae2a1a3afba3947dc05b67483c25ccd159c6985c8f05a93d0dd1560b09ce1.webp",
+    "community-cf3a7d909f15c697e769": "community/cf3a7d909f15c697e76986219c78e4b1b9c007635f8625989ca5f595e85c364f.webp",
+    "community-13939d3737295b76d5e2": "community/13939d3737295b76d5e2554b6b8a79f5e612348ce51e4c23060940aa95c503c4.webp",
+    "community-0e3165394ccab095a50a": "community/0e3165394ccab095a50ada14021185ad9e0d6f6bdb138c08bfe29e9babefac13.webp",
+    "community-74af6422eb43e534a8c4": "community/74af6422eb43e534a8c4451fe7d58a00db08a729cd6695e1482ccc7f90a08c33.webp",
+    "community-31afda897799e3b37c31": "community/31afda897799e3b37c31fdf140ede142b73ba181cacad6c5ae51995271374a8f.webp",
+    "community-2061a47f790a89959bc4": "community/2061a47f790a89959bc4be6830892214da4770defb7ece593091f73af828c5ca.webp",
+    "community-a649a93ff3efcc2f23e0": "community/a649a93ff3efcc2f23e031978aea42bdfa0d486866a0b0e8a1f1292754873375.webp",
+    "community-e1b601c2fbb1712b3095": "community/e1b601c2fbb1712b30951df586b6bf83dab264a2059bb453b1bcfeb016b840df.webp",
+    "community-3219990ce1fdac04e809": "community/3219990ce1fdac04e8094cfbf6ea53e9a9d887e12d6642aa8b2e873ae6ad031e.webp",
+    "community-ebca4d1f298ad0d1e447": "community/ebca4d1f298ad0d1e44720e009c57334c11bfed71677158f10c5f4aaf0c8bd68.webp",
+    "community-302f40880bd6f2f52749": "community/302f40880bd6f2f52749bd07e0e44f1271dd11841844ae01a6ead499f77473b8.webp",
+    "community-c60855e49ad0d6c6be16": "community/c60855e49ad0d6c6be169c4bbadb002b806e97f16f5137e87c5f869291a623f6.webp",
+    "community-b5fae7f546e15f14a7a8": "community/b5fae7f546e15f14a7a800db28ca523fdde5a7f16b79c1891f9cf7ee1e8630d4.webp",
+    "community-80b5adecc0afb642b61c": "community/80b5adecc0afb642b61cad533cb4c3395a2fb3331cccf13b6af032499e21ed82.webp",
+    "community-96babf4ef6796aa613c8": "community/96babf4ef6796aa613c8f4ac6797db034fc56bc493b062b7903725614c6d39a5.webp",
+    "community-c5fef21f461fcd28e73e": "community/c5fef21f461fcd28e73e7d56ce0bbce85157a9e3eae8ef34baeca9f1d5e862dd.webp",
+    "community-c0fc569b53f51b079941": "community/c0fc569b53f51b0799411dd17897cd96c485845c34da76bcff097ac9c698f921.webp",
+    "community-ad513bc89399fc6b5a16": "community/ad513bc89399fc6b5a16f1c0c77ef1e4d9917b33c38d4f948fa386b8919ca2a6.webp",
+    "community-5fa447b1dd8e93e0b37e": "community/5fa447b1dd8e93e0b37e57d8fdbe7c473b3a324b2c0a7727b107c455205c7b8c.webp",
+    "community-73ba213ba63115ce869d": "community/73ba213ba63115ce869d7f23eaddaab1425a7772b73d1b84430811d6dea2bce6.webp",
+    "community-faee6d69d16b7987e5e6": "community/faee6d69d16b7987e5e6af200d428710afb52266a70f821ce12b916abac189d7.webp",
+    "community-a863075f9ff36f1f7c4d": "community/a863075f9ff36f1f7c4d7650811f2ce371824e7ca67be249644b1dc86cdc271c.webp",
+    "community-fe5f6e1fbd8f2468592a": "community/fe5f6e1fbd8f2468592a91ab8dde9d6fd15c0f9aab0e561aaf475ce967ab2452.webp",
+    "community-8b0789f5114a7319548e": "community/8b0789f5114a7319548e008377810e5b307bd0edfe9093229b7d14d31f7f3061.webp",
+    "community-0743d09d8afe8d422634": "community/0743d09d8afe8d42263469ec996a497bc347c846604a6f343e0c2224f1fcf482.webp",
+    "community-e3714982eb8bd1fc03f5": "community/e3714982eb8bd1fc03f5f8345018195975c5b794b937a55b5acb22b34f498633.webp",
+    "community-7aa66426486304edc48e": "community/7aa66426486304edc48e9e0f4446d7999bb20654a8c5b143b65ca31b40fc6c59.webp",
+    "community-c85bf2b2bed1835f8f50": "community/c85bf2b2bed1835f8f503d96a784b5a9abeb55a8a2bb854ec218ab06f884d2c0.webp",
+    "community-193888dcf963f1992b10": "community/193888dcf963f1992b10f4f2080e7cee3b0a09f95306410a557b9d3b3338aee3.webp",
+    "community-6dcbe9ee93237f3a373f": "community/6dcbe9ee93237f3a373fd96d89e82e98e2ce1157400c0bfc914110c1179f8820.webp",
+    "community-52f07e109ae1b0add49e": "community/52f07e109ae1b0add49ea93a49f4a43a74ecf971f88e1f35dc5737c832984e49.webp",
+    "community-98f3d8a7163a151b47cf": "community/98f3d8a7163a151b47cfa8d9b3ef2483dd65ab138e8926160196e13cd2a093a4.webp",
+    "community-4925050aa9e1e0de204b": "community/4925050aa9e1e0de204b80db4ee9dc7fd90dddce6ee6ad45f9d281e3f85a1611.webp",
+    "community-95d01acdb5a6c5a7c640": "community/95d01acdb5a6c5a7c6407eb0e8f38c86ffd7a0e094ec508b67a86833b7fa6649.webp",
+    "community-d48c3b9c85352eb0c734": "community/d48c3b9c85352eb0c7344bb76f0800ae6da83250ef3ad0acebcf0334f952bc9a.webp",
+    "community-02e79011e6d1991460f9": "community/02e79011e6d1991460f9ec2f5d843c70906632f18a8c94c90cd8e0c6f9507d19.webp",
+    "community-45d337d924316e05c0e4": "community/45d337d924316e05c0e4af329351a7d0202acaf0f7592783fc9c65af1009e383.webp",
+    "community-64319aceee5a0cb11f66": "community/64319aceee5a0cb11f6625a33c2365701085824748d591b21799e700aa2c8c44.webp",
+    "community-8dd8a5088d75ea496338": "community/8dd8a5088d75ea4963386f7c0446dbbc89fb6bcc8fdeeb30f1bd866d78d48002.webp",
+    "community-8bafcf8cfadc9d47e021": "community/8bafcf8cfadc9d47e0215b2f54b72c0f07bcc6cfbecdcba1104c7b211f097fb0.webp",
+    "community-27095f3c1edfde8f9b4b": "community/27095f3c1edfde8f9b4b6b11f9c854c5dbca99a793ed2ec7cf42e78d4cccb40a.webp",
+    "community-1e33fed9d804fcfb3a88": "community/1e33fed9d804fcfb3a884560e50e7d76d557177fbe3efb1ced64a68feca34a55.webp",
+    "community-e519628ac79b11b0bef3": "community/e519628ac79b11b0bef313eb995731f77a78ae0d832829f200d80f934c768c08.webp",
+    "community-6e63d327dfa36d42debb": "community/6e63d327dfa36d42debb56727b33e9f192ddc18dc2e7db7bab3170bd6c17fcd2.webp",
+    "community-52fd98d786b4588f6c09": "community/52fd98d786b4588f6c091d516f0dad9b91952b8a1aff6d1d3cf70d162911ed11.webp",
+    "community-37b8a9c8ed30a51369d2": "community/37b8a9c8ed30a51369d2a4140ecbd2e6c131a6eeca861915cd8e57b9622c7711.webp",
+    "community-68ca9878b42268987f38": "community/68ca9878b42268987f38da417d9e6127c49080b434127d8b4405e0dda24db3ed.webp",
+    "community-9c19c0f09ce19371dc11": "community/9c19c0f09ce19371dc11f231213cd8c5981d8eb72a713039222c1ea2acf2ec1b.webp",
+    "community-1e7b92dd057ec38f24b9": "community/1e7b92dd057ec38f24b90c434342751838716032b4f987005bbbecc1a8b33c46.webp",
+    "community-6184458222c477de6d55": "community/6184458222c477de6d55cd1c60fb6b90b154d869ababe866edc0b6abfce52ae5.webp",
+    "community-499d9cbc1f93f7e85f96": "community/499d9cbc1f93f7e85f9636d2176f1cede5b3b766c269e2cc258ee7f1aba1778b.webp",
+    "community-06087e552d0f5e507e0d": "community/06087e552d0f5e507e0de63f77fb163d96d2bfbfcce895017af4be5ebb8c89a2.webp",
+    "community-9f50bf214f51bf48f6e7": "community/9f50bf214f51bf48f6e7441c350d73eb1adca371ef457d0b94f71228f2c742a9.webp",
+    "community-45ef031149642e7cb960": "community/45ef031149642e7cb9601f284f9463ea567f5baba83e0d9b17fff2c747341c63.webp",
+    "community-afa3f95bd7d1585e5c26": "community/afa3f95bd7d1585e5c2604c1a476f035c07757ec390c4edc6ea75bd646ff95ac.webp",
+    "community-c0008ec1b51b66e07858": "community/c0008ec1b51b66e078584d137f39c74f85bffeb315e92e39ef354c071466920a.webp",
+    "community-3d2f018574d1bd9bc4dc": "community/3d2f018574d1bd9bc4dc3e1ea3f6d3d6a33f6a952263bb9fe8300f4abe935d51.webp",
+    "community-fab2a4dd36beb877a476": "community/fab2a4dd36beb877a476dc31e7991ae320795499a728c7f109651e450aba2fa2.webp",
+    "community-f1303c29f89214437498": "community/f1303c29f892144374982166e76363e0a3ceafdba2dac8ca9a0aedaefe5ff157.webp",
+    "community-8fd0075f8e9550552236": "community/8fd0075f8e9550552236db6a30a82ffd566baefeb680935042ea3e50191058e2.webp",
+    "community-5e289e018520589fbe00": "community/5e289e018520589fbe00ac89d88db3efc0c656a40cb959ce677b95a03c67bdc1.webp",
+    "community-01c161608fb1e5a0fb82": "community/01c161608fb1e5a0fb82c83666f0c87b6c35dcec13f039acdf6c6d4c3e7741ff.webp",
+    "community-2fba67357b30edf74ce2": "community/2fba67357b30edf74ce273772d488b1f0291bb46015a67ba7b6d600202a7c6ff.webp",
+    "community-8ec9a9706975087c2867": "community/8ec9a9706975087c28679b133f6ee6730488ac711b04ccfd7039c9ed17b110e2.webp",
+    "community-9f92e761d7a8b9826b40": "community/9f92e761d7a8b9826b404abfdb26440e466c59745b7423b31a3736dff86833cc.webp",
+    "community-86396216fd9877244703": "community/86396216fd9877244703700f9edc89f71878c2d8e231d41051a44f9101e17584.webp",
+    "community-e524658e4894d779ccb7": "community/e524658e4894d779ccb742d051140aa8b2d31232a6a04f627846e1b0442bc1f7.webp",
+    "community-a9a5cb9424c2d7d95984": "community/a9a5cb9424c2d7d9598429c2565e0cf3e89aabd2107b940e9edd477a58a08cb1.webp",
+    "community-35a566cfd6243115482e": "community/35a566cfd6243115482e18aca866903c9e314dbb0684fcca226c71e85bcbf608.webp",
+    "community-02f9f375250467afa60a": "community/02f9f375250467afa60abadd8fc7db0ee647dd61266d9e0d58e95c12be4300ba.webp",
+    "community-0bc88fe88e1226f50d53": "community/0bc88fe88e1226f50d53bb04fbfd0ec8aa53e6e0df6d7c4d17d3a4967eed4f11.webp",
+    "community-c032bdc0d357c1add465": "community/c032bdc0d357c1add4656fe8e34be89b9ef68d7a076001243899ebf487ffba62.webp",
+    "community-58fd1240f3cf605af669": "community/58fd1240f3cf605af6694e08ed46c729d651dc8d63e7d1a3ec30beefbc67fac8.webp",
+    "community-8be275d7f8cb792c5f6c": "community/8be275d7f8cb792c5f6c690a15050d31aa42390ec3ea7fcae07e23a5dad22bb9.webp",
+    "community-40013a7674fab57fa6d8": "community/40013a7674fab57fa6d831ca0f950a5c7252138704d2441219d9fde75f45e7f6.webp",
+    "community-a33a889503acdd32461c": "community/a33a889503acdd32461cba406feec656816adf15c741666251a524906cb1af3f.webp",
+    "community-9158e5b1e36282abc15c": "community/9158e5b1e36282abc15cdf648af9476cf2fb78207faf71e233d64ac2c6899b19.webp",
+    "community-fce46713f35c666af781": "community/fce46713f35c666af781e6c6a1718ceaba50544dfcf3c9f75b8b3c6fcee32d63.webp",
+    "community-0619128de13242ff7ed4": "community/0619128de13242ff7ed4d8ba6b99f2c1334190419cb70849dccbcfdd7f7bf256.webp",
+    "community-2877c5a7178c2e4dde2b": "community/2877c5a7178c2e4dde2bd755e514a6533d349f8b21d9ec70a8a33f18a93eca74.webp",
+    "community-04211918e9612d0b847d": "community/04211918e9612d0b847db81d78c6e24edc28e2c9b24930cf6a8dd9bf81128f1c.webp",
+    "community-a7e83b2570666c9b70f9": "community/a7e83b2570666c9b70f9cecd15093204c1702963a898bc22962e1dc83c084c40.webp",
+    "community-9fde5aad43499b4eb4bb": "community/9fde5aad43499b4eb4bbc5b7ea36105a00bf072ec3cdc4ed3031b660776b5fa2.webp",
+    "community-76aac89efead18907c5b": "community/76aac89efead18907c5b975f1d4f672c40163c155ca6e6c794696aff142af753.webp",
+    "community-7dd3198d87ee48b55531": "community/7dd3198d87ee48b5553102e31b2f6828fee42d04bba6244edcbe882a2dc52651.webp",
+    "community-f1d175f2db593c96133c": "community/f1d175f2db593c96133c993c99b50d184c10cd4de8e10c2be4e09251cfe7d7f1.webp",
+    "community-5093e8340682dec83f7e": "community/5093e8340682dec83f7e0d5b5b904c805bad32619173f41ca8172628392a1635.webp",
+    "community-030d4dc7d0d8cb4003e8": "community/030d4dc7d0d8cb4003e8596ad866bea2b25455a6a023effbe4f611ab91335e01.webp",
+    "community-8a7df1e7e48cb9e5bcff": "community/8a7df1e7e48cb9e5bcffe7077c7dba18a7e082a631a2708bfbcc61e1e0be43b1.webp",
+    "community-4738d23a156d1208aaf4": "community/4738d23a156d1208aaf4ad43d8b2d1de039601483fb3da39694b0973833a2b2f.webp",
+    "community-dac6d7b264ccee18cef3": "community/dac6d7b264ccee18cef39a3e1d0a661ceba3ab11138c4d3fa36a1248b2dfb512.webp",
+    "community-4cc9a87caa9d9102931d": "community/4cc9a87caa9d9102931d9a637964989f3c73c80d5e410d2162cbb0b13c2c964f.webp",
+    "community-74d5277cfd8295fe8c8f": "community/74d5277cfd8295fe8c8f0d8e9b04560d240d8cd80ec7cd7e9e36bdbb9864f191.webp",
+    "community-756fad5aca6ddeeed9eb": "community/756fad5aca6ddeeed9eb170285a7d428746c6687728eaf930922ebb6d643c858.webp",
+    "community-b6391a06158801321383": "community/b6391a06158801321383b4e3b1def61c2005b7acde4e1b51ade288ede0238929.webp",
+    "community-7321c64ca7ae25dfe088": "community/7321c64ca7ae25dfe0884120fa250d492cd502c05758223fd73433d2b754fc45.webp",
+    "community-5f0f505e9db530280702": "community/5f0f505e9db5302807020ca4e33f5fd9f3b0f7d73efb074bfef34b7fdff00dae.webp",
+    "community-353c92e1763efd954797": "community/353c92e1763efd9547971b498f825dc514b8ca99176c52f67e12f3ef7bb1eeba.webp",
+    "community-dae4aa760a61fa85fb70": "community/dae4aa760a61fa85fb70eaba6ec648b675184cbfd5bc0589236252115a9cb1cd.webp",
+    "community-2015ce4c0402e96c7c2d": "community/2015ce4c0402e96c7c2d92eddc0860d2d6a6747cffd60cfc6abed38054f02c40.webp",
+    "community-003791fa1e728b1311f3": "community/003791fa1e728b1311f3335aeab0a388d1dd115ee7f8f91a305775961fdfb761.webp",
+    "community-0624d80aac64d829c61a": "community/0624d80aac64d829c61a50d88f86a43098a9d339cb9a54dbda8bfec34bf79882.webp",
+    "community-ccf136bd3b1adb6a53bb": "community/ccf136bd3b1adb6a53bbe38227d68445f93f9061d430a5c1aafc09236349ed9f.webp",
+    "community-5fd10e26d367921f0e7b": "community/5fd10e26d367921f0e7b3612d3caf262cf8f6c9695b8e6048930dc4edc43e884.webp",
+    "community-ace01d1e1894003f4938": "community/ace01d1e1894003f4938e419acd8aed7d0c9d36e273cd75517c4ec301ddd9cd5.webp",
+    "community-e0e3d46a625ae7fe2826": "community/e0e3d46a625ae7fe2826892984aa525672a8c5efc74943f593c1e01280ee700b.webp",
+    "community-4ecdaf24cfbfdf2daa1e": "community/4ecdaf24cfbfdf2daa1eb7a8168f6eaba4a96f2852829fff5f1c890060e27480.webp",
+    "community-59e3777181a2b673f295": "community/59e3777181a2b673f2956f808e579111c27127a2e11681fb1df4fb81a144b799.webp",
+    "community-89b0fca7c43607549532": "community/89b0fca7c4360754953216ee749e21f9815891da4015eca10b0756de517658e2.webp",
+    "community-aff37a51338fbcaf05f2": "community/aff37a51338fbcaf05f213d6a0c1b8e9178c2d4695677fb229dba55520713b33.webp",
+    "community-848d0a3688b6b42a1164": "community/848d0a3688b6b42a11647493e5f70e73b4ae352e7316a1263c61cc4de2b9f995.webp",
+    "community-fee3b9fc49ef5c1892e9": "community/fee3b9fc49ef5c1892e9ee52962ff7c35f5a85321474ed2192ad55033256bf5d.webp",
+    "community-52f4d0a497fa3d4aae51": "community/52f4d0a497fa3d4aae51a4c073b73ccef98743f1c9ceb536d2ec627fb6b022d5.webp",
+    "community-1de23a3f78b2940c16db": "community/1de23a3f78b2940c16dbb7e78f4ac44ad9c1032e56551e39d8592538443f4ec5.webp",
+    "community-32da78913d5dde867a98": "community/32da78913d5dde867a98d96d3e0ead5986f8073645083dc1362a33fd1d5f838f.webp",
+    "community-93a5240947f52e38c7b9": "community/93a5240947f52e38c7b9d800bc587a3869fd9073c355ab43b93f8e2d5603ad25.webp",
+    "community-446f3fb5149bb8abea6c": "community/446f3fb5149bb8abea6c10dcb8eeb4786e34e5e042519705edbb80d84005120f.webp",
+    "community-17e4a300f3b22c1c6712": "community/17e4a300f3b22c1c6712d9dd57609261af16866aadaf5fee62d0fe88a6929227.webp",
+    "community-edddab9a4ff3e681d6fd": "community/edddab9a4ff3e681d6fdf30124cc1d773dce7b3ee1071ee7bcc7922e15e0ee6c.webp",
+    "community-42f5754d1687f129a96f": "community/42f5754d1687f129a96f25108f5bc5baceaedb8ebb81d51dd6e89764acf4229d.webp"
+  }
+}

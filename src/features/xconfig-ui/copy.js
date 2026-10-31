@@ -20,11 +20,13 @@ function buildCopyEntry(description, docsDescription, featuresDescription = "") 
   };
 }
 
-function fieldCopy(description, docsDescription, featuresDescription = "") {
+import { COMMUNITY_SURROUNDS } from "../../shared/community-designs.js";
+
+function fieldCopy(description, docsDescription = description, featuresDescription = "") {
   return deepFreeze(buildCopyEntry(description, docsDescription, featuresDescription));
 }
 
-function optionCopy(description, docsDescription, featuresDescription = "") {
+function optionCopy(description, docsDescription = description, featuresDescription = "") {
   return deepFreeze(buildCopyEntry(description, docsDescription, featuresDescription));
 }
 
@@ -270,6 +272,18 @@ const cricketLayoutFieldsCopy = Object.fromEntries(Object.entries(CRICKET_LAYOUT
 const cricketStatusStyleCopy = fieldCopy("Wählt den bisherigen Stil, reine Farben oder zusätzliche Muster und Ränder.", "Zusätzliche Muster unterscheiden Punktemöglichkeiten und Gegnerdruck auch ohne alleinige Farberkennung. Der bisherige Stil erhält bestehende Darstellungen.");
 
 export const xconfigFeatureCopy = deepFreeze({
+  "live-board-enhancement": featureCopy({
+    cardDescription: "Schärft das vorhandene Board-Livebild mit einstellbarer Stärke.",
+    visibleDescription: "Verbessert Schärfe und Kontrast des angezeigten Kamerabilds. Die Darterkennung bleibt unverändert.",
+    usefulWhen: "Wenn das Livebild auf dem Spielmonitor zu weich wirkt.",
+    fields: { intensity: fieldCopy("Regelt den Filter von 0 bis 100. Dezent: 30, Deutlich: 60. Hohe Werte können Rauschen verstärken."), debug: DEBUG_FIELD },
+  }),
+  "board-surround": featureCopy({
+    cardDescription: "Zeigt einen von 34 Surrounds hinter dem Board.",
+    visibleDescription: "Das Motiv wird beim ersten Aktivieren geladen und dauerhaft gespeichert. Danach ist es offline verfügbar. Der Surround bleibt beim Checkout-Zoom stehen und lässt das Board frei.",
+    usefulWhen: "Wenn die Scheibe einen passenden Rahmen erhalten soll.",
+    fields: { design: fieldCopy("Wählt das Surround-Motiv."), sizePercent: fieldCopy("Passt die Außengröße an; die Board-Fläche bleibt frei."), debug: DEBUG_FIELD },
+  }),
   "theme-global-background": featureCopy({
     cardDescription: "Globales Wallpaper und transparente Spielerfelder für alle Spielansichten.",
     visibleDescription: "Steuert ein gemeinsames Hintergrundbild und die Transparenz der Spielerfelder unter /matches.",
@@ -277,6 +291,7 @@ export const xconfigFeatureCopy = deepFreeze({
     usefulWhen: "Wenn alle Spielvarianten denselben Hintergrund erhalten sollen.",
     images: [image("Globaler Hintergrund", "templates-global-presets.webp")],
     fields: {
+      applyMenuBackground: fieldCopy("Lädt und speichert zusätzlich das Menübild der Community-Vorlage für die Anzeige außerhalb von Matches."),
       backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_FIELD,
       backgroundOpacity: THEME_BACKGROUND_OPACITY_FIELD,
       playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_FIELD,
@@ -308,22 +323,31 @@ export const xconfigFeatureCopy = deepFreeze({
       secondaryTextColor: THEME_GLOBAL_TYPOGRAPHY_SECONDARY_COLOR_FIELD,
       throwLabelColor: THEME_GLOBAL_TYPOGRAPHY_THROW_LABEL_COLOR_FIELD,
       activePlayerTintIntensity: THEME_GLOBAL_TYPOGRAPHY_ACTIVE_PLAYER_TINT_FIELD,
+      glowMode: fieldCopy("Wählt Aus, Randglanz oder sanftes Pulsieren. BUST und Gewinnerzustände haben Vorrang; reduzierte Bewegung hält den Glow gleichmäßig."),
+      glowColor: fieldCopy("Wählt die Glow-Farbe. Ohne eigene Farbe wird die Akzentfarbe verwendet."),
+      glowIntensity: fieldCopy("Regelt die Stärke der eigenständigen Glow-Ebene von 0 bis 100."),
       debug: DEBUG_FIELD,
     },
   }),
   "theme-game-layout": featureCopy({
-    cardDescription: "Ordnet alle X01-Spieler links an und kann den aktuell werfenden Spieler immer nach oben rotieren.",
-    visibleDescription: "Zeigt die Wurfanzeige über kompakten horizontalen Spielerkarten links und vergrößert das native Board rechts.",
+    cardDescription: "Passt die Spielansicht an Desktop, TV oder Hochformat an und erhält das bisherige X01-Layout.",
+    visibleDescription: "Bildschirmprofile ordnen Spieler oder Tabelle und Board passend zum verfügbaren Platz an. Unklare Oberflächen bleiben unverändert.",
     visualDescription: "Alle nativen Spielerkarten bleiben erhalten und werden nur visuell angeordnet. Optional rotiert die Leiste zyklisch so, dass der aktuell werfende Spieler immer oben steht; ein kleiner START-Badge kann zusätzlich den Spieler markieren, der das aktuelle Leg begonnen hat.",
     usefulWhen: "Wenn das Board im Querformat möglichst groß sein und trotzdem jeder Spieler schnell erfassbar bleiben soll.",
     featuresDetails: [
-      "Aktiv ab 1180×650 Pixeln im Querformat; kleinere oder unklare Oberflächen bleiben im nativen Layout.",
+      "Bisheriges Layout erhält den X01-Board-Fokus ab 1180×650 Pixeln. Bildschirmprofile ergänzen Desktop, TV und Hochformat für gemeinsame Spieler- und Tabellenflächen aller Modi.",
+      "Automatisch verwendet Hochformat bei weniger als 900 Pixel verfügbarer Breite oder wenn das Fenster höher als breit ist. Unklare Oberflächen behalten ihre native Anordnung.",
       "Die Reihenfolge kann fest bleiben oder zyklisch mit dem aktuell werfenden Spieler nach oben rotieren.",
       "Der optionale START-Badge bleibt beim Leg-Starter und ist unabhängig davon, wer gerade wirft.",
       "Bei vielen Spielern bleibt der aktive Spieler im Rotationsmodus oben sichtbar; die übrigen Spieler lassen sich weiter durchscrollen.",
     ],
     images: [image("X01-Spiel-Layout", "theme-game-layout.webp")],
     fields: {
+      screenProfile: fieldCopy("Wählt bisheriges Layout, Automatisch, Desktop, TV oder Hochformat."),
+      boardShare: fieldCopy("Regelt im Querformat den Platzanteil für das Board. Im Hochformat begrenzt der Wert die Board-Größe relativ zur Fensterhöhe."),
+      textScale: fieldCopy("Skaliert Spielernamen und Scores von 80 bis 150 Prozent; TV vergrößert zusätzlich um 25 Prozent."),
+      showAverages: fieldCopy("Zeigt erkannte AVG- und MPR-Anzeigen an. Scores und Spielziele bleiben sichtbar."),
+      showStatistics: fieldCopy("Zeigt erkannte Nebenstatistiken wie First 9 oder Checkout-Prozent an."),
       playerOrder: fieldCopy(
         "Wählt zwischen fester Reihenfolge und aktiver Spielerkarte oben.",
         "Mit `Fest` bleibt die bisherige Sitzreihenfolge erhalten. `Aktiver Spieler immer oben` rotiert die Spielerkarten zyklisch ab dem aktuell werfenden Spieler, ohne die nativen DOM-Karten umzuhängen.",
@@ -345,10 +369,13 @@ export const xconfigFeatureCopy = deepFreeze({
   "theme-global-presets": featureCopy({
     cardDescription: "Fertige Vorlagen für globalen Hintergrund und globale Schrift.",
     visibleDescription: "Wendet Hintergrundbild, Schrift und Farben gemeinsam an, ohne die Darts in der Wurfanzeige zu verändern.",
-    visualDescription: "Jede Vorschau zeigt das mitgelieferte Hintergrundbild, die zugehörige Schrift und die Farben. Die Aktion aktiviert Hintergrund sowie Schrift & Farben und ersetzt ein eigenes Hintergrundbild.",
+    visualDescription: "Kleine Vorschaubilder sind mitgeliefert und offline verfügbar. Beim Anwenden werden nur die benötigten Motive geladen und dauerhaft gespeichert. Bei einem Fehler bleibt die bisherige Darstellung erhalten; die Auswahl kann erneut angewendet werden. Die Aktion aktiviert Hintergrund sowie Schrift & Farben und ersetzt ein eigenes Hintergrundbild.",
     usefulWhen: "Wenn du einen vollständigen Look mit einem Klick auswählen möchtest.",
     images: [image("Globale Vorlagen", "templates-global-presets.webp")],
-    fields: THEME_GLOBAL_TEMPLATE_PRESET_FIELD_COPY,
+    fields: { ...THEME_GLOBAL_TEMPLATE_PRESET_FIELD_COPY,
+      includeSurround: fieldCopy("Übernimmt einen zugeordneten Surround beim nächsten Vorlagenwechsel. Ohne diese Auswahl bleibt der aktuelle Surround erhalten."),
+      includeGlow: fieldCopy("Übernimmt den Glow beim nächsten Vorlagenwechsel. Ohne diese Auswahl bleiben die Glow-Einstellungen erhalten."),
+    },
   }),
   "turn-dart-display": featureCopy({
     cardDescription: "Globale Darstellung der drei Darts im Wurffeld.",
@@ -2512,6 +2539,10 @@ const cricketEmphasisOptionsCopy = {
 };
 
 const xconfigFieldOptionCopy = deepFreeze({
+  "board-surround": { design: {
+    preset: optionCopy("Zeigt ein bereits zugewiesenes Vorlagenmotiv. Wähle ein anderes Motiv, um es zu ersetzen."),
+    ...Object.fromEntries(COMMUNITY_SURROUNDS.map((entry) => [entry.key, optionCopy(`Zeigt den lokal gespeicherten Surround ${entry.label}.`)])),
+  } },
   "cricket-layout": cricketLayoutOptionsCopy,
   "theme-global-background": {
     backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_OPTION_COPY,
@@ -2519,12 +2550,24 @@ const xconfigFieldOptionCopy = deepFreeze({
     playerFieldTransparency: THEME_PLAYER_TRANSPARENCY_OPTION_COPY,
   },
   "theme-global-typography": {
+    glowMode: {
+      off: optionCopy("Kein zusätzlicher Glow; vorhandene Hervorhebungen bleiben erhalten."),
+      steady: optionCopy("Markiert den aktiven Spieler mit gleichmäßigem Randglanz."),
+      pulse: optionCopy("Lässt den Randglanz sanft pulsieren. Bei reduzierter Bewegung bleibt er gleichmäßig."),
+    },
     fontPreset: THEME_GLOBAL_TYPOGRAPHY_FONT_OPTION_COPY,
     remainingScoreSize: THEME_GLOBAL_TYPOGRAPHY_REMAINING_SCORE_SIZE_OPTION_COPY,
     applyTo: THEME_GLOBAL_TYPOGRAPHY_SCOPE_OPTION_COPY,
     activePlayerTintIntensity: THEME_ACTIVE_PLAYER_TINT_INTENSITY_OPTION_COPY,
   },
   "theme-game-layout": {
+    screenProfile: {
+      legacy: optionCopy("Erhält das bisherige X01-Layout und die eigenständige Cricket-Anordnung."),
+      auto: optionCopy("Wählt Hochformat bei weniger als 900 Pixel Breite oder einem höheren als breiten Fenster, sonst Desktop."),
+      desktop: optionCopy("Ordnet Spieler oder Tabelle links und den Board-Bereich rechts an."),
+      tv: optionCopy("Verwendet die Desktop-Anordnung mit zusätzlich um 25 Prozent vergrößerten Namen und Scores."),
+      portrait: optionCopy("Ordnet Spieler oder Tabelle oberhalb des Boards an und hält Inhalte scrollbar erreichbar."),
+    },
     playerOrder: GAME_LAYOUT_PLAYER_ORDER_OPTION_COPY,
     playerTransitionEffect: GAME_LAYOUT_PLAYER_TRANSITION_EFFECT_OPTION_COPY,
   },

@@ -281,11 +281,13 @@ test("createShellActionController dispatches runtime, update and theme commands"
               playerFieldTransparency: 10,
               backgroundImageDataUrl: "",
               backgroundAssetKey: "cyberpunk",
+              communityPresetKey: "",
               debug: false,
             },
             globalTypography: {
               enabled: true,
               fontPreset: "audiowide",
+              communityPresetKey: "",
               remainingScoreSize: "auto",
               applyTo: ["scores", "names"],
               accentColor: "#2EF2FF",

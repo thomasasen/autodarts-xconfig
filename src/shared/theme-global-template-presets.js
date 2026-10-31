@@ -1,7 +1,15 @@
+import { COMMUNITY_PRESETS, COMMUNITY_SURROUNDS } from "./community-designs.js";
 const DEFAULT_SCOPE_VALUES = Object.freeze(["scores", "names"]);
 
 function createPreset(definition) {
   const preset = {
+    author: definition.author || "",
+    source: definition.source || "",
+    formats: definition.formats || [],
+    previewAssetKey: definition.previewAssetKey || "",
+    communityPresetKey: definition.source ? definition.key : "",
+    surroundAssetKey: definition.surroundAssetKey || "",
+    glowColor: definition.glowColor || "",
     key: String(definition?.key || "").trim(),
     label: String(definition?.label || "").trim(),
     description: String(definition?.description || "").trim(),
@@ -313,6 +321,7 @@ export const THEME_GLOBAL_TEMPLATE_PRESETS = Object.freeze([
     backgroundAssetKey: "ice",
   }),
   ...ADDITIONAL_WALLPAPER_PRESET_ROWS.map(createWallpaperPreset),
+  ...COMMUNITY_PRESETS.map(createPreset),
 ]);
 
 const presetsByKey = new Map(THEME_GLOBAL_TEMPLATE_PRESETS.map((preset) => [preset.key, preset]));
@@ -322,7 +331,7 @@ export function getThemeGlobalTemplatePreset(presetKey) {
   return presetsByKey.get(key) || null;
 }
 
-export function createThemeGlobalTemplatePresetPatch(presetKey) {
+export function createThemeGlobalTemplatePresetPatch(presetKey, options = {}) {
   const preset = getThemeGlobalTemplatePreset(presetKey);
   if (!preset) {
     return null;
@@ -330,12 +339,15 @@ export function createThemeGlobalTemplatePresetPatch(presetKey) {
 
   return {
     featureToggles: {
+      ...(options.includeSurround && preset.surroundAssetKey ? { boardSurround: true } : {}),
       "themes.globalBackground": true,
       "themes.globalTypography": true,
     },
     features: {
+      ...(options.includeSurround && preset.surroundAssetKey ? { boardSurround: { enabled: true, assetKey: preset.surroundAssetKey, design: COMMUNITY_SURROUNDS.find((entry) => entry.assetKey === preset.surroundAssetKey)?.key || "preset" } } : {}),
       themes: {
         globalBackground: {
+          communityPresetKey: preset.communityPresetKey,
           enabled: true,
           backgroundDisplayMode: preset.backgroundDisplayMode,
           backgroundOpacity: preset.backgroundOpacity,
@@ -345,6 +357,8 @@ export function createThemeGlobalTemplatePresetPatch(presetKey) {
           debug: false,
         },
         globalTypography: {
+          communityPresetKey: preset.communityPresetKey,
+          ...(options.includeGlow ? { glowMode: "pulse", glowColor: preset.glowColor || preset.accentColor, glowIntensity: 30 } : {}),
           enabled: true,
           fontPreset: preset.fontPreset,
           remainingScoreSize: preset.remainingScoreSize,

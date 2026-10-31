@@ -24,6 +24,8 @@ function catalogEntry(
 const immediate = FEATURE_STARTUP_TIMINGS.IMMEDIATE;
 
 const rawFeatureCatalog = [
+  catalogEntry("live-board-enhancement", "liveBoardEnhancement", "Livebild optimieren", ["all"]),
+  catalogEntry("board-surround", "boardSurround", "Board-Surround", ["all"]),
   catalogEntry("checkout-score-highlight", "checkoutScoreHighlight", "Finishbaren Restscore hervorheben", ["x01"], "Animation/Autodarts Animate Checkout Score Highlight.user.js", "a-checkout-pulse"),
   catalogEntry("checkout-target-highlights", "checkoutTargetHighlights", "Checkout-Ziele hervorheben", ["x01"], "Animation/Autodarts Animate Checkout Target Highlights.user.js", "a-checkout-board"),
   catalogEntry("tv-board-zoom", "tvBoardZoom", "Automatischer Board-Zoom", ["x01"], "Animation/Autodarts Animate TV Board Zoom.user.js", "a-tv-board-zoom"),
@@ -42,7 +44,7 @@ const rawFeatureCatalog = [
   catalogEntry("x01-remaining-score-bar", "x01RemainingScoreBar", "Restscore-Balken", ["x01"], "", "", immediate),
   catalogEntry("theme-global-background", "themes.globalBackground", "Hintergrund", ["all"], "", "", immediate),
   catalogEntry("theme-global-typography", "themes.globalTypography", "Schrift & Farben", ["all"], "", "", immediate),
-  catalogEntry("theme-game-layout", "themes.gameLayout", "Spiel-Layout", ["x01"], "", "", immediate),
+  catalogEntry("theme-game-layout", "themes.gameLayout", "Spiel-Layout", ["all"], "", "", immediate),
   catalogEntry("theme-global-presets", "themes.globalPresets", "Designvorlagen", ["all"], "", "", immediate),
   catalogEntry("bot-board-style", "botBoardStyle", "Dartboard-Design", ["all"]),
   catalogEntry("turn-dart-display", "turnDartDisplay", "Darts in der Wurfanzeige", ["all"], "", "", immediate),

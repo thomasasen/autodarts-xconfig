@@ -32,6 +32,8 @@ const unusedVariableRule = buildUnusedVariableRule();
 const tampermonkeyGlobals = {
   GM_getValue: "readonly",
   GM_setValue: "readonly",
+  GM_xmlhttpRequest: "readonly",
+  GM: "readonly",
 };
 
 export default [

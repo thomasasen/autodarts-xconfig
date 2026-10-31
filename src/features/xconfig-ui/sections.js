@@ -18,6 +18,8 @@ export const XCONFIG_SECTION_DEFINITIONS = Object.freeze([
       "avg-trend-arrow",
       "special-hit-highlights",
       "bot-board-style",
+      "board-surround",
+      "live-board-enhancement",
       "turn-dart-display",
       "dart-marker-replacer",
       "dartboard-marker-highlight",

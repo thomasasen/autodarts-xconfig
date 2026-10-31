@@ -48,6 +48,8 @@ const LEGACY_SETTING_ALIASES = Object.freeze({
   }),
 });
 const SPECIAL_TRANSFER_FIELDS = Object.freeze({
+  communityPresetKey: Object.freeze({ control: "normalized-string", label: "Community-Vorlage" }),
+  assetKey: Object.freeze({ control: "normalized-string", label: "Surround-Bild" }),
   tacticsDensity: Object.freeze({
     control: "select",
     label: "Gespeicherte Tactics-Abstände",
@@ -233,6 +235,8 @@ export function createSettingsTransferSchema(descriptors = []) {
           control: String(field.control || ""),
           multiple: field.multiple === true,
           maxLength: Math.max(0, Number(field.maxLength) || 0),
+          min: field.min,
+          max: field.max,
           options: Object.freeze(
             Array.isArray(field.options) ? field.options.map((entry) => entry.value) : []
           ),
@@ -629,6 +633,12 @@ function normalizeFieldValue(field, rawValue, spec, defaults, sourceType) {
   }
   if (field.control === "select") {
     return normalizeSelectFieldValue(field, rawValue, spec, defaults, sourceType);
+  }
+  if (field.control === "range") {
+    if (typeof rawValue !== "number" || !Number.isFinite(rawValue) || rawValue < field.min || rawValue > field.max) {
+      return { valid: false, reason: "Der Zahlenwert liegt außerhalb des erlaubten Bereichs." };
+    }
+    return { valid: true, value: rawValue };
   }
   if (field.control === "color") {
     return normalizeColorFieldValue(rawValue);

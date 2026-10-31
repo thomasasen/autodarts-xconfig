@@ -50,6 +50,10 @@ export function buildUserscriptHeader(packageVersion) {
 // @run-at       document-start
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @grant        GM_xmlhttpRequest
+// @grant        GM.getValue
+// @grant        GM.setValue
+// @connect      raw.githubusercontent.com
 // @downloadURL  ${downloadUrl}
 // @updateURL    ${USERSCRIPT_UPDATE_URL}
 // ==/UserScript==

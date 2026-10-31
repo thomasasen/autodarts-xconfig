@@ -1,44 +1,23 @@
-import britishFlagJpg from "../assets/theme-presets/british-flag.jpg";
-import cyberpunkJpg from "../assets/theme-presets/cyberpunk.jpg";
-import matrixPng from "../assets/theme-presets/matrix.png";
-import fireJpg from "../assets/theme-presets/fire.jpg";
-import iceJpg from "../assets/theme-presets/ice.jpg";
-import spiderManWebp from "../assets/theme-presets/spider-man.webp";
-import neonSplashWebp from "../assets/theme-presets/neon-splash.webp";
-import johnWickWebp from "../assets/theme-presets/john-wick.webp";
-import solarPulseWebp from "../assets/theme-presets/solar-pulse.webp";
-import crimsonFacetsWebp from "../assets/theme-presets/crimson-facets.webp";
-import aquaFluxWebp from "../assets/theme-presets/aqua-flux.webp";
-import endgameWebp from "../assets/theme-presets/endgame.webp";
-import gladiatorWebp from "../assets/theme-presets/gladiator.webp";
-import deutschlandWebp from "../assets/theme-presets/deutschland.webp";
-import darkSideWebp from "../assets/theme-presets/dark-side.webp";
-import dartsArenaWebp from "../assets/theme-presets/darts-arena.webp";
-import bayernWebp from "../assets/theme-presets/bayern.webp";
-
+import { THEME_PRESET_PREVIEWS } from "./theme-previews.browser.js";
+import { THEME_ASSET_CATALOG } from "./theme-asset-catalog.js";
+import { THEME_ASSET_RELEASE_TAG } from "./theme-asset-source.js";
+import { createThemeAssetCache, downloadThemeAsset } from "./theme-asset-cache.js";
 export { THEME_PRESET_ASSET_KEYS } from "./theme-preset-assets.manifest.js";
 
-export const THEME_PRESET_ASSETS = Object.freeze({
-  "british-flag": britishFlagJpg,
-  cyberpunk: cyberpunkJpg,
-  matrix: matrixPng,
-  fire: fireJpg,
-  ice: iceJpg,
-  "spider-man": spiderManWebp,
-  "neon-splash": neonSplashWebp,
-  "john-wick": johnWickWebp,
-  "solar-pulse": solarPulseWebp,
-  "crimson-facets": crimsonFacetsWebp,
-  "aqua-flux": aquaFluxWebp,
-  endgame: endgameWebp,
-  gladiator: gladiatorWebp,
-  deutschland: deutschlandWebp,
-  "dark-side": darkSideWebp,
-  "darts-arena": dartsArenaWebp,
-  bayern: bayernWebp,
-});
-
-export function resolveThemePresetAsset(assetKey) {
-  const key = String(assetKey || "").trim().toLowerCase();
-  return THEME_PRESET_ASSETS[key] || "";
+let cache = null;
+export function configureThemePresetAssets({ gmGetValue, gmSetValue, gmRequest } = {}) {
+  cache = createThemeAssetCache({ catalog: THEME_ASSET_CATALOG, releaseTag: THEME_ASSET_RELEASE_TAG,
+    getValue: gmGetValue, setValue: gmSetValue, download: (url) => downloadThemeAsset(url, gmRequest) });
 }
+export function resolveThemePresetPreview(assetKey) {
+  return THEME_PRESET_PREVIEWS[String(assetKey || "").trim().toLowerCase()] || "";
+}
+export function resolveThemePresetAsset(assetKey) {
+  return cache?.resolve(String(assetKey || "").trim().toLowerCase()) || "";
+}
+export function ensureThemePresetAsset(assetKey) {
+  if (!cache) return Promise.reject(new Error("Der Bildspeicher wurde noch nicht eingerichtet."));
+  return cache.ensure(assetKey);
+}
+export function hydrateThemePresetAssets(keys) { return cache?.hydrate(keys) || Promise.resolve([]); }
+export function subscribeThemePresetAssets(listener) { return cache?.subscribe(listener) || (() => {}); }

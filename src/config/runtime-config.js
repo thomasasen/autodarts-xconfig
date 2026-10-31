@@ -146,13 +146,16 @@ function copyLegacyToggle(featureToggles, configKey, legacyEnabled) {
   }
 }
 
-function migrateLegacyGlobalThemeSettings(features, themes, featureToggles) {
+function migrateLegacyGlobalThemeSettings(features, themes, featureToggles, partial = false) {
   const typography = isObjectLike(themes.globalTypography)
     ? themes.globalTypography
     : null;
   if (!typography) {
     return;
   }
+  // Modern partial typography updates must not synthesize unrelated module
+  // toggles. Only an actual legacy combined payload needs to be split here.
+  if (partial && ![...LEGACY_GLOBAL_BACKGROUND_FIELDS, ...LEGACY_TURN_DART_FIELDS].some((key) => Object.hasOwn(typography, key))) return;
 
   const legacyEnabled = resolveLegacyThemeEnabled(featureToggles, typography);
   const globalBackground = ensureObjectProperty(themes, "globalBackground");
@@ -177,7 +180,7 @@ function removeLegacyGameThemes(themes, featureToggles) {
   });
 }
 
-function migrateLegacyThemeStructure(configValue = {}) {
+function migrateLegacyThemeStructure(configValue = {}, partial = false) {
   if (!isObjectLike(configValue)) {
     return;
   }
@@ -185,7 +188,7 @@ function migrateLegacyThemeStructure(configValue = {}) {
   const featureToggles = ensureObjectProperty(configValue, "featureToggles");
   const features = ensureObjectProperty(configValue, "features");
   const themes = ensureObjectProperty(features, "themes");
-  migrateLegacyGlobalThemeSettings(features, themes, featureToggles);
+  migrateLegacyGlobalThemeSettings(features, themes, featureToggles, partial);
   removeLegacyGameThemes(themes, featureToggles);
 }
 
@@ -572,7 +575,7 @@ export function createRuntimeConfig(overrides = {}) {
 
   function update(partialConfig = {}) {
     const migratedPartialConfig = deepClone(partialConfig);
-    migrateLegacyThemeStructure(migratedPartialConfig);
+    migrateLegacyThemeStructure(migratedPartialConfig, true);
     stripRemovedFeatureConfigKeys(migratedPartialConfig);
     rawConfig = migrateLegacyFeatureConfigKeys(
       deepMerge(rawConfig, migrateLegacyFeatureConfigKeys(migratedPartialConfig))

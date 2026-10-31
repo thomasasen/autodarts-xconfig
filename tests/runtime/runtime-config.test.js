@@ -20,6 +20,24 @@ const TURN_DART_DESIGNER_CONFIG = Object.freeze({
   }),
 });
 
+test("partial modern typography updates preserve independent background and dart module toggles", () => {
+  for (const enabled of [true, false]) {
+    const runtime = createRuntimeConfig({ featureToggles: { turnDartDisplay: !enabled, "themes.globalBackground": !enabled }, features: { turnDartDisplay: { enabled: !enabled }, themes: { globalBackground: { enabled: !enabled } } } });
+    runtime.update({ features: { themes: { globalTypography: { enabled, glowMode: "pulse", fontPreset: "system" } } }, featureToggles: { "themes.globalTypography": enabled } });
+    assert.equal(runtime.isFeatureEnabled("turnDartDisplay"), !enabled);
+    assert.equal(runtime.getFeatureConfig("turnDartDisplay").enabled, !enabled);
+    assert.equal(runtime.isFeatureEnabled("themes.globalBackground"), !enabled);
+  }
+});
+
+test("partial legacy combined typography updates still split their actual background and dart fields", () => {
+  const runtime = createRuntimeConfig();
+  runtime.update({ features: { themes: { globalTypography: { enabled: true, backgroundOpacity: 55, turnDartStyle: "solid" } } } });
+  assert.equal(runtime.getFeatureConfig("themes.globalBackground").backgroundOpacity, 55);
+  assert.equal(runtime.getFeatureConfig("turnDartDisplay").turnDartStyle, "solid");
+  assert.equal(runtime.isFeatureEnabled("turnDartDisplay"), true);
+});
+
 test("runtime config exposes a monotonic revision for cache invalidation", () => {
   const runtimeConfig = createRuntimeConfig();
 

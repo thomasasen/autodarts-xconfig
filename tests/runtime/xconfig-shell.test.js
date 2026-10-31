@@ -8,6 +8,8 @@ import { resolveBoardStyleDesignAsset } from "../../src/shared/feature-assets.no
 import { DART_DESIGN_KEYS } from "../../src/shared/feature-assets.manifest.js";
 import { resolveXConfigPreviewAsset } from "../../src/shared/xconfig-preview-assets.node.js";
 import { AUTODARTS_DART_DESIGNER_URL } from "../../src/shared/autodarts-dart-designer.js";
+import { COMMUNITY_PRESETS, COMMUNITY_SURROUNDS } from "../../src/shared/community-designs.js";
+import { resolveThemePresetPreview } from "../../src/shared/theme-preset-assets.node.js";
 import {
   THEME_GLOBAL_TEMPLATE_PRESETS,
   getThemeGlobalTemplatePreset,
@@ -753,6 +755,51 @@ test("fresh xConfig settings start with calm Cricket recommendations", async () 
     assert.ok(documentRef.querySelector("[data-setting-key='displayProfile'][data-setting-value='calm'][data-active='true']"));
     assert.ok(documentRef.querySelector("[data-setting-key='statusStyle'][data-setting-value='pattern'][data-active='true']"));
     assert.equal(documentRef.querySelector("[data-setting-key='rowWave']")?.checked, false);
+  } finally { runtime.stop(); }
+});
+
+test("live image range and named presets save numeric values and keep the module opt-in", async () => {
+  const localStorage = new FakeStorage();
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  try {
+    await waitForMenuButton(documentRef);
+    documentRef.getElementById("ad-xconfig-menu-item").click();
+    await waitForShellOpen(windowRef, documentRef);
+    documentRef.querySelector("[data-adxconfig-action='open-settings'][data-feature-key='live-board-enhancement']").click();
+    await waitForSettingsModal(documentRef);
+    const input = documentRef.querySelector("[data-setting-key='intensity'][data-setting-control='range']");
+    assert.ok(input);
+    input.value = "47";
+    input.dispatchEvent(new FakeEvent("change"));
+    await waitForStoredConfig(localStorage, (config) => config.features.liveBoardEnhancement.intensity === 47);
+    clickSelectSettingOption(documentRef, "live-board-enhancement", "intensity", "60");
+    await waitForStoredConfig(localStorage, (config) => config.features.liveBoardEnhancement.intensity === 60);
+    assert.equal(JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).featureToggles.liveBoardEnhancement, false);
+  } finally { runtime.stop(); }
+});
+
+test("community template search filters names, authors and formats without applying a design", async () => {
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage: new FakeStorage() });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  try {
+    await waitForMenuButton(documentRef);
+    documentRef.getElementById("ad-xconfig-menu-item").click();
+    await waitForShellOpen(windowRef, documentRef);
+    documentRef.querySelector("[data-adxconfig-action='open-settings'][data-feature-key='theme-global-presets']").click();
+    await waitForSettingsModal(documentRef);
+    const search = documentRef.querySelector('[data-adx-design-search="true"]');
+    assert.ok(search);
+    search.value = "Tobias";
+    search.dispatchEvent(new FakeEvent("input"));
+    const rows = documentRef.querySelectorAll(".ad-xconfig-setting-row--theme-preset");
+    assert.ok(rows.filter((row) => !row.hidden).length > 0);
+    assert.ok(rows.filter((row) => !row.hidden).every((row) => row.querySelectorAll(".ad-xconfig-note").some((note) => note.textContent.includes("Tobias"))));
+    search.value = "no-such-design";
+    search.dispatchEvent(new FakeEvent("input"));
+    assert.equal(rows.filter((row) => !row.hidden).length, 0);
   } finally { runtime.stop(); }
 });
 
@@ -1588,6 +1635,8 @@ test("xConfig shell renders every feature exactly once in ordered domain section
     "avg-trend-arrow",
     "special-hit-highlights",
     "bot-board-style",
+    "board-surround",
+    "live-board-enhancement",
     "turn-dart-display",
     "dart-marker-replacer",
     "dartboard-marker-highlight",
@@ -1614,7 +1663,7 @@ test("xConfig shell renders every feature exactly once in ordered domain section
   assert.equal(new Set(allCardFeatureKeys).size, xconfigDescriptors.length);
   assert.deepEqual(
     sectionNodes.map((sectionNode) => sectionNode.querySelector(".ad-xconfig-section-count")?.textContent),
-    ["4 Kacheln", "9 Kacheln", "6 Kacheln", "3 Kacheln"]
+    ["4 Kacheln", "11 Kacheln", "6 Kacheln", "3 Kacheln"]
   );
 
   runtime.stop();
@@ -3640,7 +3689,7 @@ test("xConfig shell renders a compact searchable global font picker and loads th
   const sectionTitles = documentRef
     .querySelectorAll(".ad-xconfig-settings-section-title")
     .map((node) => String(node.textContent || "").trim());
-  assert.deepEqual(sectionTitles, ["Schrift", "Farben"]);
+  assert.deepEqual(sectionTitles, ["Glow", "Schrift", "Farben"]);
 
   const previewStyleNode = documentRef.getElementById("ad-xconfig-preview-fonts-style");
   assert.ok(previewStyleNode);
@@ -3884,10 +3933,11 @@ test("xConfig shell renders a compact searchable global font picker and loads th
   const colorFields = documentRef.querySelectorAll(
     "[data-adxconfig-color-field='true'][data-feature-key='theme-global-typography']"
   );
-  assert.equal(colorFields.length, 4);
+  assert.equal(colorFields.length, 5);
   assert.deepEqual(
     colorFields.map((node) => String(node.getAttribute("data-setting-key") || "").trim()),
     [
+      "glowColor",
       "accentColor",
       "scoreColor",
       "secondaryTextColor",
@@ -4044,7 +4094,7 @@ test("xConfig shell applies global presets immediately with asset-backed preview
   assert.deepEqual(
     documentRef.querySelectorAll(".ad-xconfig-settings-section-title")
       .map((node) => String(node.textContent || "")),
-    ["Empfohlen", "Atmosphäre", "Regional", "Cinematic"]
+    ["Empfohlen", "Atmosphäre", "Regional", "Cinematic", "Community · Autodarts Layouts"]
   );
   assert.equal(
     documentRef.querySelectorAll(".ad-xconfig-theme-preset-card").length,
@@ -4060,9 +4110,9 @@ test("xConfig shell applies global presets immediately with asset-backed preview
     "ad-xconfig-field-theme-global-presets-preset-cyberpunk"
   );
   assert.ok(presetButton);
-  assert.match(
+  assert.equal(
     String(presetButton.querySelector(".ad-xconfig-theme-preset-wallpaper")?.getAttribute("src") || ""),
-    /theme-presets\/cyberpunk\.jpg/
+    resolveThemePresetPreview("cyberpunk")
   );
   const cyberpunkPreset = getThemeGlobalTemplatePreset("cyberpunk");
   assert.equal(
@@ -4103,6 +4153,10 @@ test("xConfig shell applies global presets immediately with asset-backed preview
   assert.equal(storedConfig.featureToggles["themes.globalBackground"], true);
   assert.deepEqual(storedConfig.features.themes.globalTypography, {
     enabled: true,
+    communityPresetKey: "",
+    glowMode: "off",
+    glowColor: "",
+    glowIntensity: 30,
     fontPreset: "audiowide",
     remainingScoreSize: "auto",
     applyTo: ["scores", "names"],
@@ -4115,6 +4169,8 @@ test("xConfig shell applies global presets immediately with asset-backed preview
   });
   assert.deepEqual(storedConfig.features.themes.globalBackground, {
     enabled: true,
+    communityPresetKey: "",
+    applyMenuBackground: false,
     backgroundDisplayMode: "fill",
     backgroundOpacity: 20,
     playerFieldTransparency: 10,
@@ -4155,7 +4211,7 @@ test("xConfig shell applies global presets immediately with asset-backed preview
 
   const themeCardPreview = themeCard.querySelector(".ad-xconfig-card-bg img");
   assert.ok(themeCardPreview);
-  assert.match(String(themeCardPreview.getAttribute("src") || ""), /theme-presets\/cyberpunk\.jpg/);
+  assert.equal(String(themeCardPreview.getAttribute("src") || ""), resolveThemePresetPreview("cyberpunk"));
   assert.equal(themeCard.getAttribute("data-preview-kind"), "theme-global-presets");
   assert.match(
     String(themeCard.querySelector(".ad-xconfig-theme-card-preview-label")?.textContent || ""),
@@ -4165,9 +4221,9 @@ test("xConfig shell applies global presets immediately with asset-backed preview
   const backgroundCard = documentRef.querySelector(
     ".ad-xconfig-card[data-feature-key='theme-global-background']"
   );
-  assert.match(
+  assert.equal(
     String(backgroundCard?.querySelector(".ad-xconfig-card-bg img")?.getAttribute("src") || ""),
-    /theme-presets\/cyberpunk\.jpg/
+    resolveThemePresetPreview("cyberpunk")
   );
   assert.doesNotMatch(String(backgroundCard?.getAttribute("class") || ""), /ad-xconfig-card--theme-global/);
 
@@ -4210,6 +4266,82 @@ test("xConfig shell applies global presets immediately with asset-backed preview
   );
 
   runtime.stop();
+});
+
+test("community template UI apply preserves optional effects and Undo restores the entire configuration", async () => {
+  const preset = COMMUNITY_PRESETS.find((entry) => entry.surroundAssetKey &&
+    !COMMUNITY_SURROUNDS.some((surround) => surround.assetKey === entry.surroundAssetKey));
+  assert.ok(preset);
+  for (const scenario of [{ extras: false, surroundEnabled: false }, { extras: false, surroundEnabled: true }, { extras: true, surroundEnabled: false }]) {
+    const localStorage = new FakeStorage();
+    const documentRef = new FakeDocument();
+    const windowRef = createFakeWindow({ documentRef, localStorage });
+    const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+    try {
+      await waitForMenuButton(documentRef);
+      documentRef.getElementById("ad-xconfig-menu-item").click();
+      await waitForShellOpen(windowRef, documentRef);
+      await runtime.saveConfig({ featureToggles: {
+        "themes.globalBackground": false, "themes.globalTypography": false,
+        boardSurround: scenario.surroundEnabled, "themes.gameLayout": true, liveBoardEnhancement: true,
+      }, features: {
+        themes: {
+          globalBackground: { enabled: false, backgroundAssetKey: "cyberpunk", applyMenuBackground: true, backgroundOpacity: 43 },
+          globalTypography: { enabled: false, glowMode: "steady", glowColor: "#123456", glowIntensity: 79, scoreColor: "#FEDCBA" },
+          gameLayout: { enabled: true, screenProfile: "portrait", boardShare: 61, textScale: 116 },
+          globalPresets: { includeGlow: false, includeSurround: false },
+        },
+        boardSurround: { enabled: scenario.surroundEnabled, design: "preset", assetKey: COMMUNITY_SURROUNDS[0].assetKey, sizePercent: 161 },
+        liveBoardEnhancement: { enabled: true, intensity: 67 },
+        turnDartDisplay: { turnDartStyle: "solid", turnDartColor: "#135790" },
+        tvBoardZoom: { zoomLevel: 2.15 },
+      } });
+      documentRef.querySelector("[data-adxconfig-action='open-settings'][data-feature-key='theme-global-presets']").click();
+      await waitForSettingsModal(documentRef);
+      if (scenario.extras) {
+        for (const key of ["includeGlow", "includeSurround"]) {
+          clickSettingToggle(documentRef, "theme-global-presets", key, true);
+          await waitForStoredConfig(localStorage, (config) => config.features.themes.globalPresets[key] === true);
+        }
+      }
+      const before = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+      const button = documentRef.querySelector(`.ad-xconfig-theme-preset-card[data-theme-preset-key='${preset.key}']`);
+      assert.ok(button);
+      button.click();
+      await waitForStoredConfig(localStorage, (config) => config.features.themes.globalBackground.communityPresetKey === preset.key);
+      const applied = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+      assert.equal(applied.features.themes.globalTypography.communityPresetKey, preset.key);
+      assert.equal(applied.featureToggles["themes.globalBackground"], true);
+      assert.equal(applied.featureToggles["themes.globalTypography"], true);
+      if (scenario.extras) {
+        assert.equal(applied.features.themes.globalTypography.glowMode, "pulse");
+        assert.equal(applied.features.themes.globalTypography.glowIntensity, 30);
+        assert.equal(applied.features.boardSurround.design, "preset");
+        assert.equal(applied.features.boardSurround.assetKey, preset.surroundAssetKey);
+        assert.equal(applied.features.boardSurround.enabled, true);
+        assert.equal(applied.featureToggles.boardSurround, true);
+      } else {
+        for (const key of ["glowMode", "glowColor", "glowIntensity"]) {
+          assert.equal(applied.features.themes.globalTypography[key], before.features.themes.globalTypography[key]);
+        }
+        assert.deepEqual(applied.features.boardSurround, before.features.boardSurround);
+        assert.equal(applied.featureToggles.boardSurround, before.featureToggles.boardSurround);
+      }
+      for (const key of ["liveBoardEnhancement", "turnDartDisplay", "tvBoardZoom"]) {
+        assert.deepEqual(applied.features[key], before.features[key]);
+      }
+      assert.deepEqual(applied.features.themes.gameLayout, before.features.themes.gameLayout);
+      assert.deepEqual(applied.features.themes.globalPresets, before.features.themes.globalPresets);
+      await waitFor(() => documentRef.querySelector("[data-adxconfig-action='undoThemeGlobalPreset']"));
+      const undo = documentRef.querySelector("[data-adxconfig-action='undoThemeGlobalPreset']");
+      assert.ok(undo);
+      undo.click();
+      await waitForStoredConfig(localStorage, (config) => config.featureToggles["themes.globalBackground"] === false);
+      assert.deepEqual(JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)), before);
+    } finally {
+      runtime.stop();
+    }
+  }
 });
 
 test("xConfig shell links every settings modal README button to the matching README anchor", async () => {
@@ -4341,7 +4473,7 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
     assert.ok(card.querySelector(".ad-xconfig-card-bg img"), `missing theme card image for ${featureKey}`);
     if (featureKey === "theme-game-layout") {
       assert.equal(card.querySelector(".ad-xconfig-card-global-badge"), null);
-      assert.equal(card.querySelector(".ad-xconfig-variant")?.textContent, "Gilt für: X01");
+      assert.equal(card.querySelector(".ad-xconfig-variant")?.textContent, "Gilt für: Alle Modi");
       assert.equal(card.querySelector(".ad-xconfig-game-layout-preview"), null);
     } else {
       assert.ok(card.querySelector(".ad-xconfig-card-global-badge"), `missing retained theme tag for ${featureKey}`);

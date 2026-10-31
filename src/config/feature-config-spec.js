@@ -15,6 +15,8 @@ import { TURN_DART_ASSET_KEYS } from "../shared/turn-dart-assets.manifest.js";
 import { BOARD_STYLE_DESIGN_KEYS } from "../shared/board-style-assets.manifest.js";
 import { normalizeGameLayoutPlayerTransitionEffect } from "../shared/game-layout-transition-profiles.js";
 import { normalizeAutodartsDartDesignerConfig } from "../shared/autodarts-dart-designer.js";
+import { normalizePresentationLayout, boundedNumber, GLOW_MODES } from "../shared/presentation-config.js";
+import { COMMUNITY_SURROUNDS, COMMUNITY_PRESETS } from "../shared/community-designs.js";
 import { DEFAULT_CRICKET_LAYOUT_CONFIG, normalizeCricketLayoutConfig } from "../shared/cricket-layout-config.js";
 import { CRICKET_BOARD_PROFILES, CRICKET_GRID_PROFILES, resolveCricketDisplayProfile, resolveCricketFeedback } from "../shared/cricket-display-config.js";
 
@@ -350,6 +352,8 @@ function buildFeatureImport(configKey, legacyFeatureState, mappedSettings = {}) 
 
 function normalizeThemeBackgroundConfig(rawConfig = {}, defaults = {}) {
   return {
+    communityPresetKey: COMMUNITY_PRESETS.some((entry) => entry.key === rawConfig.communityPresetKey) ? rawConfig.communityPresetKey : "",
+    applyMenuBackground: rawConfig.applyMenuBackground === true,
     enabled: normalizeBoolean(rawConfig.enabled, false),
     backgroundDisplayMode: normalizeStringChoice(rawConfig.backgroundDisplayMode, String(defaults.backgroundDisplayMode || "fill"), THEME_BACKGROUND_DISPLAY_MODES),
     backgroundOpacity: normalizeNumberChoice(rawConfig.backgroundOpacity, Number(defaults.backgroundOpacity || 25), THEME_BACKGROUND_OPACITY),
@@ -376,6 +380,8 @@ const DEFAULT_TURN_DART_DISPLAY_CONFIG = Object.freeze({
 });
 
 const DEFAULT_FEATURE_CONFIGS = Object.freeze({
+  liveBoardEnhancement: { enabled: false, intensity: 30, debug: false },
+  boardSurround: { enabled: false, design: "bulls-advantage", assetKey: "", sizePercent: 143, debug: false },
   cricketLayout: DEFAULT_CRICKET_LAYOUT_CONFIG,
   checkoutScoreHighlight: { enabled: false, effect: "grow-only", colorTheme: "159, 219, 88", intensity: "standard", triggerSource: "suggestion-first", debug: false },
   checkoutTargetHighlights: { enabled: false, visualPreset: "soft-pulse", segmentStyle: "surface-outline", singleRing: "both", targetSelectionMode: "next", colorTheme: "amber", debug: false },
@@ -400,6 +406,8 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   },
   "themes.globalBackground": {
     enabled: false,
+    communityPresetKey: "",
+    applyMenuBackground: false,
     backgroundDisplayMode: "fill",
     backgroundOpacity: 25,
     playerFieldTransparency: 10,
@@ -409,6 +417,7 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
   },
   "themes.globalTypography": {
     enabled: false,
+    communityPresetKey: "",
     fontPreset: "system",
     remainingScoreSize: "auto",
     applyTo: ["scores"],
@@ -417,16 +426,20 @@ const DEFAULT_FEATURE_CONFIGS = Object.freeze({
     secondaryTextColor: "",
     throwLabelColor: "",
     activePlayerTintIntensity: 15,
+    glowMode: "off",
+    glowColor: "",
+    glowIntensity: 30,
     debug: false,
   },
   "themes.gameLayout": {
     enabled: false,
+    ...normalizePresentationLayout(),
     playerOrder: "fixed",
     playerTransitionEffect: "flip-resize",
     showLegStarter: false,
     debug: false,
   },
-  "themes.globalPresets": { enabled: false },
+  "themes.globalPresets": { enabled: false, includeSurround: false, includeGlow: false },
   turnDartDisplay: DEFAULT_TURN_DART_DISPLAY_CONFIG,
 });
 
@@ -633,6 +646,12 @@ const LEGACY_IMPORTERS = Object.freeze({
 });
 
 const FEATURE_NORMALIZERS = Object.freeze({
+  liveBoardEnhancement(raw = {}) {
+    return { enabled: raw.enabled === true, intensity: boundedNumber(raw.intensity, 30, 0, 100), debug: raw.debug === true };
+  },
+  boardSurround(raw = {}) {
+    return { enabled: raw.enabled === true, design: COMMUNITY_SURROUNDS.some((entry) => entry.key === raw.design) || (raw.design === "preset" && normalizeThemeBackgroundAssetKey(raw.assetKey)) ? raw.design : "bulls-advantage", assetKey: normalizeThemeBackgroundAssetKey(raw.assetKey), sizePercent: boundedNumber(raw.sizePercent, 143, 110, 170), debug: raw.debug === true };
+  },
   cricketLayout: normalizeCricketLayoutConfig,
   checkoutScoreHighlight(rawConfig = {}) {
     return { enabled: normalizeBoolean(rawConfig.enabled, false), effect: normalizeMappedStringChoice(rawConfig.effect, "grow-only", CHECKOUT_EFFECT_ALIASES), colorTheme: normalizeLegacyColorTheme(rawConfig.colorTheme, "159, 219, 88"), intensity: normalizeStringChoice(rawConfig.intensity, "standard", CHECKOUT_INTENSITIES), triggerSource: normalizeStringChoice(rawConfig.triggerSource, "suggestion-first", CHECKOUT_TRIGGER_SOURCES), debug: normalizeBoolean(rawConfig.debug, false) };
@@ -728,6 +747,10 @@ const FEATURE_NORMALIZERS = Object.freeze({
   },
   "themes.globalTypography"(rawConfig = {}) {
     return {
+      communityPresetKey: COMMUNITY_PRESETS.some((entry) => entry.key === rawConfig.communityPresetKey) ? rawConfig.communityPresetKey : "",
+      glowMode: GLOW_MODES.some(({ value }) => value === rawConfig.glowMode) ? rawConfig.glowMode : "off",
+      glowColor: normalizeHexColor(rawConfig.glowColor, ""),
+      glowIntensity: boundedNumber(rawConfig.glowIntensity, 30, 0, 100),
       enabled: normalizeBoolean(rawConfig.enabled, false),
       fontPreset: normalizeStringChoice(rawConfig.fontPreset, "system", THEME_GLOBAL_TYPOGRAPHY_FONT_PRESET_KEYS),
       remainingScoreSize: normalizeStringChoice(
@@ -755,6 +778,7 @@ const FEATURE_NORMALIZERS = Object.freeze({
   },
   "themes.gameLayout"(rawConfig = {}) {
     return {
+      ...normalizePresentationLayout(rawConfig),
       enabled: normalizeBoolean(rawConfig.enabled, false),
       playerOrder: normalizeStringChoice(
         rawConfig.playerOrder,
@@ -768,8 +792,8 @@ const FEATURE_NORMALIZERS = Object.freeze({
       debug: normalizeBoolean(rawConfig.debug, false),
     };
   },
-  "themes.globalPresets"() {
-    return { enabled: false };
+  "themes.globalPresets"(raw = {}) {
+    return { enabled: false, includeSurround: raw.includeSurround === true, includeGlow: raw.includeGlow === true };
   },
   turnDartDisplay(rawConfig = {}) {
     return {

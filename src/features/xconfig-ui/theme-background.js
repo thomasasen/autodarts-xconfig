@@ -1,4 +1,4 @@
-import { resolveThemePresetAsset } from "#theme-preset-assets";
+import { resolveThemePresetPreview } from "#theme-preset-assets";
 import { resolveTurnDartAsset } from "#feature-assets";
 import { getThemeGlobalTemplatePreset } from "../../shared/theme-global-template-presets.js";
 import { TURN_DART_ASSET_LABELS } from "../../shared/turn-dart-assets.manifest.js";
@@ -405,7 +405,7 @@ export function readThemeBackgroundPreviewInfo(feature) {
 
   const assetKey = String(feature?.config?.backgroundAssetKey || "").trim();
   const presetLabel = getThemeGlobalTemplatePreset(assetKey)?.label || "";
-  const assetUrl = resolveThemePresetAsset(assetKey);
+  const assetUrl = resolveThemePresetPreview(assetKey);
   if (!assetUrl) {
     return {
       hasImage: false,

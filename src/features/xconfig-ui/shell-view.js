@@ -26,7 +26,10 @@ import {
   getThemeGlobalTypographyScopeValues,
 } from "../../shared/theme-global-typography-presets.js";
 import { getThemeGlobalTemplatePreset } from "../../shared/theme-global-template-presets.js";
-import { resolveThemePresetAsset } from "#theme-preset-assets";
+import { COMMUNITY_SURROUNDS } from "../../shared/community-designs.js";
+import { buildLiveBoardFilter, createLiveBoardFilterDefinition } from "../live-board-enhancement/logic.js";
+import { buildPlayerGlowStyle, createPlayerGlowLayer } from "../themes/global-typography/player-glow.js";
+import { resolveThemePresetPreview } from "#theme-preset-assets";
 import { normalizeHexColor } from "../../shared/hex-color-utils.js";
 import { getFeatureCatalogEntryByFeatureKey } from "../../shared/feature-catalog.js";
 import {
@@ -256,6 +259,7 @@ export function parseFieldValue(field, rawValue, checked) {
   if (field.control === "color") {
     return normalizeHexColor(rawValue, "");
   }
+  if (field.control === "range") return Number(rawValue);
 
   const matchingOption = Array.isArray(field.options)
     ? field.options.find((option) => String(option.value) === String(rawValue))
@@ -1705,6 +1709,7 @@ function buildThemeGlobalCardPreviewPlayer(documentRef, name, score, modifier = 
   return player;
 }
 
+let glowPreviewSerial = 0;
 function buildThemeGlobalCardPreviewSample(documentRef, config = {}, label = "") {
   const sample = createElement(documentRef, "div", {
     className: "ad-xconfig-theme-card-preview-sample",
@@ -1737,7 +1742,14 @@ function buildThemeGlobalCardPreviewSample(documentRef, config = {}, label = "")
     className: "ad-xconfig-theme-card-preview-label",
     text: label,
   }));
-  sample.appendChild(buildThemeGlobalCardPreviewPlayer(documentRef, "THOMAS", "501", "active"));
+  const activePlayer = buildThemeGlobalCardPreviewPlayer(documentRef, "THOMAS", "501", "active");
+  sample.appendChild(activePlayer);
+  if (config.glowMode && config.glowMode !== "off") {
+    sample.id = `ad-xconfig-glow-preview-${++glowPreviewSerial}`;
+    activePlayer.setAttribute("data-adx-player-glow", "true");
+    activePlayer.appendChild(createPlayerGlowLayer(documentRef));
+    sample.appendChild(createElement(documentRef, "style", { text: buildPlayerGlowStyle(config, `#${sample.id}`) }));
+  }
   sample.appendChild(createElement(documentRef, "span", {
     className: "ad-xconfig-theme-card-preview-throw",
     text: "T20  D20",
@@ -2633,7 +2645,7 @@ function buildThemeGlobalTemplatePresetActionField(documentRef, feature, field, 
     });
   }
 
-  const wallpaperUrl = resolveThemePresetAsset(preset.backgroundAssetKey);
+  const wallpaperUrl = resolveThemePresetPreview(preset.previewAssetKey || preset.backgroundAssetKey);
   const fontPreset = getThemeGlobalTypographyPreset(preset.fontPreset);
   const presetState = resolveThemeGlobalPresetState(features, preset);
   const wrapper = createElement(documentRef, "div", {
@@ -2682,6 +2694,9 @@ function buildThemeGlobalTemplatePresetActionField(documentRef, feature, field, 
     className: "ad-xconfig-theme-preset-name",
     text: preset.label,
   }));
+  if (preset.author) identity.appendChild(createElement(documentRef, "span", {
+    className: "ad-xconfig-note", text: `${preset.author} · ${preset.formats.map((format) => format === "portrait" ? "Hochformat" : "Querformat").join(" / ")}`,
+  }));
   if (presetState) {
     identity.appendChild(createElement(documentRef, "span", {
       className: `ad-xconfig-theme-preset-state ad-xconfig-theme-preset-state--${presetState}`,
@@ -2696,6 +2711,12 @@ function buildThemeGlobalTemplatePresetActionField(documentRef, feature, field, 
   }
   appendThemeGlobalTemplatePresetSwatches(documentRef, identity, preset);
   content.appendChild(identity);
+  if (preset.author) {
+    content.appendChild(createElement(documentRef, "span", { className: "ad-xconfig-note", text: "Originalvorschau · für xConfig angepasst" }));
+    button.appendChild(content);
+    wrapper.appendChild(button);
+    return wrapper;
+  }
 
   const player = createElement(documentRef, "span", {
     className: "ad-xconfig-theme-preset-player",
@@ -2899,6 +2920,13 @@ function buildFeatureSelectField(documentRef, feature, field, fieldId) {
       },
     });
     appendSelectOptionLayout(documentRef, optionButton, feature, field, option, state, isActive);
+    if (feature.featureKey === "board-surround" && field.key === "design") {
+      const design = COMMUNITY_SURROUNDS.find((entry) => entry.key === optionValue);
+      const url = resolveThemePresetPreview(design?.assetKey);
+      if (url) optionButton.appendChild(createElement(documentRef, "img", {
+        attributes: { src: url, alt: "", loading: "lazy", width: "100", height: "100", "data-adx-decoration": "surround-preview" },
+      }));
+    }
     list.appendChild(optionButton);
   });
 
@@ -2921,6 +2949,27 @@ function buildFeatureField(documentRef, feature, field, features = []) {
   const fieldId = `ad-xconfig-field-${feature.featureKey}-${field.key || field.action}`;
 
   switch (field.control) {
+    case "range": {
+      const wrapper = createElement(documentRef, "div", { className: "ad-xconfig-range-field" });
+      const input = createElement(documentRef, "input", { id: fieldId, type: "range", attributes: {
+        min: field.min, max: field.max, step: field.step,
+        "aria-label": field.label,
+        "data-adxconfig-setting": "true", "data-feature-key": feature.featureKey,
+        "data-config-key": feature.configKey, "data-setting-key": field.key, "data-setting-control": "range",
+      } });
+      input.value = String(feature.config?.[field.key] ?? field.min);
+      const output = createElement(documentRef, "output", { text: input.value, attributes: { for: fieldId } });
+      input.addEventListener("input", () => { output.textContent = input.value; });
+      wrapper.appendChild(input);
+      wrapper.appendChild(output);
+      for (const option of field.options || []) wrapper.appendChild(createElement(documentRef, "button", {
+        type: "button", text: option.label, attributes: {
+          "data-adxconfig-action": "set-setting-select-option", "data-feature-key": feature.featureKey,
+          "data-config-key": feature.configKey, "data-setting-key": field.key, "data-setting-value": option.value,
+        },
+      }));
+      return wrapper;
+    }
     case "action":
       return buildFeatureActionField(documentRef, feature, field, fieldId, features);
 
@@ -3230,6 +3279,12 @@ function buildFeatureCard(documentRef, feature, previewFeatures = []) {
       },
     }));
     card.appendChild(bg);
+    if (feature.featureKey === "live-board-enhancement") {
+      const id = "ad-xconfig-live-filter-preview";
+      bg.appendChild(createLiveBoardFilterDefinition(documentRef, id, feature.config?.intensity));
+      const values = buildLiveBoardFilter(feature.config?.intensity);
+      bg.querySelector("img").style.setProperty("filter", `url("#${id}") contrast(${values.contrast})`);
+    }
     syncFeatureCardPreviewContent(documentRef, card, feature, preview);
   }
 
@@ -3437,6 +3492,24 @@ function buildSettingsModal(documentRef, state, features) {
   const body = createElement(documentRef, "div", {
     className: "ad-xconfig-modal-body",
   });
+  if (feature.featureKey === "theme-global-presets") {
+    const search = createElement(documentRef, "input", { type: "search", attributes: {
+      "aria-label": "Designvorlagen durchsuchen", placeholder: "Name, Autor oder Format suchen …",
+      "data-adx-design-search": "true",
+    } });
+    search.addEventListener("input", () => {
+      const query = String(search.value || "").toLocaleLowerCase().trim();
+      for (const row of body.querySelectorAll(".ad-xconfig-setting-row--theme-preset")) {
+        const matches = String(row.getAttribute("data-adx-design-search-value") || "").includes(query);
+        row.hidden = !matches;
+        if (matches) {
+          const section = row.closest("details");
+          if (query && section) section.open = true;
+        }
+      }
+    });
+    body.appendChild(search);
+  }
   const settingsDetails = Array.isArray(descriptor?.settingsDetails)
     ? descriptor.settingsDetails.filter(Boolean)
     : [];
@@ -3521,6 +3594,10 @@ function buildSettingsModal(documentRef, state, features) {
     const row = createElement(documentRef, "div", {
       className: rowClassName,
     });
+    if (isThemePresetField) {
+      const preset = getThemeGlobalTemplatePreset(field.actionId);
+      row.setAttribute("data-adx-design-search-value", [preset?.label, preset?.author, ...(preset?.formats || []).map((format) => format === "portrait" ? "Hochformat" : "Querformat")].join(" ").toLocaleLowerCase());
+    }
     const inputWrap = createElement(documentRef, "div", {
       className: isThemePresetField
         ? "ad-xconfig-setting-input ad-xconfig-setting-input--theme-preset"

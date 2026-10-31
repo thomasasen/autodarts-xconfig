@@ -288,7 +288,30 @@ export function initializeDartMarkerReplacer(context = {}) {
   ensurePendingUpdateReasons(state);
 
   let scheduler = null;
+  let cleanedUp = false;
+  let resizeObserver = null;
+  let resizeTargets = [];
+  function disconnectResizeObserver() {
+    resizeObserver?.disconnect();
+    resizeObserver = null;
+    resizeTargets = [];
+  }
+  function syncResizeObserver() {
+    const board = state.boardSnapshot;
+    // Typography can resize the turn row above a same-sized board. Its stage
+    // then changes height and moves the board without a board resize event.
+    const stage = board?.svg?.closest?.('[data-adx-screen-part="board"]');
+    const targets = [...new Set([board?.svg, board?.zoomTarget, board?.zoomHost, stage])]
+      .filter((node) => node && node.isConnected !== false);
+    if (targets.length === resizeTargets.length && targets.every((node, index) => node === resizeTargets[index])) return;
+    disconnectResizeObserver();
+    if (!targets.length || typeof windowRef?.ResizeObserver !== "function") return;
+    resizeTargets = targets;
+    resizeObserver = new windowRef.ResizeObserver(() => scheduleUpdate(UPDATE_REASON.reposition));
+    targets.forEach((node) => resizeObserver.observe(node));
+  }
   function scheduleUpdate(reason = UPDATE_REASON.full) {
+    if (cleanedUp) return;
     scheduleStateUpdate(state, reason);
     scheduler?.schedule?.();
   }
@@ -303,9 +326,11 @@ export function initializeDartMarkerReplacer(context = {}) {
       updateMode: consumeUpdateMode(state),
       suppressFlight: rehydrating,
     });
+    syncResizeObserver();
   }
 
   scheduler = createTurnScopedScheduler(context, update, { windowRef, resetTurn() {
+    disconnectResizeObserver();
     state.cancelZoomTransitionLoop?.();
     clearDartMarkerReplacerState(state, { featureDebug, reason: "turn-change" });
     state.gameStateSnapshot = gameState?.getSnapshot?.() || null;
@@ -322,16 +347,21 @@ export function initializeDartMarkerReplacer(context = {}) {
       key: OBSERVER_KEY,
       target: rootNode,
       callback: (mutations = []) => {
-        if (!hasRelevantBoardMutation(mutations, isManagedNode)) {
-          return;
+        if (hasRelevantBoardMutation(mutations, isManagedNode)) {
+          scheduleUpdate(UPDATE_REASON.rescan);
+        } else if (mutations.some((mutation) => mutation.type === "attributes" &&
+          mutation.attributeName === "data-adx-screen-profile" && state.boardSnapshot?.svg &&
+          mutation.target !== state.boardSnapshot.svg && mutation.target?.contains?.(state.boardSnapshot.svg))) {
+          // A portrait switch can move the board without resizing it. Observe
+          // only the owning layout marker, not unrelated document styles.
+          scheduleUpdate(UPDATE_REASON.reposition);
         }
-        scheduleUpdate(UPDATE_REASON.rescan);
       },
       observeOptions: {
         childList: true,
         subtree: true,
         attributes: true,
-        attributeFilter: ["cx", "cy", "d", "points", "transform", "class", "style"],
+        attributeFilter: ["cx", "cy", "d", "points", "transform", "class", "style", "data-adx-screen-profile"],
       },
       MutationObserverRef: windowRef?.MutationObserver,
     });
@@ -412,7 +442,6 @@ export function initializeDartMarkerReplacer(context = {}) {
       : () => {};
 
   scheduleUpdate(UPDATE_REASON.full);
-  let cleanedUp = false;
 
   return function cleanup() {
     if (cleanedUp) {
@@ -421,6 +450,7 @@ export function initializeDartMarkerReplacer(context = {}) {
     cleanedUp = true;
 
     scheduler?.cancel?.();
+    disconnectResizeObserver();
     toolsAnimationLayers.release();
     state.cancelZoomTransitionLoop?.();
 

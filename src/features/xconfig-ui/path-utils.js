@@ -30,6 +30,8 @@ export function buildFeatureSettingPatch(configKey, settingKey, value) {
     featurePatch = buildCricketLayoutSettingValues(key, value);
   } else if (["cricketGridStatusEffects", "cricketTargetHighlighter"].includes(configKey)) {
     featurePatch = buildCricketDisplaySettingValues(configKey, key, value);
+  } else if (configKey === "boardSurround" && key === "design") {
+    featurePatch = { design: value, assetKey: "" };
   }
   setNestedValue(patch.features, path, featurePatch);
   return patch;

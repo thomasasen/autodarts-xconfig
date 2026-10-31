@@ -1,3 +1,4 @@
+import { readCricketPlayerStatistics } from "../cricket-surface/player-statistics.js";
 import { createFeatureMountHarness } from "../shared/feature-mount-harness.js";
 import { readModernCricketGrid } from "../cricket-surface/modern-grid.js";
 import { findBoardSvgRoot, NATIVE_BOARD_SELECTOR } from "../../shared/dartboard-svg.js";
@@ -6,11 +7,6 @@ import { calculateCricketLayout } from "./logic.js";
 import { STYLE_ID, buildCricketLayoutStyleText } from "./style.js";
 
 const FEATURE_KEY = "cricket-layout";
-
-function isCricketScoreNode(node, mprNodes) {
-  return !mprNodes.some((mpr) => mpr === node || mpr.contains(node)) &&
-    /^[\d\s.,+-]+$/.test(String(node.textContent || "").trim());
-}
 
 function resolvePanels(grid, documentRef) {
   const svg = findBoardSvgRoot(documentRef);
@@ -90,7 +86,9 @@ export function mountCricketLayout(context = {}) {
     const grid = readModernCricketGrid(documentRef);
     const raw = context.config?.getFeatureConfig?.("cricketLayout") || {};
     if (!grid || raw.enabled === false) { clear(); return; }
-    const panels = resolvePanels(grid.root, documentRef);
+    const outerLayout = context.config?.getFeatureConfig?.("themes.gameLayout");
+    const sharedOuterLayout = outerLayout?.enabled && outerLayout.screenProfile && outerLayout.screenProfile !== "legacy";
+    const panels = sharedOuterLayout ? null : resolvePanels(grid.root, documentRef);
     const structure = [grid.root, ...grid.headers, ...grid.headers.flatMap((header) => Array.from(header.querySelectorAll('span,div,p,svg[data-slot="nametag-shape"]'))), ...grid.labels.map((entry) => entry.node), ...Array.from(grid.cellsByLabel.values()).flat(), ...(panels ? [panels.root, panels.tablePanel, panels.boardPanel] : [])];
     if (lastGrid !== grid.root || structure.some((node, index) => node !== lastStructure[index]) || structure.length !== lastStructure.length) {
       clear();
@@ -142,22 +140,8 @@ export function mountCricketLayout(context = {}) {
           set(shape, "data-ad-cricket-nameplate-shape", "true");
         }
       }
-      const isMpr = (node) => /^MPR\s*(?::\s*)?[\d.,]*$/i.test(String(node?.textContent || "").trim());
-      const mprNodes = Array.from(header.querySelectorAll("span,div,p")).filter((node) =>
-        isMpr(node) && !isMpr(node.parentElement));
-      const numericNodes = Array.from(header.querySelectorAll(".font-number")).filter((node) =>
-        isCricketScoreNode(node, mprNodes));
-      const boldScores = numericNodes.filter((node) => node.classList.contains("font-bold"));
-      let score = null;
-      if (boldScores.length === 1) score = boldScores[0];
-      else if (numericNodes.length === 1) score = numericNodes[0];
-      if (score) {
-        set(score, "data-ad-cricket-score", "true");
-        // Current native heads render unlabeled statistic badges beside the main score.
-        Array.from(score.parentElement.children).filter((node) =>
-          node !== score && node.matches(".flex.flex-col") && node.querySelector(".rounded-sm.size-8 .font-number"))
-          .forEach((node) => mprNodes.push(node));
-      }
+      const { score, mprNodes } = readCricketPlayerStatistics(header);
+      if (score) set(score, "data-ad-cricket-score", "true");
       mprNodes.forEach((node) => set(node, "data-ad-cricket-mpr-value", "true"));
     });
     grid.labels.forEach(({ node, label }, index) => {

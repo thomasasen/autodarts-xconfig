@@ -1,9 +1,9 @@
 <!-- xconfig-generated:start -->
 # Feature-Übersicht
 
-`autodarts-xconfig` bündelt `22` Module in einem Userscript:
+`autodarts-xconfig` bündelt `24` Module in einem Userscript:
 
-- `18` Anzeigen und Komfortfunktionen
+- `20` Anzeigen und Komfortfunktionen
 - `4` Designmodule
 
 Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Alle Kacheln stehen gemeinsam auf einer Seite in den Bereichen **Design**, **Alle Modi**, **X01** und **Cricket / Tactics**. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).
@@ -12,7 +12,7 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Alle Kacheln 
 
 ## Hinweise zur Konfiguration
 
-- Insgesamt `22` Module: `18` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
+- Insgesamt `24` Module: `20` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
 - `↺ Zurücksetzen`: Setzt alle Einstellungen vollständig auf Standard zurück, deaktiviert alle Module, schaltet die Diagnose aus und entfernt globales Hintergrundbild sowie Dart-Upload.
 - `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
 - `Exportieren` / `Importieren`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.
@@ -166,8 +166,10 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 - Gilt für: `alle Modi`
 - Kurz: Wendet Hintergrundbild, Schrift und Farben gemeinsam an, ohne die Darts in der Wurfanzeige zu verändern.
-- Grafisch: Jede Vorschau zeigt das mitgelieferte Hintergrundbild, die zugehörige Schrift und die Farben. Die Aktion aktiviert Hintergrund sowie Schrift & Farben und ersetzt ein eigenes Hintergrundbild.
+- Grafisch: Kleine Vorschaubilder sind mitgeliefert und offline verfügbar. Beim Anwenden werden nur die benötigten Motive geladen und dauerhaft gespeichert. Bei einem Fehler bleibt die bisherige Darstellung erhalten; die Auswahl kann erneut angewendet werden. Die Aktion aktiviert Hintergrund sowie Schrift & Farben und ersetzt ein eigenes Hintergrundbild.
 - Wann sinnvoll? Wenn du einen vollständigen Look mit einem Klick auswählen möchtest.
+- `Surround übernehmen`: Übernimmt einen zugeordneten Surround beim nächsten Vorlagenwechsel. Ohne diese Auswahl bleibt der aktuelle Surround erhalten.
+- `Glow übernehmen`: Übernimmt den Glow beim nächsten Vorlagenwechsel. Ohne diese Auswahl bleiben die Glow-Einstellungen erhalten.
 - `Classic`: Wendet die Vorlage Classic mit einem Klick an.
 - `Broadcast`: Wendet die Vorlage Broadcast mit einem Klick an.
 - `Darts Arena`: Wendet die Vorlage Darts Arena mit einem Klick an.
@@ -187,6 +189,84 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Avengers Endgame`: Wendet die Vorlage Avengers Endgame mit einem Klick an.
 - `Gladiator`: Wendet die Vorlage Gladiator mit einem Klick an.
 - `Dark Side`: Wendet die Vorlage Dark Side mit einem Klick an.
+- `Adrian Lewis`: Wendet die Vorlage Adrian Lewis mit einem Klick an.
+- `Board Advantage`: Wendet die Vorlage Board Advantage mit einem Klick an.
+- `Board Black`: Wendet die Vorlage Board Black mit einem Klick an.
+- `Board Blue`: Wendet die Vorlage Board Blue mit einem Klick an.
+- `Board Green`: Wendet die Vorlage Board Green mit einem Klick an.
+- `Board Lemon`: Wendet die Vorlage Board Lemon mit einem Klick an.
+- `Board Orange`: Wendet die Vorlage Board Orange mit einem Klick an.
+- `Board Purple`: Wendet die Vorlage Board Purple mit einem Klick an.
+- `Bulls Advantage`: Wendet die Vorlage Bulls Advantage mit einem Klick an.
+- `Bulls Advantage New`: Wendet die Vorlage Bulls Advantage New mit einem Klick an.
+- `Clean Green`: Wendet die Vorlage Clean Green mit einem Klick an.
+- `Clean Lemon`: Wendet die Vorlage Clean Lemon mit einem Klick an.
+- `Clean Red`: Wendet die Vorlage Clean Red mit einem Klick an.
+- `Clean White`: Wendet die Vorlage Clean White mit einem Klick an.
+- `Green Forest`: Wendet die Vorlage Green Forest mit einem Klick an.
+- `Green Highlands`: Wendet die Vorlage Green Highlands mit einem Klick an.
+- `Green Leaves`: Wendet die Vorlage Green Leaves mit einem Klick an.
+- `Logo AL Green`: Wendet die Vorlage Logo AL Green mit einem Klick an.
+- `Logo AL Petrol`: Wendet die Vorlage Logo AL Petrol mit einem Klick an.
+- `Logo AL Purple`: Wendet die Vorlage Logo AL Purple mit einem Klick an.
+- `Neutral Blue`: Wendet die Vorlage Neutral Blue mit einem Klick an.
+- `Neutral Brown`: Wendet die Vorlage Neutral Brown mit einem Klick an.
+- `Neutral Green`: Wendet die Vorlage Neutral Green mit einem Klick an.
+- `Neutral Grey`: Wendet die Vorlage Neutral Grey mit einem Klick an.
+- `Neutral Mint`: Wendet die Vorlage Neutral Mint mit einem Klick an.
+- `Neutral Purple`: Wendet die Vorlage Neutral Purple mit einem Klick an.
+- `Neutral Red`: Wendet die Vorlage Neutral Red mit einem Klick an.
+- `New Barrels Color`: Wendet die Vorlage New Barrels Color mit einem Klick an.
+- `New Barrels Dark`: Wendet die Vorlage New Barrels Dark mit einem Klick an.
+- `Panel Black`: Wendet die Vorlage Panel Black mit einem Klick an.
+- `Panel Dark`: Wendet die Vorlage Panel Dark mit einem Klick an.
+- `Panel Grey`: Wendet die Vorlage Panel Grey mit einem Klick an.
+- `Panel Light`: Wendet die Vorlage Panel Light mit einem Klick an.
+- `Panel Mid`: Wendet die Vorlage Panel Mid mit einem Klick an.
+- `Precise180 Endorphine`: Wendet die Vorlage Precise180 Endorphine mit einem Klick an.
+- `Precise180 Endorphine Grey`: Wendet die Vorlage Precise180 Endorphine Grey mit einem Klick an.
+- `Precise180 Endorphine Light`: Wendet die Vorlage Precise180 Endorphine Light mit einem Klick an.
+- `Precise180 Northern Lights`: Wendet die Vorlage Precise180 Northern Lights mit einem Klick an.
+- `Precise180 Polychrome`: Wendet die Vorlage Precise180 Polychrome mit einem Klick an.
+- `Precise180 Spectrum`: Wendet die Vorlage Precise180 Spectrum mit einem Klick an.
+- `Precise180 Subterra`: Wendet die Vorlage Precise180 Subterra mit einem Klick an.
+- `Precise180 Subterra Light`: Wendet die Vorlage Precise180 Subterra Light mit einem Klick an.
+- `Real Board Advantage`: Wendet die Vorlage Real Board Advantage mit einem Klick an.
+- `Real Board Regular`: Wendet die Vorlage Real Board Regular mit einem Klick an.
+- `Squares Black`: Wendet die Vorlage Squares Black mit einem Klick an.
+- `Stage AllyPally1`: Wendet die Vorlage Stage AllyPally1 mit einem Klick an.
+- `Stage AllyPally2`: Wendet die Vorlage Stage AllyPally2 mit einem Klick an.
+- `Stage Premier League`: Wendet die Vorlage Stage Premier League mit einem Klick an.
+- `Vintage Black`: Wendet die Vorlage Vintage Black mit einem Klick an.
+- `Vintage Fire`: Wendet die Vorlage Vintage Fire mit einem Klick an.
+- `Vintage Fire and Ice`: Wendet die Vorlage Vintage Fire and Ice mit einem Klick an.
+- `Vintage Ice`: Wendet die Vorlage Vintage Ice mit einem Klick an.
+- `Vintage Nature`: Wendet die Vorlage Vintage Nature mit einem Klick an.
+- `Winmau Blade360`: Wendet die Vorlage Winmau Blade360 mit einem Klick an.
+- `Winmau Blade6`: Wendet die Vorlage Winmau Blade6 mit einem Klick an.
+- `Winmau Force Black`: Wendet die Vorlage Winmau Force Black mit einem Klick an.
+- `Winmau Force Blue`: Wendet die Vorlage Winmau Force Blue mit einem Klick an.
+- `Winmau Force Green`: Wendet die Vorlage Winmau Force Green mit einem Klick an.
+- `Winmau Force Red`: Wendet die Vorlage Winmau Force Red mit einem Klick an.
+- `Winmau White`: Wendet die Vorlage Winmau White mit einem Klick an.
+- `Wood Dark`: Wendet die Vorlage Wood Dark mit einem Klick an.
+- `Wood Light`: Wendet die Vorlage Wood Light mit einem Klick an.
+- `Wood Mid`: Wendet die Vorlage Wood Mid mit einem Klick an.
+- `Arena`: Wendet die Vorlage Arena mit einem Klick an.
+- `Austria v2`: Wendet die Vorlage Austria v2 mit einem Klick an.
+- `Black Stage`: Wendet die Vorlage Black Stage mit einem Klick an.
+- `Championc green`: Wendet die Vorlage Championc green mit einem Klick an.
+- `Circus Tavern`: Wendet die Vorlage Circus Tavern mit einem Klick an.
+- `DartHistory`: Wendet die Vorlage DartHistory mit einem Klick an.
+- `Faro Anubis`: Wendet die Vorlage Faro Anubis mit einem Klick an.
+- `FI YingYang`: Wendet die Vorlage FI YingYang mit einem Klick an.
+- `GERMAN`: Wendet die Vorlage GERMAN mit einem Klick an.
+- `GERMAN 2`: Wendet die Vorlage GERMAN 2 mit einem Klick an.
+- `MDMG`: Wendet die Vorlage MDMG mit einem Klick an.
+- `OLD STYLE`: Wendet die Vorlage OLD STYLE mit einem Klick an.
+- `Olymp`: Wendet die Vorlage Olymp mit einem Klick an.
+- `Price Clayton`: Wendet die Vorlage Price Clayton mit einem Klick an.
+- `Sunshine`: Wendet die Vorlage Sunshine mit einem Klick an.
 
 ![Globale Vorlagen](screenshots/templates-global-presets.webp)
 
@@ -204,6 +284,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Strecken`: Das Motiv wird unabhängig vom Originalformat auf die komplette Theme-Fläche gezogen. So ist jeder Bereich bedeckt, aber die Bildproportionen können sichtbar auseinandergezogen oder zusammengedrückt wirken.
   - `Zentriert`: Das Motiv erscheint wie ein mittig aufgelegtes Poster ohne automatische Skalierung. Große leere Ränder des Themes bleiben stehen, wenn das Bild kleiner als der verfügbare Bereich ist.
   - `Kacheln`: Das Motiv wird wie eine Kachel über die Theme-Fläche wiederholt. Statt eines einzelnen großen Hintergrundbilds entsteht ein sich wiederholendes Muster über den gesamten Bereich.
+- `Menühintergrund der Vorlage anwenden`: Lädt und speichert zusätzlich das Menübild der Community-Vorlage für die Anzeige außerhalb von Matches.
 - `Sichtbarkeit des Hintergrundbilds`: Regelt, wie stark das Hintergrundbild sichtbar bleibt.
   - `100 %`: Das Hintergrundbild wirkt nahezu ungefiltert und sehr präsent. Farben und Kanten bleiben deutlich sichtbar, sodass das Motiv den Look des Themes stark mitbestimmt.
   - `85 %`: Das Motiv bleibt klar sichtbar und prägt die Fläche stark, bekommt aber schon eine leichte dunkle Dämpfung. Dadurch bleibt der Bildcharakter erhalten, ohne ganz so hart in den Vordergrund zu drängen.
@@ -237,6 +318,12 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - Kurz: Wendet Schrift und Farben auf ausgewählte Bereiche an, kann aktive Spielerkarten einfärben und skaliert den X01-Restscore unabhängig von Namen und Statistiken.
 - Grafisch: Schriftart, Textfarben und das responsive Restscore-Profil ändern nur die ausgewählten stabilen Textbereiche; das Autodarts-Layout bleibt bestehen.
 - Wann sinnvoll? Wenn Scores, Würfe oder Namen einheitlich lesbar sein oder X01-Restscores separat hervorgehoben werden sollen.
+- `Aktiver Spieler: Glow`: Wählt Aus, Randglanz oder sanftes Pulsieren. BUST und Gewinnerzustände haben Vorrang; reduzierte Bewegung hält den Glow gleichmäßig.
+  - `Aus`: Kein zusätzlicher Glow; vorhandene Hervorhebungen bleiben erhalten.
+  - `Randglanz`: Markiert den aktiven Spieler mit gleichmäßigem Randglanz.
+  - `Sanftes Pulsieren`: Lässt den Randglanz sanft pulsieren. Bei reduzierter Bewegung bleibt er gleichmäßig.
+- `Glow-Farbe`: Wählt die Glow-Farbe. Ohne eigene Farbe wird die Akzentfarbe verwendet.
+- `Glow-Stärke`: Regelt die Stärke der eigenständigen Glow-Ebene von 0 bis 100.
 - `Schriftart`: Wählt eine kuratierte Schrift für unterstützte Bereiche.
   - `Standard (deaktiviert)`: Belässt die unterstützten Bereiche bei einer normalen Systemschrift ohne Remote-Download.
   - `Aldrich`: Setzt die unterstützten Bereiche auf Aldrich.
@@ -318,14 +405,25 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ### Spiel-Layout
 
-- Gilt für: `X01`
-- Kurz: Zeigt die Wurfanzeige über kompakten horizontalen Spielerkarten links und vergrößert das native Board rechts.
+- Gilt für: `alle Modi`
+- Kurz: Bildschirmprofile ordnen Spieler oder Tabelle und Board passend zum verfügbaren Platz an. Unklare Oberflächen bleiben unverändert.
 - Grafisch: Alle nativen Spielerkarten bleiben erhalten und werden nur visuell angeordnet. Optional rotiert die Leiste zyklisch so, dass der aktuell werfende Spieler immer oben steht; ein kleiner START-Badge kann zusätzlich den Spieler markieren, der das aktuelle Leg begonnen hat.
 - Wann sinnvoll? Wenn das Board im Querformat möglichst groß sein und trotzdem jeder Spieler schnell erfassbar bleiben soll.
-- Aktiv ab 1180×650 Pixeln im Querformat; kleinere oder unklare Oberflächen bleiben im nativen Layout.
+- Bisheriges Layout erhält den X01-Board-Fokus ab 1180×650 Pixeln. Bildschirmprofile ergänzen Desktop, TV und Hochformat für gemeinsame Spieler- und Tabellenflächen aller Modi.
+- Automatisch verwendet Hochformat bei weniger als 900 Pixel verfügbarer Breite oder wenn das Fenster höher als breit ist. Unklare Oberflächen behalten ihre native Anordnung.
 - Die Reihenfolge kann fest bleiben oder zyklisch mit dem aktuell werfenden Spieler nach oben rotieren.
 - Der optionale START-Badge bleibt beim Leg-Starter und ist unabhängig davon, wer gerade wirft.
 - Bei vielen Spielern bleibt der aktive Spieler im Rotationsmodus oben sichtbar; die übrigen Spieler lassen sich weiter durchscrollen.
+- `Bildschirmprofil`: Wählt bisheriges Layout, Automatisch, Desktop, TV oder Hochformat.
+  - `Bisheriges Layout`: Erhält das bisherige X01-Layout und die eigenständige Cricket-Anordnung.
+  - `Automatisch`: Wählt Hochformat bei weniger als 900 Pixel Breite oder einem höheren als breiten Fenster, sonst Desktop.
+  - `Desktop`: Ordnet Spieler oder Tabelle links und den Board-Bereich rechts an.
+  - `TV / Fernansicht`: Verwendet die Desktop-Anordnung mit zusätzlich um 25 Prozent vergrößerten Namen und Scores.
+  - `Hochformat`: Ordnet Spieler oder Tabelle oberhalb des Boards an und hält Inhalte scrollbar erreichbar.
+- `Board-Anteil (%)`: Regelt im Querformat den Platzanteil für das Board. Im Hochformat begrenzt der Wert die Board-Größe relativ zur Fensterhöhe.
+- `Textgröße (%)`: Skaliert Spielernamen und Scores von 80 bis 150 Prozent; TV vergrößert zusätzlich um 25 Prozent.
+- `AVG / MPR anzeigen`: Zeigt erkannte AVG- und MPR-Anzeigen an. Scores und Spielziele bleiben sichtbar.
+- `Nebenstatistiken anzeigen`: Zeigt erkannte Nebenstatistiken wie First 9 oder Checkout-Prozent an.
 - `Spielerreihenfolge`: Legt fest, ob die Reihenfolge statisch bleibt oder mit dem aktiven Spieler rotiert.
   - `Fest`: Behält die feste Sitzreihenfolge der Spielerkarten bei.
   - `Aktiver Spieler immer oben`: Rotiert zyklisch so, dass der aktive Spieler immer oben steht.
@@ -339,6 +437,64 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 ![X01-Spiel-Layout](screenshots/theme-game-layout.webp)
 
 ## Alle Modi
+
+<a id="live-board-enhancement"></a>
+
+### Livebild optimieren
+
+- Gilt für: `alle Modi`
+- Kurz: Verbessert Schärfe und Kontrast des angezeigten Kamerabilds. Die Darterkennung bleibt unverändert.
+- Grafisch: undefined
+- Wann sinnvoll? Wenn das Livebild auf dem Spielmonitor zu weich wirkt.
+- `Stärke`: Regelt den Filter von 0 bis 100. Dezent: 30, Deutlich: 60. Hohe Werte können Rauschen verstärken.
+- `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+
+<a id="board-surround"></a>
+
+### Board-Surround
+
+- Gilt für: `alle Modi`
+- Kurz: Das Motiv wird beim ersten Aktivieren geladen und dauerhaft gespeichert. Danach ist es offline verfügbar. Der Surround bleibt beim Checkout-Zoom stehen und lässt das Board frei.
+- Grafisch: undefined
+- Wann sinnvoll? Wenn die Scheibe einen passenden Rahmen erhalten soll.
+- `Surround`: Wählt das Surround-Motiv.
+  - `Zugewiesenes Vorlagenmotiv`: Zeigt ein bereits zugewiesenes Vorlagenmotiv. Wähle ein anderes Motiv, um es zu ersetzen.
+  - `Bulls Advantage`: Zeigt den lokal gespeicherten Surround Bulls Advantage.
+  - `Bulls Advantage New`: Zeigt den lokal gespeicherten Surround Bulls Advantage New.
+  - `Bulls Flying Mullets`: Zeigt den lokal gespeicherten Surround Bulls Flying Mullets.
+  - `Bulls Black`: Zeigt den lokal gespeicherten Surround Bulls Black.
+  - `Precise180 Endorphine`: Zeigt den lokal gespeicherten Surround Precise180 Endorphine.
+  - `Precise180 Endorphine Grey`: Zeigt den lokal gespeicherten Surround Precise180 Endorphine Grey.
+  - `Precise180 Endorphine White`: Zeigt den lokal gespeicherten Surround Precise180 Endorphine White.
+  - `Precise180 Northern Lights`: Zeigt den lokal gespeicherten Surround Precise180 Northern Lights.
+  - `Precise180 Polychrome`: Zeigt den lokal gespeicherten Surround Precise180 Polychrome.
+  - `Precise180 Spectrum`: Zeigt den lokal gespeicherten Surround Precise180 Spectrum.
+  - `Precise180 Subterra`: Zeigt den lokal gespeicherten Surround Precise180 Subterra.
+  - `Precise180 Subterra Light`: Zeigt den lokal gespeicherten Surround Precise180 Subterra Light.
+  - `Red Dragon Black`: Zeigt den lokal gespeicherten Surround Red Dragon Black.
+  - `Red Dragon Clayton`: Zeigt den lokal gespeicherten Surround Red Dragon Clayton.
+  - `Red Dragon Cool Hand`: Zeigt den lokal gespeicherten Surround Red Dragon Cool Hand.
+  - `Red Dragon Iceman`: Zeigt den lokal gespeicherten Surround Red Dragon Iceman.
+  - `Red Dragon Snakebite`: Zeigt den lokal gespeicherten Surround Red Dragon Snakebite.
+  - `Shot Bully Boy`: Zeigt den lokal gespeicherten Surround Shot Bully Boy.
+  - `Target Nuke`: Zeigt den lokal gespeicherten Surround Target Nuke.
+  - `Target Notched Grey`: Zeigt den lokal gespeicherten Surround Target Notched Grey.
+  - `Target Star Wars`: Zeigt den lokal gespeicherten Surround Target Star Wars.
+  - `Target Tor`: Zeigt den lokal gespeicherten Surround Target Tor.
+  - `Winmau Blade6`: Zeigt den lokal gespeicherten Surround Winmau Blade6.
+  - `Winmau Blade360`: Zeigt den lokal gespeicherten Surround Winmau Blade360.
+  - `Winmau Advanced Red`: Zeigt den lokal gespeicherten Surround Winmau Advanced Red.
+  - `Winmau Advanced Black Red`: Zeigt den lokal gespeicherten Surround Winmau Advanced Black Red.
+  - `Winmau Advanced Green`: Zeigt den lokal gespeicherten Surround Winmau Advanced Green.
+  - `Winmau Advanced Black Green`: Zeigt den lokal gespeicherten Surround Winmau Advanced Black Green.
+  - `Winmau Force Black`: Zeigt den lokal gespeicherten Surround Winmau Force Black.
+  - `Winmau Force Blue`: Zeigt den lokal gespeicherten Surround Winmau Force Blue.
+  - `Winmau Force Green`: Zeigt den lokal gespeicherten Surround Winmau Force Green.
+  - `Winmau Force Red`: Zeigt den lokal gespeicherten Surround Winmau Force Red.
+  - `Winmau Force White`: Zeigt den lokal gespeicherten Surround Winmau Force White.
+  - `Winmau MVG`: Zeigt den lokal gespeicherten Surround Winmau MVG.
+- `Größe (%)`: Passt die Außengröße an; die Board-Fläche bleibt frei.
+- `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 <a id="bot-board-style"></a>
 

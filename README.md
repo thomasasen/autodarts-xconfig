@@ -61,7 +61,7 @@ Alles wird direkt im Spiel über **xConfig** eingestellt. Du findest den Eintrag
 
 ## Im Überblick
 
-- Insgesamt `22` Module: `18` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
+- Insgesamt `24` Module: `20` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
 - `↺ Zurücksetzen`: Setzt alle Einstellungen vollständig auf Standard zurück, deaktiviert alle Module, schaltet die Diagnose aus und entfernt globales Hintergrundbild sowie Dart-Upload.
 - `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
 - `Exportieren` / `Importieren`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.
@@ -184,6 +184,20 @@ Den globalen Hintergrund kannst du zusätzlich anpassen:
 
 Hinweis: Die Option `Diagnose` ist in allen Modulen nur für Fehlersuche gedacht. Im normalen Spielbetrieb sollte sie deaktiviert bleiben.
 
+## Bildschirmprofile und Community-Designs
+
+`Spiel-Layout` bietet neben `Bisheriges Layout` die Profile `Automatisch`, `Desktop`, `TV / Fernansicht` und `Hochformat`. Bestehende Einstellungen bleiben beim bisherigen Layout. Automatisch verwendet bei weniger als 900 Pixel verfügbarer Breite oder einem höheren als breiten Fenster das Hochformat. Board-Anteil, Textgröße und Nebenanzeigen sind einstellbar. Die Profile arbeiten mit den gemeinsamen Spieler-/Tabellenflächen der Spielmodi; bei einer unbekannten oder unvollständigen Oberfläche bleibt die native Anordnung erhalten.
+
+`Livebild optimieren` schärft ausschließlich das vorhandene Board-Kamerabild. `Dezent` entspricht Stärke 30, `Deutlich` Stärke 60. Die Darterkennung bleibt unverändert. Stärke 0 lässt das Bild unbearbeitet; hohe Werte können Bildrauschen verstärken. Die tatsächliche Wirkung und Grafikleistung hängen von Kamera, Browser und Hardware ab.
+
+`Board-Surround` bietet 34 Motive. Beim ersten Aktivieren wird das ausgewählte Motiv geladen und dauerhaft gespeichert. Der Rahmen bleibt beim Checkout-Zoom stehen. Unter `Schrift & Farben` ergänzt ein optionaler Glow den aktiven Spieler beziehungsweise Cricket-Spaltenkopf. Er kann gleichmäßig leuchten oder sanft pulsieren; bei reduzierter Bewegung bleibt er gleichmäßig.
+
+Die Vorlagen enthalten zusätzlich 78 aktuelle öffentliche Designs aus Autodarts Layouts, mit Suche nach Name, Autor und Format. Es sind an xConfig angepasste Vorlagen. Ein Vorlagenwechsel verändert Hintergrund, Schrift und Farben. `Surround übernehmen` und `Glow übernehmen` sind zunächst ausgeschaltet; ein zugeordnetes Extra wird nur bei ausdrücklicher Auswahl übernommen. Bildschirmprofil, Livebildfilter und Spieleffekte bleiben erhalten. Kontextabhängige Bilder für Cricket und Hochformat werden bei Bedarf geladen; ein Vorlagen-Menübild wird nur mit `Menühintergrund der Vorlage anwenden` aktiviert.
+
+Die Galerie verwendet kleine, mitgelieferte Vorschaubilder und funktioniert sofort offline. Vollständige Hintergrund- und Surround-Bilder werden erst beim Aktivieren beziehungsweise beim Wechsel in einen noch nicht gespeicherten Bildkontext geladen. Sie stammen aus dem zur xConfig-Version gehörenden festen GitHub-Release-Tag. Nach erfolgreicher Prüfsummenprüfung und Speicherung im Tampermonkey-Speicher sind geladene Motive auch nach Reload und xConfig-Updates offline verfügbar, solange ihr Bildinhalt unverändert bleibt. Bei Download- oder Speicherfehlern bleibt die bisherige Darstellung erhalten und xConfig zeigt einen Fehler mit erneuter Versuchsmöglichkeit. Der Bildspeicher ist von den Einstellungen getrennt; Einstellungsbackups behalten Bildschlüssel, eigene Uploads werden weiterhin nach der bisherigen Exportoption behandelt. Auf einem neuen Gerät werden die benötigten Bibliotheksbilder erneut geladen.
+
+Herkunft und Importverfahren sind unter [Community-Designs](src/assets/theme-presets/community/README.md) dokumentiert. Alle neuen Effekte sind standardmäßig ausgeschaltet. Die Kompatibilität wird durch gezielte DOM- und Konfigurationstests abgesichert; eine Liveprüfung aller Spielmodi und Hardwarekonfigurationen ist damit nicht ersetzt.
+
 <!-- xconfig-generated:start -->
 ## Modul-Finder
 
@@ -191,10 +205,12 @@ Wähle den Spielmodus oder den gewünschten sichtbaren Effekt und öffne anschli
 
 | Modul | Bereich | Geeignet für | Kurz erklärt |
 | --- | --- | --- | --- |
+| [Livebild optimieren](#live-board-enhancement) | Funktion | `alle Modi` | Schärft das vorhandene Board-Livebild mit einstellbarer Stärke. |
+| [Board-Surround](#board-surround) | Funktion | `alle Modi` | Zeigt einen von 34 Surrounds hinter dem Board. |
 | [Designvorlagen](#theme-global-presets) | Aktion | `alle Modi` | Fertige Vorlagen für globalen Hintergrund und globale Schrift. |
 | [Hintergrund](#theme-global-background) | Design | `alle Modi` | Globales Wallpaper und transparente Spielerfelder für alle Spielansichten. |
 | [Schrift & Farben](#template-global-typography) | Design | `alle Modi` | Globale Schrift, Textfarben und eine separate Restscore-Größe für Spielerkarten. |
-| [Spiel-Layout](#theme-game-layout) | Design | `X01` | Ordnet alle X01-Spieler links an und kann den aktuell werfenden Spieler immer nach oben rotieren. |
+| [Spiel-Layout](#theme-game-layout) | Design | `alle Modi` | Passt die Spielansicht an Desktop, TV oder Hochformat an und erhält das bisherige X01-Layout. |
 | [Dartboard-Design](#bot-board-style) | Funktion | `alle Modi` | Zeigt eines von zehn bekannten Board-Designs entweder nur während Bot-Zügen oder auf allen unterstützten Match-Boards. |
 | [Darts in der Wurfanzeige](#turn-dart-display) | Funktion | `alle Modi` | Globale Darstellung der drei Darts im Wurffeld. |
 | [Finishbaren Restscore hervorheben](#animation-autodarts-animate-checkout-score-highlight) | Funktion | `X01` | Hebt direkt finishbare Restwerte in X01 mit einem gut sichtbaren Score-Effekt hervor. |
@@ -262,8 +278,8 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 ### Spiel-Layout
 
-- Gilt für: `X01`
-- Was macht es sichtbar? Zeigt die Wurfanzeige über kompakten horizontalen Spielerkarten links und vergrößert das native Board rechts.
+- Gilt für: `alle Modi`
+- Was macht es sichtbar? Bildschirmprofile ordnen Spieler oder Tabelle und Board passend zum verfügbaren Platz an. Unklare Oberflächen bleiben unverändert.
 - Wann sinnvoll? Wenn das Board im Querformat möglichst groß sein und trotzdem jeder Spieler schnell erfassbar bleiben soll.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#theme-game-layout)
@@ -271,6 +287,26 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 ![X01-Spiel-Layout](docs/screenshots/theme-game-layout.webp)
 
 ## Alle Modi
+
+<a id="live-board-enhancement"></a>
+
+### Livebild optimieren
+
+- Gilt für: `alle Modi`
+- Was macht es sichtbar? Verbessert Schärfe und Kontrast des angezeigten Kamerabilds. Die Darterkennung bleibt unverändert.
+- Wann sinnvoll? Wenn das Livebild auf dem Spielmonitor zu weich wirkt.
+
+[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#live-board-enhancement)
+
+<a id="board-surround"></a>
+
+### Board-Surround
+
+- Gilt für: `alle Modi`
+- Was macht es sichtbar? Das Motiv wird beim ersten Aktivieren geladen und dauerhaft gespeichert. Danach ist es offline verfügbar. Der Surround bleibt beim Checkout-Zoom stehen und lässt das Board frei.
+- Wann sinnvoll? Wenn die Scheibe einen passenden Rahmen erhalten soll.
+
+[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#board-surround)
 
 <a id="bot-board-style"></a>
 

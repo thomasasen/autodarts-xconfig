@@ -27,15 +27,19 @@ function withRuntimeCall(
         return;
       }
       if (successMessage) {
+        controller.assetRetrySuccessAction = null;
         controller.setNotice(successType, successMessage, successAction);
       }
     })
-    .catch(() => {
+    .catch((error) => {
       if (!isControllerActive(controller)) {
         return;
       }
       if (errorMessage) {
-        controller.setNotice("error", errorMessage);
+        if (error?.code === "THEME_ASSET_FAILED") {
+          controller.assetRetrySuccessAction = successAction;
+          controller.setNotice("error", `${errorMessage} ${error.message}`, { action: "retryThemeAssets", label: "Erneut versuchen" });
+        } else controller.setNotice("error", errorMessage);
       }
     })
     .finally(() => {
@@ -243,7 +247,7 @@ function handleSetSettingSelectOption(controller, actionNode, feature) {
   const descriptor = controller.getXConfigDescriptor(feature.featureKey);
   const field =
     descriptor?.fields?.find(
-      (entry) => entry.control === "select" && entry.key === settingKey
+      (entry) => ["select", "range"].includes(entry.control) && entry.key === settingKey
     ) || null;
   if (!field) {
     return;
@@ -355,7 +359,8 @@ function handleApplyThemeGlobalPreset(controller, actionNode, feature) {
 
   const presetKey = String(actionNode?.getAttribute?.("data-feature-action-id") || "").trim();
   const preset = getThemeGlobalTemplatePreset(presetKey);
-  const patch = createThemeGlobalTemplatePresetPatch(presetKey);
+  const presetOptions = feature.config || {};
+  const patch = createThemeGlobalTemplatePresetPatch(presetKey, presetOptions);
   if (!preset || !patch) {
     return;
   }
@@ -380,6 +385,13 @@ function handleApplyThemeGlobalPreset(controller, actionNode, feature) {
         },
       }
     : null;
+  if (controller.themePresetUndoPatch && patch.features.boardSurround) {
+    const surround = controller.getFeatures().find((entry) => entry.featureKey === "board-surround");
+    if (surround) {
+      controller.themePresetUndoPatch.features.boardSurround = { ...surround.config };
+      controller.themePresetUndoPatch.featureToggles.boardSurround = Boolean(surround.enabled);
+    }
+  }
 
   withRuntimeCall(
     controller,
@@ -611,6 +623,7 @@ function buildCommandHandlers(controller) {
       handleApplyThemeGlobalPreset(controller, actionNode, feature);
     }],
     ["undoThemeGlobalPreset", () => handleUndoThemeGlobalPreset(controller)],
+    ["retryThemeAssets", () => withRuntimeCall(controller, controller.runtimeApi.retryThemeAssets(), "Design-Bild geladen.", "Design-Bild konnte nicht geladen werden. Bitte erneut versuchen.", "success", controller.assetRetrySuccessAction)],
     ["clearThemeBackground", (_actionNode, feature) => {
       if (!feature) {
         return;
