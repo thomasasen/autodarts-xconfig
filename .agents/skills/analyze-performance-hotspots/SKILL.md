@@ -15,14 +15,10 @@ Improve performance only where evidence points to a real hotspot, without changi
 - be careful with observers, polling, animation frames, timers, and render scheduling
 - keep visual behavior unchanged unless the task explicitly requests a behavior change
 - require before/after reasoning and validation appropriate to the touched scope
-- do not hand-edit `dist/**`
 
-# Context budget
+# Relevant context
 
-- search first, then open likely hot-path files and nearest tests
-- avoid broad tours through `src/**`
-- avoid `docs/**` unless task-relevant
-- stop expanding context when the performance hypothesis is sufficiently grounded
+Focus on files and nearest tests relevant to the suspected hot path.
 
 # Output requirements
 

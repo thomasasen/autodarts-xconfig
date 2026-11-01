@@ -11,7 +11,8 @@ Keep xConfig administration previews faithful to shipped runtime effects while i
 
 ## 1. Freeze the visible symptom
 
-- Inspect the active xConfig tab when browser access is available.
+- Inspect the active xConfig tab only when browser access is covered by the task and `AGENTS.md` validation rules and is available.
+- Otherwise continue static analysis and report visual behavior as unverified.
 - Record idle state, hover/focus state, cleanup state, and whether the active badge order is correct.
 - Separate observed browser facts from source-code inference.
 
@@ -39,4 +40,4 @@ Keep xConfig administration previews faithful to shipped runtime effects while i
 
 - Add behavior tests for single-active lifecycle, cleanup/reset, async loader cancellation, and adapter option mapping.
 - Add shell structure tests only for layout and attributes; do not treat CSS selectors as proof of a real effect.
-- After a build, verify a live DOM matrix: idle, hover, cleanup, async-loader-cancel, active badge order.
+- When browser verification is covered by the task and `AGENTS.md` validation rules, verify a live DOM matrix: idle, hover, cleanup, async-loader-cancel, active badge order. Browser availability or a completed build alone does not trigger this verification.

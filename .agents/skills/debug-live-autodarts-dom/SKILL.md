@@ -9,13 +9,14 @@ Use live browser evidence safely when DOM behavior, hydration, overlays, or page
 
 # Browser rules
 
+- apply browser steps only when covered by the task and `AGENTS.md` validation rules; browser availability or a completed build alone is not a trigger
 - use only the currently active browser tab unless the user explicitly asks otherwise
 - do not switch tabs automatically
 - do not open new tabs unless explicitly required
 - do not navigate away from the active task context unless required
 - keep browser-side changes minimal and limited to debugging, reproduction, verification, or UI tests
 - use extra caution before destructive actions
-- if browser access is unavailable, continue static analysis where possible and state exactly what could not be verified
+- if browser access is not authorized or available, continue static analysis where possible and report visual behavior as unverified
 
 # Local Chrome connection
 
@@ -25,13 +26,10 @@ Use live browser evidence safely when DOM behavior, hydration, overlays, or page
 - prefer Chrome DevTools MCP for the existing active tab; use Playwright MCP when the task specifically requires it
 - if the endpoint responds but no browser page is visible to the MCP tool, report the MCP connection mismatch instead of opening another browser
 
-# Context budget
+# Relevant context
 
-- inspect browser state and the smallest relevant owner files
-- search first, then open nearest tests or helpers only when static context is needed
-- avoid `dist/**`
-- avoid `docs/**` unless task-relevant
-- stop expanding once live evidence explains the issue
+- when browser access is authorized, start from the active page state
+- inspect nearest tests or helpers when static context is needed to explain live evidence
 
 # Autodarts Scenarios
 

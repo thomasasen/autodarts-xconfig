@@ -23,21 +23,17 @@ If any issue remains, report it explicitly with the reason it was not fixed.
 - condition inversion churn without a real readability win
 - mixed behavior and Sonar cleanup in one patch unless explicitly requested
 - claiming Sonar server results unless actually verified
-- hand-editing `dist/**`
 
-# Context budget
+# Relevant context
 
 - query unresolved SonarQube issues for the requested project or scope before
   deciding cleanup is complete
 - start from the explicit Sonar finding or touched scope
-- search first, then open only the finding location and nearest tests
-- avoid broad tours through `src/**`
-- avoid `docs/**` unless task-relevant
-- stop expanding context when the mechanical fix is clear
+- inspect the finding location and nearest tests
 
 # Validation
 
-- validate with `npm run lint` and relevant tests
+- use `npm run lint` and relevant tests only when allowed by the selected tier and task scope in `AGENTS.md`
 - use `$validate-repo-change` for final validation reporting
 - if SonarQube is unavailable, report the concrete blocker instead of implying cleanup was server-verified
 

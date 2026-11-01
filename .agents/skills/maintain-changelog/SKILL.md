@@ -21,12 +21,10 @@ Keep `CHANGELOG.md` accurate, curated, and synchronized with repository truth.
 - from `2.9.2` onward, compare immutable release tags, except the first tagged release may compare the real `2.9.1` release commit to `v2.9.2`
 - a finalized tagged release compare link must never point to `HEAD`
 
-# Context budget
+# Relevant context
 
-- inspect changelog, version metadata, and relevant git history only
-- avoid broad `src/**` review unless needed to understand a changelog entry
-- avoid `dist/**` unless release packaging explicitly requires it
-- stop once the entry can be written or audited from concrete evidence
+- start with changelog, version metadata, and relevant git history
+- inspect relevant source files narrowly when needed to substantiate a changelog statement
 
 # Workflow
 
@@ -35,7 +33,7 @@ Keep `CHANGELOG.md` accurate, curated, and synchronized with repository truth.
 3. Update compare links when release sections change.
    For `2.9.2`, use `<2.9.1-release-commit>...v2.9.2`; for later releases use `v<previous>...v<current>`.
 4. Leave `CHANGELOG.md` untouched for purely internal cleanup with no shipped or maintainer-visible effect.
-5. Run `npm run check:changelog` when changelog structure, release notes, compare links, or version parity are relevant.
+5. For Markdown-only changes, manually review entries and compare links under Tier 0 from `AGENTS.md`. Run `npm run check:changelog` only for an explicit validation request or release validation when the selected tier and task scope permit it.
 
 # Output requirements
 

@@ -14,15 +14,12 @@ Keep board SVG detection and overlay surface truth stable across host DOM churn,
 - avoid duplicated overlay or board root detection
 - keep overlay hydration and board selection concerns separate unless the task explicitly combines them
 - treat reload/F5 overlay mismatch as regression-sensitive
-- require targeted tests or explicit manual/browser verification for DOM-sensitive changes
-- do not hand-edit `dist/**`
+- for DOM-sensitive changes, choose targeted tests or explicit manual/browser verification within the tier and task scope allowed by `AGENTS.md`
+- if browser access is not authorized or available, continue static analysis and report visual behavior as unverified; separate observations from inference
 
-# Context budget
+# Relevant context
 
-- search first, then open likely board-surface helpers, overlay mounting code, and nearest tests
-- avoid broad tours through `src/**`
-- avoid `docs/**` unless wording is in scope
-- stop expanding context when board-root ownership is clear
+Focus on board-surface helpers, overlay mounting code, and their nearest tests.
 
 # Invariants
 

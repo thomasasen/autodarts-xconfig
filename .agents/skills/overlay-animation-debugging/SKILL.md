@@ -13,6 +13,11 @@ Find whether the real fault is:
 
 # Workflow
 
+Apply live DOM and MCP steps only when covered by the task and `AGENTS.md`
+validation rules. Browser availability or a completed build alone is not a
+trigger. Otherwise, or if access is unavailable, continue static analysis and
+report visual behavior as unverified. Separate observations from inference.
+
 ## 1. Freeze the repro first
 
 - Record the exact theme, route, target, and visible symptom.
@@ -21,7 +26,7 @@ Find whether the real fault is:
 
 ## 2. Separate logic from rendering
 
-- Confirm the intended target or state is actually selected in source and in the live DOM.
+- Confirm the intended target or state in source and, when browser access is authorized and available, in the live DOM.
 - If the wrong target is chosen, fix logic first.
 - If the right target is chosen but the effect looks wrong, inspect rendering and animation next.
 
@@ -70,6 +75,6 @@ Prefer narrow runtime tests that lock in the behavior contract:
 
 A valid result from this skill must:
 - name the real failing layer
-- include MCP evidence, not only source guesses
+- include MCP evidence when browser access is authorized and available; otherwise identify static-code inferences and unverified visual behavior
 - distinguish stable reference behavior from failing behavior
 - add or update at least one regression test when code changes follow

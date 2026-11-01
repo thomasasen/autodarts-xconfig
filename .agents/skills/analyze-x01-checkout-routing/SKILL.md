@@ -14,14 +14,10 @@ Keep X01 checkout routing, finish visibility, and target semantics correct witho
 - treat route visibility and board zoom as separate concerns unless the task explicitly combines them
 - avoid changing checkout rules without tests
 - prefer shared helpers for route and surface semantics instead of duplicated feature-local parsing
-- do not hand-edit `dist/**`
 
-# Context budget
+# Relevant context
 
-- search first, then open likely route, target, board-zoom, and nearest test files
-- avoid broad tours through `src/**`
-- avoid `docs/**` unless wording is in scope
-- stop expanding context when route and target ownership is clear
+Focus on route logic, target selection, board zoom, and their nearest tests.
 
 # Regression Cases
 

@@ -7,8 +7,8 @@ description: Choose and report the smallest sufficient local validation for an a
 
 Choose the minimum sufficient validation for the actual change, run what the environment allows, and report the result truthfully.
 
-`AGENTS.md` is authoritative. Do not broaden validation beyond its tiers unless
-a selected check fails in a way that indicates wider impact.
+`AGENTS.md` is the sole definition of validation tiers and escalation criteria.
+Select the tier there before using the command hints below.
 
 # Core rules
 
@@ -17,17 +17,8 @@ a selected check fails in a way that indicates wider impact.
 - map the change to Tier 0/1/2/3 from `AGENTS.md` before selecting commands
 - use real repo commands from `package.json`; never invent results
 - stop after the smallest sufficient tier passes
-- do not run SonarQube, browser validation, packaging, full build, or `npm test`
-  unless Tier 3 or the user explicitly requests it
-
-# Context budget
-
-- search first, then open only the smallest relevant files
-- avoid broad tours through `src/**`
-- avoid `dist/**`
-- avoid `docs/**` unless task-relevant
-- for code tasks, start with likely owner files and nearest tests
-- stop expanding context when current evidence is sufficient
+- every command hint below is conditional on the selected tier and actual task scope
+- follow `AGENTS.md` restrictions for SonarQube, browser validation, packaging, builds, and repository-wide checks
 
 # Change classes and command hints
 
@@ -35,19 +26,14 @@ a selected check fails in a way that indicates wider impact.
 
 Examples: `README.md`, `docs/`, `AGENTS.md`, `.agents/skills/`, `.codex/`.
 
-Tier: 0 unless changed structured instruction files need a local format check.
-
 Validation:
 - re-read changed files for dead references, overlap, and contradictions
 - confirm documented commands exist in `package.json`
 - run `npm run check:agents` only when a selected non-Tier-0 validation scope
   or an explicit user request requires instruction validation
-- validate changed structured config formats locally when possible
+- review structured instruction formats manually; their format alone does not justify automated validation or escalation
 
 ## 2. Config-only
-
-Tier: 0 for constants, defaults, labels, selectors, URLs, timings, thresholds,
-metadata, or config values without control-flow impact; otherwise Tier 1 or 2.
 
 Validation hints:
 - add or update targeted config/runtime tests when behavior can change
@@ -55,9 +41,6 @@ Validation hints:
   relevant risk
 
 ## 3. Logic, runtime, DOM, or rendering behavior
-
-Tier: 1 for localized changes; Tier 2 when shared interfaces or several related
-modules are affected; Tier 3 only under `AGENTS.md` criteria.
 
 Validation hints:
 - add or update closest behavior-level tests
@@ -67,9 +50,6 @@ Validation hints:
 
 ## 4. Startup, update, version, or cache behavior
 
-Tier: 1 or 2 depending on touched scope; Tier 3 for release, generated output,
-repo-wide config, or production-build validation.
-
 Validation hints:
 - add or update targeted regression coverage
 - review `tests/runtime/update-check.test.js`, `tests/runtime/xconfig-shell.test.js`, and `tests/runtime/userscript-build.test.js`
@@ -77,10 +57,10 @@ Validation hints:
 
 ## 5. Release or build workflow
 
-Tier: 3 when packaging, version bump, `dist/**` refresh, publication, or shipped
-artifact verification is in scope.
+For build-only changes, choose the closest syntax check or focused build allowed
+by `AGENTS.md`; build work alone does not require release validation.
 
-Validation hints:
+Release validation hints, only when the selected tier and task scope permit them:
 - run `npm run check:syntax`
 - run `npm run build`
 - run `npm test`
@@ -100,12 +80,12 @@ Preferred release validation:
 - `npm run build` is appropriate for build workflow, packaging, generated userscript output, version parity, and release preparation
 - `npm run sonar` is a Tier 3 standalone SonarQube recheck after local tests
 - `npm run verify` is Tier 3 for explicit release/package validation or broad pre-ship validation because it runs `npm test`
-- `npm run check:changelog` is appropriate when `CHANGELOG.md`, release notes, version parity, or compare links are in scope
-- do not escalate docs, guidance, or repo-instruction changes to runtime validation unless a referenced command or changed file format needs a real local check
+- `npm run check:changelog` is appropriate for an explicit validation request or release validation involving changelog structure, release notes, version parity, or compare links; Markdown-only edits remain manual under Tier 0
+- a referenced command or structured file format alone does not escalate docs, guidance, or repo-instruction changes beyond the tier selected from `AGENTS.md`
 
 # SonarQube
 
-- use SonarQube validation only in Tier 3 or when explicitly requested
+- use SonarQube validation only when allowed by the selected tier and task scope in `AGENTS.md`
 - use `npm run sonar`; it must use `SONARQUBE_URL`/`SONARQUBE_TOKEN` from the environment or fall back to `~/.codex/config.toml` `[mcp_servers.sonarqube].env`
 - never report SonarQube as unavailable before trying `npm run sonar`
 - never print, quote, commit, or otherwise expose the SonarQube token

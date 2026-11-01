@@ -23,13 +23,6 @@ Before editing, identify:
 - whether the change is domain, runtime, feature-render, or config work
 - the tests that should prove it
 
-Context budget:
-- search first, then open likely owner files and nearest tests only
-- avoid broad tours through `src/**`
-- avoid `dist/**`
-- avoid `docs/**` unless user-facing wording is in scope
-- stop expanding context when the current evidence is sufficient
-
 ## 2. Keep architecture intact
 
 Do not solve feature problems by:

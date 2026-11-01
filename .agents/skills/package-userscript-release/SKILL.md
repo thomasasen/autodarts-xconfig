@@ -29,22 +29,25 @@ Read and follow [references/release-channel-invariants.md](references/release-ch
 
 # Workflow
 
-1. Confirm publication authorization, clean scope, branch, remote, tags, releases, and exact remote `main` SHA.
-2. For the first channel migration, land and push release infrastructure on the old stable version, then run and verify the GitHub `workflow_dispatch` dry run. Record that remote SHA as the migration base.
+1. Confirm publication authorization, clean scope, branch, remote, tags, releases, and exact remote `main` SHA. Record that SHA as the expected remote-main base. STOP if authorization or scope is unclear.
+2. For the first channel migration, land and push release infrastructure on the old stable version, then run and verify the GitHub `workflow_dispatch` dry run. STOP if the dry run fails or cannot be verified. Only after success, update the expected remote-main base to the verified infrastructure SHA.
 3. Implement and test source behavior while retaining the old version until final packaging.
 4. Curate `CHANGELOG.md`, then synchronize versions and run `npm run build`.
-5. Run `npm run check:release` and Tier-3 validation from `$validate-repo-change`, including local SonarQube before tagging. Commit first and rerun Sonar when blame requires it.
-6. Review the entire scoped diff and create the final release commit `release: prepare X.Y.Z`.
-7. Fetch and require remote `main` to equal the recorded base; also require no conflicting remote tag or GitHub Release.
+5. Run `npm run check:release` and Tier-3 validation from `$validate-repo-change`, including local SonarQube before tagging. Commit first and rerun Sonar when blame requires it. STOP before tagging if a required check fails or is unverified, the Sonar Quality Gate is red or unverified, or versions differ.
+6. Review the entire scoped diff. STOP before committing if any unowned or unexplained scope remains. Otherwise create the final release commit `release: prepare X.Y.Z`.
+7. Fetch and require remote `main` to equal the expected remote-main base; also require no conflicting remote tag or GitHub Release. On mismatch or conflict, STOP before tagging and report expected/actual SHAs or conflicting tag/release details.
 8. Create tag `vX.Y.Z` on the exact release commit, verify its SHA, and push only the tag.
-9. Wait for the tag workflow to create a Draft Release. Verify the unchanged tag, draft/not-prerelease state, exactly two assets, metadata, sizes, and SHA-256 parity with committed `dist`.
-10. Publish the verified draft. Verify stable state, tag/commit, both assets, and `releases/latest`.
-11. Fetch and repeat the remote-main race gate. Only then fast-forward `main` to the release commit.
+9. Wait for the tag workflow to create a Draft Release. Verify the unchanged tag, draft/not-prerelease state, exactly two assets, metadata, sizes, and SHA-256 parity with committed `dist`. STOP before publication on workflow failure or any missing or mismatched evidence.
+10. Publish the verified draft. Verify stable state, tag/commit, both assets, and `releases/latest`. STOP before updating `main` if any published state or endpoint is wrong or unverified.
+11. Fetch and repeat the remote-main race gate against the expected remote-main base. On mismatch or missing evidence, STOP and report expected/actual SHAs; leave `main` unchanged. Only after published release verification and a matching remote SHA, fast-forward `main` to the release commit.
 12. Verify Raw meta and Raw user, the legacy and new migration paths, skip-version compatibility, and a clean local/remote state.
 
 # Fail closed
 
 Stop before tag, publication, or main update on any dirty/unowned scope, failed check, red Sonar gate, version drift, workflow failure, conflicting tag/release, asset/hash mismatch, wrong `latest`, unexplained build drift, permission failure, or remote-main movement. Do not weaken or skip a gate to finish.
+
+Missing evidence is not a passing check. Report the failed gate and last verified
+state; do not automatically roll back published states.
 
 # Output requirements
 

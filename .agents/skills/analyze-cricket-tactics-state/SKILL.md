@@ -16,14 +16,10 @@ Keep Cricket and Tactics state derivation consistent between domain rules, grid 
 - avoid duplicated or drifting DOM parsing between feature modules
 - prefer a shared source of truth when touching parsing or state derivation
 - require behavior-level tests for rule changes
-- do not hand-edit `dist/**`
 
-# Context budget
+# Relevant context
 
-- search first, then open likely state, parsing, coloring, and nearest test files
-- avoid broad tours through `src/**`
-- avoid `docs/**` unless wording is in scope
-- stop expanding context when target-state ownership is clear
+Focus on state derivation, parsing, coloring, and their nearest tests.
 
 # Target Rules
 

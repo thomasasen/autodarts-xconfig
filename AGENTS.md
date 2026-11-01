@@ -21,10 +21,15 @@ the matching skill.
 
 ## Token economy
 
+Across tasks:
+
+- search narrowly first, then open likely owner files and nearest tests only
+- avoid broad tours through `src/**`
+- stop expanding context when the current evidence is sufficient
+
 For small, localized requests:
 
 - prefer direct file paths and one narrow `rg` search over broad exploration
-- read only the smallest relevant source slices
 - avoid opening task skills unless their domain workflow is needed
 - skip progress updates unless work takes about 30s or more
 - keep final reports concise while still covering the required facts below
@@ -37,6 +42,10 @@ validation, packaging, or release validation by default.
 Choose exactly one validation tier unless a failure requires escalation. Use
 `$validate-repo-change` after meaningful source changes to select and report the
 smallest tier allowed here; the skill must not override this file.
+
+All skill command hints are conditional on that tier and the actual task scope.
+Browser access must also be covered by the task and these rules; an available
+browser or a completed build alone does not authorize browser validation.
 
 ### Tier 0: No automated validation
 
