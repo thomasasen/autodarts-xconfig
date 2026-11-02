@@ -1,3 +1,5 @@
+import { CRICKET_TABLE_FEATURE_KEYS, groupCricketTableFeatures, getCricketTableFields } from "./cricket-table-settings.js";
+import { buildCricketTablePreview } from "./cricket-table-preview.js";
 import { resolveSelectOptionLayoutType } from "./option-layout.js";
 import {
   SEGMENT_ORDER as CHECKOUT_BOARD_PREVIEW_SEGMENT_ORDER,
@@ -3249,7 +3251,7 @@ function buildFeatureCard(documentRef, feature, previewFeatures = []) {
   const fieldCount = Array.isArray(descriptor?.fields) ? descriptor.fields.length : 0;
   const isThemeGlobalCard = isThemeGlobalFeature(feature);
   const isWideCard = isThemeGlobalWideCard(feature);
-  const preview = resolveFeatureCardPreview(feature, previewFeatures);
+  const preview = feature.tableMembers ? { kind: "cricket-table" } : resolveFeatureCardPreview(feature, previewFeatures);
   const card = createElement(documentRef, "article", {
     className: [
       "ad-xconfig-card",
@@ -3265,6 +3267,7 @@ function buildFeatureCard(documentRef, feature, previewFeatures = []) {
       "data-preview-display-mode": preview.displayMode || undefined,
     },
   });
+  if (feature.tableMembers) card.appendChild(buildCricketTablePreview(documentRef, createElement));
   const previewUrl = preview.url;
   if (previewUrl) {
     const bg = createElement(documentRef, "div", {
@@ -3338,14 +3341,24 @@ function buildFeatureCard(documentRef, feature, previewFeatures = []) {
   }));
   head.appendChild(copy);
   if (descriptor?.cardType !== "action") {
-    head.appendChild(buildFeatureToggle(documentRef, feature));
+    if (feature.tableMembers) {
+      const toggles = createElement(documentRef, "div", { className: "ad-xconfig-table-toggles" });
+      feature.tableMembers.forEach((member) => {
+        const label = createElement(documentRef, "div", { className: "ad-xconfig-table-toggle" });
+        const title = member.featureKey === "cricket-layout" ? "Layout anpassen" : "Status und Effekte anzeigen";
+        label.appendChild(createElement(documentRef, "span", { text: title }));
+        label.appendChild(buildFeatureToggle(documentRef, { ...member, title }));
+        toggles.appendChild(label);
+      });
+      head.appendChild(toggles);
+    } else head.appendChild(buildFeatureToggle(documentRef, feature));
   }
   cardContent.appendChild(head);
 
   const badges = createElement(documentRef, "div", {
     className: "ad-xconfig-card-badges",
   });
-  if (feature.config?.debug === true) {
+  if (feature.config?.debug === true || feature.tableMembers?.some((member) => member.config?.debug)) {
     badges.appendChild(createElement(documentRef, "span", {
       className: "ad-xconfig-status-badge ad-xconfig-status-badge--diagnostic",
       text: "Diagnose aktiv",
@@ -3425,10 +3438,14 @@ function buildSettingsModal(documentRef, state, features) {
   if (!state.activeSettingsFeatureKey) {
     return null;
   }
-  const feature = features.find((entry) => entry.featureKey === state.activeSettingsFeatureKey) || null;
+  const settingsKey = CRICKET_TABLE_FEATURE_KEYS.includes(state.activeSettingsFeatureKey) ? "cricket-layout" : state.activeSettingsFeatureKey;
+  const feature = groupCricketTableFeatures(features).find((entry) => entry.featureKey === settingsKey) || null;
   const descriptor = feature ? getXConfigDescriptor(feature.featureKey) : null;
-  const fields = Array.isArray(descriptor?.fields) ? descriptor.fields.filter((field) =>
-    !field.visibleWhen || feature.config?.[field.visibleWhen.key] === field.visibleWhen.value) : [];
+  const sourceFields = feature?.tableMembers ? getCricketTableFields(feature.tableMembers) : descriptor?.fields || [];
+  const fields = sourceFields.filter((field) => {
+    const source = field.sourceFeatureKey ? features.find((entry) => entry.featureKey === field.sourceFeatureKey) : feature;
+    return !field.visibleWhen || source?.config?.[field.visibleWhen.key] === field.visibleWhen.value;
+  });
   if (!feature || !fields.length) {
     return null;
   }
@@ -3555,6 +3572,7 @@ function buildSettingsModal(documentRef, state, features) {
   }
   const sectionBodies = new Map();
   fields.forEach((field) => {
+    const sourceFeature = field.sourceFeatureKey ? features.find((entry) => entry.featureKey === field.sourceFeatureKey) : feature;
     const sectionLabel = String(field.section || "").trim();
     let sectionBody = body;
     if (sectionLabel) {
@@ -3608,7 +3626,7 @@ function buildSettingsModal(documentRef, state, features) {
       copy.appendChild(createElement(documentRef, "label", {
         className: "ad-xconfig-setting-label",
         text: field.label,
-        attributes: { for: `ad-xconfig-field-${feature.featureKey}-${field.key || field.action}` },
+        attributes: { for: `ad-xconfig-field-${sourceFeature.featureKey}-${field.key || field.action}` },
       }));
       row.appendChild(copy);
       const noteText = getFieldNoteText(field);
@@ -3619,7 +3637,7 @@ function buildSettingsModal(documentRef, state, features) {
         }));
       }
     }
-    inputWrap.appendChild(buildFeatureField(documentRef, feature, field, features));
+    inputWrap.appendChild(buildFeatureField(documentRef, sourceFeature, field, features));
     row.appendChild(inputWrap);
     sectionBody.appendChild(row);
   });
@@ -3631,7 +3649,7 @@ function buildSettingsModal(documentRef, state, features) {
 
 export function groupXConfigFeatures(features = []) {
   const sortedFeatures = Array.isArray(features)
-    ? features.slice()
+    ? groupCricketTableFeatures(features)
     : [];
   if (!sortedFeatures.length) {
     return [];

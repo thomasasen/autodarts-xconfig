@@ -118,6 +118,29 @@ test("Cricket and Tactics profiles survive export/import with separate layout se
   }
 });
 
+test("all table activation combinations and legacy feedback survive both backup import modes", () => {
+  for (const layout of [false, true]) for (const effects of [false, true]) {
+    const configured = normalizeRuntimeConfig({
+      featureToggles: { cricketLayout: layout, cricketGridStatusEffects: effects },
+      features: {
+        cricketLayout: { enabled: layout, tacticsOverrides: false, tacticsMarkSize: "very-large", debug: true },
+        cricketGridStatusEffects: { enabled: effects, hitSpark: false, deltaChips: true, threatEdge: false, opponentPressureOverlay: true, rowWave: false },
+      },
+    });
+    const exported = createSettingsExport(configured, { descriptors: xconfigDescriptors });
+    assert.equal(exported.payload.schemaVersion, SETTINGS_TRANSFER_SCHEMA_VERSION);
+    assert.equal(exported.payload.features.cricketTable, undefined);
+    for (const mode of ["merge", "replace"]) {
+      const imported = analyzeSettingsImport(exported.payload, normalizeRuntimeConfig(), { descriptors: xconfigDescriptors, mode });
+      for (const key of ["cricketLayout", "cricketGridStatusEffects"]) {
+        const spec = getFeatureConfigSpec(key);
+        assert.deepEqual(spec.normalizeConfig(imported.config.features[key]), spec.normalizeConfig(configured.features[key]));
+        assert.equal(imported.config.featureToggles[key], configured.featureToggles[key]);
+      }
+    }
+  }
+});
+
 test("dart perspective strength survives export/import even while perspective is disabled", () => {
   for (const flatPerspective of [true, false]) {
     const configured = normalizeRuntimeConfig({

@@ -1,6 +1,7 @@
 ﻿import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { xconfigDescriptors } from "../src/features/xconfig-ui/descriptors.js";
+import { groupCricketTableDocumentation } from "../src/features/xconfig-ui/cricket-table-settings.js";
 import {
   buildModuleFinderSection,
   buildRecommendedDefaultsSection,
@@ -27,12 +28,12 @@ function resolveRecommendedConfig(featureKey) {
   return definition?.configKey ? createRecommendedFeatureConfig(definition.configKey) : null;
 }
 
-const orderedEntries = xconfigDescriptors
+const orderedEntries = groupCricketTableDocumentation(xconfigDescriptors
   .map((descriptor) => ({
     descriptor,
     definition: definitionByFeatureKey.get(descriptor.featureKey) || null,
   }))
-  .filter((entry) => entry.definition);
+  .filter((entry) => entry.definition));
 
 const overviewCounts = Object.freeze({
   totalModules: orderedEntries.length,

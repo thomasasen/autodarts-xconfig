@@ -61,7 +61,7 @@ Alles wird direkt im Spiel über **xConfig** eingestellt. Du findest den Eintrag
 
 ## Im Überblick
 
-- Insgesamt `24` Module: `20` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
+- Insgesamt `23` Module: `19` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
 - `↺ Zurücksetzen`: Setzt alle Einstellungen vollständig auf Standard zurück, deaktiviert alle Module, schaltet die Diagnose aus und entfernt globales Hintergrundbild sowie Dart-Upload.
 - `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
 - `Exportieren` / `Importieren`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.
@@ -221,9 +221,8 @@ Wähle den Spielmodus oder den gewünschten sichtbaren Effekt und öffne anschli
 | [Überworfen (BUST) hervorheben](#animation-autodarts-x01-bust-active-player-highlight) | Funktion | `X01` | Ersetzt den nativen BUST-Effekt durch eine rote Glasbruch-Markierung auf dem gewählten Bereich oder am Darts-Einschlag. |
 | [AVG-Trend anzeigen](#animation-autodarts-animate-avg-trend-arrow) | Funktion | `alle Modi` | Zeigt die AVG-Richtung mit einem kurzen Pfeil direkt an der Anzeige. |
 | [Triple, Double & Bull hervorheben](#animation-autodarts-animate-special-hit-highlights) | Funktion | `alle Modi` | Hebt Triple-, Double- und Bull-Treffer mit Farben, Licht und kurzen Bewegungen hervor. |
-| [Cricket-/Tactics-Layout](#cricket-tactics-layout) | Funktion | `Cricket`, `Tactics` | Passt Cricket und Tactics an Bildschirm, Spielerzahl und Betrachtungsabstand an. |
+| [Cricket-/Tactics-Tabelle](#cricket-tactics-layout) | Funktion | `Cricket`, `Tactics` | Gestaltet die Cricket-/Tactics-Tabelle mit passendem Layout, Zustandsfarben und Trefferfeedback. |
 | [Cricket-Ziele hervorheben](#animation-autodarts-animate-cricket-target-highlighter) | Funktion | `Cricket`, `Tactics` | Zeigt Cricket- und Tactics-Zustände direkt auf dem Board statt nur in der Matrix. |
-| [Cricket-Statusanzeigen](#animation-autodarts-animate-cricket-grid-status-effects) | Funktion | `Cricket`, `Tactics` | Ergänzt die Cricket-/Tactics-Matrix um Live-Effekte für Fortschritt, Druck und Wechsel. |
 | [Treffermarkierungen hervorheben](#animation-autodarts-animate-dartboard-marker-highlight) | Funktion | `alle Modi` | Macht vorhandene Marker auf dem virtuellen Board klarer und auffälliger. |
 | [Treffermarkierungen durch Darts ersetzen](#animation-autodarts-animate-dart-marker-replacer) | Funktion | `alle Modi` | Ersetzt Marker optional durch kleine Dart-Grafiken mit Fluganimation und pausiert im Live-Modus automatisch. |
 | [Hinweis: Darts entfernen](#animation-autodarts-animate-take-out-darts-alert) | Funktion | `alle Modi` | Macht den Hinweis zum Entfernen der Darts mit einer großen Grafik auffälliger. |
@@ -498,12 +497,14 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 ## Cricket / Tactics
 
 <a id="cricket-tactics-layout"></a>
+<a id="animation-autodarts-animate-cricket-grid-status-effects"></a>
+<a id="animation-autodarts-animate-cricket-grid-fx"></a>
 
-### Cricket-/Tactics-Layout
+### Cricket-/Tactics-Tabelle
 
 - Gilt für: `Cricket`, `Tactics`
-- Was macht es sichtbar? Tabelle und Spieleranzeige erhalten abgestimmte Größen und eine stabile Zuordnung.
-- Wann sinnvoll? Wenn du Marks und Spielernamen aus der Entfernung besser lesen oder mehrere Spieler leichter vergleichen möchtest.
+- Was macht es sichtbar? Eine gemeinsame Tabellenkachel bietet Layout und Status/Effekte mit getrennten Schaltern.
+- Wann sinnvoll? Wenn du die Tabelle besser lesen und Fortschritt sowie Gegnerdruck schneller erkennen möchtest.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#cricket-tactics-layout)
 
@@ -521,19 +522,6 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-cricket-target-highlighter)
 
 ![Cricket-Ziele hervorheben](docs/screenshots/animation-cricket-target-highlighter.png)
-
-<a id="animation-autodarts-animate-cricket-grid-status-effects"></a>
-<a id="animation-autodarts-animate-cricket-grid-fx"></a>
-
-### Cricket-Statusanzeigen
-
-- Gilt für: `Cricket`, `Tactics`
-- Was macht es sichtbar? Zusätzliche Live-Effekte direkt in der Cricket-/Tactics-Matrix.
-- Wann sinnvoll? Wenn du Fortschritt, Gegnerdruck und Wechsel im Grid klarer sehen willst.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-cricket-grid-status-effects)
-
-![Cricket-Statusanzeigen](docs/screenshots/animation-cricket-grid-fx.png)
 <!-- xconfig-generated:end -->
 ## Weitere Dokumentation
 

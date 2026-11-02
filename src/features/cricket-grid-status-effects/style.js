@@ -206,13 +206,13 @@ export function buildStyleText() {
   position: relative;
   isolation: isolate;
   padding-inline: 0 !important;
-  font-size: 1.5rem !important;
+  font-size: var(--ad-cricket-target-size, 1.5rem) !important;
   letter-spacing: -0.02em;
 }
 
 @media (min-width: 48rem) {
   .${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${LABEL_CLASS}.${NATIVE_LABEL_CLASS} {
-    font-size: 2rem !important;
+    font-size: var(--ad-cricket-target-size, 2rem) !important;
   }
 }
 
@@ -449,6 +449,12 @@ export function buildStyleText() {
 .${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${CELL_CLASS}.${OPEN_ACTIVE_CLASS}::before {
   box-shadow: inset 0 0 0 1px rgba(127, 214, 247, 0.36);
   opacity: 1;
+}
+
+/* The layout owns the active-player indicator; tactical states retain their overlays. */
+.${ROOT_CLASS}.${MODERN_ROOT_CLASS}[data-ad-cricket-layout="true"]:not([data-ad-cricket-indicator="native"]) .${CELL_CLASS}.${OPEN_ACTIVE_CLASS}::before {
+  box-shadow: none;
+  opacity: 0;
 }
 
 .${ROOT_CLASS}[data-ad-crfx-status-style="color"] .${CELL_CLASS}.${PRESSURE_CLASS}{background-image:linear-gradient(rgba(var(--ad-ext-crfx-danger-rgb),.12),rgba(var(--ad-ext-crfx-danger-rgb),.12))!important}

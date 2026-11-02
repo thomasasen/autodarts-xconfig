@@ -443,7 +443,8 @@ function refreshStableModalContent(previousShellNode, nextShellNode) {
   // Presets and conditional fields can change several controls in one saved update.
   // Retain the modal/body identity and the user's expanded advanced sections.
   if (previousModalBody.closest?.(".ad-xconfig-modal")?.getAttribute("data-adxconfig-refresh-settings") === "true") {
-    const openedSections = new Set(Array.from(previousModalBody.querySelectorAll("details[open]"))
+    const openedSections = new Set(Array.from(previousModalBody.querySelectorAll("details"))
+      .filter((node) => node.getAttribute("open") !== null)
       .map((node) => node.getAttribute("data-adxconfig-settings-section")));
     while (previousModalBody.firstChild) previousModalBody.firstChild.remove();
     Array.from(nextModalBody.childNodes || nextModalBody.children || []).forEach((node) => previousModalBody.appendChild(node));

@@ -52,7 +52,7 @@ export function resolveCricketLayoutSettings(raw = {}, tactics = false) {
   return { ...config, ...Object.fromEntries(["profile", ...SETTINGS].map((key) => [key, config[tacticsLayoutKey(key)]])) };
 }
 
-// Presets change only this layout card. Individual edits are identified by normalization.
+// Presets change only the table's layout settings. Normalization identifies individual edits.
 export function buildCricketLayoutSettingValues(key, value) {
   const tactics = key === "tacticsProfile";
   if ((key === "profile" || tactics) && CRICKET_LAYOUT_PROFILES[value]) {

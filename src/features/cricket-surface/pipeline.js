@@ -1107,6 +1107,9 @@ function buildMarksByLabelSnapshot(options = {}) {
     gridSnapshot: {
       root: grid.root,
       modern: grid.modern === true,
+      headers: grid.headers || [],
+      cellsByLabel: grid.cellsByLabel || new Map(),
+      activePlayerIndex: grid.activePlayerIndex,
       labels: grid.labels,
       diagnostics: labelDiagnostics,
       rows: gridRows,

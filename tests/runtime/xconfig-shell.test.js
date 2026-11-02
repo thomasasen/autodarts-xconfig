@@ -750,7 +750,7 @@ test("fresh xConfig settings start with calm Cricket recommendations", async () 
     await waitForMenuButton(documentRef);
     documentRef.getElementById("ad-xconfig-menu-item").click();
     await waitForShellOpen(windowRef, documentRef);
-    documentRef.querySelector("[data-adxconfig-action='open-settings'][data-feature-key='cricket-grid-status-effects']").click();
+    documentRef.querySelector("[data-adxconfig-action='open-settings'][data-feature-key='cricket-layout']").click();
     await waitForSettingsModal(documentRef);
     assert.ok(documentRef.querySelector("[data-setting-key='displayProfile'][data-setting-value='calm'][data-active='true']"));
     assert.ok(documentRef.querySelector("[data-setting-key='statusStyle'][data-setting-value='pattern'][data-active='true']"));
@@ -803,6 +803,77 @@ test("community template search filters names, authors and formats without apply
   } finally { runtime.stop(); }
 });
 
+test("the Cricket table card keeps both switches independent and both debug fields uniquely bound", async () => {
+  const localStorage = new FakeStorage({ [CONFIG_STORAGE_KEY]: JSON.stringify(normalizeRuntimeConfig()) });
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  try {
+    await waitForMenuButton(documentRef);
+    documentRef.getElementById("ad-xconfig-menu-item").click();
+    await waitForShellOpen(windowRef, documentRef);
+    const cardSelector = ".ad-xconfig-card[data-feature-key='cricket-layout']";
+    assert.equal(documentRef.querySelectorAll(cardSelector).length, 1);
+    assert.equal(documentRef.querySelector(".ad-xconfig-card[data-feature-key='cricket-grid-status-effects']"), null);
+    assert.match(documentRef.querySelector(`${cardSelector} .ad-xconfig-card-title`).textContent, /Cricket-\/Tactics-Tabelle/);
+    assert.equal(documentRef.querySelectorAll(`${cardSelector} [data-adxconfig-feature-toggle]`).length, 2);
+    assert.equal(documentRef.querySelectorAll(`${cardSelector} [data-state='scoring']`).length, 2);
+    for (const [layout, effects] of [[true, false], [true, true], [false, true], [false, false]]) {
+      clickFeatureToggle(documentRef, "cricket-layout", layout);
+      clickFeatureToggle(documentRef, "cricket-grid-status-effects", effects);
+      await waitForStoredConfig(localStorage, (config) => config.features.cricketLayout.enabled === layout && config.features.cricketGridStatusEffects.enabled === effects);
+      await waitFor(() => documentRef.querySelector(cardSelector)?.getAttribute("data-enabled") === String(layout || effects));
+      assert.equal(documentRef.querySelector(cardSelector).getAttribute("data-enabled"), String(layout || effects));
+    }
+    documentRef.querySelector(`${cardSelector} [data-adxconfig-action='open-settings']`).click();
+    await waitForSettingsModal(documentRef);
+    const ids = documentRef.querySelectorAll(".ad-xconfig-modal input[id]").map((node) => node.id);
+    assert.equal(new Set(ids).size, ids.length);
+    clickSettingToggle(documentRef, "cricket-layout", "debug", true);
+    await waitForStoredConfig(localStorage, (config) => config.features.cricketLayout.debug === true);
+    assert.equal(JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features.cricketGridStatusEffects.debug, false);
+    clickSettingToggle(documentRef, "cricket-grid-status-effects", "debug", true);
+    await waitForStoredConfig(localStorage, (config) => config.features.cricketGridStatusEffects.debug === true);
+    clickSettingToggle(documentRef, "cricket-layout", "debug", false);
+    await waitForStoredConfig(localStorage, (config) => config.features.cricketLayout.debug === false);
+    assert.equal(JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)).features.cricketGridStatusEffects.debug, true);
+  } finally { runtime.stop(); }
+});
+
+test("the Cricket table exposes individual legacy and custom effect controls only when needed", async () => {
+  const saved = normalizeRuntimeConfig({ features: { cricketGridStatusEffects: { hitSpark: false, deltaChips: true } } });
+  const localStorage = new FakeStorage({ [CONFIG_STORAGE_KEY]: JSON.stringify(saved) });
+  const documentRef = new FakeDocument();
+  const windowRef = createFakeWindow({ documentRef, localStorage });
+  const runtime = await initializeTampermonkeyRuntime({ windowRef, documentRef });
+  try {
+    await waitForMenuButton(documentRef);
+    documentRef.getElementById("ad-xconfig-menu-item").click();
+    await waitForShellOpen(windowRef, documentRef);
+    documentRef.querySelector("[data-adxconfig-action='open-settings'][data-feature-key='cricket-layout']").click();
+    await waitForSettingsModal(documentRef);
+    assert.ok(documentRef.querySelector("[data-setting-key='hitSpark']"));
+    assert.ok(documentRef.querySelector("[data-setting-key='deltaChips']"));
+    assert.ok(documentRef.querySelector("[data-setting-key='pressureOverlay']"));
+    const advanced = documentRef.querySelector("details[data-adxconfig-settings-section='erweitert']");
+    advanced.setAttribute("open", "");
+    clickSelectSettingOption(documentRef, "cricket-grid-status-effects", "feedback", "impulse");
+    await waitFor(() => !documentRef.querySelector("[data-setting-key='deltaChips']"));
+    assert.equal(documentRef.querySelector("[data-setting-key='hitSpark']"), null);
+    clickSelectSettingOption(documentRef, "cricket-grid-status-effects", "pressureStyle", "edge");
+    await waitFor(() => !documentRef.querySelector("[data-setting-key='pressureOverlay']"));
+    assert.equal(documentRef.querySelector("[data-setting-key='pressureEdge']"), null);
+    assert.ok(documentRef.querySelector("[data-setting-key='scoringStripe']"));
+    clickSelectSettingOption(documentRef, "cricket-grid-status-effects", "scoringStyle", "off");
+    await waitFor(() => !documentRef.querySelector("[data-setting-key='scoringStripe']"));
+    assert.equal(documentRef.querySelector("details[data-adxconfig-settings-section='erweitert']").getAttribute("open"), "");
+    const config = JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY));
+    assert.equal(config.features.cricketGridStatusEffects.hitSpark, true);
+    assert.equal(config.features.cricketGridStatusEffects.deltaChips, false);
+    assert.equal(config.features.cricketLayout.profile, saved.features.cricketLayout.profile);
+  } finally { runtime.stop(); }
+});
+
 test("Cricket layout saves scoped profiles and shows Tactics overrides only when selected", async () => {
   const localStorage = new FakeStorage({ [CONFIG_STORAGE_KEY]: JSON.stringify(normalizeRuntimeConfig()) });
   const documentRef = new FakeDocument();
@@ -827,6 +898,7 @@ test("Cricket layout saves scoped profiles and shows Tactics overrides only when
     assert.equal(saved.features.cricketLayout.markSize, "very-large");
     assert.equal(saved.features.cricketTargetHighlighter.statusStyle, "legacy");
     assert.equal(saved.features.cricketGridStatusEffects.rowWave, true);
+    assert.equal(documentRef.querySelector(".ad-xconfig-card[data-feature-key='cricket-layout']").getAttribute("data-preview-kind"), "cricket-table");
     const customOption = documentRef.querySelector("[data-feature-key='cricket-layout'][data-setting-key='profile'][data-setting-value='custom']");
     assert.equal(customOption.getAttribute("disabled"), "");
     customOption.click();
@@ -853,7 +925,7 @@ test("Cricket status settings expose advanced controls separately and apply calm
     await waitForMenuButton(documentRef);
     documentRef.getElementById("ad-xconfig-menu-item").click();
     await waitForShellOpen(windowRef, documentRef);
-    documentRef.querySelector("[data-adxconfig-action='open-settings'][data-feature-key='cricket-grid-status-effects']").click();
+    documentRef.querySelector("[data-adxconfig-action='open-settings'][data-feature-key='cricket-layout']").click();
     await waitForSettingsModal(documentRef);
     const advanced = documentRef.querySelector("details[data-adxconfig-settings-section='erweitert']");
     assert.ok(advanced);
@@ -883,7 +955,7 @@ test("xConfig settings modal preserves node identity and scroll offsets during e
   await waitForShellOpen(windowRef, documentRef);
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='cricket-grid-status-effects']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='cricket-layout']"
   );
   assert.ok(openSettings);
   openSettings.click();
@@ -938,7 +1010,7 @@ test("xConfig settings modal keeps container identity while applying setting upd
   await waitForShellOpen(windowRef, documentRef);
 
   const openSettings = documentRef.querySelector(
-    "[data-adxconfig-action='open-settings'][data-feature-key='cricket-grid-status-effects']"
+    "[data-adxconfig-action='open-settings'][data-feature-key='cricket-layout']"
   );
   assert.ok(openSettings);
   openSettings.click();
@@ -1596,7 +1668,7 @@ test("xConfig shell wires settings modals, toggles and save actions on one page"
   runtime.stop();
 });
 
-test("xConfig shell renders every feature exactly once in ordered domain sections", async () => {
+test("xConfig shell renders each visible card once in ordered domain sections", async () => {
   const localStorage = new FakeStorage();
   const documentRef = new FakeDocument();
   const windowRef = createFakeWindow({ documentRef, localStorage });
@@ -1654,16 +1726,15 @@ test("xConfig shell renders every feature exactly once in ordered domain section
   assert.deepEqual(readSectionCards("cricket-tactics"), [
     "cricket-layout",
     "cricket-target-highlighter",
-    "cricket-grid-status-effects",
   ]);
 
   const allCardFeatureKeys = documentRef.querySelectorAll(".ad-xconfig-card")
     .map((cardNode) => String(cardNode.getAttribute("data-feature-key") || ""));
-  assert.equal(allCardFeatureKeys.length, xconfigDescriptors.length);
-  assert.equal(new Set(allCardFeatureKeys).size, xconfigDescriptors.length);
+  assert.equal(allCardFeatureKeys.length, xconfigDescriptors.length - 1);
+  assert.equal(new Set(allCardFeatureKeys).size, xconfigDescriptors.length - 1);
   assert.deepEqual(
     sectionNodes.map((sectionNode) => sectionNode.querySelector(".ad-xconfig-section-count")?.textContent),
-    ["4 Kacheln", "11 Kacheln", "6 Kacheln", "3 Kacheln"]
+    ["4 Kacheln", "11 Kacheln", "6 Kacheln", "2 Kacheln"]
   );
 
   runtime.stop();
@@ -3640,7 +3711,7 @@ test("xConfig shell links every card README button to the matching README anchor
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
 
-  for (const descriptor of xconfigDescriptors) {
+  for (const descriptor of xconfigDescriptors.filter((entry) => entry.featureKey !== "cricket-grid-status-effects")) {
     const cardReadmeButton = documentRef.querySelector(
       `.ad-xconfig-card[data-feature-key='${descriptor.featureKey}'] [data-adxconfig-action='open-readme'][data-feature-key='${descriptor.featureKey}']`
     );
@@ -4354,7 +4425,7 @@ test("xConfig shell links every settings modal README button to the matching REA
   documentRef.getElementById("ad-xconfig-menu-item").click();
   await waitForShellOpen(windowRef, documentRef);
 
-  for (const descriptor of xconfigDescriptors) {
+  for (const descriptor of xconfigDescriptors.filter((entry) => entry.featureKey !== "cricket-grid-status-effects")) {
     if (!Array.isArray(descriptor.fields) || !descriptor.fields.length) {
       continue;
     }
@@ -4484,7 +4555,7 @@ test("xConfig shell renders mapped preview backgrounds and compact shell header"
     documentRef.querySelectorAll(`[data-adxconfig-section='${sectionId}'] .ad-xconfig-card`)
   ).forEach((card) => {
     const featureKey = String(card.getAttribute("data-feature-key") || "");
-    assert.ok(card.querySelector(".ad-xconfig-card-bg img"), `missing animation card image for ${featureKey}`);
+    assert.ok(card.querySelector(featureKey === "cricket-layout" ? "[data-adxconfig-cricket-table-preview]" : ".ad-xconfig-card-bg img"), `missing animation card preview for ${featureKey}`);
     assert.ok(card.querySelector(".ad-xconfig-variant"), `missing retained animation tag for ${featureKey}`);
   });
 

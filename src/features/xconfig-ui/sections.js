@@ -43,7 +43,7 @@ export const XCONFIG_SECTION_DEFINITIONS = Object.freeze([
   sectionDefinition(
     "cricket-tactics",
     "Cricket / Tactics",
-    "Layout, Zielmarkierungen und Statusanzeigen für Cricket und Tactics.",
+    "Tabelle mit Layout und Statuseffekten sowie Board-Zielmarkierungen für Cricket und Tactics.",
     ["cricket-layout", "cricket-target-highlighter", "cricket-grid-status-effects"]
   ),
 ]);

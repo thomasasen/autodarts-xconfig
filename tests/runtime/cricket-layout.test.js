@@ -1,8 +1,13 @@
 import test from "node:test";
+import * as cricketRules from "../../src/domain/cricket-rules.js";
+import * as variantRules from "../../src/domain/variant-rules.js";
 import assert from "node:assert/strict";
 import { normalizeCricketLayoutConfig, resolveCricketLayoutSettings } from "../../src/shared/cricket-layout-config.js";
 import { calculateCricketLayout } from "../../src/features/cricket-layout/logic.js";
 import { mountCricketLayout } from "../../src/features/cricket-layout/index.js";
+import { initializeCricketGridStatusEffects } from "../../src/features/cricket-grid-status-effects/index.js";
+import { acquireSharedCricketRuntime } from "../../src/features/cricket-surface/shared-runtime.js";
+import { CELL_CLASS, SCORE_CLASS, PRESSURE_CLASS, SPARK_CLASS, DELTA_CLASS, ROOT_CLASS } from "../../src/features/cricket-grid-status-effects/style.js";
 import { buildFeatureSettingPatch } from "../../src/features/xconfig-ui/path-utils.js";
 import { getFeatureConfigSpec, createRecommendedFeatureConfig } from "../../src/config/feature-config-spec.js";
 import { readModernCricketGrid } from "../../src/features/cricket-surface/modern-grid.js";
@@ -56,10 +61,129 @@ function fixture(players = 4, tactics = false, columnMajor = false) {
   const observers = createObserverRegistry();
   const listeners = createListenerRegistry();
   let config = normalizeCricketLayoutConfig({ enabled: true });
+  let effects = getFeatureConfigSpec("cricketGridStatusEffects").createDefaultConfig();
   const context = { documentRef, windowRef, domGuards: createDomGuards({ documentRef }), registries: { observers, listeners },
-    config: { getFeatureConfig: () => config }, helpers: { createRafScheduler: (callback) => ({ schedule: callback, cancel() {} }) } };
-  return { documentRef, windowRef, grid, headers, rows, observers, listeners, context, setConfig: (value) => { config = normalizeCricketLayoutConfig(value); } };
+    domain: { cricketRules, variantRules },
+    config: { getFeatureConfig: (key) => key === "cricketLayout" ? config : key === "cricketGridStatusEffects" ? effects : {} }, helpers: { createRafScheduler: (callback) => ({ schedule: callback, cancel() {} }) } };
+  return { documentRef, windowRef, grid, headers, rows, observers, listeners, context,
+    setConfig: (value) => { config = normalizeCricketLayoutConfig(value); },
+    setEffects: (value) => { effects = getFeatureConfigSpec("cricketGridStatusEffects").normalizeConfig(value); } };
 }
+
+test("the shared table preserves every activation combination and native arrangement for one to six players", () => {
+  for (const tactics of [false, true]) for (const columnMajor of [false, true]) {
+    for (let players = 1; players <= 6; players += 1) for (const layout of [false, true]) for (const effects of [false, true]) {
+      const host = fixture(players, tactics, columnMajor);
+      host.setConfig({ enabled: layout });
+      host.setEffects({ enabled: effects });
+      host.rows[0].cells[0].dataset.marks = "3";
+      const nativeChildren = [...host.grid.children];
+      const cleanupLayout = layout ? mountCricketLayout(host.context) : () => {};
+      const cleanupEffects = effects ? initializeCricketGridStatusEffects(host.context) : () => {};
+      try {
+        assert.equal(host.grid.getAttribute("data-ad-cricket-layout"), layout ? "true" : null);
+        assert.equal(host.grid.classList.contains(ROOT_CLASS), effects);
+        if (effects && players > 1) {
+          assert.equal(host.rows[0].cells[0].classList.contains(SCORE_CLASS), true);
+          assert.equal(host.rows[0].cells[1].classList.contains(PRESSURE_CLASS), true);
+        }
+        assert.deepEqual([...host.grid.children], nativeChildren);
+        assert.equal(readModernCricketGrid(host.documentRef).headers.length, players);
+        if (layout || effects) {
+          const runtime = acquireSharedCricketRuntime(host.context);
+          assert.deepEqual([...runtime.subscribers.keys()], ["cricket-table"]);
+          assert.equal(host.observers.get("cricket-layout:dom-observer"), null);
+        }
+      } finally { cleanupLayout(); cleanupEffects(); }
+      assert.equal(host.grid.getAttribute("data-ad-cricket-layout"), null);
+      assert.equal(host.grid.classList.contains(ROOT_CLASS), false);
+      assert.equal(host.observers.get("cricket-surface:dom-observer"), null);
+    }
+  }
+});
+
+test("either table part can detach while the other keeps its rendering and watchdog coverage", () => {
+  for (const first of ["layout", "effects"]) for (const scoped of [false, true]) {
+    const host = fixture(2);
+    const turn = { phase: "ready", generation: 1 };
+    if (scoped) host.context.turnLifecycle = { ensureCurrent: () => turn, register: () => () => {} };
+    const checks = new Map();
+    const mounts = { layout: mountCricketLayout, effects: initializeCricketGridStatusEffects };
+    const mount = (kind) => mounts[kind]({ ...host.context, watchdog: { register(hooks) {
+      checks.set(kind, hooks);
+      return () => checks.delete(kind);
+    } } });
+    const second = first === "layout" ? "effects" : "layout";
+    const cleanupFirst = mount(first);
+    const cleanupSecond = mount(second);
+    try {
+      assert.equal(checks.size, 2);
+      cleanupFirst();
+      assert.equal(checks.has(first), false);
+      assert.equal(checks.has(second), true);
+      assert.equal(host.grid.classList.contains(ROOT_CLASS), second === "effects");
+      assert.equal(host.grid.getAttribute("data-ad-cricket-layout"), second === "layout" ? "true" : null);
+      if (second === "layout") host.grid.removeAttribute("data-ad-cricket-layout");
+      else host.rows[0].cells[1].classList.remove(CELL_CLASS);
+      assert.notEqual(checks.get(second).check(turn), true);
+      checks.get(second).repair(turn);
+      assert.equal(checks.get(second).check(turn), true);
+      assert.equal(host.grid.querySelector(`.${SPARK_CLASS},.${DELTA_CLASS}`), null);
+      if (second === "effects") {
+        host.grid.classList.remove(ROOT_CLASS);
+        assert.notEqual(checks.get(second).check(turn), true);
+        checks.get(second).repair(turn);
+        assert.equal(host.grid.classList.contains(ROOT_CLASS), true);
+      }
+    } finally { cleanupFirst(); cleanupSecond(); }
+    assert.equal(checks.size, 0);
+  }
+});
+
+test("a layout rendering failure leaves table status usable and recovers through its scoped watchdog", () => {
+  const host = fixture(2);
+  const rectangle = host.grid.getBoundingClientRect;
+  host.grid.getBoundingClientRect = () => { throw new Error("layout measurement failed"); };
+  let health;
+  const cleanupLayout = mountCricketLayout({ ...host.context, watchdog: { register(hooks) { health = hooks; return () => {}; } } });
+  const cleanupEffects = initializeCricketGridStatusEffects(host.context);
+  try {
+    assert.match(health.check(), /layout measurement failed/);
+    assert.equal(host.rows[0].cells[0].classList.contains(CELL_CLASS), true);
+    host.grid.getBoundingClientRect = rectangle;
+    health.repair();
+    assert.equal(health.check(), true);
+    assert.equal(host.grid.getAttribute("data-ad-cricket-layout"), "true");
+  } finally { cleanupLayout(); cleanupEffects(); }
+});
+
+test("combined table replaces host cells without replaying feedback and resizes without changing marks", () => {
+  const host = fixture(2, true, true);
+  let resize;
+  host.windowRef.ResizeObserver = class { constructor(callback) { resize = callback; } observe() {} disconnect() {} };
+  const cleanupEffects = initializeCricketGridStatusEffects(host.context);
+  const cleanupLayout = mountCricketLayout(host.context);
+  try {
+    const oldCell = host.rows[0].cells[0];
+    const replacement = host.documentRef.createElement("div");
+    replacement.appendChild(oldCell.firstChild.cloneNode(true));
+    oldCell.before(replacement);
+    oldCell.remove();
+    host.observers.get("cricket-surface:dom-observer").callback([
+      { target: host.grid, type: "childList", addedNodes: [replacement], removedNodes: [oldCell] },
+    ]);
+    assert.equal(replacement.classList.contains(CELL_CLASS), true);
+    assert.equal(replacement.getAttribute("data-ad-cricket-layout-node"), "cell");
+    assert.equal(oldCell.getAttribute("data-ad-cricket-layout-node"), null);
+    assert.equal(host.grid.querySelector(`.${SPARK_CLASS},.${DELTA_CLASS}`), null);
+    const before = Number.parseFloat(host.grid.style.getPropertyValue("--ad-cricket-name-size"));
+    host.grid.getBoundingClientRect = () => ({ width: 160, height: 300, top: 80 });
+    resize();
+    assert.ok(Number.parseFloat(host.grid.style.getPropertyValue("--ad-cricket-name-size")) < before);
+    assert.equal(replacement.firstChild.getAttribute("src"), oldCell.firstChild.getAttribute("src"));
+    assert.equal(host.grid.querySelector(`.${SPARK_CLASS},.${DELTA_CLASS}`), null);
+  } finally { cleanupLayout(); cleanupEffects(); }
+});
 
 test("Cricket and Tactics glow tracks the semantic active header without touching target cells", () => {
   for (const tactics of [false, true]) {
@@ -166,14 +290,14 @@ test("layout preserves native order, mark sources and player ownership in both n
     assert.equal(host.headers[0].getAttribute("data-ad-cricket-active"), "true");
     host.headers[0].classList.remove("bg-raspberry-slush-diagonal");
     host.headers[2].classList.add("bg-raspberry-slush-diagonal");
-    host.observers.get("cricket-layout:dom-observer").callback([{ target: host.headers[2], type: "attributes", attributeName: "class" }]);
+    host.observers.get("cricket-surface:dom-observer").callback([{ target: host.headers[2], type: "attributes", attributeName: "class" }]);
     assert.equal(host.headers[0].getAttribute("data-ad-cricket-active"), "false");
     assert.equal(host.headers[2].getAttribute("data-ad-cricket-active"), "true");
     assert.deepEqual([...host.grid.children], originalChildren);
     cleanup();
     assert.equal(host.grid.getAttribute("data-ad-cricket-layout"), null);
     assert.equal(host.rows[0].cells[0].style.getPropertyValue("--ad-cricket-row"), "");
-    assert.equal(host.observers.get("cricket-layout:dom-observer"), null);
+    assert.equal(host.observers.get("cricket-surface:dom-observer"), null);
   }
 });
 
@@ -200,7 +324,7 @@ test("replaced native grids are decorated and detached nodes are restored", () =
   replacement.appendChild(name);
   host.grid.insertBefore(replacement, originalHeader);
   originalHeader.remove();
-  host.observers.get("cricket-layout:dom-observer").callback([{ target: host.grid, type: "childList", addedNodes: [replacement], removedNodes: [originalHeader] }]);
+  host.observers.get("cricket-surface:dom-observer").callback([{ target: host.grid, type: "childList", addedNodes: [replacement], removedNodes: [originalHeader] }]);
   assert.equal(originalHeader.getAttribute("data-ad-cricket-layout-node"), null);
   assert.equal(replacement.getAttribute("data-ad-cricket-layout-node"), "header");
   cleanup();

@@ -253,7 +253,7 @@ const THEME_GLOBAL_TEMPLATE_PRESET_FIELD_COPY = deepFreeze(
 );
 
 const CRICKET_LAYOUT_FIELD_TEXT = Object.freeze({
-  profile: "Wählt Ausgewogen, Fernansicht oder Mehrspieler. Individuelle Änderungen werden als Benutzerdefiniert angezeigt. Das Profil ändert ausschließlich diese Layout-Karte.",
+  profile: "Wählt Ausgewogen, Fernansicht oder Mehrspieler. Individuelle Änderungen werden als Benutzerdefiniert angezeigt. Das Profil ändert ausschließlich den Layout-Bereich der Tabellenkachel.",
   space: "Verteilt den verfügbaren Platz zwischen Tabelle und Board. Automatisch berücksichtigt Spielerzahl und Zielanzahl; eine unsichere Board-Anordnung bleibt unverändert.",
   markSize: "Vergrößert die nativen Mark-Symbole bis zur verfügbaren Zellengröße. Ihre Bedeutung und Zuordnung bleiben erhalten.",
   targetSize: "Wählt die Größe der Zielzahlen. Die verfügbare Zeilenhöhe begrenzt die Größe, besonders bei Tactics.",
@@ -742,11 +742,11 @@ export const xconfigFeatureCopy = deepFreeze({
   }),
   "cricket-layout": featureCopy({
     images: [image("Cricket-Layout: schematische Beispielansicht", "cricket-layout-example.png")],
-    cardDescription: "Passt Cricket und Tactics an Bildschirm, Spielerzahl und Betrachtungsabstand an.",
-    visibleDescription: "Tabelle und Spieleranzeige erhalten abgestimmte Größen und eine stabile Zuordnung.",
-    visualDescription: "Ausgewogen, Fernansicht und Mehrspieler verteilen Platz und Schriftgrößen. Native Marks, Zielreihenfolge und Spielerpositionen bleiben erhalten.",
-    usefulWhen: "Wenn du Marks und Spielernamen aus der Entfernung besser lesen oder mehrere Spieler leichter vergleichen möchtest.",
-    featuresDetails: ["Standardmäßig ist das Layout ausgeschaltet.", "Tactics übernimmt die Cricket-Einstellungen und passt Größen an seine zwölf Zielzeilen an. Eigene Tactics-Werte lassen sich zusätzlich speichern.", "Profile ändern nur die Layout-Karte. Board-Zielmarkierung und Tabellen-Statuseffekte werden getrennt eingestellt."],
+    cardDescription: "Gestaltet die Cricket-/Tactics-Tabelle mit passendem Layout, Zustandsfarben und Trefferfeedback.",
+    visibleDescription: "Eine gemeinsame Tabellenkachel bietet Layout und Status/Effekte mit getrennten Schaltern.",
+    visualDescription: "Layoutprofile verteilen Platz und Schriftgrößen. Farben und Muster zeigen Punktemöglichkeiten, Gegnerdruck und geschlossene Ziele; Trefferfeedback ergänzt kurze Hinweise. Native Marks, Zielreihenfolge und Spielerpositionen bleiben erhalten.",
+    usefulWhen: "Wenn du die Tabelle besser lesen und Fortschritt sowie Gegnerdruck schneller erkennen möchtest.",
+    featuresDetails: ["Layout und Status/Effekte sind unabhängig schaltbar und zunächst ausgeschaltet.", "Tactics übernimmt die Cricket-Einstellungen und passt Größen an seine zwölf Zielzeilen an. Eigene Tactics-Werte lassen sich zusätzlich speichern.", "Layout- und Effektprofile ändern ausschließlich ihren eigenen Bereich. Die Board-Zielmarkierung bleibt separat.", "Trefferfeedback bündelt Impuls und Änderungsanzeige. Einzelregler für gespeicherte Sonderkombinationen und den bisherigen Stil stehen unter Erweitert."],
     fields: { ...cricketLayoutFieldsCopy,
       tacticsOverrides: fieldCopy("Verwendet eigene Layout-Werte für Tactics.", "Ausgeschaltet übernimmt Tactics die Cricket-Einstellungen. Gespeicherte Tactics-Werte bleiben für eine spätere Aktivierung erhalten."),
       debug: DEBUG_FIELD,
@@ -799,7 +799,7 @@ export const xconfigFeatureCopy = deepFreeze({
     cardDescription:
       "Ergänzt die Cricket-/Tactics-Matrix um Live-Effekte für Fortschritt, Druck und Wechsel.",
     visibleDescription:
-      "Zusätzliche Live-Effekte direkt in der Cricket-/Tactics-Matrix.",
+      "Status und Trefferfeedback im gemeinsamen Einstellungsdialog der Cricket-/Tactics-Tabelle.",
     visualDescription:
       "Zellen, Zeilen und Zielmarken reagieren mit grünen und roten Zuständen, kurzen Hinweisen, Kanten und Übergängen. So werden Fortschritt, Gegnerdruck und Zugwechsel in der Matrix selbst sichtbarer.",
     usefulWhen:
@@ -2846,7 +2846,7 @@ const RECOMMENDED_DEFAULTS_DOC_GROUPS = deepFreeze([
         ["irrelevantBoardDimStyle", "Andere Felder abdunkeln"], ["colorTheme", "Farben"],
         ["intensity", "Stärke"],
       ]),
-      recommendedSection("Cricket-Statusanzeigen", "cricket-grid-status-effects", [
+      recommendedSection("Cricket-/Tactics-Tabelle: Status und Effekte", "cricket-grid-status-effects", [
         ["rowWave", "Welle durch die Zeile"], ["badgeBeacon", "Zielmarke hervorheben"],
         ["markProgress", "Markierungen auffüllen"], ["pressureEdge", "Druck anzeigen (PRESSURE)"],
         ["scoringStripe", "Punktemöglichkeit anzeigen (SCORING)"],

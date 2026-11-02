@@ -153,6 +153,19 @@ ${buildX01RemainingScoreBarStyleText()}
 #${PANEL_HOST_ID} .ad-xconfig-btn--square{width:2.15rem;min-width:2.15rem;height:2.15rem;padding:0;display:inline-flex;align-items:center;justify-content:center;line-height:1}
 #${PANEL_HOST_ID} .ad-xconfig-btn--danger{border-color:rgba(255,84,84,.42);background:rgba(255,84,84,.17)}
 #${PANEL_HOST_ID} .ad-xconfig-content{margin-top:24px}
+
+#${PANEL_HOST_ID} .ad-xconfig-table-toggles{display:grid;gap:10px;flex-shrink:0}
+#${PANEL_HOST_ID} .ad-xconfig-table-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.8rem}
+#${PANEL_HOST_ID} .ad-xconfig-card[data-preview-kind="cricket-table"] .ad-xconfig-card-head{flex-wrap:wrap}
+#${PANEL_HOST_ID} .ad-xconfig-table-preview{display:flex;align-items:center;justify-content:flex-end;padding:20px;overflow:hidden}
+#${PANEL_HOST_ID} .ad-xconfig-table-preview-grid{display:grid;grid-template-columns:36px repeat(4,minmax(52px,1fr));gap:3px;min-width:370px;color:#f1f5f9;font-size:18px;text-align:center}
+#${PANEL_HOST_ID} .ad-xconfig-table-preview-grid>span{min-height:24px;background:#202a37;border-radius:3px;padding:3px}
+#${PANEL_HOST_ID} .ad-xconfig-table-preview-grid .ad-xconfig-table-preview-header{font-size:9px;padding:8px 2px}
+#${PANEL_HOST_ID} .ad-xconfig-table-preview-grid [data-active="true"]{border-inline-start:2px solid #f5f5f5}
+#${PANEL_HOST_ID} .ad-xconfig-table-preview-grid [data-state="scoring"]{background:#124739;box-shadow:inset 0 0 0 1px #00b287}
+#${PANEL_HOST_ID} .ad-xconfig-table-preview-grid [data-state="pressure"]{background:repeating-linear-gradient(45deg,#50272c 0 4px,#36252e 4px 8px);box-shadow:inset 0 0 0 1px #ef4444}
+#${PANEL_HOST_ID} .ad-xconfig-table-preview-grid [data-state="dead"]{background:#30363d}
+
 #${PANEL_HOST_ID} .ad-xconfig-section{--adx-section-accent:#94a3b8;display:grid;gap:0}
 #${PANEL_HOST_ID} .ad-xconfig-section + .ad-xconfig-section{margin-top:36px;padding-top:36px;border-top:1px solid var(--adx-border)}
 #${PANEL_HOST_ID} .ad-xconfig-section[data-adxconfig-section="template"]{--adx-section-accent:#a855f7}
