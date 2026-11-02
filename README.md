@@ -61,7 +61,7 @@ Alles wird direkt im Spiel über **xConfig** eingestellt. Du findest den Eintrag
 
 ## Im Überblick
 
-- Insgesamt `23` Module: `19` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
+- Insgesamt `19` Module: `15` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
 - `↺ Zurücksetzen`: Setzt alle Einstellungen vollständig auf Standard zurück, deaktiviert alle Module, schaltet die Diagnose aus und entfernt globales Hintergrundbild sowie Dart-Upload.
 - `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
 - `Exportieren` / `Importieren`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.
@@ -212,22 +212,18 @@ Wähle den Spielmodus oder den gewünschten sichtbaren Effekt und öffne anschli
 | [Schrift & Farben](#template-global-typography) | Design | `alle Modi` | Globale Schrift, Textfarben und eine separate Restscore-Größe für Spielerkarten. |
 | [Spiel-Layout](#theme-game-layout) | Design | `alle Modi` | Passt die Spielansicht an Desktop, TV oder Hochformat an und erhält das bisherige X01-Layout. |
 | [Dartboard-Design](#bot-board-style) | Funktion | `alle Modi` | Zeigt eines von zehn bekannten Board-Designs entweder nur während Bot-Zügen oder auf allen unterstützten Match-Boards. |
-| [Darts in der Wurfanzeige](#turn-dart-display) | Funktion | `alle Modi` | Globale Darstellung der drei Darts im Wurffeld. |
-| [Finishbaren Restscore hervorheben](#animation-autodarts-animate-checkout-score-highlight) | Funktion | `X01` | Hebt direkt finishbare Restwerte in X01 mit einem gut sichtbaren Score-Effekt hervor. |
-| [Restscore-Balken](#animation-autodarts-x01-remaining-score-bar) | Funktion | `X01` | Zeigt den verbleibenden X01-Score als Balken direkt unter jeder Spielerpunktzahl. |
+| [X01-Restscore](#animation-autodarts-animate-checkout-score-highlight) | Funktion | `X01` | Gestaltet den X01-Restscore mit Finish-Hervorhebung und einem unabhängig schaltbaren Fortschrittsbalken. |
 | [Checkout-Ziele hervorheben](#animation-autodarts-animate-checkout-target-highlights) | Funktion | `X01` | Markiert Checkout-Ziele direkt am Board, statt sie nur im Text zu zeigen. |
 | [Automatischer Board-Zoom](#animation-autodarts-animate-tv-board-zoom) | Funktion | `X01` | Zoomt in X01 bei Checkout- und sinnvollen Setup-Zielen TV-artig auf das Board. |
 | [Checkout-Vorschlag gestalten](#animation-autodarts-checkout-suggestion-styles) | Funktion | `X01` | Vergrößert die Turn-Felder sofort und hebt Checkout-Hinweise theme-kompatibel hervor. |
 | [Überworfen (BUST) hervorheben](#animation-autodarts-x01-bust-active-player-highlight) | Funktion | `X01` | Ersetzt den nativen BUST-Effekt durch eine rote Glasbruch-Markierung auf dem gewählten Bereich oder am Darts-Einschlag. |
 | [AVG-Trend anzeigen](#animation-autodarts-animate-avg-trend-arrow) | Funktion | `alle Modi` | Zeigt die AVG-Richtung mit einem kurzen Pfeil direkt an der Anzeige. |
-| [Triple, Double & Bull hervorheben](#animation-autodarts-animate-special-hit-highlights) | Funktion | `alle Modi` | Hebt Triple-, Double- und Bull-Treffer mit Farben, Licht und kurzen Bewegungen hervor. |
 | [Cricket-/Tactics-Tabelle](#cricket-tactics-layout) | Funktion | `Cricket`, `Tactics` | Gestaltet die Cricket-/Tactics-Tabelle mit passendem Layout, Zustandsfarben und Trefferfeedback. |
 | [Cricket-Ziele hervorheben](#animation-autodarts-animate-cricket-target-highlighter) | Funktion | `Cricket`, `Tactics` | Zeigt Cricket- und Tactics-Zustände direkt auf dem Board statt nur in der Matrix. |
-| [Treffermarkierungen hervorheben](#animation-autodarts-animate-dartboard-marker-highlight) | Funktion | `alle Modi` | Macht vorhandene Marker auf dem virtuellen Board klarer und auffälliger. |
-| [Treffermarkierungen durch Darts ersetzen](#animation-autodarts-animate-dart-marker-replacer) | Funktion | `alle Modi` | Ersetzt Marker optional durch kleine Dart-Grafiken mit Fluganimation und pausiert im Live-Modus automatisch. |
+| [Board-Treffermarkierungen](#animation-autodarts-animate-dartboard-marker-highlight) | Funktion | `alle Modi` | Gestaltet Treffer auf dem Board mit hervorgehobenen Markern und optionalen Dart-Bildern. |
 | [Hinweis: Darts entfernen](#animation-autodarts-animate-take-out-darts-alert) | Funktion | `alle Modi` | Macht den Hinweis zum Entfernen der Darts mit einer großen Grafik auffälliger. |
 | [Ton bei Single Bull](#animation-autodarts-animate-single-bull-hit-sound) | Funktion | `alle Modi` | Spielt bei Single Bull einen kurzen Ton zur akustischen Rückmeldung ab. |
-| [Punkte animiert zählen](#animation-autodarts-animate-turn-score-counter) | Funktion | `alle Modi` | Zählt Punkteänderungen beim Turn sichtbar hoch oder herunter. |
+| [Wurfanzeige](#animation-autodarts-animate-turn-score-counter) | Funktion | `alle Modi` | Gestaltet Dart-Symbole, Trefferfeedback und die animierte Wurfsumme in einer gemeinsamen Kachel. |
 
 ## Empfohlene Standards
 
@@ -317,18 +313,6 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#bot-board-style)
 
-<a id="turn-dart-display"></a>
-
-### Darts in der Wurfanzeige
-
-- Gilt für: `alle Modi`
-- Was macht es sichtbar? Ersetzt die Darts in der Wurfanzeige durch Farbe, Verlauf, Text, ein vorbereitetes Dart-Bild, einen eigenen Upload oder einen lokal gespeicherten Dart aus dem Autodarts-Dartdesigner.
-- Wann sinnvoll? Wenn die Darts im Wurffeld besser zum eigenen Setup passen sollen.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#turn-dart-display)
-
-![Darts in der Wurfanzeige mit Dart-Bild](docs/screenshots/turn-dart-display.png)
-
 <a id="animation-autodarts-animate-avg-trend-arrow"></a>
 <a id="animation-autodarts-animate-average-trend-arrow"></a>
 
@@ -342,42 +326,20 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 ![AVG-Trend anzeigen](docs/screenshots/animation-average-trend-arrow.png)
 
-<a id="animation-autodarts-animate-special-hit-highlights"></a>
-<a id="animation-autodarts-animate-triple-double-bull-hits"></a>
-
-### Triple, Double & Bull hervorheben
-
-- Gilt für: `alle Modi`
-- Was macht es sichtbar? Treffer wie `T20`, `D16`, `25` und `BULL` bekommen farbige Flächen und einen deutlich sichtbaren Trefferimpuls.
-- Wann sinnvoll? Wenn wichtige Treffer auch in schnellen Legs sofort lesbar, deutlich stylischer und visuell markanter wirken sollen, ohne weitere Einzelschalter zu pflegen.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-special-hit-highlights)
-
 <a id="animation-autodarts-animate-dartboard-marker-highlight"></a>
 <a id="animation-autodarts-animate-dart-marker-emphasis"></a>
+<a id="animation-autodarts-animate-dart-marker-replacer"></a>
+<a id="animation-autodarts-animate-dart-marker-darts"></a>
 
-### Treffermarkierungen hervorheben
+### Board-Treffermarkierungen
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Treffer-Marker auf dem virtuellen Board werden deutlicher sichtbar.
+- Was macht es sichtbar? Eine gemeinsame Kachel bietet native Treffermarker und Dart-Bilder mit getrennten Schaltern.
 - Wann sinnvoll? Wenn die Standardmarker zu klein oder zu unauffällig sind.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-dartboard-marker-highlight)
 
 ![Treffermarkierungen hervorheben](docs/screenshots/animation-dart-marker-emphasis.gif)
-
-<a id="animation-autodarts-animate-dart-marker-replacer"></a>
-<a id="animation-autodarts-animate-dart-marker-darts"></a>
-
-### Treffermarkierungen durch Darts ersetzen
-
-- Gilt für: `alle Modi`
-- Was macht es sichtbar? Standardmarker können auf dem virtuellen Board durch kleine Dart-Grafiken ersetzt werden. Im Live-Modus pausiert das Modul automatisch.
-- Wann sinnvoll? Wenn du Treffer auf dem virtuellen Board persönlicher oder realistischer darstellen möchtest.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-dart-marker-replacer)
-
-![Treffermarkierungen durch Darts ersetzen](docs/screenshots/dart-marker-replacer.webp)
 
 <a id="animation-autodarts-animate-take-out-darts-alert"></a>
 <a id="animation-autodarts-animate-remove-darts-notification"></a>
@@ -404,12 +366,15 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-single-bull-hit-sound)
 
 <a id="animation-autodarts-animate-turn-score-counter"></a>
+<a id="turn-dart-display"></a>
+<a id="animation-autodarts-animate-special-hit-highlights"></a>
+<a id="animation-autodarts-animate-triple-double-bull-hits"></a>
 <a id="animation-autodarts-animate-turn-points-count"></a>
 
-### Punkte animiert zählen
+### Wurfanzeige
 
 - Gilt für: `alle Modi`
-- Was macht es sichtbar? Punkteänderungen beim Turn werden sichtbar hoch- oder heruntergezählt.
+- Was macht es sichtbar? Dart-Symbole, Trefferfarben und Animationen der Wurfsumme lassen sich unabhängig einstellen.
 - Wann sinnvoll? Wenn du Punktwechsel im Spielbild leichter verfolgen möchtest.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-turn-score-counter)
@@ -420,29 +385,18 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 <a id="animation-autodarts-animate-checkout-score-highlight"></a>
 <a id="animation-autodarts-animate-checkout-score-pulse"></a>
+<a id="animation-autodarts-x01-remaining-score-bar"></a>
+<a id="animation-autodarts-x01-score-progress"></a>
 
-### Finishbaren Restscore hervorheben
+### X01-Restscore
 
 - Gilt für: `X01`
-- Was macht es sichtbar? Direkt finishbare Restwerte werden an der aktiven Punktzahl hervorgehoben.
+- Was macht es sichtbar? Eine gemeinsame Kachel bietet die Hervorhebung der aktiven Restpunktzahl und einen Restscore-Balken je Spieler.
 - Wann sinnvoll? Wenn du Checkout-Momente schneller am Score erkennen möchtest.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-checkout-score-highlight)
 
 ![Finishbaren Restscore hervorheben](docs/screenshots/animation-checkout-score-pulse.gif)
-
-<a id="animation-autodarts-x01-remaining-score-bar"></a>
-<a id="animation-autodarts-x01-score-progress"></a>
-
-### Restscore-Balken
-
-- Gilt für: `X01`
-- Was macht es sichtbar? Jede X01-Spielerkarte erhält einen Balken, der den verbleibenden Score relativ zum Startwert zeigt.
-- Wann sinnvoll? Wenn du Reststände und den Abstand zwischen Spielern in X01 schneller auf einen Blick erfassen möchtest.
-
-[Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-x01-remaining-score-bar)
-
-![Restscore-Balken](docs/screenshots/animation-x01-score-progress.png)
 
 <a id="animation-autodarts-animate-checkout-target-highlights"></a>
 <a id="animation-autodarts-animate-checkout-board-targets"></a>

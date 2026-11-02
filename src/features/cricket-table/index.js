@@ -10,6 +10,10 @@ function createTable(runtime) {
   let sharedHealth = null;
   const schedule = () => runtime.scheduler.schedule();
 
+  function unmonitorParts() {
+    parts.forEach((entry) => entry.unmonitor());
+  }
+
   function monitor(part) {
     part.unmonitor = part.context.watchdog?.register({
       coverage: "display",
@@ -49,7 +53,7 @@ function createTable(runtime) {
           watchdog: { register(health) {
             sharedHealth = health;
             parts.forEach(monitor);
-            return () => parts.forEach((entry) => entry.unmonitor());
+            return unmonitorParts;
           } },
           onTurnReset: () => parts.forEach((entry) => entry.renderer.clear()),
           isManagedNode: (node) => Array.from(parts.values()).some((entry) => entry.renderer.isManagedNode?.(node)),
@@ -81,7 +85,8 @@ function createTable(runtime) {
 }
 
 // Preserve both public feature/config identities while sharing one table subscription.
-export function mountCricketTablePart(context = {}, kind) {
+export function mountCricketTablePart(context, kind) {
+  context ??= {};
   const documentRef = context.documentRef || globalThis.document;
   const windowRef = context.windowRef || globalThis.window;
   if (!documentRef || !windowRef || !context.domGuards || !context.domain?.cricketRules) return () => {};

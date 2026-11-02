@@ -61,21 +61,24 @@ export function collectBoardMarkers(documentRef, options = {}) {
     return [];
   }
 
-  const boardLayerParent = board?.svg?.parentElement || null;
-  const siblingSvgLayers = Array.from(boardLayerParent?.children || []).filter((node) => {
-    return String(node?.tagName || node?.nodeName || "").toLowerCase() === "svg";
-  });
-  const markerRoots = siblingSvgLayers.length > 1 ? siblingSvgLayers : [boardRoot];
-  const seen = new Set();
-
-  return markerRoots.flatMap((root) => Array.from(root.querySelectorAll("circle")))
-    .filter((node) => {
-      if (seen.has(node) || !isLikelyBoardMarker(node)) {
-        return false;
-      }
-      seen.add(node);
-      return true;
+  const collect = () => {
+    const boardLayerParent = board?.svg?.parentElement || null;
+    const siblingSvgLayers = Array.from(boardLayerParent?.children || []).filter((node) => {
+      return String(node?.tagName || node?.nodeName || "").toLowerCase() === "svg";
     });
+    const markerRoots = siblingSvgLayers.length > 1 ? siblingSvgLayers : [boardRoot];
+    const seen = new Set();
+
+    return markerRoots.flatMap((root) => Array.from(root.querySelectorAll("circle")))
+      .filter((node) => {
+        if (seen.has(node) || !isLikelyBoardMarker(node)) {
+          return false;
+        }
+        seen.add(node);
+        return true;
+      });
+  };
+  return typeof options.readSurfaceState === "function" ? options.readSurfaceState(boardRoot, collect) : collect();
 }
 
 export function buildMarkerKey(node) {

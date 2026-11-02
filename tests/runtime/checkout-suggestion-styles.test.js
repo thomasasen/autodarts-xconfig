@@ -140,12 +140,12 @@ test("checkout-suggestion-styles decorates setup recommendations and removes sty
   const suggestions = collectSuggestions(fixture.documentRef, fixture.windowRef);
   assert.equal(suggestions.length, 1);
   assert.equal(suggestions[0], third);
-  let render;
+  const observers = createObserverRegistry();
   const cleanup = initializeCheckoutSuggestionStyles({
     ...fixture,
     domGuards: createDomGuards({ documentRef: fixture.documentRef }),
+    registries: { observers },
     helpers: { createRafScheduler(callback) {
-      render = callback;
       return { schedule: callback, cancel() {} };
     } },
     gameState: { isX01Variant: () => false },
@@ -156,7 +156,7 @@ test("checkout-suggestion-styles decorates setup recommendations and removes sty
   assert.equal(fixture.rows[0].row.dataset.adExtLabel, undefined);
   fixture.setVisit(["S20", "S18", "T17"], []);
   third.classList.remove("text-checkout-setup");
-  render();
+  observers.get("checkout-suggestion-styles:dom-observer").callback([{ type: "characterData", target: fixture.rows[0].label }]);
   assert.equal(third.classList.contains(MODERN_CLASS), false);
   assert.equal(third.dataset.adExtLabel, undefined);
   cleanup();
@@ -250,15 +250,15 @@ test("checkout-suggestion-styles decorates the modern route with one label and c
     throws: [],
     route: ["T20", "25", "D18"],
   });
-  let render = () => {};
+  const observers = createObserverRegistry();
   const cleanup = initializeCheckoutSuggestionStyles({
     documentRef: fixture.documentRef,
     windowRef: fixture.windowRef,
     domGuards: createDomGuards({ documentRef: fixture.documentRef }),
+    registries: { observers },
     helpers: {
       createRafScheduler(callback) {
-        render = callback;
-        return {
+          return {
           schedule: callback,
           cancel() {},
         };
@@ -288,7 +288,7 @@ test("checkout-suggestion-styles decorates the modern route with one label and c
   assert.equal(fixture.cardRoute.classList.contains("ad-ext-checkout-suggestion"), false);
 
   fixture.setVisit(["T20"], ["25", "D18"]);
-  render();
+  observers.get("checkout-suggestion-styles:dom-observer").callback([{ type: "characterData", target: fixture.rows[0].label }]);
 
   assert.equal(modernRows[0].classList.contains("ad-ext-checkout-suggestion"), false);
   assert.equal(modernRows[1].dataset.adExtLabel, "CHECKOUT");

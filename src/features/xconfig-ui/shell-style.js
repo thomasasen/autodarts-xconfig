@@ -156,7 +156,7 @@ ${buildX01RemainingScoreBarStyleText()}
 
 #${PANEL_HOST_ID} .ad-xconfig-table-toggles{display:grid;gap:10px;flex-shrink:0}
 #${PANEL_HOST_ID} .ad-xconfig-table-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.8rem}
-#${PANEL_HOST_ID} .ad-xconfig-card[data-preview-kind="cricket-table"] .ad-xconfig-card-head{flex-wrap:wrap}
+#${PANEL_HOST_ID} .ad-xconfig-card[data-presentation-group] .ad-xconfig-card-head{flex-wrap:wrap}
 #${PANEL_HOST_ID} .ad-xconfig-table-preview{display:flex;align-items:center;justify-content:flex-end;padding:20px;overflow:hidden}
 #${PANEL_HOST_ID} .ad-xconfig-table-preview-grid{display:grid;grid-template-columns:36px repeat(4,minmax(52px,1fr));gap:3px;min-width:370px;color:#f1f5f9;font-size:18px;text-align:center}
 #${PANEL_HOST_ID} .ad-xconfig-table-preview-grid>span{min-height:24px;background:#202a37;border-radius:3px;padding:3px}
@@ -632,7 +632,7 @@ ${buildX01RemainingScoreBarSizeStyle(`#${PANEL_HOST_ID} .ad-xconfig-x01-remainin
 #${PANEL_HOST_ID} .ad-xconfig-option-list{margin-top:0}
 #${PANEL_HOST_ID} .ad-xconfig-option-item:not(.ad-xconfig-option-item--effect-preview):not(.ad-xconfig-option-item--color-preview){background:var(--adx-raised);box-shadow:none}
 #${PANEL_HOST_ID} .ad-xconfig-variant,#${PANEL_HOST_ID} .ad-xconfig-option-active{background:var(--adx-secondary);color:var(--adx-muted);box-shadow:none}
-#${PANEL_HOST_ID} :is(.ad-xconfig-text-input,.ad-xconfig-color-code){background:var(--adx-raised);color:var(--adx-text);border:1px solid var(--adx-border);border-radius:8px;min-width:0}
+#${PANEL_HOST_ID} :is(.ad-xconfig-text-input,.ad-xconfig-color-code){box-sizing:border-box;max-width:100%;background:var(--adx-raised);color:var(--adx-text);border:1px solid var(--adx-border);border-radius:8px;min-width:0}
 #${PANEL_HOST_ID} .ad-xconfig-transfer-dialog > :first-child{position:sticky;top:-24px;background:var(--adx-surface);z-index:3;padding:16px 0;margin:0}
 @media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-page{padding:16px}#${PANEL_HOST_ID} .ad-xconfig-header{padding:12px}#${PANEL_HOST_ID} .ad-xconfig-header-lead{align-items:flex-start}#${PANEL_HOST_ID} .ad-xconfig-heading{flex:1 1 180px}#${PANEL_HOST_ID} .ad-xconfig-update-panel{min-width:100%}#${PANEL_HOST_ID} .ad-xconfig-header-actions{width:100%;justify-content:flex-start}#${PANEL_HOST_ID} .ad-xconfig-section + .ad-xconfig-section{margin-top:28px;padding-top:28px}#${PANEL_HOST_ID} .ad-xconfig-section-header{align-items:flex-start;padding:12px}#${PANEL_HOST_ID} .ad-xconfig-grid{gap:16px}#${PANEL_HOST_ID} .ad-xconfig-card-bg{inset:0}#${PANEL_HOST_ID} .ad-xconfig-card-bg::after{background:linear-gradient(90deg,rgba(27,31,41,.96) 0%,rgba(27,31,41,.88) 58%,rgba(27,31,41,.5) 100%)}#${PANEL_HOST_ID} .ad-xconfig-card-content,#${PANEL_HOST_ID} .ad-xconfig-card--theme-global .ad-xconfig-card-content{width:100%}#${PANEL_HOST_ID} .ad-xconfig-setting-row{grid-template-columns:minmax(0,1fr)}#${PANEL_HOST_ID} .ad-xconfig-setting-input > .ad-xconfig-switch{float:none}#${PANEL_HOST_ID} .ad-xconfig-modal{padding:0 16px 16px}#${PANEL_HOST_ID} .ad-xconfig-modal-header{padding-top:16px}#${PANEL_HOST_ID} .ad-xconfig-transfer-dialog{padding:16px}#${PANEL_HOST_ID} .ad-xconfig-modal-actions{flex-wrap:wrap;justify-content:flex-end}#${PANEL_HOST_ID} .ad-xconfig-transfer-summary{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-card-bg::after{background:linear-gradient(90deg,rgba(27,31,41,.90) 0%,rgba(27,31,41,.72) 55%,rgba(27,31,41,.46) 78%,rgba(27,31,41,.28) 100%)}}

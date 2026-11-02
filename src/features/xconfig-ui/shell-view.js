@@ -1,4 +1,4 @@
-import { CRICKET_TABLE_FEATURE_KEYS, groupCricketTableFeatures, getCricketTableFields } from "./cricket-table-settings.js";
+import { getPresentationGroup, groupPresentationFeatures, getPresentationFields } from "./presentation-groups.js";
 import { buildCricketTablePreview } from "./cricket-table-preview.js";
 import { resolveSelectOptionLayoutType } from "./option-layout.js";
 import {
@@ -3251,7 +3251,7 @@ function buildFeatureCard(documentRef, feature, previewFeatures = []) {
   const fieldCount = Array.isArray(descriptor?.fields) ? descriptor.fields.length : 0;
   const isThemeGlobalCard = isThemeGlobalFeature(feature);
   const isWideCard = isThemeGlobalWideCard(feature);
-  const preview = feature.tableMembers ? { kind: "cricket-table" } : resolveFeatureCardPreview(feature, previewFeatures);
+  const preview = resolveFeatureCardPreview(feature, previewFeatures);
   const card = createElement(documentRef, "article", {
     className: [
       "ad-xconfig-card",
@@ -3260,6 +3260,7 @@ function buildFeatureCard(documentRef, feature, previewFeatures = []) {
     attributes: {
       "data-feature-key": feature.featureKey,
       "data-card-kind": isThemeGlobalCard ? "theme-global" : "default",
+      "data-presentation-group": feature.presentationGroup?.key,
       "data-card-type": descriptor?.cardType || "toggle",
       "data-enabled": descriptor?.cardType === "action" ? undefined : String(Boolean(feature.enabled)),
       "data-design-status": "ready",
@@ -3267,7 +3268,7 @@ function buildFeatureCard(documentRef, feature, previewFeatures = []) {
       "data-preview-display-mode": preview.displayMode || undefined,
     },
   });
-  if (feature.tableMembers) card.appendChild(buildCricketTablePreview(documentRef, createElement));
+  if (feature.presentationGroup?.kind === "cricket-table") card.appendChild(buildCricketTablePreview(documentRef, createElement));
   const previewUrl = preview.url;
   if (previewUrl) {
     const bg = createElement(documentRef, "div", {
@@ -3341,11 +3342,11 @@ function buildFeatureCard(documentRef, feature, previewFeatures = []) {
   }));
   head.appendChild(copy);
   if (descriptor?.cardType !== "action") {
-    if (feature.tableMembers) {
+    if (feature.presentationMembers) {
       const toggles = createElement(documentRef, "div", { className: "ad-xconfig-table-toggles" });
-      feature.tableMembers.forEach((member) => {
+      feature.presentationMembers.forEach((member) => {
         const label = createElement(documentRef, "div", { className: "ad-xconfig-table-toggle" });
-        const title = member.featureKey === "cricket-layout" ? "Layout anpassen" : "Status und Effekte anzeigen";
+        const title = member.groupLabel;
         label.appendChild(createElement(documentRef, "span", { text: title }));
         label.appendChild(buildFeatureToggle(documentRef, { ...member, title }));
         toggles.appendChild(label);
@@ -3358,7 +3359,7 @@ function buildFeatureCard(documentRef, feature, previewFeatures = []) {
   const badges = createElement(documentRef, "div", {
     className: "ad-xconfig-card-badges",
   });
-  if (feature.config?.debug === true || feature.tableMembers?.some((member) => member.config?.debug)) {
+  if (feature.config?.debug === true || feature.presentationMembers?.some((member) => member.config?.debug)) {
     badges.appendChild(createElement(documentRef, "span", {
       className: "ad-xconfig-status-badge ad-xconfig-status-badge--diagnostic",
       text: "Diagnose aktiv",
@@ -3438,10 +3439,10 @@ function buildSettingsModal(documentRef, state, features) {
   if (!state.activeSettingsFeatureKey) {
     return null;
   }
-  const settingsKey = CRICKET_TABLE_FEATURE_KEYS.includes(state.activeSettingsFeatureKey) ? "cricket-layout" : state.activeSettingsFeatureKey;
-  const feature = groupCricketTableFeatures(features).find((entry) => entry.featureKey === settingsKey) || null;
+  const settingsKey = getPresentationGroup(state.activeSettingsFeatureKey)?.key || state.activeSettingsFeatureKey;
+  const feature = groupPresentationFeatures(features).find((entry) => entry.featureKey === settingsKey) || null;
   const descriptor = feature ? getXConfigDescriptor(feature.featureKey) : null;
-  const sourceFields = feature?.tableMembers ? getCricketTableFields(feature.tableMembers) : descriptor?.fields || [];
+  const sourceFields = feature?.presentationMembers ? getPresentationFields(feature.presentationMembers) : descriptor?.fields || [];
   const fields = sourceFields.filter((field) => {
     const source = field.sourceFeatureKey ? features.find((entry) => entry.featureKey === field.sourceFeatureKey) : feature;
     return !field.visibleWhen || source?.config?.[field.visibleWhen.key] === field.visibleWhen.value;
@@ -3461,7 +3462,7 @@ function buildSettingsModal(documentRef, state, features) {
     attributes: {
       role: "dialog",
       "aria-modal": "true",
-      "data-adxconfig-refresh-settings": descriptor.refreshSettingsOnChange ? "true" : "false",
+      "data-adxconfig-refresh-settings": feature.presentationMembers || descriptor.refreshSettingsOnChange ? "true" : "false",
       "data-adxconfig-modal": "true",
       "aria-labelledby": "ad-xconfig-settings-title",
       tabindex: "-1",
@@ -3527,9 +3528,9 @@ function buildSettingsModal(documentRef, state, features) {
     });
     body.appendChild(search);
   }
-  const settingsDetails = Array.isArray(descriptor?.settingsDetails)
-    ? descriptor.settingsDetails.filter(Boolean)
-    : [];
+  const settingsDetails = feature.presentationMembers
+    ? [...new Set(feature.presentationMembers.flatMap((member) => getXConfigDescriptor(member.featureKey)?.settingsDetails || []))]
+    : descriptor?.settingsDetails || [];
   if (settingsDetails.length) {
     const detailsRow = createElement(documentRef, "section", {
       className: "ad-xconfig-setting-row",
@@ -3552,23 +3553,25 @@ function buildSettingsModal(documentRef, state, features) {
     });
     body.appendChild(detailsRow);
   }
-  if (isThemeGameLayoutFeature(feature)) {
-    body.appendChild(buildThemeGameLayoutPreviewSection(documentRef, feature));
-  }
-  if (isCheckoutScoreHighlightFeature(feature)) {
-    body.appendChild(buildCheckoutScoreHighlightPreviewSection(documentRef, feature));
-  }
-  if (isCheckoutTargetHighlightsFeature(feature)) {
-    body.appendChild(buildCheckoutBoardPreviewSection(documentRef, feature));
-  }
-  if (isCheckoutSuggestionStylesFeature(feature)) {
-    body.appendChild(buildCheckoutSuggestionPreviewSection(documentRef, feature));
-  }
-  if (isX01RemainingScoreBarFeature(feature)) {
-    body.appendChild(buildX01RemainingScoreBarPreviewSection(documentRef, feature));
-  }
-  if (feature.featureKey === SPECIAL_HIT_HIGHLIGHTS_FEATURE_KEY) {
-    body.appendChild(buildSpecialHitHighlightsPreviewSection(documentRef, feature, features));
+  for (const previewFeature of feature.presentationMembers || [feature]) {
+    if (isThemeGameLayoutFeature(previewFeature)) {
+      body.appendChild(buildThemeGameLayoutPreviewSection(documentRef, previewFeature));
+    }
+    if (isCheckoutScoreHighlightFeature(previewFeature)) {
+      body.appendChild(buildCheckoutScoreHighlightPreviewSection(documentRef, previewFeature));
+    }
+    if (isCheckoutTargetHighlightsFeature(previewFeature)) {
+      body.appendChild(buildCheckoutBoardPreviewSection(documentRef, previewFeature));
+    }
+    if (isCheckoutSuggestionStylesFeature(previewFeature)) {
+      body.appendChild(buildCheckoutSuggestionPreviewSection(documentRef, previewFeature));
+    }
+    if (isX01RemainingScoreBarFeature(previewFeature)) {
+      body.appendChild(buildX01RemainingScoreBarPreviewSection(documentRef, previewFeature));
+    }
+    if (previewFeature.featureKey === SPECIAL_HIT_HIGHLIGHTS_FEATURE_KEY) {
+      body.appendChild(buildSpecialHitHighlightsPreviewSection(documentRef, previewFeature, features));
+    }
   }
   const sectionBodies = new Map();
   fields.forEach((field) => {
@@ -3649,7 +3652,7 @@ function buildSettingsModal(documentRef, state, features) {
 
 export function groupXConfigFeatures(features = []) {
   const sortedFeatures = Array.isArray(features)
-    ? groupCricketTableFeatures(features)
+    ? groupPresentationFeatures(features)
     : [];
   if (!sortedFeatures.length) {
     return [];

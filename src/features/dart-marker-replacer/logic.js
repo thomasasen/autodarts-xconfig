@@ -204,7 +204,7 @@ function resolveBoardMarkers(documentRef, state, board, shouldRescan = true) {
     return state.markerNodes;
   }
 
-  const markers = collectBoardMarkers(documentRef, { board });
+  const markers = collectBoardMarkers(documentRef, { board, readSurfaceState: state?.readSurfaceState });
   if (state) {
     state.markerNodes = markers;
   }

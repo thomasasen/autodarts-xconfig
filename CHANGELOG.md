@@ -12,6 +12,20 @@ immutable Git-Tags; der erste Tag-Vergleich beginnt beim tatsächlichen `2.9.1`-
 Dieses Repository führt keine `Unreleased`-Sektion. Jeder dokumentierte Eintrag gehört
 direkt zu einer versionierten Release-Sektion.
 
+## [3.7.0] - 2026-11-02
+
+### Changed
+
+- Nutzerwirkung: Die gemeinsame Cricket-/Tactics-Tabelle bündelt Layout, Status und Trefferfeedback in einer Kachel mit zwei unabhängigen Schaltern. Layout- und Effektprofile bleiben getrennt; vorhandene Einstellungen werden weiterverwendet.
+  Technik: Eine gemeinsame Tabellensteuerung und ein gemeinsamer Snapshot ersetzen doppelte DOM-Analysen. Layout und Statuseffekte besitzen getrennte Zuständigkeiten und Cleanup-Pfade; Zielzahlen behalten bei gleichzeitig aktiven Effekten ihre berechnete Größe.
+- Nutzerwirkung: Board-Treffermarkierungen, X01-Restscore und Wurfanzeige bündeln jeweils zusammengehörige Funktionen in einer Kachel. Alle Teilfunktionen bleiben unabhängig schaltbar; Import, Export und vorhandene Konfigurationsschlüssel bleiben erhalten.
+  Technik: Eine gemeinsame Gruppenzuordnung verbindet Dialoge, Suche, Aktivitätsanzeige und Vorschauen mit den ursprünglichen Features. Renderer teilen Frame-Scheduling, Game-State-Subscriptions und DOM-Lesungen innerhalb eines Frames; die Wurfanzeigen-Geometrie liegt in einem gemeinsamen Modul.
+
+### Fixed
+
+- Nutzerwirkung: Die zusammengeführten Dialoge bleiben auch auf schmalen Bildschirmen ohne horizontal überlaufende Text- und Farbeingaben bedienbar. Gleichnamige Einstellungen der Teilfunktionen bleiben eindeutig zugeordnet.
+  Technik: Eingabebreiten berücksichtigen ihre Rahmen; Feldidentitäten enthalten den ursprünglichen Feature-Schlüssel. Kombinations-, Import-/Export- und Chromium-Regressionstests sichern unabhängige Aktivierung, DOM-Knotenaustausch und vollständiges Aufräumen ab.
+
 ## [3.6.0] - 2026-10-31
 
 ### Added
@@ -2481,6 +2495,7 @@ direkt zu einer versionierten Release-Sektion.
   und Regressionstests eingeführt und die generierten README-/FEATURES-Texte wurden
   entsprechend synchronisiert.
 
+[3.7.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.6.0...v3.7.0
 [3.6.0]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.11...v3.6.0
 [3.5.11]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.10...v3.5.11
 [3.5.10]: https://github.com/thomasasen/autodarts-xconfig/compare/v3.5.9...v3.5.10

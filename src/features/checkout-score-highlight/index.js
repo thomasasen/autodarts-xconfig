@@ -1,3 +1,4 @@
+import { mountFeatureSurfaceGroup } from "../shared/feature-surface-group.js";
 import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
 import { createX01ReadContext, readX01MatchSurface } from "../x01-checkout-context.js";
 import {
@@ -17,7 +18,7 @@ import { STYLE_ID, buildStyleText } from "./style.js";
 const FEATURE_KEY = "checkout-score-highlight";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
 
-export function mountCheckoutScoreHighlight(context = {}) {
+function mountRenderer(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const domGuards = context.domGuards;
@@ -86,6 +87,7 @@ export function mountCheckoutScoreHighlight(context = {}) {
 
   function update() {
     const readContext = createX01ReadContext({
+      readSurfaceState: context.readSurfaceState,
       documentRef,
       windowRef,
       gameState,
@@ -137,7 +139,7 @@ export function mountCheckoutScoreHighlight(context = {}) {
     const surface = getX01PlayerSurfaceSnapshot(documentRef, { includeModern: true, windowRef });
     clearHighlightState(getAllScoreNodes(documentRef, { playerSurfaceSnapshot: surface }));
     lastDebugSignature = "";
-  } });
+  } }, context.helpers?.createRafScheduler);
 
   const cleanupSurfaceObserver = createX01PlayerSurfaceObserverController({
     documentRef,
@@ -187,3 +189,7 @@ export function mountCheckoutScoreHighlight(context = {}) {
 export const initializeCheckoutScoreHighlight = mountCheckoutScoreHighlight;
 export const initialize = mountCheckoutScoreHighlight;
 export const mount = mountCheckoutScoreHighlight;
+
+export function mountCheckoutScoreHighlight(context = {}) {
+  return mountFeatureSurfaceGroup(context, "x01-score", 0, mountRenderer);
+}

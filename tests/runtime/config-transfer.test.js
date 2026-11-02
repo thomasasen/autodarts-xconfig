@@ -13,6 +13,7 @@ import { normalizeRuntimeConfig } from "../../src/config/runtime-config.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
 import { getFeatureCatalogEntryByFeatureKey } from "../../src/shared/feature-catalog.js";
 import { buildFeatureSettingPatch } from "../../src/features/xconfig-ui/path-utils.js";
+import { PRESENTATION_GROUPS } from "../../src/features/xconfig-ui/presentation-groups.js";
 import { COMMUNITY_PRESETS, COMMUNITY_SURROUNDS } from "../../src/shared/community-designs.js";
 
 const SMALL_PNG = "data:image/png;base64,iVBORw0KGgo=";
@@ -136,6 +137,38 @@ test("all table activation combinations and legacy feedback survive both backup 
         const spec = getFeatureConfigSpec(key);
         assert.deepEqual(spec.normalizeConfig(imported.config.features[key]), spec.normalizeConfig(configured.features[key]));
         assert.equal(imported.config.featureToggles[key], configured.featureToggles[key]);
+      }
+    }
+  }
+});
+
+test("presentation groups retain every source configuration and activation combination in existing backups", () => {
+  const custom = {
+    dartboardMarkerHighlight: { size: 9, opacityPercent: 65, effect: "size-pulse" },
+    dartMarkerReplacer: { sizePercent: 138, hideOriginalMarkers: true, realisticDirection: true, animateDarts: false },
+    checkoutScoreHighlight: { effect: "fade-blink", triggerSource: "score-only" },
+    x01RemainingScoreBar: { colorTheme: "checkout-zone-blue", effect: "previous-score-trail", barSize: "extrabreit" },
+    turnDartDisplay: { turnDartStyle: "text", turnDartTextTemplate: "Wurf #", turnDartColor: "#123456" },
+    specialHitHighlights: { colorTheme: "ember-rush", animationStyle: "shockwave-ring" },
+    turnScoreCounter: { countEffect: "rolling-digits", durationMs: 3000, flashMode: "permanent" },
+  };
+  for (const group of PRESENTATION_GROUPS.filter((entry) => entry.key !== "cricket-layout")) {
+    const keys = group.members.map(([key]) => getFeatureCatalogEntryByFeatureKey(key).configKey);
+    for (let flags = 0; flags < 1 << keys.length; flags += 1) {
+      const configured = normalizeRuntimeConfig({
+        featureToggles: Object.fromEntries(keys.map((key, index) => [key, Boolean(flags & 1 << index)])),
+        features: Object.fromEntries(keys.map((key, index) => [key, { ...custom[key], enabled: Boolean(flags & 1 << index) }])),
+      });
+      const backup = createSettingsExport(configured, { descriptors: xconfigDescriptors }).payload;
+      assert.equal(backup.schemaVersion, SETTINGS_TRANSFER_SCHEMA_VERSION);
+      for (const mode of ["merge", "replace"]) {
+        const imported = analyzeSettingsImport(backup, normalizeRuntimeConfig(), { descriptors: xconfigDescriptors, mode });
+        for (const key of keys) {
+          const spec = getFeatureConfigSpec(key);
+          assert.ok(backup.features[key], `missing original backup key ${key}`);
+          assert.deepEqual(spec.normalizeConfig(imported.config.features[key]), spec.normalizeConfig(configured.features[key]));
+          assert.equal(imported.config.featureToggles[key], configured.featureToggles[key]);
+        }
       }
     }
   }

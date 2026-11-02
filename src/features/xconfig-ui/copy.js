@@ -400,11 +400,12 @@ export const xconfigFeatureCopy = deepFreeze({
   }),
   "checkout-score-highlight": featureCopy({
     cardDescription:
-      "Hebt direkt finishbare Restwerte in X01 mit einem gut sichtbaren Score-Effekt hervor.",
+      "Gestaltet den X01-Restscore mit Finish-Hervorhebung und einem unabhängig schaltbaren Fortschrittsbalken.",
     visibleDescription:
-      "Direkt finishbare Restwerte werden an der aktiven Punktzahl hervorgehoben.",
+      "Eine gemeinsame Kachel bietet die Hervorhebung der aktiven Restpunktzahl und einen Restscore-Balken je Spieler.",
     visualDescription:
-      "Die aktive Restpunktzahl pulsiert, glüht, skaliert oder blinkt je nach gewähltem Effekt. Die Hervorhebung sitzt direkt am Score und verändert keine anderen UI-Bereiche.",
+      "Die aktive Restpunktzahl erhält einen Finish-Effekt. Der Balken stellt verbleibende Punkte relativ zum Startscore dar. Seine 170er-Zone ist eine Bereichsmarkierung und kein Nachweis eines aktuell möglichen Finishes.",
+    featuresDetails: ["Zahlenhervorhebung und Balken bleiben unabhängig schaltbar. Farben und Animationen werden für beide Bereiche getrennt gespeichert."],
     usefulWhen: "Wenn du Checkout-Momente schneller am Score erkennen möchtest.",
     images: [image("Finishbaren Restscore hervorheben", "animation-checkout-score-pulse.gif")],
     fields: {
@@ -899,11 +900,12 @@ export const xconfigFeatureCopy = deepFreeze({
   }),
   "dartboard-marker-highlight": featureCopy({
     cardDescription:
-      "Macht vorhandene Marker auf dem virtuellen Board klarer und auffälliger.",
+      "Gestaltet Treffer auf dem Board mit hervorgehobenen Markern und optionalen Dart-Bildern.",
     visibleDescription:
-      "Treffer-Marker auf dem virtuellen Board werden deutlicher sichtbar.",
+      "Eine gemeinsame Kachel bietet native Treffermarker und Dart-Bilder mit getrennten Schaltern.",
     visualDescription:
-      "Die bestehenden Treffermarkierungen werden größer, farbiger und auf Wunsch mit Pulsieren, Leuchten oder einem Rand versehen. Das Modul ersetzt sie nicht, sondern betont sie.",
+      "Native Marker erhalten Größe, Farbe, Rand und Animation. Dart-Bilder ergänzen Perspektive, Flug und Einschlag. Beide Darstellungen können einzeln oder gemeinsam aktiv sein.",
+    featuresDetails: ["Original-Marker ausblenden wirkt nur bei aktiven Dart-Bildern. Wird dieser Bereich ausgeschaltet, kehren die nativen Marker mit ihrer gespeicherten Hervorhebung zurück."],
     usefulWhen:
       "Wenn die Standardmarker zu klein oder zu unauffällig sind.",
     images: [image("Treffermarkierungen hervorheben", "animation-dart-marker-emphasis.gif")],
@@ -1095,11 +1097,12 @@ export const xconfigFeatureCopy = deepFreeze({
   }),
   "turn-score-counter": featureCopy({
     cardDescription:
-      "Zählt Punkteänderungen beim Turn sichtbar hoch oder herunter.",
+      "Gestaltet Dart-Symbole, Trefferfeedback und die animierte Wurfsumme in einer gemeinsamen Kachel.",
     visibleDescription:
-      "Punkteänderungen beim Turn werden sichtbar hoch- oder heruntergezählt.",
+      "Dart-Symbole, Trefferfarben und Animationen der Wurfsumme lassen sich unabhängig einstellen.",
     visualDescription:
-      "Statt eines harten Sprungs läuft der angezeigte Wert weich zur neuen Punktzahl. Dadurch wird die Änderung als kurze Animation nachvollziehbar.",
+      "Dart-Symbole gestalten die Wurfplätze, tatsächliche Triple-, Double- und Bull-Treffer erhalten Feedback, und die Wurfsumme kann zum neuen Wert zählen. Checkout-Vorschläge werden weiterhin separat gestaltet.",
+    featuresDetails: ["Alle drei Bereiche sind getrennt schaltbar. Die Dart-Bilder dieser Wurfanzeige und die Dart-Bilder auf dem Board besitzen jeweils eigene Designs und Größen."],
     usefulWhen: "Wenn du Punktwechsel im Spielbild leichter verfolgen möchtest.",
     images: [
       image("Punkte animiert zählen", "animation-turn-points-count.gif"),
@@ -3127,14 +3130,21 @@ export function buildFeaturesDocSection(descriptor, definition) {
     `- Wann sinnvoll? ${copy.usefulWhen}`,
   ];
 
-  const featuresDetails = Array.isArray(copy.featuresDetails)
-    ? copy.featuresDetails.map((entry) => String(entry || "").trim()).filter(Boolean)
+  const groupedFields = descriptor.fields?.some((field) => field.sourceFeatureKey);
+  const detailSource = groupedFields ? descriptor.settingsDetails : copy.featuresDetails;
+  const featuresDetails = Array.isArray(detailSource)
+    ? detailSource.map((entry) => String(entry || "").trim()).filter(Boolean)
     : [];
   featuresDetails.forEach((entry) => {
     lines.push(`- ${entry}`);
   });
 
+  let lastSection = "";
   (descriptor.fields || []).forEach((field) => {
+    if (groupedFields && field.section && field.section !== lastSection) {
+      lines.push("", `#### ${field.section}`, "");
+      lastSection = field.section;
+    }
     const featuresDescription = String(field.featuresDescription || field.docsDescription || "").trim();
     appendFieldWithOptions(lines, field, featuresDescription, "featuresDescription");
     appendRawLines(lines, getFieldAppendixLines(copy, field.key, "features"));

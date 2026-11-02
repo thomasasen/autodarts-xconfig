@@ -1,9 +1,9 @@
 <!-- xconfig-generated:start -->
 # Feature-Übersicht
 
-`autodarts-xconfig` bündelt `23` Module in einem Userscript:
+`autodarts-xconfig` bündelt `19` Module in einem Userscript:
 
-- `19` Anzeigen und Komfortfunktionen
+- `15` Anzeigen und Komfortfunktionen
 - `4` Designmodule
 
 Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Alle Kacheln stehen gemeinsam auf einer Seite in den Bereichen **Design**, **Alle Modi**, **X01** und **Cricket / Tactics**. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).
@@ -12,7 +12,7 @@ Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Alle Kacheln 
 
 ## Hinweise zur Konfiguration
 
-- Insgesamt `23` Module: `19` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
+- Insgesamt `19` Module: `15` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
 - `↺ Zurücksetzen`: Setzt alle Einstellungen vollständig auf Standard zurück, deaktiviert alle Module, schaltet die Diagnose aus und entfernt globales Hintergrundbild sowie Dart-Upload.
 - `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
 - `Exportieren` / `Importieren`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.
@@ -520,49 +520,6 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Alle Match-Boards`: Verwendet das Design global auf unterstützten Match-Boards.
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-<a id="turn-dart-display"></a>
-
-### Darts in der Wurfanzeige
-
-- Gilt für: `alle Modi`
-- Kurz: Ersetzt die Darts in der Wurfanzeige durch Farbe, Verlauf, Text, ein vorbereitetes Dart-Bild, einen eigenen Upload oder einen lokal gespeicherten Dart aus dem Autodarts-Dartdesigner.
-- Grafisch: Das Modul arbeitet unabhängig von Hintergrund, Schrift und Farben und verändert keine Treffermarkierungen am Board.
-- Wann sinnvoll? Wenn die Darts im Wurffeld besser zum eigenen Setup passen sollen.
-- `Autodarts-Dartdesigner öffnen`: Öffnet den Autodarts-Dartdesigner mit xConfig-Übernahme.
-- `Dartdesigner-Konfiguration entfernen`: Entfernt die Dartdesigner-Konfiguration.
-- `Stil`: Ändert die Dart-Grafiken im Wurffeld.
-  - `Original`: Belässt die Darts in der Wurfanzeige unverändert.
-  - `Farbe`: Nutzt eine einfarbige Dart-Grafik.
-  - `Verlauf`: Nutzt eine Dart-Grafik mit Verlauf.
-  - `Dart-Bild`: Nutzt das ausgewählte vorbereitete Dart-Bild.
-  - `Eigenes Bild`: Nutzt ein eigenes gespeichertes Dart-Bild.
-  - `Autodarts-Dartdesigner`: Nutzt den lokal gespeicherten Autodarts-Dart.
-- `Dart auswählen`: Wählt ein vorbereitetes Bild für die Darts in der Wurfanzeige aus.
-  - `German Gigant`: Verwendet den German-Gigant-Dart als Wurffeld-Dart.
-  - `Blue Lightning`: Verwendet Blue Lightning als Wurffeld-Dart.
-  - `Copper Grid`: Verwendet Copper Grid als Wurffeld-Dart.
-  - `Snakebite Purple`: Verwendet Snakebite Purple als Wurffeld-Dart.
-  - `Iceman Blue`: Verwendet Iceman Blue als Wurffeld-Dart.
-  - `Bullet Red`: Verwendet Bullet Red als Wurffeld-Dart.
-  - `Carbon Gold`: Verwendet Carbon Gold als Wurffeld-Dart.
-  - `Vecta Gold`: Verwendet Vecta Gold als Wurffeld-Dart.
-  - `GVV Blue`: Verwendet GVV Blue als Wurffeld-Dart.
-  - `Cool Hand Luke`: Verwendet Cool Hand Luke als Wurffeld-Dart.
-  - `Target Neon`: Verwendet Target Neon als Wurffeld-Dart.
-- `Dart-Text`: Zeigt Wurftext mit Nummernplatzhalter.
-- `Dart-Farbe`: Setzt die Hauptfarbe der Darts in der Wurfanzeige.
-- `Verlaufsfarbe`: Setzt die zweite Verlaufsfarbe.
-- `Dart-Größe`: Regelt die Größe der Darts in der Wurfanzeige.
-  - `Kompakt`: Kompakte Darts in der Wurfanzeige.
-  - `Standard`: Standardgröße für die Darts in der Wurfanzeige.
-  - `Groß`: Große Darts in der Wurfanzeige.
-- `Leuchteffekt`: Schaltet den Leuchteffekt ein oder aus.
-- `Dart-Bild hochladen`: Speichert ein eigenes Dart-Bild.
-- `Dart-Bild entfernen`: Entfernt das eigene Dart-Bild.
-- `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-
-![Darts in der Wurfanzeige mit Dart-Bild](screenshots/turn-dart-display.png)
-
 <a id="animation-autodarts-animate-avg-trend-arrow"></a>
 <a id="animation-autodarts-animate-average-trend-arrow"></a>
 
@@ -589,62 +546,24 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 
 ![AVG-Trend anzeigen](screenshots/animation-average-trend-arrow.png)
 
-<a id="animation-autodarts-animate-special-hit-highlights"></a>
-<a id="animation-autodarts-animate-triple-double-bull-hits"></a>
-
-### Triple, Double & Bull hervorheben
-
-- Gilt für: `alle Modi`
-- Kurz: Treffer wie `T20`, `D16`, `25` und `BULL` bekommen farbige Flächen und einen deutlich sichtbaren Trefferimpuls.
-- Grafisch: Die betroffenen Wurffelder erhalten dunkle, kontrastreiche Flächen mit animierten Verläufen, Pattern-Layern, leuchtenden Rändern und textbezogenen Trefferimpulsen. Einige Farbwelten gehen eher in Cyberpunk-, Hazard- oder Vintage-Richtung. `25` (Single Bull) bleibt ruhiger, `BULL` (Bullseye) erscheint heller und markanter. Nur das frisch erkannte Feld bekommt den starken einmaligen Burst.
-- Wann sinnvoll? Wenn wichtige Treffer auch in schnellen Legs sofort lesbar, deutlich stylischer und visuell markanter wirken sollen, ohne weitere Einzelschalter zu pflegen.
-- `Farbstil`: Wählt die Farben für Fläche, Leuchten und Rand der Treffer-Hervorhebung.
-  - `Rot/Blau/Grün`: Verwendet feste Signalfarben pro Trefferart: `Triple = rot`, `Double = blau`, `Bull = grün`.
-  - `Solar Flare`: Solar Flare taucht das Trefferfeld in Orange-, Rot- und Goldtöne mit sichtbaren Flame-Stripes. Rand, Verlauf und Text wirken wie aufgeheizt und präsent.
-  - `Ice Reactor`: Ice Reactor baut einen kühlen Cyan-Blau-Look mit Grid-Muster und technischem Randlicht auf. Das Ergebnis wirkt präzise, futuristisch und deutlich weniger weich als warme Themes.
-  - `Venom Lime`: Venom Lime mischt neonige Cyberpunk-Farben mit Hazard-Stripes und hartem Glow. Verlauf, Rand und Text springen damit am stärksten ins Auge.
-  - `Crimson Velocity`: Crimson Velocity kombiniert schnelle Rottöne mit Stahlakzenten, Scanlines und scharfem Randlicht. Das Ergebnis wirkt wie ein Performance- oder Mecha-Look.
-  - `Polar Mint`: Polar Mint mischt Mint, Aqua und Türkis mit leichter Stripe-Struktur zu einer frischen Trefferwelt. Der Look bleibt deutlich, aber ruhiger als die aggressiveren Varianten.
-  - `Midnight Gold`: Midnight Gold legt Gold, Amber und Elfenbein über eine dunkle Vintage-Basis mit vertikalen Deco-Streifen. Das Trefferfeld wirkt dadurch hochwertig, warm und sehr gut lesbar.
-
-**Vorschau Farbstile**
-
-Die Farbwelten sind hier bewusst als kompakte Standbilder eingebunden, damit Kontrast, Pattern und Beschriftung schnell vergleichbar bleiben.
-Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine eigene Preset-Galerie.
-
-|  |  |
-| --- | --- |
-| `Solar Flare` | `Ice Reactor` |
-| ![Farbstil Solar Flare](screenshots/animation-triple-double-bull-hits-color-solar-flare-readme.png) | ![Farbstil Ice Reactor](screenshots/animation-triple-double-bull-hits-color-ice-reactor-readme.png) |
-| `Venom Lime` | `Crimson Velocity` |
-| ![Farbstil Venom Lime](screenshots/animation-triple-double-bull-hits-color-venom-lime-readme.png) | ![Farbstil Crimson Velocity](screenshots/animation-triple-double-bull-hits-color-crimson-velocity-readme.png) |
-| `Polar Mint` | `Midnight Gold` |
-| ![Farbstil Polar Mint](screenshots/animation-triple-double-bull-hits-color-polar-mint-readme.png) | ![Farbstil Midnight Gold](screenshots/animation-triple-double-bull-hits-color-midnight-gold-readme.png) |
-
-- `Animation`: Wählt die kurze Animation für das frisch erkannte Trefferfeld.
-  - `Aufspringen`: Kurzes Aufspringen mit starkem Zahlenfokus.
-  - `Seitlich wackeln`: Kurzes seitliches Wackeln ohne Dauerbewegung.
-  - `Aufleuchten`: Einmaliges Aufleuchten ohne Seitenbewegung oder Daueranimation.
-  - `Drehen`: Kurze räumliche Drehung des Trefferfelds.
-  - `Lichtlauf`: Ein einmaliger Lichtzug läuft über das Trefferfeld und betont den Rand ohne dauerhafte Bewegung.
-  - `Wellenring`: Der Wellenring inszeniert den Treffer wie eine kurze Druckwelle mit stärkerem Ringimpuls und sichtbarem Textschub.
-  - `Stromstoß`: Der Stromstoß kombiniert einen kompakten elektrischen Impuls mit leichter Seitenbewegung auf Feld, Score und Segment. Die Wirkung ist kräftig und kurz.
-
-**Animationsstile**
-
-`Aufspringen`, `Seitlich wackeln`, `Aufleuchten`, `Drehen`, `Lichtlauf`, `Wellenring` und `Stromstoß` werden jeweils einmal pro neuem Treffer abgespielt. Alte Presets mit ähnlicher Wirkung werden beim Laden auf diese Stile übertragen.
-
-- `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
-
 <a id="animation-autodarts-animate-dartboard-marker-highlight"></a>
 <a id="animation-autodarts-animate-dart-marker-emphasis"></a>
+<a id="animation-autodarts-animate-dart-marker-replacer"></a>
+<a id="animation-autodarts-animate-dart-marker-darts"></a>
 
-### Treffermarkierungen hervorheben
+### Board-Treffermarkierungen
 
 - Gilt für: `alle Modi`
-- Kurz: Treffer-Marker auf dem virtuellen Board werden deutlicher sichtbar.
-- Grafisch: Die bestehenden Treffermarkierungen werden größer, farbiger und auf Wunsch mit Pulsieren, Leuchten oder einem Rand versehen. Das Modul ersetzt sie nicht, sondern betont sie.
+- Kurz: Eine gemeinsame Kachel bietet native Treffermarker und Dart-Bilder mit getrennten Schaltern.
+- Grafisch: Native Marker erhalten Größe, Farbe, Rand und Animation. Dart-Bilder ergänzen Perspektive, Flug und Einschlag. Beide Darstellungen können einzeln oder gemeinsam aktiv sein.
 - Wann sinnvoll? Wenn die Standardmarker zu klein oder zu unauffällig sind.
+- Original-Marker ausblenden wirkt nur bei aktiven Dart-Bildern. Wird dieser Bereich ausgeschaltet, kehren die nativen Marker mit ihrer gespeicherten Hervorhebung zurück.
+- Auf dem virtuellen Board bleibt das Modul aktiv. Im Live-Modus pausiert es automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.
+- Die unabhängigen Optionen `Realistische Wurfrichtung` und `Flachere Dart-Perspektive` sind standardmäßig aus. Sie richten Flights nach oben aus beziehungsweise verkürzen die sichtbare Dart-Länge, ohne den Trefferpunkt zu verschieben.
+- Leistungsintensive Effekte können auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.
+
+#### Native Marker hervorheben
+
 - `Größe der Treffermarkierung`: Vergrößert oder verkleinert die Marker.
   - `Klein`: Diese Stufe lässt die Marker nur leicht anwachsen und bleibt nah an der ursprünglichen Geometrie des Boards. Die Treffer werden klarer, aber nicht großflächig.
   - `Standard`: Diese Einstellung liefert den Standardwert für die Markergröße. Treffer springen besser ins Auge, ohne die Board-Geometrie optisch zu überladen.
@@ -667,23 +586,13 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Aus`: Mit dieser Option bleibt die Markerbetonung auf Farbe, Größe und Animation beschränkt. Es wird keine zusätzliche Kontur zur Trennung vom Hintergrund gesetzt.
   - `Weiß`: Diese Variante ergänzt einen weißen Rand um die Treffermarkierung. Dadurch bleibt der Treffer auch auf dunklen oder farbstarken Hintergründen besser abgegrenzt.
   - `Schwarz`: Diese Option ergänzt eine schwarze Kontur und verbessert die Trennung auf helleren oder stark leuchtenden Segmentflächen. Der Marker bekommt dadurch einen härteren, grafischeren Rand.
-- `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Treffermarkierungen hervorheben](screenshots/animation-dart-marker-emphasis.gif)
+#### Dart-Demo
 
-<a id="animation-autodarts-animate-dart-marker-replacer"></a>
-<a id="animation-autodarts-animate-dart-marker-darts"></a>
-
-### Treffermarkierungen durch Darts ersetzen
-
-- Gilt für: `alle Modi`
-- Kurz: Standardmarker können auf dem virtuellen Board durch kleine Dart-Grafiken ersetzt werden. Im Live-Modus pausiert das Modul automatisch.
-- Grafisch: Statt des normalen Markers liegt ein Dart-Bild im getroffenen Segment. Auf Wunsch fliegt der Dart sichtbar ein, bevor er an seiner Zielposition landet.
-- Wann sinnvoll? Wenn du Treffer auf dem virtuellen Board persönlicher oder realistischer darstellen möchtest.
-- Auf dem virtuellen Board bleibt das Modul aktiv. Im Live-Modus pausiert es automatisch, damit dort keine zusätzlichen Dart-Overlays erscheinen.
-- Die unabhängigen Optionen `Realistische Wurfrichtung` und `Flachere Dart-Perspektive` sind standardmäßig aus. Sie richten Flights nach oben aus beziehungsweise verkürzen die sichtbare Dart-Länge, ohne den Trefferpunkt zu verschieben.
-- Leistungsintensive Effekte können auf schwächeren Geräten zu Rucklern oder weniger flüssigen Animationen führen.
 - `Dart-Demo`: Startet eine direkte Vorschau mit dem aktuell konfigurierten Dart-Design.
+
+#### Dart-Bilder anzeigen
+
 - `Dart-Design`: Wählt das Bilddesign der eingeblendeten Darts.
   - `AI Replicant`: Dieses Motiv nutzt einen futuristischen Flight mit technisch anmutender Gestaltung. Der Dart wirkt dadurch moderner, kühler und stärker wie ein Sci-Fi-Design als die schlichten Farbvarianten.
   - `Bullet`: Diese Variante setzt auf einen kompakten, metallischen Look mit Bullet-Anmutung. Dadurch wirkt der Dart besonders direkt, schwerer und weniger verspielt als die farbigen Flight-Designs.
@@ -732,9 +641,13 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Schnell`: Diese Stufe verkürzt die Flugphase deutlich. Neue Darts schießen schnell ins Segment und wirken dadurch sportlicher und unmittelbarer.
   - `Standard`: Diese Einstellung hält die Fluganimation sichtbar, aber kontrolliert. Der neue Dart ist gut wahrnehmbar und landet dennoch zügig am Zielpunkt.
   - `Filmisch`: Diese Stufe verlängert die Fluganimation merklich und macht den Anflug des Darts selbst zum kleinen Effektmoment. Dadurch wirkt das Setzen des Markers cineastischer, aber weniger direkt.
-- `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Treffermarkierungen durch Darts ersetzen](screenshots/dart-marker-replacer.webp)
+#### Erweitert
+
+- `Diagnose: Native Marker hervorheben`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+- `Diagnose: Dart-Bilder anzeigen`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+
+![Treffermarkierungen hervorheben](screenshots/animation-dart-marker-emphasis.gif)
 
 <a id="animation-autodarts-animate-take-out-darts-alert"></a>
 <a id="animation-autodarts-animate-remove-darts-notification"></a>
@@ -783,14 +696,77 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 <a id="animation-autodarts-animate-turn-score-counter"></a>
+<a id="turn-dart-display"></a>
+<a id="animation-autodarts-animate-special-hit-highlights"></a>
+<a id="animation-autodarts-animate-triple-double-bull-hits"></a>
 <a id="animation-autodarts-animate-turn-points-count"></a>
 
-### Punkte animiert zählen
+### Wurfanzeige
 
 - Gilt für: `alle Modi`
-- Kurz: Punkteänderungen beim Turn werden sichtbar hoch- oder heruntergezählt.
-- Grafisch: Statt eines harten Sprungs läuft der angezeigte Wert weich zur neuen Punktzahl. Dadurch wird die Änderung als kurze Animation nachvollziehbar.
+- Kurz: Dart-Symbole, Trefferfarben und Animationen der Wurfsumme lassen sich unabhängig einstellen.
+- Grafisch: Dart-Symbole gestalten die Wurfplätze, tatsächliche Triple-, Double- und Bull-Treffer erhalten Feedback, und die Wurfsumme kann zum neuen Wert zählen. Checkout-Vorschläge werden weiterhin separat gestaltet.
 - Wann sinnvoll? Wenn du Punktwechsel im Spielbild leichter verfolgen möchtest.
+- Alle drei Bereiche sind getrennt schaltbar. Die Dart-Bilder dieser Wurfanzeige und die Dart-Bilder auf dem Board besitzen jeweils eigene Designs und Größen.
+
+#### Autodarts-Dartdesigner
+
+- `Autodarts-Dartdesigner öffnen`: Öffnet den Autodarts-Dartdesigner mit xConfig-Übernahme.
+- `Dartdesigner-Konfiguration entfernen`: Entfernt die Dartdesigner-Konfiguration.
+
+#### Dart-Symbole gestalten
+
+- `Stil`: Ändert die Dart-Grafiken im Wurffeld.
+  - `Original`: Belässt die Darts in der Wurfanzeige unverändert.
+  - `Farbe`: Nutzt eine einfarbige Dart-Grafik.
+  - `Verlauf`: Nutzt eine Dart-Grafik mit Verlauf.
+  - `Dart-Bild`: Nutzt das ausgewählte vorbereitete Dart-Bild.
+  - `Eigenes Bild`: Nutzt ein eigenes gespeichertes Dart-Bild.
+  - `Autodarts-Dartdesigner`: Nutzt den lokal gespeicherten Autodarts-Dart.
+- `Dart auswählen`: Wählt ein vorbereitetes Bild für die Darts in der Wurfanzeige aus.
+  - `German Gigant`: Verwendet den German-Gigant-Dart als Wurffeld-Dart.
+  - `Blue Lightning`: Verwendet Blue Lightning als Wurffeld-Dart.
+  - `Copper Grid`: Verwendet Copper Grid als Wurffeld-Dart.
+  - `Snakebite Purple`: Verwendet Snakebite Purple als Wurffeld-Dart.
+  - `Iceman Blue`: Verwendet Iceman Blue als Wurffeld-Dart.
+  - `Bullet Red`: Verwendet Bullet Red als Wurffeld-Dart.
+  - `Carbon Gold`: Verwendet Carbon Gold als Wurffeld-Dart.
+  - `Vecta Gold`: Verwendet Vecta Gold als Wurffeld-Dart.
+  - `GVV Blue`: Verwendet GVV Blue als Wurffeld-Dart.
+  - `Cool Hand Luke`: Verwendet Cool Hand Luke als Wurffeld-Dart.
+  - `Target Neon`: Verwendet Target Neon als Wurffeld-Dart.
+- `Dart-Text`: Zeigt Wurftext mit Nummernplatzhalter.
+- `Dart-Farbe`: Setzt die Hauptfarbe der Darts in der Wurfanzeige.
+- `Verlaufsfarbe`: Setzt die zweite Verlaufsfarbe.
+- `Dart-Größe`: Regelt die Größe der Darts in der Wurfanzeige.
+  - `Kompakt`: Kompakte Darts in der Wurfanzeige.
+  - `Standard`: Standardgröße für die Darts in der Wurfanzeige.
+  - `Groß`: Große Darts in der Wurfanzeige.
+- `Leuchteffekt`: Schaltet den Leuchteffekt ein oder aus.
+- `Dart-Bild hochladen`: Speichert ein eigenes Dart-Bild.
+- `Dart-Bild entfernen`: Entfernt das eigene Dart-Bild.
+
+#### Treffer hervorheben
+
+- `Farbstil`: Wählt die Farben für Fläche, Leuchten und Rand der Treffer-Hervorhebung.
+  - `Rot/Blau/Grün`: Verwendet feste Signalfarben pro Trefferart: `Triple = rot`, `Double = blau`, `Bull = grün`.
+  - `Solar Flare`: Solar Flare taucht das Trefferfeld in Orange-, Rot- und Goldtöne mit sichtbaren Flame-Stripes. Rand, Verlauf und Text wirken wie aufgeheizt und präsent.
+  - `Ice Reactor`: Ice Reactor baut einen kühlen Cyan-Blau-Look mit Grid-Muster und technischem Randlicht auf. Das Ergebnis wirkt präzise, futuristisch und deutlich weniger weich als warme Themes.
+  - `Venom Lime`: Venom Lime mischt neonige Cyberpunk-Farben mit Hazard-Stripes und hartem Glow. Verlauf, Rand und Text springen damit am stärksten ins Auge.
+  - `Crimson Velocity`: Crimson Velocity kombiniert schnelle Rottöne mit Stahlakzenten, Scanlines und scharfem Randlicht. Das Ergebnis wirkt wie ein Performance- oder Mecha-Look.
+  - `Polar Mint`: Polar Mint mischt Mint, Aqua und Türkis mit leichter Stripe-Struktur zu einer frischen Trefferwelt. Der Look bleibt deutlich, aber ruhiger als die aggressiveren Varianten.
+  - `Midnight Gold`: Midnight Gold legt Gold, Amber und Elfenbein über eine dunkle Vintage-Basis mit vertikalen Deco-Streifen. Das Trefferfeld wirkt dadurch hochwertig, warm und sehr gut lesbar.
+- `Animation`: Wählt die kurze Animation für das frisch erkannte Trefferfeld.
+  - `Aufspringen`: Kurzes Aufspringen mit starkem Zahlenfokus.
+  - `Seitlich wackeln`: Kurzes seitliches Wackeln ohne Dauerbewegung.
+  - `Aufleuchten`: Einmaliges Aufleuchten ohne Seitenbewegung oder Daueranimation.
+  - `Drehen`: Kurze räumliche Drehung des Trefferfelds.
+  - `Lichtlauf`: Ein einmaliger Lichtzug läuft über das Trefferfeld und betont den Rand ohne dauerhafte Bewegung.
+  - `Wellenring`: Der Wellenring inszeniert den Treffer wie eine kurze Druckwelle mit stärkerem Ringimpuls und sichtbarem Textschub.
+  - `Stromstoß`: Der Stromstoß kombiniert einen kompakten elektrischen Impuls mit leichter Seitenbewegung auf Feld, Score und Segment. Die Wirkung ist kräftig und kurz.
+
+#### Wurfsumme animieren
+
 - `Zählweise`: Wählt die Zählweise der Punkte.
   - `Fließend zählen`: Fließende Zählweise.
   - `Rollende Zahlen`: Zählweise mit rollenden Ziffern.
@@ -803,7 +779,12 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 - `Aufblitzen`: Wählt, ob der Rahmen nur bei Änderungen oder dauerhaft sichtbar ist.
   - `Nur bei Änderung`: Rahmen nur während laufender Zahlenänderungen.
   - `Permanent`: Rahmen dauerhaft sichtbar, unabhängig von laufender Änderung.
-- `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+
+#### Erweitert
+
+- `Diagnose: Dart-Symbole gestalten`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+- `Diagnose: Treffer hervorheben`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+- `Diagnose: Wurfsumme animieren`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ![Punkte animiert zählen](screenshots/animation-turn-points-count.gif)
 ![Punkte animiert zählen – Detail](screenshots/animation-turn-points-count-detail-readme.gif)
@@ -812,13 +793,19 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 
 <a id="animation-autodarts-animate-checkout-score-highlight"></a>
 <a id="animation-autodarts-animate-checkout-score-pulse"></a>
+<a id="animation-autodarts-x01-remaining-score-bar"></a>
+<a id="animation-autodarts-x01-score-progress"></a>
 
-### Finishbaren Restscore hervorheben
+### X01-Restscore
 
 - Gilt für: `X01`
-- Kurz: Direkt finishbare Restwerte werden an der aktiven Punktzahl hervorgehoben.
-- Grafisch: Die aktive Restpunktzahl pulsiert, glüht, skaliert oder blinkt je nach gewähltem Effekt. Die Hervorhebung sitzt direkt am Score und verändert keine anderen UI-Bereiche.
+- Kurz: Eine gemeinsame Kachel bietet die Hervorhebung der aktiven Restpunktzahl und einen Restscore-Balken je Spieler.
+- Grafisch: Die aktive Restpunktzahl erhält einen Finish-Effekt. Der Balken stellt verbleibende Punkte relativ zum Startscore dar. Seine 170er-Zone ist eine Bereichsmarkierung und kein Nachweis eines aktuell möglichen Finishes.
 - Wann sinnvoll? Wenn du Checkout-Momente schneller am Score erkennen möchtest.
+- Zahlenhervorhebung und Balken bleiben unabhängig schaltbar. Farben und Animationen werden für beide Bereiche getrennt gespeichert.
+
+#### Finishbaren Restscore hervorheben
+
 - `Animation`: Wählt die Animationsart der hervorgehobenen Restpunktzahl.
   - `Vergrößern & leuchten`: Die Restpunktzahl bekommt einen weichen Puls aus Größenänderung, Helligkeit und Schattierung. Der Effekt wirkt organisch und wiederkehrend, ohne die Zahl hart springen zu lassen.
   - `Nur leuchten`: Der Fokus liegt auf einem an- und abschwellenden Glühen um die Zahl herum. Die Score-Anzeige selbst bleibt relativ stabil, während der Lichtschein die Aufmerksamkeit auf das Finish lenkt.
@@ -837,19 +824,9 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Vorschlag zuerst`: Diese Einstellung koppelt die Hervorhebung zuerst an die sichtbare Checkout-Empfehlung und nutzt den Punktestand nur als Fallback. Mehrschrittige Routen lösen den Effekt noch nicht aus; entscheidend ist erst der aktuell fällige Finish-Dart.
   - `Nur Score`: Mit dieser Einstellung entscheidet allein, ob der aktuelle Score mit dem nächsten Dart direkt finishbar ist. Sichtbare Checkout-Vorschläge beeinflussen den Effekt nicht mehr.
   - `Nur Vorschlag`: Diese Einstellung bindet die Hervorhebung strikt an den sichtbaren Suggestion-Block. Selbst ein rechnerisch direkt finishbarer Wert erzeugt keinen Effekt, solange kein passender Finish-Vorschlag erkannt wird.
-- `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Finishbaren Restscore hervorheben](screenshots/animation-checkout-score-pulse.gif)
+#### Restscore-Balken anzeigen
 
-<a id="animation-autodarts-x01-remaining-score-bar"></a>
-<a id="animation-autodarts-x01-score-progress"></a>
-
-### Restscore-Balken
-
-- Gilt für: `X01`
-- Kurz: Jede X01-Spielerkarte erhält einen Balken, der den verbleibenden Score relativ zum Startwert zeigt.
-- Grafisch: Direkt unter der Punktzahl liegt ein horizontaler Fortschrittsbalken. Aktive Spieler erhalten eine kräftigere, präsentere Darstellung mit optionalem Effekt, inaktive Karten bleiben flacher und unverändert ruhig. Je näher der Restwert an `0` liegt, desto kürzer wird der Balken.
-- Wann sinnvoll? Wenn du Reststände und den Abstand zwischen Spielern in X01 schneller auf einen Blick erfassen möchtest.
 - `Farben`: Steuert statische Farbpaletten und dynamische Schwellenfarben in einer gemeinsamen Auswahl.
   - `Checkout Focus`: Dynamischer Standardmodus mit Checkout-Fokus.
   - `Checkout-Zone Blau/Weiß`: Blauer Restscore-Balken mit weißer 170-Linie und schraffierter Checkout-Zone.
@@ -876,9 +853,13 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Vorherigen Stand anzeigen`: Nachziehender Ghost-Trail beim Scorewechsel.
   - `Schneller Lichtlauf`: Schneller Signal-Sweep mit hoher Aufmerksamkeit.
   - `Aus`: Keine Zusatzanimation; nur der statische Balken bleibt sichtbar.
-- `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
-![Restscore-Balken](screenshots/animation-x01-score-progress.png)
+#### Erweitert
+
+- `Diagnose: Finishbaren Restscore hervorheben`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+- `Diagnose: Restscore-Balken anzeigen`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+
+![Finishbaren Restscore hervorheben](screenshots/animation-checkout-score-pulse.gif)
 
 <a id="animation-autodarts-animate-checkout-target-highlights"></a>
 <a id="animation-autodarts-animate-checkout-board-targets"></a>
@@ -1011,6 +992,9 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
 - Tactics übernimmt die Cricket-Einstellungen und passt Größen an seine zwölf Zielzeilen an. Eigene Tactics-Werte lassen sich zusätzlich speichern.
 - Layout- und Effektprofile ändern ausschließlich ihren eigenen Bereich. Die Board-Zielmarkierung bleibt separat.
 - Trefferfeedback bündelt Impuls und Änderungsanzeige. Einzelregler für gespeicherte Sonderkombinationen und den bisherigen Stil stehen unter Erweitert.
+
+#### Layout
+
 - `Layoutprofil`: Wählt Ausgewogen, Fernansicht oder Mehrspieler. Individuelle Änderungen werden als Benutzerdefiniert angezeigt. Das Profil ändert ausschließlich den Layout-Bereich der Tabellenkachel.
   - `Ausgewogen`: Verteilt Platz und Größen ausgewogen.
   - `Fernansicht`: Betont die Tabelle mit größeren Marks, Namen und Punkten.
@@ -1020,6 +1004,9 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Automatisch`: Berücksichtigt Spielerzahl und Cricket- oder Tactics-Zielanzahl.
   - `Tabelle betonen`: Gibt der Tabelle mehr Platz.
   - `Board betonen`: Gibt dem Board mehr Platz.
+
+#### Status und Trefferfeedback
+
 - `Effektprofil`: Ruhig verwendet zurückhaltende Ränder und einen kurzen Trefferimpuls. Belebt aktiviert die bisherigen Einzeleffekte. Individuelle Änderungen werden als Benutzerdefiniert angezeigt; die Farbpalette bleibt erhalten.
   - `Ruhig`: Schaltet großflächige Wellen und Rundenübergänge aus. Verwendet unterscheidbare Ränder und einen kurzen Impuls.
   - `Belebt`: Aktiviert die bisherigen Einzeleffekte; die Farbpalette bleibt erhalten.
@@ -1052,6 +1039,9 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Dezent`: Diese Stufe reduziert die Opazität und den Glanz der Grid-FX-Komponenten. Zeilen, Badges und Zellzustände bleiben informativ, treten aber weniger plakativ auf.
   - `Standard`: Diese Einstellung liefert den Standardwert für Badge-Glow, Zellfüllung, Druckkante und Scoring-Streifen. Das Grid bleibt klar interpretierbar und zugleich kontrolliert.
   - `Stark`: Diese Stufe erhöht die sichtbare Stärke von Glow, Füllung und Kanten im gesamten Grid-FX-Paket. Offensiv- und Druckzustände wirken dadurch markanter und dominieren die Matrix stärker.
+
+#### Tactics
+
 - `Eigene Einstellungen für Tactics`: Ausgeschaltet übernimmt Tactics die Cricket-Einstellungen. Gespeicherte Tactics-Werte bleiben für eine spätere Aktivierung erhalten.
 - `Layoutprofil`: Gilt bei aktivierten eigenen Tactics-Einstellungen. Wählt Ausgewogen, Fernansicht oder Mehrspieler. Individuelle Änderungen werden als Benutzerdefiniert angezeigt. Das Profil ändert ausschließlich den Layout-Bereich der Tabellenkachel.
   - `Ausgewogen`: Verteilt Platz und Größen ausgewogen.
@@ -1062,6 +1052,9 @@ Der Farbstil `Rot/Blau/Grün` nutzt feste Trefferfarben und hat deshalb keine ei
   - `Automatisch`: Berücksichtigt Spielerzahl und Cricket- oder Tactics-Zielanzahl.
   - `Tabelle betonen`: Gibt der Tabelle mehr Platz.
   - `Board betonen`: Gibt dem Board mehr Platz.
+
+#### Erweitert
+
 - `Mark-Größe`: Vergrößert die nativen Mark-Symbole bis zur verfügbaren Zellengröße. Ihre Bedeutung und Zuordnung bleiben erhalten.
   - `Original`: Behält native Mark-Größen bei, begrenzt durch die Zellengröße.
   - `Groß`: Vergrößert Marks bis zur verfügbaren Zellengröße.

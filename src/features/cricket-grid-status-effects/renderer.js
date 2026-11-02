@@ -184,7 +184,8 @@ function handleGridSurfaceStatus(options = {}) {
   };
 }
 
-export function createCricketGridStatusRenderer(context = {}, runtime) {
+export function createCricketGridStatusRenderer(context, runtime) {
+  context ??= {};
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const domGuards = context.domGuards;
@@ -193,7 +194,7 @@ export function createCricketGridStatusRenderer(context = {}, runtime) {
   const featureDebug = context.featureDebug || null;
 
   if (!documentRef || !domGuards || !cricketRules) {
-    return () => {};
+    return { clear() {}, update() {} };
   }
 
   const featureConfig =

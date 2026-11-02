@@ -5,6 +5,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { XCONFIG_PREVIEW_ASSET_FILES } from "../../src/shared/xconfig-preview-assets.manifest.js";
 import { xconfigDescriptors } from "../../src/features/xconfig-ui/descriptors.js";
+import { groupPresentationDocumentation } from "../../src/features/xconfig-ui/presentation-groups.js";
 import {
   buildModuleFinderSection,
   buildRecommendedDefaultsSection,
@@ -45,23 +46,23 @@ const mojibakePattern =
 const featureDefinitionByKey = new Map(
   defaultFeatureDefinitions.map((definition) => [definition.featureKey, definition])
 );
-const orderedFeatureEntries = xconfigDescriptors
+const orderedFeatureEntries = groupPresentationDocumentation(xconfigDescriptors
   .map((descriptor) => ({
     descriptor,
     definition: featureDefinitionByKey.get(descriptor.featureKey) || null,
   }))
-  .filter((entry) => entry.definition);
+  .filter((entry) => entry.definition));
 function resolveRecommendedConfig(featureKey) {
   const definition = featureDefinitionByKey.get(String(featureKey || "").trim());
   return definition?.configKey ? createRecommendedFeatureConfig(definition.configKey) : null;
 }
 const overviewCounts = {
-  totalModules: xconfigDescriptors.length,
-  animationModules: xconfigDescriptors.filter(
-    (descriptor) => getXConfigSectionMeta(descriptor.featureKey).sectionId !== "template"
+  totalModules: orderedFeatureEntries.length,
+  animationModules: orderedFeatureEntries.filter(
+    ({ descriptor }) => getXConfigSectionMeta(descriptor.featureKey).sectionId !== "template"
   ).length,
-  themeModules: xconfigDescriptors.filter(
-    (descriptor) => getXConfigSectionMeta(descriptor.featureKey).sectionId === "template"
+  themeModules: orderedFeatureEntries.filter(
+    ({ descriptor }) => getXConfigSectionMeta(descriptor.featureKey).sectionId === "template"
   ).length,
   themeImageLimit: "1,5 MiB",
 };
@@ -131,9 +132,10 @@ test("README and FEATURES no longer reference the deprecated AD xConfig overview
   assert.doesNotMatch(featuresDoc, deprecatedOverviewScreenshotPattern);
 });
 
-test("xConfig module counts derive from the current registry descriptors", () => {
-  assert.equal(overviewCounts.totalModules, 24);
-  assert.equal(overviewCounts.animationModules, 20);
+test("xConfig presentation counts reflect grouped cards while registry descriptors remain stable", () => {
+  assert.equal(xconfigDescriptors.length, 24);
+  assert.equal(overviewCounts.totalModules, 19);
+  assert.equal(overviewCounts.animationModules, 15);
   assert.equal(overviewCounts.themeModules, 4);
 });
 
@@ -203,7 +205,7 @@ test("README contains the generated module finder with every module exactly once
   const expectedFinder = buildModuleFinderSection("Modul-Finder", orderedFeatureEntries).trim();
 
   assert.match(readme, new RegExp(escapeRegExp(expectedFinder)));
-  xconfigDescriptors.forEach((descriptor) => {
+  orderedFeatureEntries.forEach(({ descriptor }) => {
     const linkPattern = new RegExp(
       String.raw`\]\(#${escapeRegExp(descriptor.readmeAnchor)}\)`,
       "g"
@@ -254,8 +256,7 @@ test("every xConfig select option carries UI and docs descriptions", () => {
 test("README contains concise generated xConfig feature summaries", () => {
   const readme = readText(readmePath);
 
-  xconfigDescriptors.forEach((descriptor) => {
-    const definition = featureDefinitionByKey.get(descriptor.featureKey);
+  orderedFeatureEntries.forEach(({ descriptor, definition }) => {
     assert.ok(definition, `missing feature definition for ${descriptor.featureKey}`);
     const expectedSection = buildReadmeFeatureSection(descriptor, definition).trim();
     assert.match(
@@ -311,8 +312,7 @@ test("FEATURES removes stale tab and header screenshots", () => {
 test("FEATURES doc contains the generated xConfig feature sections and all setting explanations", () => {
   const featuresDoc = readText(featuresDocPath);
 
-  xconfigDescriptors.forEach((descriptor) => {
-    const definition = featureDefinitionByKey.get(descriptor.featureKey);
+  orderedFeatureEntries.forEach(({ descriptor, definition }) => {
     assert.ok(definition, `missing feature definition for ${descriptor.featureKey}`);
     const expectedSection = buildFeaturesDocSection(descriptor, definition).trim();
     assert.match(

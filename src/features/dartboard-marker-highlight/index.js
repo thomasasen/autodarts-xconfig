@@ -1,3 +1,4 @@
+import { mountFeatureSurfaceGroup } from "../shared/feature-surface-group.js";
 import { createFeatureMountHarness } from "../shared/feature-mount-harness.js";
 import {
   clearDartboardMarkerHighlight,
@@ -88,7 +89,7 @@ export function hasRelevantDartboardMarkerHighlightMutation(mutations = [], stat
   });
 }
 
-export function initializeDartboardMarkerHighlight(context = {}) {
+function mountRenderer(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const domGuards = context.domGuards;
@@ -120,6 +121,7 @@ export function initializeDartboardMarkerHighlight(context = {}) {
       documentRef,
       state,
       visualConfig,
+      readSurfaceState: context.readSurfaceState,
     });
   }
 
@@ -159,3 +161,7 @@ export function initializeDartboardMarkerHighlight(context = {}) {
 export const mountDartboardMarkerHighlight = initializeDartboardMarkerHighlight;
 export const initialize = initializeDartboardMarkerHighlight;
 export const mount = initializeDartboardMarkerHighlight;
+
+export function initializeDartboardMarkerHighlight(context = {}) {
+  return mountFeatureSurfaceGroup(context, "board-markers", 0, mountRenderer);
+}

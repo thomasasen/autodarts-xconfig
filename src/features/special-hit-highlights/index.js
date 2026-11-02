@@ -1,3 +1,4 @@
+import { mountFeatureSurfaceGroup } from "../shared/feature-surface-group.js";
 import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
 import { ensureAnimeLoaded, getAnime } from "../../vendors/index.js";
 import {
@@ -96,7 +97,7 @@ function usesElectricArc(featureConfig = {}) {
   return String(featureConfig.animationStyle || "").trim().toLowerCase() === "electric-jolt";
 }
 
-export function initializeSpecialHitHighlights(context = {}) {
+function mountRenderer(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const featureDebug = context.featureDebug || null;
@@ -169,6 +170,7 @@ export function initializeSpecialHitHighlights(context = {}) {
 
   const scheduler = createTurnScopedScheduler(context, ({ rehydrating = false } = {}) => {
     const stats = updateHitDecorations({
+      readSurfaceState: context.readSurfaceState,
       documentRef,
       featureConfig,
       trackedRows,
@@ -339,3 +341,7 @@ export function initializeSpecialHitHighlights(context = {}) {
 export const mountSpecialHitHighlights = initializeSpecialHitHighlights;
 export const initialize = initializeSpecialHitHighlights;
 export const mount = initializeSpecialHitHighlights;
+
+export function initializeSpecialHitHighlights(context = {}) {
+  return mountFeatureSurfaceGroup(context, "turn-display", 1, mountRenderer);
+}

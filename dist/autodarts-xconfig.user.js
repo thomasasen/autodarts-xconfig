@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         autodarts-xconfig
 // @namespace    https://github.com/thomasasen/autodarts-xconfig
-// @version      3.6.0
+// @version      3.7.0
 // @description  Modular, side-effect resistant Tampermonkey runtime for Autodarts enhancements.
 // @author       Thomas Asen
 // @license      MIT
@@ -1482,7 +1482,7 @@
     catalogEntry("x01-bust-active-player-highlight", "x01BustActivePlayerHighlight", "Überworfen (BUST) hervorheben", ["x01"], "", "", immediate),
     catalogEntry("avg-trend-arrow", "avgTrendArrow", "AVG-Trend anzeigen", ["all"], "Animation/Autodarts Animate AVG Trend Arrow.user.js", "a-average-arrow"),
     catalogEntry("special-hit-highlights", "specialHitHighlights", "Triple, Double & Bull hervorheben", ["all"], "Animation/Autodarts Animate Special Hit Highlights.user.js", "a-triple-double-bull"),
-    catalogEntry("cricket-layout", "cricketLayout", "Cricket-/Tactics-Layout", ["cricket", "tactics"], "", "", immediate),
+    catalogEntry("cricket-layout", "cricketLayout", "Cricket-/Tactics-Tabelle", ["cricket", "tactics"], "", "", immediate),
     catalogEntry("cricket-target-highlighter", "cricketTargetHighlighter", "Cricket-Ziele hervorheben", ["cricket", "tactics"], "Animation/Autodarts Animate Cricket Target Highlighter.user.js", "a-cricket-target"),
     catalogEntry("cricket-grid-status-effects", "cricketGridStatusEffects", "Cricket-Statusanzeigen", ["cricket", "tactics"], "Animation/Autodarts Animate Cricket Grid Status Effects.user.js", "a-cricket-grid-status-effects"),
     catalogEntry("dartboard-marker-highlight", "dartboardMarkerHighlight", "Treffermarkierungen hervorheben", ["all"], "Animation/Autodarts Animate Dartboard Marker Highlight.user.js", "a-dartboard-marker-highlight"),
@@ -9567,6 +9567,168 @@
     };
   }
 
+  // src/features/shared/feature-surface-group.js
+  var groupsByDocument = /* @__PURE__ */ new WeakMap();
+  function createSharedGameState(gameState, owner, subscribe, readSurfaceState) {
+    return gameState && new Proxy(gameState, {
+      get(source, key) {
+        if (key === "subscribe" && typeof source.subscribe === "function") return (handler) => subscribe(source, owner, handler);
+        if (key === "getSnapshot" && typeof source.getSnapshot === "function") {
+          return () => readSurfaceState(source, () => source.getSnapshot());
+        }
+        const value = Reflect.get(source, key, source);
+        return typeof value === "function" ? value.bind(source) : value;
+      }
+    });
+  }
+  function createGroup(context, onEmpty) {
+    const jobs = /* @__PURE__ */ new Set();
+    const owners2 = /* @__PURE__ */ new Set();
+    const sources = /* @__PURE__ */ new Map();
+    const reads = /* @__PURE__ */ new Map();
+    let flushing = false;
+    const factory = context.helpers?.createRafScheduler || createRafScheduler;
+    const scheduler = factory(() => {
+      if (flushing) return;
+      flushing = true;
+      reads.clear();
+      let failure = null;
+      try {
+        const batch = [...jobs].sort((left, right) => left.priority - right.priority);
+        batch.forEach((job) => {
+          if (!jobs.delete(job) || !job.owner.active) return;
+          try {
+            job.callback();
+          } catch (error) {
+            failure ||= error;
+          }
+        });
+      } finally {
+        flushing = false;
+        reads.clear();
+      }
+      if (jobs.size) scheduler.schedule();
+      if (failure) throw failure;
+    }, { windowRef: context.windowRef });
+    function readSurfaceState(key, read) {
+      if (!flushing) return read();
+      if (!reads.has(key)) reads.set(key, read());
+      return reads.get(key);
+    }
+    function subscribe(source, owner, handler) {
+      let record = sources.get(source);
+      if (!record) {
+        record = { handlers: /* @__PURE__ */ new Set(), release: () => {
+        }, connected: false };
+        sources.set(source, record);
+      }
+      const entry = { owner, handler };
+      record.handlers.add(entry);
+      const release = () => {
+        record.handlers.delete(entry);
+        owner.releases.delete(release);
+        if (!record.handlers.size && sources.get(source) === record) {
+          record.release();
+          sources.delete(source);
+        }
+      };
+      owner.releases.add(release);
+      if (!record.connected) {
+        record.connected = true;
+        const dispose = source.subscribe((snapshot) => {
+          let failure = null;
+          [...record.handlers].forEach((entry2) => {
+            if (!entry2.owner.active) return;
+            try {
+              entry2.handler(snapshot);
+            } catch (error) {
+              failure ||= error;
+            }
+          });
+          if (failure) throw failure;
+        });
+        record.release = typeof dispose === "function" ? dispose : () => {
+        };
+      }
+      return release;
+    }
+    return {
+      mount(context2, priority, initialize) {
+        const owner = { active: true, releases: /* @__PURE__ */ new Set(), jobs: /* @__PURE__ */ new Set() };
+        owners2.add(owner);
+        const gameState = createSharedGameState(context2.gameState, owner, subscribe, readSurfaceState);
+        function release() {
+          if (!owner.active) return;
+          owner.active = false;
+          owner.jobs.forEach((job) => jobs.delete(job));
+          [...owner.releases].forEach((dispose) => dispose());
+          owners2.delete(owner);
+          if (!owners2.size) {
+            scheduler.cancel();
+            onEmpty();
+          }
+        }
+        let cleanup;
+        try {
+          cleanup = initialize({
+            ...context2,
+            gameState,
+            readSurfaceState,
+            helpers: {
+              ...context2.helpers,
+              createRafScheduler(callback) {
+                const job = { owner, priority, callback };
+                owner.jobs.add(job);
+                return {
+                  schedule() {
+                    if (owner.active) {
+                      jobs.add(job);
+                      if (!flushing) scheduler.schedule();
+                    }
+                  },
+                  cancel() {
+                    jobs.delete(job);
+                  }
+                };
+              }
+            }
+          });
+        } catch (error) {
+          release();
+          throw error;
+        }
+        return () => {
+          if (owner.active) {
+            try {
+              cleanup?.();
+            } finally {
+              release();
+            }
+          }
+        };
+      }
+    };
+  }
+  function mountFeatureSurfaceGroup(context, groupKey, priority, initialize) {
+    const documentRef = context.documentRef || globalThis.document;
+    if (!documentRef) return () => {
+    };
+    let groups = groupsByDocument.get(documentRef);
+    if (!groups) {
+      groups = /* @__PURE__ */ new Map();
+      groupsByDocument.set(documentRef, groups);
+    }
+    let group = groups.get(groupKey);
+    if (!group) {
+      group = createGroup(context, () => groups.delete(groupKey));
+      groups.set(groupKey, group);
+    }
+    return group.mount(context, priority, initialize);
+  }
+  function readSharedFeatureSurface(context, key, read) {
+    return typeof context.readSurfaceState === "function" ? context.readSurfaceState(key, read) : read();
+  }
+
   // src/shared/route-normalization.js
   function normalizeRoutePath(pathValue) {
     let normalized = String(pathValue || "").trim().toLowerCase();
@@ -11025,7 +11187,7 @@
     return scope.get(key);
   }
   function readX01MatchSurface(context = {}) {
-    return readScoped(context, "modernSurface", () => readModernMatchSurface(context.documentRef, context.windowRef));
+    return readScoped(context, "modernSurface", () => readSharedFeatureSurface(context, "x01:match-surface", () => readModernMatchSurface(context.documentRef, context.windowRef)));
   }
   function readX01CricketGrid(context = {}) {
     return readScoped(context, "cricketGrid", () => readModernCricketGrid(context.documentRef));
@@ -13005,7 +13167,7 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
   // src/features/checkout-score-highlight/index.js
   var FEATURE_KEY = "checkout-score-highlight";
   var OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
-  function mountCheckoutScoreHighlight(context = {}) {
+  function mountRenderer(context = {}) {
     const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
     const windowRef = context.windowRef || (globalThis.window !== void 0 ? globalThis.window : null);
     const domGuards = context.domGuards;
@@ -13056,6 +13218,7 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
     }
     function update() {
       const readContext = createX01ReadContext({
+        readSurfaceState: context.readSurfaceState,
         documentRef,
         windowRef,
         gameState,
@@ -13103,7 +13266,7 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
       const surface = getX01PlayerSurfaceSnapshot(documentRef, { includeModern: true, windowRef });
       clearHighlightState(getAllScoreNodes(documentRef, { playerSurfaceSnapshot: surface }));
       lastDebugSignature = "";
-    } });
+    } }, context.helpers?.createRafScheduler);
     const cleanupSurfaceObserver = createX01PlayerSurfaceObserverController({
       documentRef,
       observerRegistry,
@@ -13136,6 +13299,9 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
       clearHighlightState(getAllScoreNodes(documentRef, { playerSurfaceSnapshot }));
       domGuards.removeNodeById(STYLE_ID);
     };
+  }
+  function mountCheckoutScoreHighlight(context = {}) {
+    return mountFeatureSurfaceGroup(context, "x01-score", 0, mountRenderer);
   }
 
   // src/shared/dartboard-geometry.js
@@ -19310,10 +19476,87 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
     return harness;
   }
 
+  // src/features/shared/turn-display-layout.js
+  var TURN_DISPLAY_LAYOUT_CLASS = "ad-ext-checkout-suggestion-layout";
+  function findTurnDisplayLayoutNode(documentRef, windowRef, context = {}) {
+    return readSharedFeatureSurface(context, "turn:surface", () => findModernTurnSurface(documentRef, windowRef))?.turnContainer || null;
+  }
+  function applyTurnDisplayLayout(node) {
+    node?.classList?.add(TURN_DISPLAY_LAYOUT_CLASS);
+  }
+  function resetTurnDisplayLayout(node) {
+    node?.classList?.remove(TURN_DISPLAY_LAYOUT_CLASS);
+  }
+  function buildTurnDisplayLayoutStyleText() {
+    return `
+.${TURN_DISPLAY_LAYOUT_CLASS} {
+  --ad-ext-checkout-turn-value-font-size: var(--ad-game-layout-turn-value-font-size, clamp(2.625rem, 3.35vw, 3rem));
+  position: relative;
+  left: 50%;
+  flex: 0 0 444px;
+  width: 444px;
+  max-width: calc(100vw - 24px);
+  min-height: 80px;
+  transform: translateX(-50%);
+}
+
+.${TURN_DISPLAY_LAYOUT_CLASS} > :first-child {
+  gap: 8px;
+  padding-left: 8px;
+}
+
+.${TURN_DISPLAY_LAYOUT_CLASS} > :first-child > .font-number {
+  flex: 1 1 0;
+  max-width: none;
+  height: 80px;
+  padding-top: 10px;
+}
+
+.${TURN_DISPLAY_LAYOUT_CLASS} > :first-child > .font-number > span:not([aria-hidden="true"]),
+.${TURN_DISPLAY_LAYOUT_CLASS} > .font-number,
+.${TURN_DISPLAY_LAYOUT_CLASS} > .font-number > span {
+  font-size: var(--ad-ext-checkout-turn-value-font-size);
+}
+
+.${TURN_DISPLAY_LAYOUT_CLASS} > .font-number {
+  height: 80px;
+}
+
+@media (max-width: 900px) {
+  .${TURN_DISPLAY_LAYOUT_CLASS} {
+    --ad-ext-checkout-turn-value-font-size: var(--ad-game-layout-turn-value-font-size, min(2.5rem, 6vw));
+    left: auto;
+    flex: 1 1 0;
+    width: 100%;
+    max-width: 100%;
+    transform: none;
+  }
+
+  .${TURN_DISPLAY_LAYOUT_CLASS},
+  .${TURN_DISPLAY_LAYOUT_CLASS} > :first-child > .font-number,
+  .${TURN_DISPLAY_LAYOUT_CLASS} > .font-number {
+    height: 72px;
+    min-height: 72px;
+  }
+
+  .${TURN_DISPLAY_LAYOUT_CLASS} > :first-child > .font-number {
+    padding-top: 6px;
+  }
+
+  .${TURN_DISPLAY_LAYOUT_CLASS} > :first-child > .font-number > span:not([aria-hidden="true"]),
+  .${TURN_DISPLAY_LAYOUT_CLASS} > .font-number,
+  .${TURN_DISPLAY_LAYOUT_CLASS} > .font-number > span {
+    font-size: var(--ad-ext-checkout-turn-value-font-size);
+  }
+}
+
+`;
+  }
+
   // src/features/checkout-suggestion-styles/style.js
   var STYLE_ID4 = "ad-ext-checkout-suggestion-style";
   var BASE_CLASS = "ad-ext-checkout-suggestion";
-  var LAYOUT_CLASS = "ad-ext-checkout-suggestion-layout";
+  var LAYOUT_CLASS = TURN_DISPLAY_LAYOUT_CLASS;
   var MODERN_CLASS = "ad-ext-checkout-suggestion--modern";
   var NO_LABEL_CLASS = "ad-ext-checkout-suggestion--no-label";
   var COLOR_NUMBERS_CLASS = "ad-ext-checkout-suggestion--color-numbers";
@@ -19327,67 +19570,7 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
   var STYLE_CLASS_LIST = Object.freeze(Object.values(STYLE_CLASSES));
   function buildStyleText4() {
     return `
-.${LAYOUT_CLASS} {
-  --ad-ext-checkout-turn-value-font-size: var(--ad-game-layout-turn-value-font-size, clamp(2.625rem, 3.35vw, 3rem));
-  position: relative;
-  left: 50%;
-  flex: 0 0 444px;
-  width: 444px;
-  max-width: calc(100vw - 24px);
-  min-height: 80px;
-  transform: translateX(-50%);
-}
-
-.${LAYOUT_CLASS} > :first-child {
-  gap: 8px;
-  padding-left: 8px;
-}
-
-.${LAYOUT_CLASS} > :first-child > .font-number {
-  flex: 1 1 0;
-  max-width: none;
-  height: 80px;
-  padding-top: 10px;
-}
-
-.${LAYOUT_CLASS} > :first-child > .font-number > span:not([aria-hidden="true"]),
-.${LAYOUT_CLASS} > .font-number,
-.${LAYOUT_CLASS} > .font-number > span {
-  font-size: var(--ad-ext-checkout-turn-value-font-size);
-}
-
-.${LAYOUT_CLASS} > .font-number {
-  height: 80px;
-}
-
-@media (max-width: 900px) {
-  .${LAYOUT_CLASS} {
-    --ad-ext-checkout-turn-value-font-size: var(--ad-game-layout-turn-value-font-size, min(2.5rem, 6vw));
-    left: auto;
-    flex: 1 1 0;
-    width: 100%;
-    max-width: 100%;
-    transform: none;
-  }
-
-  .${LAYOUT_CLASS},
-  .${LAYOUT_CLASS} > :first-child > .font-number,
-  .${LAYOUT_CLASS} > .font-number {
-    height: 72px;
-    min-height: 72px;
-  }
-
-  .${LAYOUT_CLASS} > :first-child > .font-number {
-    padding-top: 6px;
-  }
-
-  .${LAYOUT_CLASS} > :first-child > .font-number > span:not([aria-hidden="true"]),
-  .${LAYOUT_CLASS} > .font-number,
-  .${LAYOUT_CLASS} > .font-number > span {
-    font-size: var(--ad-ext-checkout-turn-value-font-size);
-  }
-}
-
+${buildTurnDisplayLayoutStyleText()}
 .${BASE_CLASS} {
   position: relative;
   isolation: isolate;
@@ -19647,22 +19830,16 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
   function isModernSuggestionNode(node) {
     return isModernCheckoutHint(node);
   }
-  function findModernSuggestionLayoutNode(documentRef, windowRef = documentRef?.defaultView) {
-    return findModernTurnSurface(documentRef, windowRef)?.turnContainer || null;
+  function findModernSuggestionLayoutNode(documentRef, windowRef = documentRef?.defaultView, context = {}) {
+    return findTurnDisplayLayoutNode(documentRef, windowRef, context);
   }
-  function applySuggestionLayout(node) {
-    node?.classList?.add(LAYOUT_CLASS);
-  }
-  function resetSuggestionLayout(node) {
-    node?.classList?.remove(LAYOUT_CLASS);
-  }
-  function collectSuggestions(documentRef, windowRef = documentRef?.defaultView) {
+  function collectSuggestions(documentRef, windowRef = documentRef?.defaultView, context = {}) {
     if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
       return [];
     }
     const suggestions = Array.from(documentRef.querySelectorAll(SUGGESTION_SELECTOR3));
     const seen = new Set(suggestions);
-    const modernTurnSurface = findModernTurnSurface(documentRef, windowRef);
+    const modernTurnSurface = readSharedFeatureSurface(context, "turn:surface", () => findModernTurnSurface(documentRef, windowRef));
     (modernTurnSurface?.throwRows || []).forEach((node) => {
       if (!seen.has(node) && isModernSuggestionNode(node) && isMatchNodeVisible(node, windowRef)) {
         seen.add(node);
@@ -19751,7 +19928,7 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
   // src/features/checkout-suggestion-styles/index.js
   var FEATURE_KEY4 = "checkout-suggestion-styles";
   var OBSERVER_KEY4 = `${FEATURE_KEY4}:dom-observer`;
-  function initializeCheckoutSuggestionStyles(context = {}) {
+  function mountRenderer2(context = {}) {
     const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
     const windowRef = context.windowRef || (globalThis.window !== void 0 ? globalThis.window : null);
     const domGuards = context.domGuards;
@@ -19772,14 +19949,14 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
     domGuards.ensureStyle(STYLE_ID4, buildStyleText4());
     let lastDebugSignature = "";
     function update() {
-      const layoutNode = findModernSuggestionLayoutNode(documentRef, windowRef);
+      const layoutNode = findModernSuggestionLayoutNode(documentRef, windowRef, context);
       Array.from(documentRef.querySelectorAll?.(`.${LAYOUT_CLASS}`) || []).forEach((node) => {
         if (node !== layoutNode) {
-          resetSuggestionLayout(node);
+          resetTurnDisplayLayout(node);
         }
       });
-      applySuggestionLayout(layoutNode);
-      const nodes = collectSuggestions(documentRef, windowRef);
+      applyTurnDisplayLayout(layoutNode);
+      const nodes = collectSuggestions(documentRef, windowRef, context);
       const currentNodes = new Set(nodes);
       Array.from(documentRef.querySelectorAll?.(`.${BASE_CLASS}`) || []).forEach((node) => {
         if (!currentNodes.has(node)) {
@@ -19817,7 +19994,7 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
     }
     const harness = createFeatureMountHarness(context, { update, resetTurn() {
       Array.from(documentRef.querySelectorAll?.(`.${BASE_CLASS}`) || []).forEach(resetSuggestionNode);
-      Array.from(documentRef.querySelectorAll?.(`.${LAYOUT_CLASS}`) || []).forEach(resetSuggestionLayout);
+      Array.from(documentRef.querySelectorAll?.(`.${LAYOUT_CLASS}`) || []).forEach(resetTurnDisplayLayout);
       lastDebugSignature = "";
     } });
     const rootNode = documentRef.documentElement || documentRef.body || documentRef;
@@ -19843,11 +20020,14 @@ ${scopedClassSelector(selectorPrefix, EFFECT_CLASSES["fade-blink"])} {
     harness.schedule();
     return harness.createCleanup(() => {
       Array.from(documentRef.querySelectorAll?.(`.${BASE_CLASS}`) || []).forEach(resetSuggestionNode);
-      Array.from(documentRef.querySelectorAll?.(`.${LAYOUT_CLASS}`) || []).forEach(resetSuggestionLayout);
+      Array.from(documentRef.querySelectorAll?.(`.${LAYOUT_CLASS}`) || []).forEach(resetTurnDisplayLayout);
       domGuards.removeNodeById(STYLE_ID4);
     });
   }
   var mountCheckoutSuggestionStyles = initializeCheckoutSuggestionStyles;
+  function initializeCheckoutSuggestionStyles(context = {}) {
+    return mountFeatureSurfaceGroup(context, "turn-display", -1, mountRenderer2);
+  }
 
   // src/features/x01-bust-active-player-highlight/style.js
   var STYLE_ID5 = "ad-ext-x01-bust-active-player-highlight-style";
@@ -20287,19 +20467,22 @@ html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] .${BUST_SURFACE_CLASS}:not(.${B
     if (!boardRoot || typeof boardRoot.querySelectorAll !== "function") {
       return [];
     }
-    const boardLayerParent = board?.svg?.parentElement || null;
-    const siblingSvgLayers = Array.from(boardLayerParent?.children || []).filter((node) => {
-      return String(node?.tagName || node?.nodeName || "").toLowerCase() === "svg";
-    });
-    const markerRoots = siblingSvgLayers.length > 1 ? siblingSvgLayers : [boardRoot];
-    const seen = /* @__PURE__ */ new Set();
-    return markerRoots.flatMap((root) => Array.from(root.querySelectorAll("circle"))).filter((node) => {
-      if (seen.has(node) || !isLikelyBoardMarker(node)) {
-        return false;
-      }
-      seen.add(node);
-      return true;
-    });
+    const collect = () => {
+      const boardLayerParent = board?.svg?.parentElement || null;
+      const siblingSvgLayers = Array.from(boardLayerParent?.children || []).filter((node) => {
+        return String(node?.tagName || node?.nodeName || "").toLowerCase() === "svg";
+      });
+      const markerRoots = siblingSvgLayers.length > 1 ? siblingSvgLayers : [boardRoot];
+      const seen = /* @__PURE__ */ new Set();
+      return markerRoots.flatMap((root) => Array.from(root.querySelectorAll("circle"))).filter((node) => {
+        if (seen.has(node) || !isLikelyBoardMarker(node)) {
+          return false;
+        }
+        seen.add(node);
+        return true;
+      });
+    };
+    return typeof options.readSurfaceState === "function" ? options.readSurfaceState(boardRoot, collect) : collect();
   }
   function buildMarkerKey(node) {
     if (!node) {
@@ -24416,7 +24599,7 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
       normalizeText: normalizeRawText
     });
     if (!turnSurface.turnContainer && turnSurface.throwRows.length === 0) {
-      const modernSurface = findModernTurnSurface(documentRef, windowRef);
+      const modernSurface = readSharedFeatureSurface(options, "turn:surface", () => findModernTurnSurface(documentRef, windowRef));
       const modernThrows = readModernThrows(modernSurface, options.x01Rules);
       if (modernSurface && Array.isArray(modernThrows)) {
         turnSurface = {
@@ -24677,7 +24860,7 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
   function usesElectricArc(featureConfig = {}) {
     return String(featureConfig.animationStyle || "").trim().toLowerCase() === "electric-jolt";
   }
-  function initializeSpecialHitHighlights(context = {}) {
+  function mountRenderer3(context = {}) {
     const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
     const windowRef = context.windowRef || (globalThis.window !== void 0 ? globalThis.window : null);
     const featureDebug = context.featureDebug || null;
@@ -24743,6 +24926,7 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
     }
     const scheduler = createTurnScopedScheduler(context, ({ rehydrating = false } = {}) => {
       const stats = updateHitDecorations({
+        readSurfaceState: context.readSurfaceState,
         documentRef,
         featureConfig,
         trackedRows,
@@ -24881,6 +25065,9 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
     };
   }
   var mountSpecialHitHighlights = initializeSpecialHitHighlights;
+  function initializeSpecialHitHighlights(context = {}) {
+    return mountFeatureSurfaceGroup(context, "turn-display", 1, mountRenderer3);
+  }
 
   // src/features/cricket-target-highlighter/style.js
   var SVG_NS2 = "http://www.w3.org/2000/svg";
@@ -26679,6 +26866,9 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
       gridSnapshot: {
         root: grid.root,
         modern: grid.modern === true,
+        headers: grid.headers || [],
+        cellsByLabel: grid.cellsByLabel || /* @__PURE__ */ new Map(),
+        activePlayerIndex: grid.activePlayerIndex,
         labels: grid.labels,
         diagnostics: labelDiagnostics,
         rows: gridRows,
@@ -28832,8 +29022,247 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
   }
   var mountCricketTargetHighlighter = initializeCricketTargetHighlighter;
 
+  // src/features/cricket-surface/player-statistics.js
+  function readCricketPlayerStatistics(header) {
+    const isMpr = (node) => /^MPR\s*(?::\s*)?[\d.,]*$/i.test(String(node?.textContent || "").trim());
+    const mprNodes = Array.from(header.querySelectorAll("span,div,p")).filter((node) => isMpr(node) && !isMpr(node.parentElement));
+    const numericNodes = Array.from(header.querySelectorAll(".font-number")).filter((node) => !mprNodes.some((mpr) => mpr === node || mpr.contains(node)) && /^[\d\s.,+-]+$/.test(String(node.textContent || "").trim()));
+    const boldScores = numericNodes.filter((node) => node.classList.contains("font-bold"));
+    let score = null;
+    if (boldScores.length === 1) score = boldScores[0];
+    else if (numericNodes.length === 1) score = numericNodes[0];
+    if (score) Array.from(score.parentElement.children).filter((node) => node !== score && node.matches(".flex.flex-col") && node.querySelector(".rounded-sm.size-8 .font-number")).forEach((node) => mprNodes.push(node));
+    return { score, mprNodes };
+  }
+
+  // src/features/cricket-layout/logic.js
+  var clamp2 = (value, min, max) => Math.min(max, Math.max(min, value));
+  function calculateCricketLayout(options = {}) {
+    const playerCount = clamp2(Math.trunc(Number(options.playerCount) || 2), 1, 6);
+    const targetCount = options.targetCount === 12 ? 12 : 7;
+    const width = Math.max(1, Number(options.width) || 800);
+    const height = Math.max(1, Number(options.height) || 500);
+    const settings = options.settings || {};
+    const automaticShare = clamp2(0.49 + (playerCount - 2) * 0.035 + (targetCount === 12 ? 0.04 : 0), 0.46, 0.67);
+    let tableShare = automaticShare;
+    if (settings.space === "table") tableShare = 0.67;
+    else if (settings.space === "board") tableShare = 0.43;
+    const gap = Math.min(settings.density === "compact" || targetCount === 12 ? 2 : 4, height / (targetCount * 8));
+    const labelWidth = Math.min(width * 0.2, clamp2(width * 0.075, 36, 64));
+    const columnWidth = Math.max(20, (width - labelWidth - gap * playerCount) / playerCount);
+    const nameLines = settings.names === "single" ? 1 : 2;
+    const headerHeight = Math.min(height * 0.36, clamp2(height * (settings.textSize === "large" ? 0.28 : 0.23), 64, settings.textSize === "large" ? 150 : 128));
+    const rowHeight = Math.max(1, (height - headerHeight - gap * targetCount) / targetCount);
+    const maxMark = Math.max(1, Math.min(rowHeight - 6, columnWidth - 8));
+    const preferredMark = settings.markSize === "very-large" ? 60 : 44;
+    let preferredTarget = 24;
+    if (settings.targetSize === "very-large") preferredTarget = 38;
+    else if (settings.targetSize === "large") preferredTarget = 30;
+    return {
+      tableShare,
+      gap,
+      labelWidth,
+      headerHeight,
+      rowHeight,
+      markSize: Math.min(preferredMark, maxMark),
+      targetSize: Math.max(1, Math.min(preferredTarget, rowHeight * 0.7, labelWidth * 0.62)),
+      nameSize: Math.max(1, Math.min(settings.textSize === "large" ? 26 : 20, columnWidth * 0.15, headerHeight * 0.34 / nameLines)),
+      scoreSize: Math.max(1, Math.min(settings.textSize === "large" ? 48 : 36, columnWidth * 0.38, headerHeight * 0.35))
+    };
+  }
+
+  // src/features/cricket-layout/style.js
+  var STYLE_ID9 = "ad-ext-cricket-layout-style";
+  function buildCricketLayoutStyleText() {
+    return `
+[data-ad-cricket-layout-stage="true"]{display:grid!important;grid-template-columns:minmax(0,var(--ad-cricket-table-share)) minmax(0,1fr)!important;min-height:0!important;min-width:0!important}
+[data-ad-cricket-layout-panel]{min-width:0!important;min-height:0!important}
+[data-ad-cricket-layout-panel="table"]{grid-column:1!important}
+[data-ad-cricket-layout-panel="board"]{grid-column:2!important}
+main .grid[data-ad-cricket-layout="true"]{grid-template-columns:var(--ad-cricket-label-width) repeat(var(--ad-cricket-players),minmax(0,1fr))!important;grid-template-rows:var(--ad-cricket-header-height) repeat(var(--ad-cricket-targets),minmax(0,1fr))!important;gap:var(--ad-cricket-gap)!important;min-height:0!important;min-width:0!important}
+main .grid[data-ad-cricket-layout="true"]>[data-ad-cricket-layout-node]{grid-row:var(--ad-cricket-row)!important;grid-column:var(--ad-cricket-column)!important;min-height:0!important;min-width:0!important}
+main .grid[data-ad-cricket-layout="true"]>[data-ad-cricket-layout-node="label"]{font-size:var(--ad-cricket-target-size)!important;line-height:1!important;padding:0!important}
+main .grid[data-ad-cricket-layout="true"]>[data-ad-cricket-layout-node="cell"]{padding:0!important;position:relative}
+main .grid[data-ad-cricket-layout="true"]>[data-ad-cricket-layout-node="cell"]>:is(img,svg,.size-8){max-width:100%!important;max-height:100%!important;object-fit:contain}
+main .grid[data-ad-cricket-layout="true"][data-ad-cricket-mark-size]:not([data-ad-cricket-mark-size="original"])>[data-ad-cricket-layout-node="cell"]:is(div,section)>:is(img,svg,.size-8){width:var(--ad-cricket-mark-size)!important;height:var(--ad-cricket-mark-size)!important;max-width:100%!important;max-height:100%!important;object-fit:contain}
+main .grid[data-ad-cricket-layout="true"]>[data-ad-cricket-layout-node="header"]{gap:4px!important;padding:4px!important;justify-content:center!important}
+main .grid[data-ad-cricket-layout="true"] [data-ad-cricket-name="true"]{font-size:var(--ad-cricket-name-size)!important;line-height:1.15!important;max-width:100%!important;min-height:calc(var(--ad-cricket-name-size) * var(--ad-cricket-name-lines) * 1.15);overflow:hidden!important;overflow-wrap:anywhere}
+main .grid[data-ad-cricket-layout="true"] [data-ad-cricket-nameplate="true"],
+main .grid[data-ad-cricket-layout="true"] [data-ad-cricket-nameplate-shape="true"]{height:var(--ad-cricket-nameplate-height)!important;min-height:var(--ad-cricket-nameplate-height)!important}
+main .grid[data-ad-cricket-layout="true"][data-ad-cricket-names="single"] [data-ad-cricket-name="true"]{white-space:nowrap!important;text-overflow:ellipsis}
+main .grid[data-ad-cricket-layout="true"][data-ad-cricket-names="two-lines"] [data-ad-cricket-name="true"]{white-space:normal!important;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+main .grid[data-ad-cricket-layout="true"] [data-ad-cricket-score="true"]{font-size:var(--ad-cricket-score-size)!important;line-height:1!important}
+main .grid[data-ad-cricket-layout="true"][data-ad-cricket-mpr="subtle"] [data-ad-cricket-mpr-value="true"]{opacity:.75;font-size:.8em}
+main .grid[data-ad-cricket-layout="true"][data-ad-cricket-mpr="off"] [data-ad-cricket-mpr-value="true"]{display:none!important}
+main .grid[data-ad-cricket-layout="true"]>[data-ad-cricket-layout-node="header"][data-ad-cricket-active="true"]{outline:2px solid var(--ad-ext-theme-accent-color,#f5f5f5);outline-offset:-2px}
+main .grid[data-ad-cricket-layout="true"][data-ad-cricket-indicator="line"]>[data-ad-cricket-layout-node="cell"][data-ad-cricket-active="true"]{border-inline-start:2px solid var(--ad-ext-theme-accent-color,#f5f5f5)!important}
+main .grid[data-ad-cricket-layout="true"][data-ad-cricket-indicator="tint"]>[data-ad-cricket-layout-node="cell"][data-ad-cricket-active="true"]{background-image:linear-gradient(rgba(255,255,255,.055),rgba(255,255,255,.055))}
+`;
+  }
+
+  // src/features/cricket-layout/renderer.js
+  function resolvePanels(grid, documentRef) {
+    const svg = findBoardSvgRoot(documentRef);
+    const board = svg?.closest?.(NATIVE_BOARD_SELECTOR);
+    if (!board) return null;
+    let root = grid.parentElement;
+    for (let depth = 0; root && depth < 5; depth += 1, root = root.parentElement) {
+      if (["MAIN", "BODY", "HTML"].includes(root.tagName)) return null;
+      if (!root.contains(board)) continue;
+      const children = Array.from(root.children || []);
+      const tablePanel = children.find((node) => node === grid || node.contains(grid));
+      const boardPanel = children.find((node) => node === board || node.contains(board));
+      return children.length === 2 && tablePanel && boardPanel && tablePanel !== boardPanel ? { root, tablePanel, boardPanel } : null;
+    }
+    return null;
+  }
+  function createDecorationState() {
+    const nodes = /* @__PURE__ */ new Map();
+    function set(node, key, value, style = false) {
+      if (!node) return;
+      if (!nodes.has(node)) nodes.set(node, /* @__PURE__ */ new Map());
+      const values = nodes.get(node);
+      const identity = `${style ? "style" : "attr"}:${key}`;
+      const read = () => style ? node.style.getPropertyValue(key) : node.getAttribute(key);
+      let entry = values.get(identity);
+      if (!entry) {
+        entry = { original: read(), applied: null, style, key };
+        values.set(identity, entry);
+      } else if (read() !== entry.applied) {
+        entry.original = read();
+      }
+      const next = String(value);
+      if (read() !== next) {
+        if (style) node.style.setProperty(key, next);
+        else node.setAttribute(key, next);
+      }
+      entry.applied = next;
+    }
+    function clear() {
+      nodes.forEach((values, node) => values.forEach((entry) => {
+        const current = entry.style ? node.style.getPropertyValue(entry.key) : node.getAttribute(entry.key);
+        if (current !== entry.applied) return;
+        if (entry.style) {
+          if (entry.original) node.style.setProperty(entry.key, entry.original);
+          else node.style.removeProperty(entry.key);
+        } else if (entry.original === null) node.removeAttribute(entry.key);
+        else node.setAttribute(entry.key, entry.original);
+      }));
+      nodes.clear();
+    }
+    return { set, clear };
+  }
+  function createCricketLayoutRenderer(context = {}, schedule = () => {
+  }) {
+    const decorations = createDecorationState();
+    let lastGrid = null;
+    let lastStructure = [];
+    let resizeObserver = null;
+    let observedRoot = null;
+    const { documentRef, windowRef } = context;
+    function clear() {
+      decorations.clear();
+      lastGrid = null;
+      lastStructure = [];
+      observedRoot = null;
+      resizeObserver?.disconnect();
+      context.domGuards.removeNodeById(STYLE_ID9);
+    }
+    function update({ renderState }) {
+      const grid = renderState?.gridSnapshot?.modern ? renderState.gridSnapshot : null;
+      const raw = context.config?.getFeatureConfig?.("cricketLayout") || {};
+      if (!grid || raw.enabled === false) {
+        clear();
+        return;
+      }
+      const outerLayout = context.config?.getFeatureConfig?.("themes.gameLayout");
+      const sharedOuterLayout = outerLayout?.enabled && outerLayout.screenProfile && outerLayout.screenProfile !== "legacy";
+      const panels = sharedOuterLayout ? null : resolvePanels(grid.root, documentRef);
+      const structure = [grid.root, ...grid.headers, ...grid.headers.flatMap((header) => Array.from(header.querySelectorAll('span,div,p,svg[data-slot="nametag-shape"]'))), ...grid.labels.map((entry) => entry.node), ...Array.from(grid.cellsByLabel.values()).flat(), ...panels ? [panels.root, panels.tablePanel, panels.boardPanel] : []];
+      if (lastGrid !== grid.root || structure.some((node, index) => node !== lastStructure[index]) || structure.length !== lastStructure.length) {
+        clear();
+        lastGrid = grid.root;
+        lastStructure = structure;
+      }
+      const settings = resolveCricketLayoutSettings(raw, grid.labels.length === 12);
+      const rect = grid.root.getBoundingClientRect();
+      const panelRect = panels?.root.getBoundingClientRect();
+      const share = calculateCricketLayout({ playerCount: grid.headers.length, targetCount: grid.labels.length, settings }).tableShare;
+      const width = panelRect?.width > 0 ? panelRect.width * share : rect.width;
+      const height = rect.height > 0 ? rect.height : Math.max(120, (windowRef?.innerHeight || 600) - Math.max(0, rect.top));
+      const geometry = calculateCricketLayout({ width, height, playerCount: grid.headers.length, targetCount: grid.labels.length, settings });
+      context.domGuards.ensureStyle(STYLE_ID9, buildCricketLayoutStyleText());
+      const set = decorations.set;
+      set(grid.root, "data-ad-cricket-layout", "true");
+      for (const [key, value] of Object.entries({
+        "--ad-cricket-players": grid.headers.length,
+        "--ad-cricket-targets": grid.labels.length,
+        "--ad-cricket-label-width": `${geometry.labelWidth}px`,
+        "--ad-cricket-header-height": `${geometry.headerHeight}px`,
+        "--ad-cricket-gap": `${geometry.gap}px`,
+        "--ad-cricket-mark-size": `${geometry.markSize}px`,
+        "--ad-cricket-target-size": `${geometry.targetSize}px`,
+        "--ad-cricket-name-size": `${geometry.nameSize}px`,
+        "--ad-cricket-score-size": `${geometry.scoreSize}px`,
+        "--ad-cricket-name-lines": settings.names === "single" ? 1 : 2,
+        "--ad-cricket-nameplate-height": `${geometry.nameSize * (settings.names === "single" ? 1 : 2) * 1.15 + 8}px`
+      })) set(grid.root, key, value, true);
+      for (const [key, value] of Object.entries({ "mark-size": settings.markSize, names: settings.names, mpr: settings.mpr, indicator: settings.activeIndicator })) {
+        set(grid.root, `data-ad-cricket-${key}`, value);
+      }
+      function place(node, kind, row, column, active = false) {
+        set(node, "data-ad-cricket-layout-node", kind);
+        set(node, "--ad-cricket-row", row, true);
+        set(node, "--ad-cricket-column", column, true);
+        set(node, "data-ad-cricket-active", active && settings.activeIndicator !== "native" ? "true" : "false");
+      }
+      const corner = Array.from(grid.root.children || []).find((node) => node.getAttribute("data-ad-ext-cricket-surface-overlay") !== "true" && !grid.headers.includes(node) && !grid.labels.some((entry) => entry.node === node) && !Array.from(grid.cellsByLabel.values()).some((cells) => cells.includes(node)));
+      if (corner) place(corner, "corner", 1, 1);
+      grid.headers.forEach((header, index) => {
+        place(header, "header", 1, index + 2, index === grid.activePlayerIndex);
+        const name = header.querySelector(".font-display");
+        if (name) {
+          set(name, "data-ad-cricket-name", "true");
+          set(name, "title", name.textContent || "");
+          const plate = name.parentElement;
+          const shape = plate?.parentElement?.querySelector('[data-slot="nametag-shape"]');
+          if (shape && plate !== header) {
+            set(plate, "data-ad-cricket-nameplate", "true");
+            set(shape, "data-ad-cricket-nameplate-shape", "true");
+          }
+        }
+        const { score, mprNodes } = readCricketPlayerStatistics(header);
+        if (score) set(score, "data-ad-cricket-score", "true");
+        mprNodes.forEach((node) => set(node, "data-ad-cricket-mpr-value", "true"));
+      });
+      grid.labels.forEach(({ node, label }, index) => {
+        place(node, "label", index + 2, 1);
+        grid.cellsByLabel.get(label).forEach((cell, player) => place(cell, "cell", index + 2, player + 2, player === grid.activePlayerIndex));
+      });
+      if (panels) {
+        set(panels.root, "data-ad-cricket-layout-stage", "true");
+        set(panels.root, "--ad-cricket-table-share", `${geometry.tableShare * 100}%`, true);
+        set(panels.tablePanel, "data-ad-cricket-layout-panel", "table");
+        set(panels.boardPanel, "data-ad-cricket-layout-panel", "board");
+      }
+      const nextObservedRoot = panels?.root || grid.root;
+      if (resizeObserver && observedRoot !== nextObservedRoot) {
+        resizeObserver.disconnect();
+        resizeObserver.observe(nextObservedRoot);
+        observedRoot = nextObservedRoot;
+      }
+    }
+    if (typeof windowRef?.ResizeObserver === "function") resizeObserver = new windowRef.ResizeObserver(schedule);
+    return {
+      update,
+      clear,
+      collectWatchNodes: () => lastStructure,
+      checkHealth: () => !lastGrid || lastStructure.every((node) => node.isConnected !== false) && lastGrid.getAttribute("data-ad-cricket-layout") === "true" || "Cricket-Tabellenlayout fehlt"
+    };
+  }
+
   // src/features/cricket-grid-status-effects/style.js
-  var STYLE_ID9 = "ad-ext-cricket-grid-status-effects-style";
+  var STYLE_ID10 = "ad-ext-cricket-grid-status-effects-style";
   var ROOT_CLASS = "ad-ext-crfx-root";
   var MODERN_ROOT_CLASS = "ad-ext-crfx-modern-root";
   var CELL_CLASS = "ad-ext-crfx-cell";
@@ -29022,13 +29451,13 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
   position: relative;
   isolation: isolate;
   padding-inline: 0 !important;
-  font-size: 1.5rem !important;
+  font-size: var(--ad-cricket-target-size, 1.5rem) !important;
   letter-spacing: -0.02em;
 }
 
 @media (min-width: 48rem) {
   .${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${LABEL_CLASS}.${NATIVE_LABEL_CLASS} {
-    font-size: 2rem !important;
+    font-size: var(--ad-cricket-target-size, 2rem) !important;
   }
 }
 
@@ -29265,6 +29694,12 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
 .${ROOT_CLASS}.${MODERN_ROOT_CLASS} .${CELL_CLASS}.${OPEN_ACTIVE_CLASS}::before {
   box-shadow: inset 0 0 0 1px rgba(127, 214, 247, 0.36);
   opacity: 1;
+}
+
+/* The layout owns the active-player indicator; tactical states retain their overlays. */
+.${ROOT_CLASS}.${MODERN_ROOT_CLASS}[data-ad-cricket-layout="true"]:not([data-ad-cricket-indicator="native"]) .${CELL_CLASS}.${OPEN_ACTIVE_CLASS}::before {
+  box-shadow: none;
+  opacity: 0;
 }
 
 .${ROOT_CLASS}[data-ad-crfx-status-style="color"] .${CELL_CLASS}.${PRESSURE_CLASS}{background-image:linear-gradient(rgba(var(--ad-ext-crfx-danger-rgb),.12),rgba(var(--ad-ext-crfx-danger-rgb),.12))!important}
@@ -31030,7 +31465,7 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
     }
   }
 
-  // src/features/cricket-grid-status-effects/index.js
+  // src/features/cricket-grid-status-effects/renderer.js
   var FEATURE_KEY9 = "cricket-grid-status-effects";
   function readVariantText4(documentRef) {
     return String(documentRef?.getElementById?.("ad-ext-game-variant")?.textContent || "").trim();
@@ -31074,6 +31509,7 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
     if (!currentRoot || currentRoot.isConnected === false) {
       return false;
     }
+    if (!currentRoot.classList?.contains(ROOT_CLASS)) return false;
     if (expectedRoot && currentRoot !== expectedRoot) {
       return false;
     }
@@ -31088,7 +31524,7 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
     if (!allNodesConnected) {
       return false;
     }
-    return trackedCells.length > 0 ? trackedCells.some((node) => node?.classList?.contains(CELL_CLASS)) : true;
+    return trackedCells.length > 0 ? trackedCells.every((node) => node?.classList?.contains(CELL_CLASS)) : true;
   }
   function collectRuntimeWatchNodes2(state, renderState, documentRef) {
     const extraNodes = [
@@ -31173,7 +31609,8 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
       lastStatusSignature: ""
     };
   }
-  function initializeCricketGridStatusEffects(context = {}) {
+  function createCricketGridStatusRenderer(context, runtime) {
+    context ??= {};
     const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
     const windowRef = context.windowRef || (globalThis.window !== void 0 ? globalThis.window : null);
     const domGuards = context.domGuards;
@@ -31181,8 +31618,9 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
     const config = context.config;
     const featureDebug = context.featureDebug || null;
     if (!documentRef || !domGuards || !cricketRules) {
-      return () => {
-      };
+      return { clear() {
+      }, update() {
+      } };
     }
     const featureConfig = config && typeof config.getFeatureConfig === "function" ? config.getFeatureConfig("cricketGridStatusEffects") : {
       rowWave: true,
@@ -31199,12 +31637,7 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
       intensity: "normal"
     };
     const visualConfig = resolveCricketGridStatusEffectsConfig(featureConfig);
-    domGuards.ensureStyle(STYLE_ID9, buildStyleText9());
-    const runtime = acquireSharedCricketRuntime(context);
-    if (!runtime) {
-      return () => {
-      };
-    }
+    domGuards.ensureStyle(STYLE_ID10, buildStyleText9());
     const state = createCricketGridStatusEffectsState(windowRef);
     state.renderCache = runtime.renderCache;
     const debugState = createDebugState5(featureDebug);
@@ -31218,13 +31651,12 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
       clearCricketGridStatusEffectsState(state);
       state.renderCache = runtime.renderCache;
     }
-    const unsubscribeRuntime = runtime.subscribe({
-      watchdog: context.watchdog,
-      onTurnReset: clearAndReset,
+    return {
+      clear: clearAndReset,
       featureKey: FEATURE_KEY9,
       isManagedNode: managedNodeMatcher,
       collectWatchNodes: ({ renderState }) => collectRuntimeWatchNodes2(state, renderState, documentRef),
-      onRenderState: ({ renderState, lifecycle }) => {
+      update: ({ renderState, lifecycle }) => {
         const surfaceStatus = renderState?.surfaceStatus || CRICKET_SURFACE_STATUS.MISSING_GRID;
         const statusSignature = buildStatusSignature3(renderState);
         const variantText = renderState?.variantText || readVariantText4(documentRef);
@@ -31288,263 +31720,117 @@ ${HIT_SURFACE_SELECTOR}.${HIT_ANIMATION_CLASS["electric-jolt"]}.${HIT_ANIMATION_
           logSignature,
           `state variant="${variantText || "-"}" gameMode="${renderState.gameModeNormalized || "-"}" scoring="${renderState.scoringModeNormalized || "-"}" active=${Number(renderState.activePlayerIndex) || 0} status="${surfaceStatus}" rows=${Number(debugStats.rowCount) || 0} scoringRows=${Number(debugStats.scoringRowCount) || 0} pressureRows=${Number(debugStats.pressureRowCount) || 0} scoreCells=${Number(debugStats.scoreCellCount) || 0} waveDelta=${Number(debugStats.rowWaveDeltaCount) || 0} waveTransition=${Number(debugStats.rowWaveTacticalCount) || 0} wipe=${debugStats.turnTokenChanged ? "1" : "0"} activePreview=${renderState?.activeThrowPreviewDebug?.applied ? "on" : "off"} reason="${renderState?.activeThrowPreviewDebug?.suppressionReason || "none"}" labels="${(renderState?.activeThrowPreviewDebug?.labels || []).join(",")}"`
         );
+      },
+      checkHealth: () => !state.gridRoot || hasLiveGridRenderContract(state) || "Cricket-Tabellenstatus fehlt",
+      dispose() {
+        clearAndReset();
+        domGuards.removeNodeById(STYLE_ID10);
       }
-    });
-    let cleanedUp = false;
-    return function cleanup() {
-      if (cleanedUp) {
-        return;
-      }
-      cleanedUp = true;
-      unsubscribeRuntime();
-      clearCricketGridStatusEffectsState(state);
-      domGuards.removeNodeById(STYLE_ID9);
     };
+  }
+
+  // src/features/cricket-table/index.js
+  var tables = /* @__PURE__ */ new WeakMap();
+  function createTable(runtime) {
+    const parts = /* @__PURE__ */ new Map();
+    let unsubscribe = null;
+    let sharedHealth = null;
+    const schedule = () => runtime.scheduler.schedule();
+    function unmonitorParts() {
+      parts.forEach((entry) => entry.unmonitor());
+    }
+    function monitor(part) {
+      part.unmonitor = part.context.watchdog?.register({
+        coverage: "display",
+        check(snapshot) {
+          if (part.renderError) return part.renderError;
+          const shared = sharedHealth?.check(snapshot);
+          return shared !== true && shared != null ? shared : part.renderer.checkHealth?.(snapshot) ?? true;
+        },
+        repair(snapshot) {
+          if (runtime.scheduler.health) sharedHealth?.repair(snapshot);
+          else schedule();
+        }
+      }) || (() => {
+      });
+    }
+    function renderPart(kind, input) {
+      const part = parts.get(kind);
+      if (!part) return;
+      try {
+        part.renderer.update(input);
+        part.renderError = "";
+      } catch (error) {
+        part.renderError = `render-failed: ${error?.message || error}`;
+      }
+    }
+    return {
+      attach(kind, context) {
+        const renderer = kind === "layout" ? createCricketLayoutRenderer(context, schedule) : createCricketGridStatusRenderer(context, runtime);
+        const part = { renderer, context, renderError: "", unmonitor: () => {
+        } };
+        parts.set(kind, part);
+        if (!unsubscribe) {
+          unsubscribe = runtime.subscribe({
+            featureKey: "cricket-table",
+            watchdog: { register(health) {
+              sharedHealth = health;
+              parts.forEach(monitor);
+              return unmonitorParts;
+            } },
+            onTurnReset: () => parts.forEach((entry) => entry.renderer.clear()),
+            isManagedNode: (node) => Array.from(parts.values()).some((entry) => entry.renderer.isManagedNode?.(node)),
+            collectWatchNodes: (input) => Array.from(parts.values()).flatMap((entry) => entry.renderer.collectWatchNodes?.(input) || []),
+            onRenderState(input) {
+              renderPart("layout", input);
+              renderPart("effects", input);
+            }
+          });
+        } else {
+          monitor(part);
+          schedule();
+        }
+        let removed = false;
+        return () => {
+          if (removed) return;
+          removed = true;
+          part.unmonitor();
+          (renderer.dispose || renderer.clear)();
+          parts.delete(kind);
+          if (!parts.size) {
+            unsubscribe();
+            tables.delete(runtime);
+          } else schedule();
+        };
+      }
+    };
+  }
+  function mountCricketTablePart(context, kind) {
+    context ??= {};
+    const documentRef = context.documentRef || globalThis.document;
+    const windowRef = context.windowRef || globalThis.window;
+    if (!documentRef || !windowRef || !context.domGuards || !context.domain?.cricketRules) return () => {
+    };
+    const runtime = acquireSharedCricketRuntime(context);
+    if (!runtime) return () => {
+    };
+    let table = tables.get(runtime);
+    if (!table) {
+      table = createTable(runtime);
+      tables.set(runtime, table);
+    }
+    return table.attach(kind, { ...context, documentRef, windowRef });
+  }
+
+  // src/features/cricket-grid-status-effects/index.js
+  function initializeCricketGridStatusEffects(context = {}) {
+    return mountCricketTablePart(context, "effects");
   }
   var mountCricketGridStatusEffects = initializeCricketGridStatusEffects;
 
-  // src/features/cricket-surface/player-statistics.js
-  function readCricketPlayerStatistics(header) {
-    const isMpr = (node) => /^MPR\s*(?::\s*)?[\d.,]*$/i.test(String(node?.textContent || "").trim());
-    const mprNodes = Array.from(header.querySelectorAll("span,div,p")).filter((node) => isMpr(node) && !isMpr(node.parentElement));
-    const numericNodes = Array.from(header.querySelectorAll(".font-number")).filter((node) => !mprNodes.some((mpr) => mpr === node || mpr.contains(node)) && /^[\d\s.,+-]+$/.test(String(node.textContent || "").trim()));
-    const boldScores = numericNodes.filter((node) => node.classList.contains("font-bold"));
-    let score = null;
-    if (boldScores.length === 1) score = boldScores[0];
-    else if (numericNodes.length === 1) score = numericNodes[0];
-    if (score) Array.from(score.parentElement.children).filter((node) => node !== score && node.matches(".flex.flex-col") && node.querySelector(".rounded-sm.size-8 .font-number")).forEach((node) => mprNodes.push(node));
-    return { score, mprNodes };
-  }
-
-  // src/features/cricket-layout/logic.js
-  var clamp2 = (value, min, max) => Math.min(max, Math.max(min, value));
-  function calculateCricketLayout(options = {}) {
-    const playerCount = clamp2(Math.trunc(Number(options.playerCount) || 2), 1, 6);
-    const targetCount = options.targetCount === 12 ? 12 : 7;
-    const width = Math.max(1, Number(options.width) || 800);
-    const height = Math.max(1, Number(options.height) || 500);
-    const settings = options.settings || {};
-    const automaticShare = clamp2(0.49 + (playerCount - 2) * 0.035 + (targetCount === 12 ? 0.04 : 0), 0.46, 0.67);
-    let tableShare = automaticShare;
-    if (settings.space === "table") tableShare = 0.67;
-    else if (settings.space === "board") tableShare = 0.43;
-    const gap = Math.min(settings.density === "compact" || targetCount === 12 ? 2 : 4, height / (targetCount * 8));
-    const labelWidth = Math.min(width * 0.2, clamp2(width * 0.075, 36, 64));
-    const columnWidth = Math.max(20, (width - labelWidth - gap * playerCount) / playerCount);
-    const nameLines = settings.names === "single" ? 1 : 2;
-    const headerHeight = Math.min(height * 0.36, clamp2(height * (settings.textSize === "large" ? 0.28 : 0.23), 64, settings.textSize === "large" ? 150 : 128));
-    const rowHeight = Math.max(1, (height - headerHeight - gap * targetCount) / targetCount);
-    const maxMark = Math.max(1, Math.min(rowHeight - 6, columnWidth - 8));
-    const preferredMark = settings.markSize === "very-large" ? 60 : 44;
-    let preferredTarget = 24;
-    if (settings.targetSize === "very-large") preferredTarget = 38;
-    else if (settings.targetSize === "large") preferredTarget = 30;
-    return {
-      tableShare,
-      gap,
-      labelWidth,
-      headerHeight,
-      rowHeight,
-      markSize: Math.min(preferredMark, maxMark),
-      targetSize: Math.max(1, Math.min(preferredTarget, rowHeight * 0.7, labelWidth * 0.62)),
-      nameSize: Math.max(1, Math.min(settings.textSize === "large" ? 26 : 20, columnWidth * 0.15, headerHeight * 0.34 / nameLines)),
-      scoreSize: Math.max(1, Math.min(settings.textSize === "large" ? 48 : 36, columnWidth * 0.38, headerHeight * 0.35))
-    };
-  }
-
-  // src/features/cricket-layout/style.js
-  var STYLE_ID10 = "ad-ext-cricket-layout-style";
-  function buildCricketLayoutStyleText() {
-    return `
-[data-ad-cricket-layout-stage="true"]{display:grid!important;grid-template-columns:minmax(0,var(--ad-cricket-table-share)) minmax(0,1fr)!important;min-height:0!important;min-width:0!important}
-[data-ad-cricket-layout-panel]{min-width:0!important;min-height:0!important}
-[data-ad-cricket-layout-panel="table"]{grid-column:1!important}
-[data-ad-cricket-layout-panel="board"]{grid-column:2!important}
-main .grid[data-ad-cricket-layout="true"]{grid-template-columns:var(--ad-cricket-label-width) repeat(var(--ad-cricket-players),minmax(0,1fr))!important;grid-template-rows:var(--ad-cricket-header-height) repeat(var(--ad-cricket-targets),minmax(0,1fr))!important;gap:var(--ad-cricket-gap)!important;min-height:0!important;min-width:0!important}
-main .grid[data-ad-cricket-layout="true"]>[data-ad-cricket-layout-node]{grid-row:var(--ad-cricket-row)!important;grid-column:var(--ad-cricket-column)!important;min-height:0!important;min-width:0!important}
-main .grid[data-ad-cricket-layout="true"]>[data-ad-cricket-layout-node="label"]{font-size:var(--ad-cricket-target-size)!important;line-height:1!important;padding:0!important}
-main .grid[data-ad-cricket-layout="true"]>[data-ad-cricket-layout-node="cell"]{padding:0!important;position:relative}
-main .grid[data-ad-cricket-layout="true"]>[data-ad-cricket-layout-node="cell"]>:is(img,svg,.size-8){max-width:100%!important;max-height:100%!important;object-fit:contain}
-main .grid[data-ad-cricket-layout="true"][data-ad-cricket-mark-size]:not([data-ad-cricket-mark-size="original"])>[data-ad-cricket-layout-node="cell"]:is(div,section)>:is(img,svg,.size-8){width:var(--ad-cricket-mark-size)!important;height:var(--ad-cricket-mark-size)!important;max-width:100%!important;max-height:100%!important;object-fit:contain}
-main .grid[data-ad-cricket-layout="true"]>[data-ad-cricket-layout-node="header"]{gap:4px!important;padding:4px!important;justify-content:center!important}
-main .grid[data-ad-cricket-layout="true"] [data-ad-cricket-name="true"]{font-size:var(--ad-cricket-name-size)!important;line-height:1.15!important;max-width:100%!important;min-height:calc(var(--ad-cricket-name-size) * var(--ad-cricket-name-lines) * 1.15);overflow:hidden!important;overflow-wrap:anywhere}
-main .grid[data-ad-cricket-layout="true"] [data-ad-cricket-nameplate="true"],
-main .grid[data-ad-cricket-layout="true"] [data-ad-cricket-nameplate-shape="true"]{height:var(--ad-cricket-nameplate-height)!important;min-height:var(--ad-cricket-nameplate-height)!important}
-main .grid[data-ad-cricket-layout="true"][data-ad-cricket-names="single"] [data-ad-cricket-name="true"]{white-space:nowrap!important;text-overflow:ellipsis}
-main .grid[data-ad-cricket-layout="true"][data-ad-cricket-names="two-lines"] [data-ad-cricket-name="true"]{white-space:normal!important;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
-main .grid[data-ad-cricket-layout="true"] [data-ad-cricket-score="true"]{font-size:var(--ad-cricket-score-size)!important;line-height:1!important}
-main .grid[data-ad-cricket-layout="true"][data-ad-cricket-mpr="subtle"] [data-ad-cricket-mpr-value="true"]{opacity:.75;font-size:.8em}
-main .grid[data-ad-cricket-layout="true"][data-ad-cricket-mpr="off"] [data-ad-cricket-mpr-value="true"]{display:none!important}
-main .grid[data-ad-cricket-layout="true"]>[data-ad-cricket-layout-node="header"][data-ad-cricket-active="true"]{outline:2px solid var(--ad-ext-theme-accent-color,#f5f5f5);outline-offset:-2px}
-main .grid[data-ad-cricket-layout="true"][data-ad-cricket-indicator="line"]>[data-ad-cricket-layout-node="cell"][data-ad-cricket-active="true"]{border-inline-start:2px solid var(--ad-ext-theme-accent-color,#f5f5f5)!important}
-main .grid[data-ad-cricket-layout="true"][data-ad-cricket-indicator="tint"]>[data-ad-cricket-layout-node="cell"][data-ad-cricket-active="true"]{background-image:linear-gradient(rgba(255,255,255,.055),rgba(255,255,255,.055))}
-`;
-  }
-
   // src/features/cricket-layout/index.js
-  var FEATURE_KEY10 = "cricket-layout";
-  function resolvePanels(grid, documentRef) {
-    const svg = findBoardSvgRoot(documentRef);
-    const board = svg?.closest?.(NATIVE_BOARD_SELECTOR);
-    if (!board) return null;
-    let root = grid.parentElement;
-    for (let depth = 0; root && depth < 5; depth += 1, root = root.parentElement) {
-      if (["MAIN", "BODY", "HTML"].includes(root.tagName)) return null;
-      if (!root.contains(board)) continue;
-      const children = Array.from(root.children || []);
-      const tablePanel = children.find((node) => node === grid || node.contains(grid));
-      const boardPanel = children.find((node) => node === board || node.contains(board));
-      return children.length === 2 && tablePanel && boardPanel && tablePanel !== boardPanel ? { root, tablePanel, boardPanel } : null;
-    }
-    return null;
-  }
-  function createDecorationState() {
-    const nodes = /* @__PURE__ */ new Map();
-    function set(node, key, value, style = false) {
-      if (!node) return;
-      if (!nodes.has(node)) nodes.set(node, /* @__PURE__ */ new Map());
-      const values = nodes.get(node);
-      const identity = `${style ? "style" : "attr"}:${key}`;
-      const read = () => style ? node.style.getPropertyValue(key) : node.getAttribute(key);
-      let entry = values.get(identity);
-      if (!entry) {
-        entry = { original: read(), applied: null, style, key };
-        values.set(identity, entry);
-      } else if (read() !== entry.applied) {
-        entry.original = read();
-      }
-      const next = String(value);
-      if (read() !== next) {
-        if (style) node.style.setProperty(key, next);
-        else node.setAttribute(key, next);
-      }
-      entry.applied = next;
-    }
-    function clear() {
-      nodes.forEach((values, node) => values.forEach((entry) => {
-        const current = entry.style ? node.style.getPropertyValue(entry.key) : node.getAttribute(entry.key);
-        if (current !== entry.applied) return;
-        if (entry.style) {
-          if (entry.original) node.style.setProperty(entry.key, entry.original);
-          else node.style.removeProperty(entry.key);
-        } else if (entry.original === null) node.removeAttribute(entry.key);
-        else node.setAttribute(entry.key, entry.original);
-      }));
-      nodes.clear();
-    }
-    return { set, clear };
-  }
   function mountCricketLayout(context = {}) {
-    const decorations = createDecorationState();
-    let lastGrid = null;
-    let lastStructure = [];
-    let resizeObserver = null;
-    let observedRoot = null;
-    const harness = createFeatureMountHarness(context, { update });
-    if (!harness || !context.domGuards) return () => {
-    };
-    const { documentRef, windowRef } = harness;
-    function clear() {
-      decorations.clear();
-      lastGrid = null;
-      lastStructure = [];
-      observedRoot = null;
-      resizeObserver?.disconnect();
-      context.domGuards.removeNodeById(STYLE_ID10);
-    }
-    function update() {
-      const grid = readModernCricketGrid(documentRef);
-      const raw = context.config?.getFeatureConfig?.("cricketLayout") || {};
-      if (!grid || raw.enabled === false) {
-        clear();
-        return;
-      }
-      const outerLayout = context.config?.getFeatureConfig?.("themes.gameLayout");
-      const sharedOuterLayout = outerLayout?.enabled && outerLayout.screenProfile && outerLayout.screenProfile !== "legacy";
-      const panels = sharedOuterLayout ? null : resolvePanels(grid.root, documentRef);
-      const structure = [grid.root, ...grid.headers, ...grid.headers.flatMap((header) => Array.from(header.querySelectorAll('span,div,p,svg[data-slot="nametag-shape"]'))), ...grid.labels.map((entry) => entry.node), ...Array.from(grid.cellsByLabel.values()).flat(), ...panels ? [panels.root, panels.tablePanel, panels.boardPanel] : []];
-      if (lastGrid !== grid.root || structure.some((node, index) => node !== lastStructure[index]) || structure.length !== lastStructure.length) {
-        clear();
-        lastGrid = grid.root;
-        lastStructure = structure;
-      }
-      const settings = resolveCricketLayoutSettings(raw, grid.labels.length === 12);
-      const rect = grid.root.getBoundingClientRect();
-      const panelRect = panels?.root.getBoundingClientRect();
-      const share = calculateCricketLayout({ playerCount: grid.headers.length, targetCount: grid.labels.length, settings }).tableShare;
-      const width = panelRect?.width > 0 ? panelRect.width * share : rect.width;
-      const height = rect.height > 0 ? rect.height : Math.max(120, (windowRef?.innerHeight || 600) - Math.max(0, rect.top));
-      const geometry = calculateCricketLayout({ width, height, playerCount: grid.headers.length, targetCount: grid.labels.length, settings });
-      context.domGuards.ensureStyle(STYLE_ID10, buildCricketLayoutStyleText());
-      const set = decorations.set;
-      set(grid.root, "data-ad-cricket-layout", "true");
-      for (const [key, value] of Object.entries({
-        "--ad-cricket-players": grid.headers.length,
-        "--ad-cricket-targets": grid.labels.length,
-        "--ad-cricket-label-width": `${geometry.labelWidth}px`,
-        "--ad-cricket-header-height": `${geometry.headerHeight}px`,
-        "--ad-cricket-gap": `${geometry.gap}px`,
-        "--ad-cricket-mark-size": `${geometry.markSize}px`,
-        "--ad-cricket-target-size": `${geometry.targetSize}px`,
-        "--ad-cricket-name-size": `${geometry.nameSize}px`,
-        "--ad-cricket-score-size": `${geometry.scoreSize}px`,
-        "--ad-cricket-name-lines": settings.names === "single" ? 1 : 2,
-        "--ad-cricket-nameplate-height": `${geometry.nameSize * (settings.names === "single" ? 1 : 2) * 1.15 + 8}px`
-      })) set(grid.root, key, value, true);
-      for (const [key, value] of Object.entries({ "mark-size": settings.markSize, names: settings.names, mpr: settings.mpr, indicator: settings.activeIndicator })) {
-        set(grid.root, `data-ad-cricket-${key}`, value);
-      }
-      function place(node, kind, row, column, active = false) {
-        set(node, "data-ad-cricket-layout-node", kind);
-        set(node, "--ad-cricket-row", row, true);
-        set(node, "--ad-cricket-column", column, true);
-        set(node, "data-ad-cricket-active", active && settings.activeIndicator !== "native" ? "true" : "false");
-      }
-      const corner = Array.from(grid.root.children || []).find((node) => node.getAttribute("data-ad-ext-cricket-surface-overlay") !== "true" && !grid.headers.includes(node) && !grid.labels.some((entry) => entry.node === node) && !Array.from(grid.cellsByLabel.values()).some((cells) => cells.includes(node)));
-      if (corner) place(corner, "corner", 1, 1);
-      grid.headers.forEach((header, index) => {
-        place(header, "header", 1, index + 2, index === grid.activePlayerIndex);
-        const name = header.querySelector(".font-display");
-        if (name) {
-          set(name, "data-ad-cricket-name", "true");
-          set(name, "title", name.textContent || "");
-          const plate = name.parentElement;
-          const shape = plate?.parentElement?.querySelector('[data-slot="nametag-shape"]');
-          if (shape && plate !== header) {
-            set(plate, "data-ad-cricket-nameplate", "true");
-            set(shape, "data-ad-cricket-nameplate-shape", "true");
-          }
-        }
-        const { score, mprNodes } = readCricketPlayerStatistics(header);
-        if (score) set(score, "data-ad-cricket-score", "true");
-        mprNodes.forEach((node) => set(node, "data-ad-cricket-mpr-value", "true"));
-      });
-      grid.labels.forEach(({ node, label }, index) => {
-        place(node, "label", index + 2, 1);
-        grid.cellsByLabel.get(label).forEach((cell, player) => place(cell, "cell", index + 2, player + 2, player === grid.activePlayerIndex));
-      });
-      if (panels) {
-        set(panels.root, "data-ad-cricket-layout-stage", "true");
-        set(panels.root, "--ad-cricket-table-share", `${geometry.tableShare * 100}%`, true);
-        set(panels.tablePanel, "data-ad-cricket-layout-panel", "table");
-        set(panels.boardPanel, "data-ad-cricket-layout-panel", "board");
-      }
-      const nextObservedRoot = panels?.root || grid.root;
-      if (resizeObserver && observedRoot !== nextObservedRoot) {
-        resizeObserver.disconnect();
-        resizeObserver.observe(nextObservedRoot);
-        observedRoot = nextObservedRoot;
-      }
-    }
-    if (typeof windowRef?.ResizeObserver === "function") resizeObserver = new windowRef.ResizeObserver(() => harness.schedule());
-    harness.registerObserver({ key: `${FEATURE_KEY10}:dom-observer`, observeOptions: { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class", "src", "alt", "data-marks"] }, callback(mutations) {
-      const external = mutations.some((mutation) => !mutation.target?.closest?.(`#${STYLE_ID10},#ad-xconfig-panel-host,[data-ad-ext-cricket-surface-overlay="true"]`));
-      if (external) harness.schedule();
-    } });
-    harness.registerListeners(["resize", "popstate", "hashchange"].map((type) => ({ key: `${FEATURE_KEY10}:${type}`, target: windowRef, type, handler: () => harness.schedule() })));
-    harness.subscribeToGameState();
-    update();
-    return harness.createCleanup(clear);
+    return mountCricketTablePart(context, "layout");
   }
 
   // src/shared/board-presentation-surface.js
@@ -32817,7 +33103,7 @@ main .grid[data-ad-cricket-layout="true"][data-ad-cricket-indicator="tint"]>[dat
   // package.json
   var package_default = {
     name: "autodarts-xconfig",
-    version: "3.6.0",
+    version: "3.7.0",
     description: "Clean successor architecture for autodarts xConfig userscript modules",
     type: "module",
     imports: {
@@ -33459,7 +33745,7 @@ main .grid[data-ad-cricket-layout="true"][data-ad-cricket-indicator="tint"]>[dat
       clearDartboardMarkerHighlight(state);
       return;
     }
-    const markers = collectBoardMarkers(documentRef);
+    const markers = collectBoardMarkers(documentRef, { readSurfaceState: options.readSurfaceState });
     const markerSet = new Set(markers);
     state.trackedMarkers.forEach((marker) => {
       if (markerSet.has(marker)) {
@@ -33485,10 +33771,10 @@ main .grid[data-ad-cricket-layout="true"][data-ad-cricket-indicator="tint"]>[dat
   }
 
   // src/features/dartboard-marker-highlight/index.js
-  var FEATURE_KEY11 = "dartboard-marker-highlight";
-  var OBSERVER_KEY8 = `${FEATURE_KEY11}:dom-observer`;
+  var FEATURE_KEY10 = "dartboard-marker-highlight";
+  var OBSERVER_KEY8 = `${FEATURE_KEY10}:dom-observer`;
   var LISTENER_KEYS4 = Object.freeze({
-    visibility: `${FEATURE_KEY11}:document-visibility`
+    visibility: `${FEATURE_KEY10}:document-visibility`
   });
   var BOARD_SURFACE_SELECTOR = "svg, g, circle, .showAnimations, .ad-ext-theme-board-canvas";
   function isElementNode2(node) {
@@ -33548,7 +33834,7 @@ main .grid[data-ad-cricket-layout="true"][data-ad-cricket-indicator="tint"]>[dat
       return mutationContainsRelevantNode(mutation, state);
     });
   }
-  function initializeDartboardMarkerHighlight(context = {}) {
+  function mountRenderer4(context = {}) {
     const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
     const windowRef = context.windowRef || (globalThis.window !== void 0 ? globalThis.window : null);
     const domGuards = context.domGuards;
@@ -33572,7 +33858,8 @@ main .grid[data-ad-cricket-layout="true"][data-ad-cricket-indicator="tint"]>[dat
       updateDartboardMarkerHighlight({
         documentRef,
         state,
-        visualConfig
+        visualConfig,
+        readSurfaceState: context.readSurfaceState
       });
     }
     const harness = createFeatureMountHarness(context, { update, resetTurn() {
@@ -33607,6 +33894,9 @@ main .grid[data-ad-cricket-layout="true"][data-ad-cricket-indicator="tint"]>[dat
     });
   }
   var mountDartboardMarkerHighlight = initializeDartboardMarkerHighlight;
+  function initializeDartboardMarkerHighlight(context = {}) {
+    return mountFeatureSurfaceGroup(context, "board-markers", 0, mountRenderer4);
+  }
 
   // src/shared/turn-selection.js
   function parseTimestamp(value) {
@@ -34067,7 +34357,7 @@ html[${TOOLS_ANIMATION_ACTIVE_ATTRIBUTE}="true"] #${OVERLAY_ID3} * {
     if (!shouldRescan && areReusableMarkers(state?.markerNodes, board)) {
       return state.markerNodes;
     }
-    const markers = collectBoardMarkers(documentRef, { board });
+    const markers = collectBoardMarkers(documentRef, { board, readSurfaceState: state?.readSurfaceState });
     if (state) {
       state.markerNodes = markers;
     }
@@ -35940,23 +36230,23 @@ ${buildStyleText11()}
   }
 
   // src/features/dart-marker-replacer/index.js
-  var FEATURE_KEY12 = "dart-marker-replacer";
-  var OBSERVER_KEY9 = `${FEATURE_KEY12}:dom-observer`;
+  var FEATURE_KEY11 = "dart-marker-replacer";
+  var OBSERVER_KEY9 = `${FEATURE_KEY11}:dom-observer`;
   var UPDATE_REASON = Object.freeze({
     full: "full",
     reposition: "reposition",
     rescan: "rescan"
   });
   var LISTENER_KEYS5 = Object.freeze({
-    visibility: `${FEATURE_KEY12}:document-visibility`,
-    resize: `${FEATURE_KEY12}:window-resize`,
-    scroll: `${FEATURE_KEY12}:window-scroll`,
-    popstate: `${FEATURE_KEY12}:window-popstate`,
-    hashchange: `${FEATURE_KEY12}:window-hashchange`,
-    navigationCurrentEntry: `${FEATURE_KEY12}:navigation-currententrychange`,
-    transitionRun: `${FEATURE_KEY12}:zoom-transition-run`,
-    transitionEnd: `${FEATURE_KEY12}:zoom-transition-end`,
-    transitionCancel: `${FEATURE_KEY12}:zoom-transition-cancel`
+    visibility: `${FEATURE_KEY11}:document-visibility`,
+    resize: `${FEATURE_KEY11}:window-resize`,
+    scroll: `${FEATURE_KEY11}:window-scroll`,
+    popstate: `${FEATURE_KEY11}:window-popstate`,
+    hashchange: `${FEATURE_KEY11}:window-hashchange`,
+    navigationCurrentEntry: `${FEATURE_KEY11}:navigation-currententrychange`,
+    transitionRun: `${FEATURE_KEY11}:zoom-transition-run`,
+    transitionEnd: `${FEATURE_KEY11}:zoom-transition-end`,
+    transitionCancel: `${FEATURE_KEY11}:zoom-transition-cancel`
   });
   var ZOOM_CLASS3 = "ad-ext-tv-board-zoom";
   var ZOOM_HOST_CLASS3 = "ad-ext-tv-board-zoom-host";
@@ -36105,7 +36395,7 @@ ${buildStyleText11()}
       ).join("|")
     ].join("::");
   }
-  function initializeDartMarkerReplacer(context = {}) {
+  function mountRenderer5(context = {}) {
     const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
     const windowRef = context.windowRef || (globalThis.window !== void 0 ? globalThis.window : null);
     const domGuards = context.domGuards;
@@ -36150,6 +36440,7 @@ ${buildStyleText11()}
     domGuards.ensureStyle(STYLE_ID12, buildStyleText11());
     const toolsAnimationLayers = acquireToolsAnimationLayerController({ documentRef, windowRef });
     const state = createDartMarkerReplacerState(windowRef);
+    state.readSurfaceState = context.readSurfaceState;
     state.lastHref = getCurrentHref2(windowRef);
     state.gameStateSnapshot = gameState && typeof gameState.getSnapshot === "function" ? gameState.getSnapshot() : null;
     ensurePendingUpdateReasons(state);
@@ -36328,6 +36619,9 @@ ${buildStyleText11()}
     });
   }
   var mountDartMarkerReplacer = initializeDartMarkerReplacer;
+  function initializeDartMarkerReplacer(context = {}) {
+    return mountFeatureSurfaceGroup(context, "board-markers", 1, mountRenderer5);
+  }
 
   // src/features/take-out-darts-alert/style.js
   var STYLE_ID13 = "ad-ext-take-out-darts-alert-style";
@@ -36929,8 +37223,8 @@ ${buildStyleText11()}
   }
 
   // src/features/take-out-darts-alert/index.js
-  var FEATURE_KEY13 = "take-out-darts-alert";
-  var OBSERVER_KEY10 = `${FEATURE_KEY13}:dom-observer`;
+  var FEATURE_KEY12 = "take-out-darts-alert";
+  var OBSERVER_KEY10 = `${FEATURE_KEY12}:dom-observer`;
   function initializeTakeOutDartsAlert(context = {}) {
     const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
     const domGuards = context.domGuards;
@@ -37410,12 +37704,12 @@ ${buildStyleText11()}
   }
 
   // src/features/single-bull-hit-sound/index.js
-  var FEATURE_KEY14 = "single-bull-hit-sound";
-  var OBSERVER_KEY11 = `${FEATURE_KEY14}:dom-observer`;
+  var FEATURE_KEY13 = "single-bull-hit-sound";
+  var OBSERVER_KEY11 = `${FEATURE_KEY13}:dom-observer`;
   var LISTENER_KEYS6 = Object.freeze({
-    unlockPointer: `${FEATURE_KEY14}:unlock-pointerdown`,
-    unlockKey: `${FEATURE_KEY14}:unlock-keydown`,
-    visibility: `${FEATURE_KEY14}:document-visibility`
+    unlockPointer: `${FEATURE_KEY13}:unlock-pointerdown`,
+    unlockKey: `${FEATURE_KEY13}:unlock-keydown`,
+    visibility: `${FEATURE_KEY13}:document-visibility`
   });
   function initializeSingleBullHitSound(context = {}) {
     const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
@@ -38447,20 +38741,20 @@ ${SCORE_SELECTOR2}.${SCORE_FLASH_CLASS}[${SCORE_FLASH_SEQUENCE_ATTRIBUTE}="1"]{
   }
 
   // src/features/turn-score-counter/index.js
-  var FEATURE_KEY15 = "turn-score-counter";
+  var FEATURE_KEY14 = "turn-score-counter";
   var OBSERVER_KEYS = Object.freeze({
-    lifecycle: `${FEATURE_KEY15}:dom-observer:lifecycle`,
-    surface: `${FEATURE_KEY15}:dom-observer:surface`
+    lifecycle: `${FEATURE_KEY14}:dom-observer:lifecycle`,
+    surface: `${FEATURE_KEY14}:dom-observer:surface`
   });
   var LISTENER_KEYS7 = Object.freeze({
-    visibility: `${FEATURE_KEY15}:document-visibility`
+    visibility: `${FEATURE_KEY14}:document-visibility`
   });
   function isAdminLifecycleMutation(mutation) {
     return mutation?.type === "childList" && mutation.target?.closest?.("#ad-xconfig-panel-host") && [mutation.addedNodes, mutation.removedNodes].every(
       (nodes) => nodes && typeof nodes[Symbol.iterator] === "function" && Array.from(nodes).every((node) => node && typeof node.nodeType === "number")
     );
   }
-  function initializeTurnScoreCounter(context = {}) {
+  function mountRenderer6(context = {}) {
     const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
     const windowRef = context.windowRef || (globalThis.window !== void 0 ? globalThis.window : null);
     const observerRegistry = context.registries?.observers;
@@ -38557,7 +38851,7 @@ ${SCORE_SELECTOR2}.${SCORE_FLASH_CLASS}[${SCORE_FLASH_SEQUENCE_ATTRIBUTE}="1"]{
       observedModernTurn = null;
     } }, schedulerFactory);
     function resolveObserverSurface() {
-      const modernTurnSurface = findModernTurnSurface(documentRef, windowRef);
+      const modernTurnSurface = readSharedFeatureSurface(context, "turn:surface", () => findModernTurnSurface(documentRef, windowRef));
       const modernTurn = modernTurnSurface?.turnContainer || null;
       const scoreNodes = collectScoreNodes(documentRef, state, { windowRef, modernTurnSurface });
       const initialScoreNode = scoreNodes[0] || null;
@@ -38742,6 +39036,9 @@ ${SCORE_SELECTOR2}.${SCORE_FLASH_CLASS}[${SCORE_FLASH_SEQUENCE_ATTRIBUTE}="1"]{
     };
   }
   var mountTurnScoreCounter = initializeTurnScoreCounter;
+  function initializeTurnScoreCounter(context = {}) {
+    return mountFeatureSurfaceGroup(context, "turn-display", 2, mountRenderer6);
+  }
 
   // src/features/x01-remaining-score-bar/style.js
   var STYLE_ID15 = "ad-ext-x01-remaining-score-bar-style";
@@ -40647,7 +40944,7 @@ ${HOST_SELECTOR2}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-remaining-score-bar_
     return staleHostsRemoved;
   }
   function syncScoreProgress(context = {}, state = createScoreProgressState()) {
-    const modernSurface = readModernMatchSurface(context.documentRef, context.windowRef);
+    const modernSurface = readSharedFeatureSurface(context, "x01:match-surface", () => readModernMatchSurface(context.documentRef, context.windowRef));
     context = { ...context, modernSurface };
     const documentRef = context.documentRef;
     const debugEnabled = context.featureConfig?.debug === true;
@@ -40793,8 +41090,8 @@ ${HOST_SELECTOR2}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-remaining-score-bar_
   }
 
   // src/features/x01-remaining-score-bar/index.js
-  var FEATURE_KEY16 = "x01-remaining-score-bar";
-  var OBSERVER_KEY12 = `${FEATURE_KEY16}:dom-observer`;
+  var FEATURE_KEY15 = "x01-remaining-score-bar";
+  var OBSERVER_KEY12 = `${FEATURE_KEY15}:dom-observer`;
   var X01_MUTATION_AREA_SELECTOR = ["#ad-ext-player-display", "#ad-ext-turn", ...MODERN_MATCH_SEMANTIC_SELECTORS].join(", ");
   var X01_RELEVANT_SUBTREE_SELECTOR = `${X01_MUTATION_AREA_SELECTOR}, .ad-ext-player, .ad-ext-player-score`;
   var GENERIC_X01_MUTATION_TAG_NAMES = /* @__PURE__ */ new Set(["button", "span", "p"]);
@@ -40970,7 +41267,7 @@ ${HOST_SELECTOR2}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-remaining-score-bar_
       ].some((node) => nodeContainsRelevantX01Node(node));
     });
   }
-  function mountX01RemainingScoreBar(context = {}) {
+  function mountRenderer7(context = {}) {
     const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
     const windowRef = context.windowRef || (globalThis.window !== void 0 ? globalThis.window : null);
     const domGuards = context.domGuards;
@@ -41077,6 +41374,9 @@ ${HOST_SELECTOR2}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-remaining-score-bar_
       clearAllScoreProgress(documentRef);
       domGuards.removeNodeById(STYLE_ID15);
     };
+  }
+  function mountX01RemainingScoreBar(context = {}) {
+    return mountFeatureSurfaceGroup(context, "x01-score", 1, mountRenderer7);
   }
 
   // src/features/bot-board-style/style.js
@@ -41425,8 +41725,8 @@ ${HOST_SELECTOR2}.${ACTIVE_CLASS} .${FILL_CLASS}.ad-ext-x01-remaining-score-bar_
   }
 
   // src/features/bot-board-style/index.js
-  var FEATURE_KEY17 = "bot-board-style";
-  var OBSERVER_KEY13 = `${FEATURE_KEY17}:dom-observer`;
+  var FEATURE_KEY16 = "bot-board-style";
+  var OBSERVER_KEY13 = `${FEATURE_KEY16}:dom-observer`;
   var BOARD_SELECTOR = "svg[viewBox], .showAnimations, .ad-ext-theme-board-canvas";
   var PLAYER_SELECTOR = ".ad-ext-player, .ad-ext-player-name";
   function asElementNode(node) {
@@ -41813,11 +42113,11 @@ ${portraitUrl && portraitUrl !== backgroundUrl ? `@media (orientation:portrait) 
   }
 
   // src/features/themes/global-background/index.js
-  var FEATURE_KEY18 = "theme-global-background";
+  var FEATURE_KEY17 = "theme-global-background";
   var CONFIG_KEY = "themes.globalBackground";
   function mountThemeGlobalBackground(context = {}) {
     return mountGlobalMatchStyle(context, {
-      featureKey: FEATURE_KEY18,
+      featureKey: FEATURE_KEY17,
       configKey: CONFIG_KEY,
       styleId: STYLE_ID17,
       allowMenu: true,
@@ -42097,12 +42397,12 @@ ${MODERN_ACTIVE_PLAYER_SURFACE_SELECTORS2.join(",\n")} {
   }
 
   // src/features/themes/global-typography/index.js
-  var FEATURE_KEY19 = "theme-global-typography";
+  var FEATURE_KEY18 = "theme-global-typography";
   var CONFIG_KEY2 = "themes.globalTypography";
-  var OBSERVER_KEY14 = `${FEATURE_KEY19}:dom-observer`;
-  var POPSTATE_LISTENER_KEY = `${FEATURE_KEY19}:popstate`;
-  var HASHCHANGE_LISTENER_KEY = `${FEATURE_KEY19}:hashchange`;
-  var RESIZE_LISTENER_KEY = `${FEATURE_KEY19}:resize`;
+  var OBSERVER_KEY14 = `${FEATURE_KEY18}:dom-observer`;
+  var POPSTATE_LISTENER_KEY = `${FEATURE_KEY18}:popstate`;
+  var HASHCHANGE_LISTENER_KEY = `${FEATURE_KEY18}:hashchange`;
+  var RESIZE_LISTENER_KEY = `${FEATURE_KEY18}:resize`;
   var TOOLS_HOST_SELECTOR = "autodarts-tools-wxt";
   function queryToolsHosts(documentRef) {
     if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
@@ -43539,7 +43839,7 @@ main [${ROOT}] .grid[data-ad-cricket-layout="true"] [data-ad-cricket-score="true
   }
 
   // src/features/themes/game-layout/index.js
-  var FEATURE_KEY20 = "theme-game-layout";
+  var FEATURE_KEY19 = "theme-game-layout";
   var CONFIG_KEY3 = "themes.gameLayout";
   var MANAGED_ATTRIBUTES = Object.freeze([
     "data-ad-ext-game-layout-root",
@@ -44047,7 +44347,7 @@ main [${ROOT}] .grid[data-ad-cricket-layout="true"] [data-ad-cricket-score="true
     if (!harness) return () => {
     };
     harness.registerObserver({
-      key: `${FEATURE_KEY20}:dom-observer`,
+      key: `${FEATURE_KEY19}:dom-observer`,
       callback: () => harness.schedule(),
       observeOptions: {
         childList: true,
@@ -44058,18 +44358,18 @@ main [${ROOT}] .grid[data-ad-cricket-layout="true"] [data-ad-cricket-score="true
       }
     });
     harness.registerListeners([
-      { key: `${FEATURE_KEY20}:mousemove`, target: documentRef, type: "mousemove", handler: revealControls },
-      { key: `${FEATURE_KEY20}:resize`, target: windowRef, type: "resize", handler: () => {
+      { key: `${FEATURE_KEY19}:mousemove`, target: documentRef, type: "mousemove", handler: revealControls },
+      { key: `${FEATURE_KEY19}:resize`, target: windowRef, type: "resize", handler: () => {
         playerTransition.cancel();
         harness.schedule();
       } },
-      { key: `${FEATURE_KEY20}:visual-viewport-resize`, target: windowRef?.visualViewport, type: "resize", handler: () => {
+      { key: `${FEATURE_KEY19}:visual-viewport-resize`, target: windowRef?.visualViewport, type: "resize", handler: () => {
         playerTransition.cancel();
         harness.schedule();
       } },
-      { key: `${FEATURE_KEY20}:fonts-loaded`, target: documentRef.fonts, type: "loadingdone", handler: () => harness.schedule() },
-      { key: `${FEATURE_KEY20}:popstate`, target: windowRef, type: "popstate", handler: () => harness.schedule() },
-      { key: `${FEATURE_KEY20}:hashchange`, target: windowRef, type: "hashchange", handler: () => harness.schedule() }
+      { key: `${FEATURE_KEY19}:fonts-loaded`, target: documentRef.fonts, type: "loadingdone", handler: () => harness.schedule() },
+      { key: `${FEATURE_KEY19}:popstate`, target: windowRef, type: "popstate", handler: () => harness.schedule() },
+      { key: `${FEATURE_KEY19}:hashchange`, target: windowRef, type: "hashchange", handler: () => harness.schedule() }
     ]);
     harness.subscribeToGameState();
     harness.schedule();
@@ -44300,7 +44600,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
   }
 
   // src/features/turn-dart-display/index.js
-  var FEATURE_KEY21 = "turn-dart-display";
+  var FEATURE_KEY20 = "turn-dart-display";
   var CONFIG_KEY4 = "turnDartDisplay";
   var MANAGED_CLASSES = Object.freeze([
     MODERN_TURN_DART_SURFACE_CLASS,
@@ -44312,7 +44612,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
       return node?.getAttribute?.("aria-hidden") === "true";
     }) || null;
   }
-  function mountTurnDartDisplay(context = {}) {
+  function mountRenderer8(context = {}) {
     const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
     const windowRef = context.windowRef || (globalThis.window !== void 0 ? globalThis.window : null);
     const domGuards = context.domGuards || null;
@@ -44337,7 +44637,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
       MANAGED_CLASSES.forEach((className) => syncManagedNodes(className));
     }
     function syncModernSurface() {
-      const surface = findModernTurnSurface(documentRef, windowRef);
+      const surface = readSharedFeatureSurface(context, "turn:surface", () => findModernTurnSurface(documentRef, windowRef));
       const rows2 = Array.from(surface?.throwRows || []);
       const placeholders = rows2.map(findModernDartPlaceholder).filter(Boolean);
       syncManagedNodes(MODERN_TURN_DART_SURFACE_CLASS, surface?.turnContainer ? [surface.turnContainer] : []);
@@ -44377,7 +44677,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
       ids: [TURN_DART_DISPLAY_STYLE_ID]
     });
     harness.registerObserver({
-      key: `${FEATURE_KEY21}:dom-observer`,
+      key: `${FEATURE_KEY20}:dom-observer`,
       callback: (mutations = []) => {
         if (hasExternalDomMutation(mutations, isManagedNode)) {
           harness.schedule();
@@ -44393,13 +44693,13 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
     });
     harness.registerListeners([
       {
-        key: `${FEATURE_KEY21}:popstate`,
+        key: `${FEATURE_KEY20}:popstate`,
         target: windowRef,
         type: "popstate",
         handler: () => harness.schedule()
       },
       {
-        key: `${FEATURE_KEY21}:hashchange`,
+        key: `${FEATURE_KEY20}:hashchange`,
         target: windowRef,
         type: "hashchange",
         handler: () => harness.schedule()
@@ -44408,6 +44708,9 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
     harness.subscribeToGameState();
     harness.schedule();
     return harness.createCleanup(removeFeatureArtifacts);
+  }
+  function mountTurnDartDisplay(context = {}) {
+    return mountFeatureSurfaceGroup(context, "turn-display", 0, mountRenderer8);
   }
 
   // src/features/feature-metadata.js
@@ -45754,7 +46057,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
 
   // src/core/bootstrap.js
   var GLOBAL_NAMESPACE_KEY = "__adXConfig";
-  var API_VERSION = "3.6.0";
+  var API_VERSION = "3.7.0";
   var STARTUP_DEFER_INTERVAL_MS = 16;
   function getWindowTimerApi(windowRef) {
     let setTimeoutRef = null;
@@ -46591,7 +46894,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
     sectionDefinition(
       "cricket-tactics",
       "Cricket / Tactics",
-      "Layout, Zielmarkierungen und Statusanzeigen für Cricket und Tactics.",
+      "Tabelle mit Layout und Statuseffekten sowie Board-Zielmarkierungen für Cricket und Tactics.",
       ["cricket-layout", "cricket-target-highlighter", "cricket-grid-status-effects"]
     )
   ]);
@@ -46808,7 +47111,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
     )
   );
   var CRICKET_LAYOUT_FIELD_TEXT = Object.freeze({
-    profile: "Wählt Ausgewogen, Fernansicht oder Mehrspieler. Individuelle Änderungen werden als Benutzerdefiniert angezeigt. Das Profil ändert ausschließlich diese Layout-Karte.",
+    profile: "Wählt Ausgewogen, Fernansicht oder Mehrspieler. Individuelle Änderungen werden als Benutzerdefiniert angezeigt. Das Profil ändert ausschließlich den Layout-Bereich der Tabellenkachel.",
     space: "Verteilt den verfügbaren Platz zwischen Tabelle und Board. Automatisch berücksichtigt Spielerzahl und Zielanzahl; eine unsichere Board-Anordnung bleibt unverändert.",
     markSize: "Vergrößert die nativen Mark-Symbole bis zur verfügbaren Zellengröße. Ihre Bedeutung und Zuordnung bleiben erhalten.",
     targetSize: "Wählt die Größe der Zielzahlen. Die verfügbare Zeilenhöhe begrenzt die Größe, besonders bei Tactics.",
@@ -46952,9 +47255,10 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
       }
     }),
     "checkout-score-highlight": featureCopy({
-      cardDescription: "Hebt direkt finishbare Restwerte in X01 mit einem gut sichtbaren Score-Effekt hervor.",
-      visibleDescription: "Direkt finishbare Restwerte werden an der aktiven Punktzahl hervorgehoben.",
-      visualDescription: "Die aktive Restpunktzahl pulsiert, glüht, skaliert oder blinkt je nach gewähltem Effekt. Die Hervorhebung sitzt direkt am Score und verändert keine anderen UI-Bereiche.",
+      cardDescription: "Gestaltet den X01-Restscore mit Finish-Hervorhebung und einem unabhängig schaltbaren Fortschrittsbalken.",
+      visibleDescription: "Eine gemeinsame Kachel bietet die Hervorhebung der aktiven Restpunktzahl und einen Restscore-Balken je Spieler.",
+      visualDescription: "Die aktive Restpunktzahl erhält einen Finish-Effekt. Der Balken stellt verbleibende Punkte relativ zum Startscore dar. Seine 170er-Zone ist eine Bereichsmarkierung und kein Nachweis eines aktuell möglichen Finishes.",
+      featuresDetails: ["Zahlenhervorhebung und Balken bleiben unabhängig schaltbar. Farben und Animationen werden für beide Bereiche getrennt gespeichert."],
       usefulWhen: "Wenn du Checkout-Momente schneller am Score erkennen möchtest.",
       images: [image("Finishbaren Restscore hervorheben", "animation-checkout-score-pulse.gif")],
       fields: {
@@ -47265,11 +47569,11 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
     }),
     "cricket-layout": featureCopy({
       images: [image("Cricket-Layout: schematische Beispielansicht", "cricket-layout-example.png")],
-      cardDescription: "Passt Cricket und Tactics an Bildschirm, Spielerzahl und Betrachtungsabstand an.",
-      visibleDescription: "Tabelle und Spieleranzeige erhalten abgestimmte Größen und eine stabile Zuordnung.",
-      visualDescription: "Ausgewogen, Fernansicht und Mehrspieler verteilen Platz und Schriftgrößen. Native Marks, Zielreihenfolge und Spielerpositionen bleiben erhalten.",
-      usefulWhen: "Wenn du Marks und Spielernamen aus der Entfernung besser lesen oder mehrere Spieler leichter vergleichen möchtest.",
-      featuresDetails: ["Standardmäßig ist das Layout ausgeschaltet.", "Tactics übernimmt die Cricket-Einstellungen und passt Größen an seine zwölf Zielzeilen an. Eigene Tactics-Werte lassen sich zusätzlich speichern.", "Profile ändern nur die Layout-Karte. Board-Zielmarkierung und Tabellen-Statuseffekte werden getrennt eingestellt."],
+      cardDescription: "Gestaltet die Cricket-/Tactics-Tabelle mit passendem Layout, Zustandsfarben und Trefferfeedback.",
+      visibleDescription: "Eine gemeinsame Tabellenkachel bietet Layout und Status/Effekte mit getrennten Schaltern.",
+      visualDescription: "Layoutprofile verteilen Platz und Schriftgrößen. Farben und Muster zeigen Punktemöglichkeiten, Gegnerdruck und geschlossene Ziele; Trefferfeedback ergänzt kurze Hinweise. Native Marks, Zielreihenfolge und Spielerpositionen bleiben erhalten.",
+      usefulWhen: "Wenn du die Tabelle besser lesen und Fortschritt sowie Gegnerdruck schneller erkennen möchtest.",
+      featuresDetails: ["Layout und Status/Effekte sind unabhängig schaltbar und zunächst ausgeschaltet.", "Tactics übernimmt die Cricket-Einstellungen und passt Größen an seine zwölf Zielzeilen an. Eigene Tactics-Werte lassen sich zusätzlich speichern.", "Layout- und Effektprofile ändern ausschließlich ihren eigenen Bereich. Die Board-Zielmarkierung bleibt separat.", "Trefferfeedback bündelt Impuls und Änderungsanzeige. Einzelregler für gespeicherte Sonderkombinationen und den bisherigen Stil stehen unter Erweitert."],
       fields: {
         ...cricketLayoutFieldsCopy,
         tacticsOverrides: fieldCopy("Verwendet eigene Layout-Werte für Tactics.", "Ausgeschaltet übernimmt Tactics die Cricket-Einstellungen. Gespeicherte Tactics-Werte bleiben für eine spätere Aktivierung erhalten."),
@@ -47317,7 +47621,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
     }),
     "cricket-grid-status-effects": featureCopy({
       cardDescription: "Ergänzt die Cricket-/Tactics-Matrix um Live-Effekte für Fortschritt, Druck und Wechsel.",
-      visibleDescription: "Zusätzliche Live-Effekte direkt in der Cricket-/Tactics-Matrix.",
+      visibleDescription: "Status und Trefferfeedback im gemeinsamen Einstellungsdialog der Cricket-/Tactics-Tabelle.",
       visualDescription: "Zellen, Zeilen und Zielmarken reagieren mit grünen und roten Zuständen, kurzen Hinweisen, Kanten und Übergängen. So werden Fortschritt, Gegnerdruck und Zugwechsel in der Matrix selbst sichtbarer.",
       usefulWhen: "Wenn du Fortschritt, Gegnerdruck und Wechsel im Grid klarer sehen willst.",
       images: [image("Cricket-Statusanzeigen", "animation-cricket-grid-fx.png")],
@@ -47410,9 +47714,10 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
       }
     }),
     "dartboard-marker-highlight": featureCopy({
-      cardDescription: "Macht vorhandene Marker auf dem virtuellen Board klarer und auffälliger.",
-      visibleDescription: "Treffer-Marker auf dem virtuellen Board werden deutlicher sichtbar.",
-      visualDescription: "Die bestehenden Treffermarkierungen werden größer, farbiger und auf Wunsch mit Pulsieren, Leuchten oder einem Rand versehen. Das Modul ersetzt sie nicht, sondern betont sie.",
+      cardDescription: "Gestaltet Treffer auf dem Board mit hervorgehobenen Markern und optionalen Dart-Bildern.",
+      visibleDescription: "Eine gemeinsame Kachel bietet native Treffermarker und Dart-Bilder mit getrennten Schaltern.",
+      visualDescription: "Native Marker erhalten Größe, Farbe, Rand und Animation. Dart-Bilder ergänzen Perspektive, Flug und Einschlag. Beide Darstellungen können einzeln oder gemeinsam aktiv sein.",
+      featuresDetails: ["Original-Marker ausblenden wirkt nur bei aktiven Dart-Bildern. Wird dieser Bereich ausgeschaltet, kehren die nativen Marker mit ihrer gespeicherten Hervorhebung zurück."],
       usefulWhen: "Wenn die Standardmarker zu klein oder zu unauffällig sind.",
       images: [image("Treffermarkierungen hervorheben", "animation-dart-marker-emphasis.gif")],
       fields: {
@@ -47591,9 +47896,10 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
       }
     }),
     "turn-score-counter": featureCopy({
-      cardDescription: "Zählt Punkteänderungen beim Turn sichtbar hoch oder herunter.",
-      visibleDescription: "Punkteänderungen beim Turn werden sichtbar hoch- oder heruntergezählt.",
-      visualDescription: "Statt eines harten Sprungs läuft der angezeigte Wert weich zur neuen Punktzahl. Dadurch wird die Änderung als kurze Animation nachvollziehbar.",
+      cardDescription: "Gestaltet Dart-Symbole, Trefferfeedback und die animierte Wurfsumme in einer gemeinsamen Kachel.",
+      visibleDescription: "Dart-Symbole, Trefferfarben und Animationen der Wurfsumme lassen sich unabhängig einstellen.",
+      visualDescription: "Dart-Symbole gestalten die Wurfplätze, tatsächliche Triple-, Double- und Bull-Treffer erhalten Feedback, und die Wurfsumme kann zum neuen Wert zählen. Checkout-Vorschläge werden weiterhin separat gestaltet.",
+      featuresDetails: ["Alle drei Bereiche sind getrennt schaltbar. Die Dart-Bilder dieser Wurfanzeige und die Dart-Bilder auf dem Board besitzen jeweils eigene Designs und Größen."],
       usefulWhen: "Wenn du Punktwechsel im Spielbild leichter verfolgen möchtest.",
       images: [
         image("Punkte animiert zählen", "animation-turn-points-count.gif"),
@@ -49286,7 +49592,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
           ["colorTheme", "Farben"],
           ["intensity", "Stärke"]
         ]),
-        recommendedSection("Cricket-Statusanzeigen", "cricket-grid-status-effects", [
+        recommendedSection("Cricket-/Tactics-Tabelle: Status und Effekte", "cricket-grid-status-effects", [
           ["rowWave", "Welle durch die Zeile"],
           ["badgeBeacon", "Zielmarke hervorheben"],
           ["markProgress", "Markierungen auffüllen"],
@@ -50129,6 +50435,84 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
   var descriptorsByFeatureKey = buildFeatureMap(xconfigDescriptors, (descriptor) => descriptor.featureKey);
   function getXConfigDescriptor(featureKey) {
     return descriptorsByFeatureKey.get(normalizeFeatureKey(featureKey)) || null;
+  }
+
+  // src/features/xconfig-ui/cricket-table-settings.js
+  var CRICKET_TABLE_FEATURE_KEYS = Object.freeze(["cricket-layout", "cricket-grid-status-effects"]);
+  var legacyConditions = Object.freeze({
+    pressureEdge: { key: "pressureStyle", value: "legacy" },
+    pressureOverlay: { key: "pressureStyle", value: "legacy" },
+    scoringStripe: { key: "scoringStyle", value: "legacy" },
+    hitSpark: { key: "feedback", value: "custom" },
+    deltaChips: { key: "feedback", value: "custom" }
+  });
+  function getCricketTableFields(members) {
+    const sections = ["Layout", "Status und Trefferfeedback", "Tactics", "Erweitert"];
+    return members.flatMap((feature) => (getXConfigDescriptor(feature.featureKey)?.fields || []).map((field) => {
+      const effects = feature.featureKey === "cricket-grid-status-effects";
+      const scopeLabel = effects ? "Status und Effekte" : "Layout";
+      const defaultSection = effects ? "Status und Trefferfeedback" : "Layout";
+      return {
+        ...field,
+        sourceFeatureKey: feature.featureKey,
+        label: field.key === "debug" ? `Diagnose: ${scopeLabel}` : field.label,
+        section: field.key === "debug" ? "Erweitert" : field.section || defaultSection,
+        visibleWhen: effects ? legacyConditions[field.key] || field.visibleWhen : field.visibleWhen
+      };
+    })).sort((left, right) => sections.indexOf(left.section) - sections.indexOf(right.section));
+  }
+
+  // src/features/xconfig-ui/presentation-groups.js
+  var PRESENTATION_GROUPS = Object.freeze([
+    { key: "cricket-layout", title: "Cricket-/Tactics-Tabelle", kind: "cricket-table", members: [
+      ["cricket-layout", "Layout anpassen"],
+      ["cricket-grid-status-effects", "Status und Effekte anzeigen"]
+    ] },
+    { key: "dartboard-marker-highlight", title: "Board-Treffermarkierungen", members: [
+      ["dartboard-marker-highlight", "Native Marker hervorheben"],
+      ["dart-marker-replacer", "Dart-Bilder anzeigen"]
+    ] },
+    { key: "checkout-score-highlight", title: "X01-Restscore", members: [
+      ["checkout-score-highlight", "Finishbaren Restscore hervorheben"],
+      ["x01-remaining-score-bar", "Restscore-Balken anzeigen"]
+    ] },
+    { key: "turn-score-counter", title: "Wurfanzeige", members: [
+      ["turn-dart-display", "Dart-Symbole gestalten"],
+      ["special-hit-highlights", "Treffer hervorheben"],
+      ["turn-score-counter", "Wurfsumme animieren"]
+    ] }
+  ]);
+  function getPresentationGroup(featureKey) {
+    return PRESENTATION_GROUPS.find((group) => group.members.some(([key]) => key === featureKey)) || null;
+  }
+  function groupPresentationFeatures(features) {
+    const result = features.filter((feature) => !getPresentationGroup(feature.featureKey));
+    PRESENTATION_GROUPS.forEach((group) => {
+      const members = group.members.map(([key, label]) => {
+        const feature = features.find((entry) => entry.featureKey === key);
+        return feature ? { ...feature, groupLabel: label } : null;
+      }).filter(Boolean);
+      if (!members.length) return;
+      const primary = members.find((entry) => entry.featureKey === group.key) || members[0];
+      result.push({
+        ...primary,
+        featureKey: group.key,
+        title: group.title,
+        enabled: members.some((entry) => entry.enabled),
+        presentationMembers: members,
+        presentationGroup: group
+      });
+    });
+    return result;
+  }
+  function getPresentationFields(members) {
+    if (members.some((entry) => ["cricket-layout", "cricket-grid-status-effects"].includes(entry.featureKey))) return getCricketTableFields(members);
+    return members.flatMap((member) => (getXConfigDescriptor(member.featureKey)?.fields || []).map((field) => ({
+      ...field,
+      sourceFeatureKey: member.featureKey,
+      label: field.key === "debug" ? `Diagnose: ${member.groupLabel}` : field.label,
+      section: field.key === "debug" ? "Erweitert" : field.section || member.groupLabel
+    }))).sort((left, right) => Number(left.section === "Erweitert") - Number(right.section === "Erweitert"));
   }
 
   // src/features/xconfig-ui/update-check.js
@@ -51367,7 +51751,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
       return;
     }
     if (previousModalBody.closest?.(".ad-xconfig-modal")?.getAttribute("data-adxconfig-refresh-settings") === "true") {
-      const openedSections = new Set(Array.from(previousModalBody.querySelectorAll("details[open]")).map((node) => node.getAttribute("data-adxconfig-settings-section")));
+      const openedSections = new Set(Array.from(previousModalBody.querySelectorAll("details")).filter((node) => node.getAttribute("open") !== null).map((node) => node.getAttribute("data-adxconfig-settings-section")));
       while (previousModalBody.firstChild) previousModalBody.firstChild.remove();
       Array.from(nextModalBody.childNodes || nextModalBody.children || []).forEach((node) => previousModalBody.appendChild(node));
       previousModalBody.querySelectorAll("details[data-adxconfig-settings-section]").forEach((node) => {
@@ -51498,6 +51882,36 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
       syncMenuUpdateState: (item) => syncMenuUpdateState(controller, item),
       syncVisibility: () => syncShellVisibility(controller)
     };
+  }
+
+  // src/features/xconfig-ui/cricket-table-preview.js
+  var EXAMPLE_ROWS = Object.freeze([
+    ["20", [3, 1, 0, 2]],
+    ["19", [0, 3, 1, 0]],
+    ["18", [3, 3, 3, 3]],
+    ["17", [1, 2, 0, 1]],
+    ["16", [0, 0, 1, 0]],
+    ["15", [2, 0, 0, 1]],
+    ["Bull", [1, 0, 2, 0]]
+  ]);
+  function buildCricketTablePreview(documentRef, createElement3) {
+    const preview = createElement3(documentRef, "div", {
+      className: "ad-xconfig-card-bg ad-xconfig-table-preview",
+      attributes: { "aria-hidden": "true", "data-adxconfig-cricket-table-preview": "true" }
+    });
+    const table = createElement3(documentRef, "div", { className: "ad-xconfig-table-preview-grid" });
+    const add = (text2, className = "", attributes = {}) => table.appendChild(createElement3(documentRef, "span", { text: text2, className, attributes }));
+    add("");
+    ["ANNA · 80", "THOMAS · 120", "BEN · 60", "LENA · 100"].forEach((name, index) => add(name, "ad-xconfig-table-preview-header", { "data-active": String(index === 1) }));
+    EXAMPLE_ROWS.forEach(([target, marks]) => {
+      add(target);
+      marks.forEach((value, index) => add(["", "/", "×", "⊗"][value], "ad-xconfig-table-preview-cell", {
+        "data-state": evaluatePlayerTargetState(marks, index).presentation,
+        "data-active": String(index === 1)
+      }));
+    });
+    preview.appendChild(table);
+    return preview;
   }
 
   // src/features/xconfig-ui/option-layout.js
@@ -52440,6 +52854,11 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
   });
   function resolveFeatureCardPreview(feature, features = []) {
     const featureKey = String(feature?.featureKey || "").trim();
+    if (featureKey === "cricket-layout") return { kind: "cricket-table", url: "" };
+    if (feature.presentationGroup?.key === "dartboard-marker-highlight") return {
+      kind: "dart-marker",
+      url: resolveXConfigPreviewAsset("dart-marker-replacer")
+    };
     if (featureKey === "live-board-enhancement") return { kind: "board", url: resolveBoardStyleDesignAsset("winmau-blade-6-tc") };
     if (featureKey === "board-surround") {
       const design = COMMUNITY_SURROUNDS.find((entry) => entry.key === feature.config?.design) || COMMUNITY_SURROUNDS[0];
@@ -55269,6 +55688,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
       attributes: {
         "data-feature-key": feature.featureKey,
         "data-card-kind": isThemeGlobalCard ? "theme-global" : "default",
+        "data-presentation-group": feature.presentationGroup?.key,
         "data-card-type": descriptor?.cardType || "toggle",
         "data-enabled": descriptor?.cardType === "action" ? void 0 : String(Boolean(feature.enabled)),
         "data-design-status": "ready",
@@ -55276,6 +55696,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
         "data-preview-display-mode": preview.displayMode || void 0
       }
     });
+    if (feature.presentationGroup?.kind === "cricket-table") card.appendChild(buildCricketTablePreview(documentRef, createElement));
     const previewUrl = preview.url;
     if (previewUrl) {
       const bg = createElement(documentRef, "div", {
@@ -55348,13 +55769,23 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
     }));
     head.appendChild(copy);
     if (descriptor?.cardType !== "action") {
-      head.appendChild(buildFeatureToggle(documentRef, feature));
+      if (feature.presentationMembers) {
+        const toggles = createElement(documentRef, "div", { className: "ad-xconfig-table-toggles" });
+        feature.presentationMembers.forEach((member) => {
+          const label = createElement(documentRef, "div", { className: "ad-xconfig-table-toggle" });
+          const title2 = member.groupLabel;
+          label.appendChild(createElement(documentRef, "span", { text: title2 }));
+          label.appendChild(buildFeatureToggle(documentRef, { ...member, title: title2 }));
+          toggles.appendChild(label);
+        });
+        head.appendChild(toggles);
+      } else head.appendChild(buildFeatureToggle(documentRef, feature));
     }
     cardContent.appendChild(head);
     const badges = createElement(documentRef, "div", {
       className: "ad-xconfig-card-badges"
     });
-    if (feature.config?.debug === true) {
+    if (feature.config?.debug === true || feature.presentationMembers?.some((member) => member.config?.debug)) {
       badges.appendChild(createElement(documentRef, "span", {
         className: "ad-xconfig-status-badge ad-xconfig-status-badge--diagnostic",
         text: "Diagnose aktiv",
@@ -55427,9 +55858,14 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
     if (!state.activeSettingsFeatureKey) {
       return null;
     }
-    const feature = features.find((entry) => entry.featureKey === state.activeSettingsFeatureKey) || null;
+    const settingsKey = getPresentationGroup(state.activeSettingsFeatureKey)?.key || state.activeSettingsFeatureKey;
+    const feature = groupPresentationFeatures(features).find((entry) => entry.featureKey === settingsKey) || null;
     const descriptor = feature ? getXConfigDescriptor(feature.featureKey) : null;
-    const fields = Array.isArray(descriptor?.fields) ? descriptor.fields.filter((field) => !field.visibleWhen || feature.config?.[field.visibleWhen.key] === field.visibleWhen.value) : [];
+    const sourceFields = feature?.presentationMembers ? getPresentationFields(feature.presentationMembers) : descriptor?.fields || [];
+    const fields = sourceFields.filter((field) => {
+      const source = field.sourceFeatureKey ? features.find((entry) => entry.featureKey === field.sourceFeatureKey) : feature;
+      return !field.visibleWhen || source?.config?.[field.visibleWhen.key] === field.visibleWhen.value;
+    });
     if (!feature || !fields.length) {
       return null;
     }
@@ -55444,7 +55880,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
       attributes: {
         role: "dialog",
         "aria-modal": "true",
-        "data-adxconfig-refresh-settings": descriptor.refreshSettingsOnChange ? "true" : "false",
+        "data-adxconfig-refresh-settings": feature.presentationMembers || descriptor.refreshSettingsOnChange ? "true" : "false",
         "data-adxconfig-modal": "true",
         "aria-labelledby": "ad-xconfig-settings-title",
         tabindex: "-1"
@@ -55509,7 +55945,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
       });
       body.appendChild(search);
     }
-    const settingsDetails = Array.isArray(descriptor?.settingsDetails) ? descriptor.settingsDetails.filter(Boolean) : [];
+    const settingsDetails = feature.presentationMembers ? [...new Set(feature.presentationMembers.flatMap((member) => getXConfigDescriptor(member.featureKey)?.settingsDetails || []))] : descriptor?.settingsDetails || [];
     if (settingsDetails.length) {
       const detailsRow = createElement(documentRef, "section", {
         className: "ad-xconfig-setting-row",
@@ -55532,26 +55968,29 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
       });
       body.appendChild(detailsRow);
     }
-    if (isThemeGameLayoutFeature(feature)) {
-      body.appendChild(buildThemeGameLayoutPreviewSection(documentRef, feature));
-    }
-    if (isCheckoutScoreHighlightFeature(feature)) {
-      body.appendChild(buildCheckoutScoreHighlightPreviewSection(documentRef, feature));
-    }
-    if (isCheckoutTargetHighlightsFeature(feature)) {
-      body.appendChild(buildCheckoutBoardPreviewSection(documentRef, feature));
-    }
-    if (isCheckoutSuggestionStylesFeature(feature)) {
-      body.appendChild(buildCheckoutSuggestionPreviewSection(documentRef, feature));
-    }
-    if (isX01RemainingScoreBarFeature(feature)) {
-      body.appendChild(buildX01RemainingScoreBarPreviewSection(documentRef, feature));
-    }
-    if (feature.featureKey === SPECIAL_HIT_HIGHLIGHTS_FEATURE_KEY) {
-      body.appendChild(buildSpecialHitHighlightsPreviewSection(documentRef, feature, features));
+    for (const previewFeature of feature.presentationMembers || [feature]) {
+      if (isThemeGameLayoutFeature(previewFeature)) {
+        body.appendChild(buildThemeGameLayoutPreviewSection(documentRef, previewFeature));
+      }
+      if (isCheckoutScoreHighlightFeature(previewFeature)) {
+        body.appendChild(buildCheckoutScoreHighlightPreviewSection(documentRef, previewFeature));
+      }
+      if (isCheckoutTargetHighlightsFeature(previewFeature)) {
+        body.appendChild(buildCheckoutBoardPreviewSection(documentRef, previewFeature));
+      }
+      if (isCheckoutSuggestionStylesFeature(previewFeature)) {
+        body.appendChild(buildCheckoutSuggestionPreviewSection(documentRef, previewFeature));
+      }
+      if (isX01RemainingScoreBarFeature(previewFeature)) {
+        body.appendChild(buildX01RemainingScoreBarPreviewSection(documentRef, previewFeature));
+      }
+      if (previewFeature.featureKey === SPECIAL_HIT_HIGHLIGHTS_FEATURE_KEY) {
+        body.appendChild(buildSpecialHitHighlightsPreviewSection(documentRef, previewFeature, features));
+      }
     }
     const sectionBodies = /* @__PURE__ */ new Map();
     fields.forEach((field) => {
+      const sourceFeature = field.sourceFeatureKey ? features.find((entry) => entry.featureKey === field.sourceFeatureKey) : feature;
       const sectionLabel = String(field.section || "").trim();
       let sectionBody = body;
       if (sectionLabel) {
@@ -55599,7 +56038,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
         copy.appendChild(createElement(documentRef, "label", {
           className: "ad-xconfig-setting-label",
           text: field.label,
-          attributes: { for: `ad-xconfig-field-${feature.featureKey}-${field.key || field.action}` }
+          attributes: { for: `ad-xconfig-field-${sourceFeature.featureKey}-${field.key || field.action}` }
         }));
         row.appendChild(copy);
         const noteText = getFieldNoteText(field);
@@ -55610,7 +56049,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
           }));
         }
       }
-      inputWrap.appendChild(buildFeatureField(documentRef, feature, field, features));
+      inputWrap.appendChild(buildFeatureField(documentRef, sourceFeature, field, features));
       row.appendChild(inputWrap);
       sectionBody.appendChild(row);
     });
@@ -55619,7 +56058,7 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
     return backdrop;
   }
   function groupXConfigFeatures(features = []) {
-    const sortedFeatures = Array.isArray(features) ? features.slice() : [];
+    const sortedFeatures = Array.isArray(features) ? groupPresentationFeatures(features) : [];
     if (!sortedFeatures.length) {
       return [];
     }
@@ -58001,9 +58440,9 @@ ${buildTurnSuggestionDartGuardStyleBlock()}`;
   }
 
   // src/features/xconfig-ui/special-hit-highlights-preview-controller.js
-  var FEATURE_KEY22 = "special-hit-highlights";
+  var FEATURE_KEY21 = "special-hit-highlights";
   function resolveFeatureConfig(rowNode, getFeatures) {
-    const feature = (typeof getFeatures === "function" ? getFeatures() : []).find?.((entry) => entry?.featureKey === FEATURE_KEY22) || null;
+    const feature = (typeof getFeatures === "function" ? getFeatures() : []).find?.((entry) => entry?.featureKey === FEATURE_KEY21) || null;
     return {
       colorTheme: rowNode?.getAttribute?.(SPECIAL_HIT_HIGHLIGHTS_PREVIEW_COLOR_THEME_ATTRIBUTE) || feature?.config?.colorTheme || "kind-signal",
       animationStyle: rowNode?.getAttribute?.(SPECIAL_HIT_HIGHLIGHTS_PREVIEW_ANIMATION_STYLE_ATTRIBUTE) || feature?.config?.animationStyle || "pop-hit"
@@ -58805,6 +59244,19 @@ ${buildStyleText14()}
 #${PANEL_HOST_ID} .ad-xconfig-btn--square{width:2.15rem;min-width:2.15rem;height:2.15rem;padding:0;display:inline-flex;align-items:center;justify-content:center;line-height:1}
 #${PANEL_HOST_ID} .ad-xconfig-btn--danger{border-color:rgba(255,84,84,.42);background:rgba(255,84,84,.17)}
 #${PANEL_HOST_ID} .ad-xconfig-content{margin-top:24px}
+
+#${PANEL_HOST_ID} .ad-xconfig-table-toggles{display:grid;gap:10px;flex-shrink:0}
+#${PANEL_HOST_ID} .ad-xconfig-table-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.8rem}
+#${PANEL_HOST_ID} .ad-xconfig-card[data-presentation-group] .ad-xconfig-card-head{flex-wrap:wrap}
+#${PANEL_HOST_ID} .ad-xconfig-table-preview{display:flex;align-items:center;justify-content:flex-end;padding:20px;overflow:hidden}
+#${PANEL_HOST_ID} .ad-xconfig-table-preview-grid{display:grid;grid-template-columns:36px repeat(4,minmax(52px,1fr));gap:3px;min-width:370px;color:#f1f5f9;font-size:18px;text-align:center}
+#${PANEL_HOST_ID} .ad-xconfig-table-preview-grid>span{min-height:24px;background:#202a37;border-radius:3px;padding:3px}
+#${PANEL_HOST_ID} .ad-xconfig-table-preview-grid .ad-xconfig-table-preview-header{font-size:9px;padding:8px 2px}
+#${PANEL_HOST_ID} .ad-xconfig-table-preview-grid [data-active="true"]{border-inline-start:2px solid #f5f5f5}
+#${PANEL_HOST_ID} .ad-xconfig-table-preview-grid [data-state="scoring"]{background:#124739;box-shadow:inset 0 0 0 1px #00b287}
+#${PANEL_HOST_ID} .ad-xconfig-table-preview-grid [data-state="pressure"]{background:repeating-linear-gradient(45deg,#50272c 0 4px,#36252e 4px 8px);box-shadow:inset 0 0 0 1px #ef4444}
+#${PANEL_HOST_ID} .ad-xconfig-table-preview-grid [data-state="dead"]{background:#30363d}
+
 #${PANEL_HOST_ID} .ad-xconfig-section{--adx-section-accent:#94a3b8;display:grid;gap:0}
 #${PANEL_HOST_ID} .ad-xconfig-section + .ad-xconfig-section{margin-top:36px;padding-top:36px;border-top:1px solid var(--adx-border)}
 #${PANEL_HOST_ID} .ad-xconfig-section[data-adxconfig-section="template"]{--adx-section-accent:#a855f7}
@@ -59300,7 +59752,7 @@ ${buildModernSizeStyle(`#${PANEL_HOST_ID} .ad-xconfig-x01-remaining-score-bar-pr
 #${PANEL_HOST_ID} .ad-xconfig-option-list{margin-top:0}
 #${PANEL_HOST_ID} .ad-xconfig-option-item:not(.ad-xconfig-option-item--effect-preview):not(.ad-xconfig-option-item--color-preview){background:var(--adx-raised);box-shadow:none}
 #${PANEL_HOST_ID} .ad-xconfig-variant,#${PANEL_HOST_ID} .ad-xconfig-option-active{background:var(--adx-secondary);color:var(--adx-muted);box-shadow:none}
-#${PANEL_HOST_ID} :is(.ad-xconfig-text-input,.ad-xconfig-color-code){background:var(--adx-raised);color:var(--adx-text);border:1px solid var(--adx-border);border-radius:8px;min-width:0}
+#${PANEL_HOST_ID} :is(.ad-xconfig-text-input,.ad-xconfig-color-code){box-sizing:border-box;max-width:100%;background:var(--adx-raised);color:var(--adx-text);border:1px solid var(--adx-border);border-radius:8px;min-width:0}
 #${PANEL_HOST_ID} .ad-xconfig-transfer-dialog > :first-child{position:sticky;top:-24px;background:var(--adx-surface);z-index:3;padding:16px 0;margin:0}
 @media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-page{padding:16px}#${PANEL_HOST_ID} .ad-xconfig-header{padding:12px}#${PANEL_HOST_ID} .ad-xconfig-header-lead{align-items:flex-start}#${PANEL_HOST_ID} .ad-xconfig-heading{flex:1 1 180px}#${PANEL_HOST_ID} .ad-xconfig-update-panel{min-width:100%}#${PANEL_HOST_ID} .ad-xconfig-header-actions{width:100%;justify-content:flex-start}#${PANEL_HOST_ID} .ad-xconfig-section + .ad-xconfig-section{margin-top:28px;padding-top:28px}#${PANEL_HOST_ID} .ad-xconfig-section-header{align-items:flex-start;padding:12px}#${PANEL_HOST_ID} .ad-xconfig-grid{gap:16px}#${PANEL_HOST_ID} .ad-xconfig-card-bg{inset:0}#${PANEL_HOST_ID} .ad-xconfig-card-bg::after{background:linear-gradient(90deg,rgba(27,31,41,.96) 0%,rgba(27,31,41,.88) 58%,rgba(27,31,41,.5) 100%)}#${PANEL_HOST_ID} .ad-xconfig-card-content,#${PANEL_HOST_ID} .ad-xconfig-card--theme-global .ad-xconfig-card-content{width:100%}#${PANEL_HOST_ID} .ad-xconfig-setting-row{grid-template-columns:minmax(0,1fr)}#${PANEL_HOST_ID} .ad-xconfig-setting-input > .ad-xconfig-switch{float:none}#${PANEL_HOST_ID} .ad-xconfig-modal{padding:0 16px 16px}#${PANEL_HOST_ID} .ad-xconfig-modal-header{padding-top:16px}#${PANEL_HOST_ID} .ad-xconfig-transfer-dialog{padding:16px}#${PANEL_HOST_ID} .ad-xconfig-modal-actions{flex-wrap:wrap;justify-content:flex-end}#${PANEL_HOST_ID} .ad-xconfig-transfer-summary{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:640px){#${PANEL_HOST_ID} .ad-xconfig-card-bg::after{background:linear-gradient(90deg,rgba(27,31,41,.90) 0%,rgba(27,31,41,.72) 55%,rgba(27,31,41,.46) 78%,rgba(27,31,41,.28) 100%)}}
@@ -59615,13 +60067,14 @@ ${buildModernSizeStyle(`#${PANEL_HOST_ID} .ad-xconfig-x01-remaining-score-bar-pr
       if (!normalizedFeatureKey) {
         return;
       }
-      const feature = getFeatures().find((entry) => entry?.featureKey === normalizedFeatureKey) || null;
+      const cardKey = getPresentationGroup(normalizedFeatureKey)?.key || normalizedFeatureKey;
+      const feature = groupPresentationFeatures(getFeatures()).find((entry) => entry?.featureKey === cardKey) || null;
       if (!feature) {
         return;
       }
       const nextCardPreview = resolveFeatureCardPreview(feature, getFeatures());
       const cardNodes = Array.from(documentRef.querySelectorAll(
-        `.ad-xconfig-card[data-feature-key='${normalizedFeatureKey}']`
+        `.ad-xconfig-card[data-feature-key='${cardKey}']`
       ));
       cardNodes.forEach((card) => {
         card.setAttribute("data-preview-kind", nextCardPreview.kind);

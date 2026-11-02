@@ -18,6 +18,7 @@ import {
 } from "./style.js";
 import { markPlayerCardParts } from "../shared/player-card-parts.js";
 import { readModernMatchSurface } from "../shared/x01-match-surface.js";
+import { readSharedFeatureSurface } from "../shared/feature-surface-group.js";
 
 export const VARIANT_ELEMENT_ID = "ad-ext-game-variant";
 export const PLAYER_DISPLAY_SELECTOR = "#ad-ext-player-display";
@@ -1476,7 +1477,7 @@ function cleanupScoreProgressHosts(documentRef, activeHosts) {
 }
 
 export function syncScoreProgress(context = {}, state = createScoreProgressState()) {
-  const modernSurface = readModernMatchSurface(context.documentRef, context.windowRef);
+  const modernSurface = readSharedFeatureSurface(context, "x01:match-surface", () => readModernMatchSurface(context.documentRef, context.windowRef));
   context = { ...context, modernSurface };
   const documentRef = context.documentRef;
   const debugEnabled = context.featureConfig?.debug === true;

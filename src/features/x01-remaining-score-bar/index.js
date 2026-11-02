@@ -1,3 +1,4 @@
+import { mountFeatureSurfaceGroup } from "../shared/feature-surface-group.js";
 import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
 import { createRafScheduler } from "../../shared/raf-scheduler.js";
 import {
@@ -255,7 +256,7 @@ function hasRelevantX01Mutation(mutations = [], isManagedNode = null) {
   });
 }
 
-export function mountX01RemainingScoreBar(context = {}) {
+function mountRenderer(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const domGuards = context.domGuards;
@@ -391,3 +392,7 @@ export function mountX01RemainingScoreBar(context = {}) {
 export const initializeX01RemainingScoreBar = mountX01RemainingScoreBar;
 export const initialize = mountX01RemainingScoreBar;
 export const mount = mountX01RemainingScoreBar;
+
+export function mountX01RemainingScoreBar(context = {}) {
+  return mountFeatureSurfaceGroup(context, "x01-score", 1, mountRenderer);
+}

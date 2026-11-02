@@ -1,6 +1,7 @@
+import { TURN_DISPLAY_LAYOUT_CLASS, buildTurnDisplayLayoutStyleText } from "../shared/turn-display-layout.js";
 export const STYLE_ID = "ad-ext-checkout-suggestion-style";
 export const BASE_CLASS = "ad-ext-checkout-suggestion";
-export const LAYOUT_CLASS = "ad-ext-checkout-suggestion-layout";
+export const LAYOUT_CLASS = TURN_DISPLAY_LAYOUT_CLASS;
 export const MODERN_CLASS = "ad-ext-checkout-suggestion--modern";
 export const NO_LABEL_CLASS = "ad-ext-checkout-suggestion--no-label";
 export const COLOR_NUMBERS_CLASS = "ad-ext-checkout-suggestion--color-numbers";
@@ -16,67 +17,7 @@ export const STYLE_CLASS_LIST = Object.freeze(Object.values(STYLE_CLASSES));
 
 export function buildStyleText() {
   return `
-.${LAYOUT_CLASS} {
-  --ad-ext-checkout-turn-value-font-size: var(--ad-game-layout-turn-value-font-size, clamp(2.625rem, 3.35vw, 3rem));
-  position: relative;
-  left: 50%;
-  flex: 0 0 444px;
-  width: 444px;
-  max-width: calc(100vw - 24px);
-  min-height: 80px;
-  transform: translateX(-50%);
-}
-
-.${LAYOUT_CLASS} > :first-child {
-  gap: 8px;
-  padding-left: 8px;
-}
-
-.${LAYOUT_CLASS} > :first-child > .font-number {
-  flex: 1 1 0;
-  max-width: none;
-  height: 80px;
-  padding-top: 10px;
-}
-
-.${LAYOUT_CLASS} > :first-child > .font-number > span:not([aria-hidden="true"]),
-.${LAYOUT_CLASS} > .font-number,
-.${LAYOUT_CLASS} > .font-number > span {
-  font-size: var(--ad-ext-checkout-turn-value-font-size);
-}
-
-.${LAYOUT_CLASS} > .font-number {
-  height: 80px;
-}
-
-@media (max-width: 900px) {
-  .${LAYOUT_CLASS} {
-    --ad-ext-checkout-turn-value-font-size: var(--ad-game-layout-turn-value-font-size, min(2.5rem, 6vw));
-    left: auto;
-    flex: 1 1 0;
-    width: 100%;
-    max-width: 100%;
-    transform: none;
-  }
-
-  .${LAYOUT_CLASS},
-  .${LAYOUT_CLASS} > :first-child > .font-number,
-  .${LAYOUT_CLASS} > .font-number {
-    height: 72px;
-    min-height: 72px;
-  }
-
-  .${LAYOUT_CLASS} > :first-child > .font-number {
-    padding-top: 6px;
-  }
-
-  .${LAYOUT_CLASS} > :first-child > .font-number > span:not([aria-hidden="true"]),
-  .${LAYOUT_CLASS} > .font-number,
-  .${LAYOUT_CLASS} > .font-number > span {
-    font-size: var(--ad-ext-checkout-turn-value-font-size);
-  }
-}
-
+${buildTurnDisplayLayoutStyleText()}
 .${BASE_CLASS} {
   position: relative;
   isolation: isolate;

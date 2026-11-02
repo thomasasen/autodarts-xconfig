@@ -1,3 +1,4 @@
+import { mountFeatureSurfaceGroup, readSharedFeatureSurface } from "../shared/feature-surface-group.js";
 import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
 import {
   ensureAnimeLoaded,
@@ -44,7 +45,7 @@ function isAdminLifecycleMutation(mutation) {
     );
 }
 
-export function initializeTurnScoreCounter(context = {}) {
+function mountRenderer(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const observerRegistry = context.registries?.observers;
@@ -148,7 +149,7 @@ export function initializeTurnScoreCounter(context = {}) {
   } }, schedulerFactory);
 
   function resolveObserverSurface() {
-    const modernTurnSurface = findModernTurnSurface(documentRef, windowRef);
+    const modernTurnSurface = readSharedFeatureSurface(context, "turn:surface", () => findModernTurnSurface(documentRef, windowRef));
     const modernTurn = modernTurnSurface?.turnContainer || null;
     const scoreNodes = collectScoreNodes(documentRef, state, { windowRef, modernTurnSurface });
     const initialScoreNode = scoreNodes[0] || null;
@@ -387,3 +388,7 @@ export const initializeTurnScoreCount = initializeTurnScoreCounter;
 export const mountTurnScoreCounter = initializeTurnScoreCounter;
 export const initialize = initializeTurnScoreCounter;
 export const mount = initializeTurnScoreCounter;
+
+export function initializeTurnScoreCounter(context = {}) {
+  return mountFeatureSurfaceGroup(context, "turn-display", 2, mountRenderer);
+}

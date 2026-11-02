@@ -1,4 +1,5 @@
 import { normalizeRoutePath } from "../shared/route-normalization.js";
+import { readSharedFeatureSurface } from "./shared/feature-surface-group.js";
 import {
   collectVisibleCheckoutRouteEntries,
   resolveCheckoutSurfaceSemantics,
@@ -41,7 +42,7 @@ function readScoped(context, key, read) {
 
 export function readX01MatchSurface(context = {}) {
   return readScoped(context, "modernSurface", () =>
-    readModernMatchSurface(context.documentRef, context.windowRef));
+    readSharedFeatureSurface(context, "x01:match-surface", () => readModernMatchSurface(context.documentRef, context.windowRef)));
 }
 
 export function readX01CricketGrid(context = {}) {

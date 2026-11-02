@@ -1,3 +1,4 @@
+import { mountFeatureSurfaceGroup } from "../shared/feature-surface-group.js";
 import { selectNewestTurn } from "../../shared/turn-selection.js";
 import { createTurnScopedScheduler } from "../shared/turn-lifecycle.js";
 import {
@@ -230,7 +231,7 @@ function buildGameStateSignature(snapshot = null) {
   ].join("::");
 }
 
-export function initializeDartMarkerReplacer(context = {}) {
+function mountRenderer(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const domGuards = context.domGuards;
@@ -282,6 +283,7 @@ export function initializeDartMarkerReplacer(context = {}) {
   const toolsAnimationLayers = acquireToolsAnimationLayerController({ documentRef, windowRef });
 
   const state = createDartMarkerReplacerState(windowRef);
+  state.readSurfaceState = context.readSurfaceState;
   state.lastHref = getCurrentHref(windowRef);
   state.gameStateSnapshot =
     gameState && typeof gameState.getSnapshot === "function" ? gameState.getSnapshot() : null;
@@ -492,3 +494,7 @@ export async function runDartMarkerReplacerAction(actionContext = {}) {
 export const mountDartMarkerReplacer = initializeDartMarkerReplacer;
 export const initialize = initializeDartMarkerReplacer;
 export const mount = initializeDartMarkerReplacer;
+
+export function initializeDartMarkerReplacer(context = {}) {
+  return mountFeatureSurfaceGroup(context, "board-markers", 1, mountRenderer);
+}

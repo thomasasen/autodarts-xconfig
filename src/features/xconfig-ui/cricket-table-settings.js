@@ -29,11 +29,13 @@ export function getCricketTableFields(members) {
   const sections = ["Layout", "Status und Trefferfeedback", "Tactics", "Erweitert"];
   return members.flatMap((feature) => (getXConfigDescriptor(feature.featureKey)?.fields || []).map((field) => {
     const effects = feature.featureKey === "cricket-grid-status-effects";
+    const scopeLabel = effects ? "Status und Effekte" : "Layout";
+    const defaultSection = effects ? "Status und Trefferfeedback" : "Layout";
     return {
       ...field,
       sourceFeatureKey: feature.featureKey,
-      label: field.key === "debug" ? `Diagnose: ${effects ? "Status und Effekte" : "Layout"}` : field.label,
-      section: field.key === "debug" ? "Erweitert" : field.section || (effects ? "Status und Trefferfeedback" : "Layout"),
+      label: field.key === "debug" ? `Diagnose: ${scopeLabel}` : field.label,
+      section: field.key === "debug" ? "Erweitert" : field.section || defaultSection,
       visibleWhen: effects ? legacyConditions[field.key] || field.visibleWhen : field.visibleWhen,
     };
   })).sort((left, right) => sections.indexOf(left.section) - sections.indexOf(right.section));

@@ -1,3 +1,4 @@
+import { mountFeatureSurfaceGroup } from "../shared/feature-surface-group.js";
 import { createFeatureMountHarness } from "../shared/feature-mount-harness.js";
 import {
   applySuggestionStyle,
@@ -24,7 +25,7 @@ import {
 const FEATURE_KEY = "checkout-suggestion-styles";
 const OBSERVER_KEY = `${FEATURE_KEY}:dom-observer`;
 
-export function initializeCheckoutSuggestionStyles(context = {}) {
+function mountRenderer(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const domGuards = context.domGuards;
@@ -51,7 +52,7 @@ export function initializeCheckoutSuggestionStyles(context = {}) {
   let lastDebugSignature = "";
 
   function update() {
-    const layoutNode = findModernSuggestionLayoutNode(documentRef, windowRef);
+    const layoutNode = findModernSuggestionLayoutNode(documentRef, windowRef, context);
     Array.from(documentRef.querySelectorAll?.(`.${LAYOUT_CLASS}`) || []).forEach((node) => {
       if (node !== layoutNode) {
         resetSuggestionLayout(node);
@@ -59,7 +60,7 @@ export function initializeCheckoutSuggestionStyles(context = {}) {
     });
     applySuggestionLayout(layoutNode);
 
-    const nodes = collectSuggestions(documentRef, windowRef);
+    const nodes = collectSuggestions(documentRef, windowRef, context);
     const currentNodes = new Set(nodes);
     Array.from(documentRef.querySelectorAll?.(`.${BASE_CLASS}`) || []).forEach((node) => {
       if (!currentNodes.has(node)) {
@@ -136,3 +137,7 @@ export function initializeCheckoutSuggestionStyles(context = {}) {
 export const mountCheckoutSuggestionStyles = initializeCheckoutSuggestionStyles;
 export const initialize = initializeCheckoutSuggestionStyles;
 export const mount = initializeCheckoutSuggestionStyles;
+
+export function initializeCheckoutSuggestionStyles(context = {}) {
+  return mountFeatureSurfaceGroup(context, "turn-display", -1, mountRenderer);
+}

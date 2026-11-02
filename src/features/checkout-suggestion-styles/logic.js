@@ -1,7 +1,9 @@
+import { findTurnDisplayLayoutNode } from "../shared/turn-display-layout.js";
+import { readSharedFeatureSurface } from "../shared/feature-surface-group.js";
+export { applyTurnDisplayLayout as applySuggestionLayout, resetTurnDisplayLayout as resetSuggestionLayout } from "../shared/turn-display-layout.js";
 import {
   BASE_CLASS,
   COLOR_NUMBERS_CLASS,
-  LAYOUT_CLASS,
   MODERN_CLASS,
   NO_LABEL_CLASS,
   STYLE_CLASSES,
@@ -52,22 +54,16 @@ export function isModernSuggestionNode(node) {
 
 export function findModernSuggestionLayoutNode(
   documentRef,
-  windowRef = documentRef?.defaultView
+  windowRef = documentRef?.defaultView,
+  context = {}
 ) {
-  return findModernTurnSurface(documentRef, windowRef)?.turnContainer || null;
-}
-
-export function applySuggestionLayout(node) {
-  node?.classList?.add(LAYOUT_CLASS);
-}
-
-export function resetSuggestionLayout(node) {
-  node?.classList?.remove(LAYOUT_CLASS);
+  return findTurnDisplayLayoutNode(documentRef, windowRef, context);
 }
 
 export function collectSuggestions(
   documentRef,
-  windowRef = documentRef?.defaultView
+  windowRef = documentRef?.defaultView,
+  context = {}
 ) {
   if (!documentRef || typeof documentRef.querySelectorAll !== "function") {
     return [];
@@ -75,7 +71,7 @@ export function collectSuggestions(
 
   const suggestions = Array.from(documentRef.querySelectorAll(SUGGESTION_SELECTOR));
   const seen = new Set(suggestions);
-  const modernTurnSurface = findModernTurnSurface(documentRef, windowRef);
+  const modernTurnSurface = readSharedFeatureSurface(context, "turn:surface", () => findModernTurnSurface(documentRef, windowRef));
 
   (modernTurnSurface?.throwRows || []).forEach((node) => {
     if (

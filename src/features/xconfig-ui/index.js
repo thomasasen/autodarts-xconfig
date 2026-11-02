@@ -1,3 +1,4 @@
+import { getPresentationGroup, groupPresentationFeatures } from "./presentation-groups.js";
 import { getXConfigDescriptor } from "./descriptors.js";
 import { subscribeThemePresetAssets } from "#theme-preset-assets";
 import {
@@ -418,14 +419,15 @@ function ensureXConfigShell(options = {}) {
       return;
     }
 
-    const feature = getFeatures().find((entry) => entry?.featureKey === normalizedFeatureKey) || null;
+    const cardKey = getPresentationGroup(normalizedFeatureKey)?.key || normalizedFeatureKey;
+    const feature = groupPresentationFeatures(getFeatures()).find((entry) => entry?.featureKey === cardKey) || null;
     if (!feature) {
       return;
     }
 
     const nextCardPreview = resolveFeatureCardPreview(feature, getFeatures());
     const cardNodes = Array.from(documentRef.querySelectorAll(
-      `.ad-xconfig-card[data-feature-key='${normalizedFeatureKey}']`
+      `.ad-xconfig-card[data-feature-key='${cardKey}']`
     ));
     cardNodes.forEach((card) => {
       card.setAttribute("data-preview-kind", nextCardPreview.kind);

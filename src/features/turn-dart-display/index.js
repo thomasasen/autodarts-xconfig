@@ -1,3 +1,4 @@
+import { mountFeatureSurfaceGroup, readSharedFeatureSurface } from "../shared/feature-surface-group.js";
 import { createManagedNodeMatcher, hasExternalDomMutation } from "../../core/dom-mutation-filter.js";
 import { createFeatureMountHarness } from "../shared/feature-mount-harness.js";
 import { findModernTurnSurface } from "../shared/x01-match-surface.js";
@@ -24,7 +25,7 @@ function findModernDartPlaceholder(rowNode) {
   }) || null;
 }
 
-export function mountTurnDartDisplay(context = {}) {
+function mountRenderer(context = {}) {
   const documentRef = context.documentRef || (typeof document !== "undefined" ? document : null);
   const windowRef = context.windowRef || (globalThis.window !== undefined ? globalThis.window : null);
   const domGuards = context.domGuards || null;
@@ -53,7 +54,7 @@ export function mountTurnDartDisplay(context = {}) {
   }
 
   function syncModernSurface() {
-    const surface = findModernTurnSurface(documentRef, windowRef);
+    const surface = readSharedFeatureSurface(context, "turn:surface", () => findModernTurnSurface(documentRef, windowRef));
     const rows = Array.from(surface?.throwRows || []);
     const placeholders = rows.map(findModernDartPlaceholder).filter(Boolean);
 
@@ -135,3 +136,7 @@ export function mountTurnDartDisplay(context = {}) {
 export const initializeTurnDartDisplay = mountTurnDartDisplay;
 export const initialize = mountTurnDartDisplay;
 export const mount = mountTurnDartDisplay;
+
+export function mountTurnDartDisplay(context = {}) {
+  return mountFeatureSurfaceGroup(context, "turn-display", 0, mountRenderer);
+}

@@ -171,7 +171,7 @@ export function updateDartboardMarkerHighlight(options = {}) {
     return;
   }
 
-  const markers = collectBoardMarkers(documentRef);
+  const markers = collectBoardMarkers(documentRef, { readSurfaceState: options.readSurfaceState });
   const markerSet = new Set(markers);
 
   state.trackedMarkers.forEach((marker) => {

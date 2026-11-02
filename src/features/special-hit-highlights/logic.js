@@ -1,4 +1,5 @@
 import { queryAll as collectBySelector } from "../../shared/dom-query.js";
+import { readSharedFeatureSurface } from "../shared/feature-surface-group.js";
 import {
   HIT_ANIMATION_CLASS,
   HIT_ANIMATION_TRIGGER_CLASS,
@@ -1422,7 +1423,7 @@ export function updateHitDecorations(options = {}) {
     normalizeText: normalizeRawText,
   });
   if (!turnSurface.turnContainer && turnSurface.throwRows.length === 0) {
-    const modernSurface = findModernTurnSurface(documentRef, windowRef);
+    const modernSurface = readSharedFeatureSurface(options, "turn:surface", () => findModernTurnSurface(documentRef, windowRef));
     const modernThrows = readModernThrows(modernSurface, options.x01Rules);
     if (modernSurface && Array.isArray(modernThrows)) {
       turnSurface = {

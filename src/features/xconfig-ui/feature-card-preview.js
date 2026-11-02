@@ -176,6 +176,9 @@ const FEATURE_PREVIEW_RESOLVERS = Object.freeze({
 export function resolveFeatureCardPreview(feature, features = []) {
   const featureKey = String(feature?.featureKey || "").trim();
   if (featureKey === "cricket-layout") return { kind: "cricket-table", url: "" };
+  if (feature.presentationGroup?.key === "dartboard-marker-highlight") return {
+    kind: "dart-marker", url: resolveXConfigPreviewAsset("dart-marker-replacer"),
+  };
   if (featureKey === "live-board-enhancement") return { kind: "board", url: resolveBoardStyleDesignAsset("winmau-blade-6-tc") };
   if (featureKey === "board-surround") {
     const design = COMMUNITY_SURROUNDS.find((entry) => entry.key === feature.config?.design) || COMMUNITY_SURROUNDS[0];

@@ -1,7 +1,7 @@
 ﻿import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { xconfigDescriptors } from "../src/features/xconfig-ui/descriptors.js";
-import { groupCricketTableDocumentation } from "../src/features/xconfig-ui/cricket-table-settings.js";
+import { groupPresentationDocumentation } from "../src/features/xconfig-ui/presentation-groups.js";
 import {
   buildModuleFinderSection,
   buildRecommendedDefaultsSection,
@@ -28,7 +28,7 @@ function resolveRecommendedConfig(featureKey) {
   return definition?.configKey ? createRecommendedFeatureConfig(definition.configKey) : null;
 }
 
-const orderedEntries = groupCricketTableDocumentation(xconfigDescriptors
+const orderedEntries = groupPresentationDocumentation(xconfigDescriptors
   .map((descriptor) => ({
     descriptor,
     definition: definitionByFeatureKey.get(descriptor.featureKey) || null,
