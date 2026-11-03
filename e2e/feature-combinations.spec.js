@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { build } from "esbuild";
 import { readFile } from "node:fs/promises";
 import { USERSCRIPT_ASSET_LOADERS } from "../scripts/userscript-build-config.mjs";
+import { openMatchRuntime, expectCheckout, stopMatchRuntime } from "./helpers/match-runtime.js";
 
 let bundle;
 
@@ -233,4 +234,98 @@ test("two takeout surfaces and rapid equal-score player changes retain one overl
     return { valid, overlays, tracked, remaining: document.querySelectorAll(".ad-ext-takeout-overlay").length };
   });
   expect(result).toEqual({ valid: true, overlays: 1, tracked: 2, remaining: 0 });
+});
+
+test.describe("shared match surfaces recover in Chromium", () => {
+  test.beforeEach(async ({ page }) => openMatchRuntime(page));
+  test.afterEach(async ({ page }) => stopMatchRuntime(page));
+
+  async function enterCricket(page) {
+    await page.evaluate(() => {
+      const api = window.matchRecovery;
+      api.visit.variant = "Cricket";
+      api.visit.throws = [];
+      api.replaceHost("Cricket");
+      // Keep the live-derived three-player grid. All three must close target 20
+      // before it becomes dead; the third player is already closed here.
+      const cells = api.readModernCricketGrid(document).cellsByLabel.get("20");
+      [3, 2, 3].forEach((marks, index) => { cells[index].dataset.marks = String(marks); });
+      api.publish();
+    });
+    await expect(page.locator(".ad-ext-crfx-modern-root")).toHaveCount(1);
+    await expect(page.locator('#ad-ext-cricket-targets [data-target-label="20"][data-target-presentation="scoring"]')).not.toHaveCount(0);
+  }
+
+  // Browser contribution: the two mounted consumers must rebind to the same new
+  // host through native observer delivery, not an explicit renderer invocation.
+  test("Cricket grid replacement preserves scoring and a later close updates board and cells", async ({ page }) => {
+    await enterCricket(page);
+    await page.evaluate(() => {
+      const api = window.matchRecovery;
+      const grid = api.readModernCricketGrid(document).root;
+      const replacement = grid.cloneNode(true);
+      for (const node of [replacement, ...replacement.querySelectorAll("*")]) {
+        node.className = [...node.classList].filter((name) => !name.startsWith("ad-ext-")).join(" ");
+      }
+      grid.replaceWith(replacement);
+    });
+    await expect(page.locator(".ad-ext-crfx-modern-root")).toHaveCount(1);
+    await expect.poll(() => page.evaluate(() => {
+      const cells = window.matchRecovery.readModernCricketGrid(document).cellsByLabel.get("20");
+      return [cells[0].classList.contains("ad-ext-crfx-score"), cells[1].classList.contains("ad-ext-crfx-pressure")];
+    })).toEqual([true, true]);
+    await page.evaluate(() => {
+      window.matchRecovery.readModernCricketGrid(document).cellsByLabel.get("20")[1].dataset.marks = "3";
+    });
+    await expect.poll(() => page.evaluate(() => window.matchRecovery.readModernCricketGrid(document)
+      .cellsByLabel.get("20").every((cell) => cell.classList.contains("ad-ext-crfx-dead")))).toBe(true);
+    const targets = page.locator('#ad-ext-cricket-targets [data-target-label="20"]');
+    await expect(targets).not.toHaveCount(0);
+    await expect(page.locator('#ad-ext-cricket-targets [data-target-label="20"]:not([data-target-presentation="dead"])')).toHaveCount(0);
+    await expect(page.locator("#ad-ext-cricket-targets")).toHaveCount(1);
+  });
+
+  test("Cricket undo reopens a dead target on the board and in every player column", async ({ page }) => {
+    await enterCricket(page);
+    await page.evaluate(() => {
+      window.matchRecovery.readModernCricketGrid(document).cellsByLabel.get("20")[1].dataset.marks = "3";
+    });
+    await expect.poll(() => page.evaluate(() => window.matchRecovery.readModernCricketGrid(document)
+      .cellsByLabel.get("20").every((cell) => cell.classList.contains("ad-ext-crfx-dead")))).toBe(true);
+    await expect(page.locator('#ad-ext-cricket-targets [data-target-label="20"]:not([data-target-presentation="dead"])')).toHaveCount(0);
+    await expect(page.locator('#ad-ext-cricket-targets [data-target-label="20"][data-target-presentation="dead"]')).not.toHaveCount(0);
+    await page.evaluate(() => {
+      window.matchRecovery.readModernCricketGrid(document).cellsByLabel.get("20")[1].dataset.marks = "2";
+    });
+    await expect.poll(() => page.evaluate(() => {
+      const cells = window.matchRecovery.readModernCricketGrid(document).cellsByLabel.get("20");
+      return {
+        scoring: [cells[0].classList.contains("ad-ext-crfx-score"), cells[2].classList.contains("ad-ext-crfx-score")],
+        pressure: cells[1].classList.contains("ad-ext-crfx-pressure"),
+        staleDead: cells.some((cell) => cell.classList.contains("ad-ext-crfx-dead")),
+      };
+    })).toEqual({ scoring: [true, true], pressure: true, staleDead: false });
+    await expect(page.locator('#ad-ext-cricket-targets [data-target-label="20"][data-target-presentation="scoring"]')).not.toHaveCount(0);
+    await expect(page.locator('#ad-ext-cricket-targets [data-target-label="20"]:not([data-target-presentation="scoring"])')).toHaveCount(0);
+    await expect(page.locator("#ad-ext-cricket-targets")).toHaveCount(1);
+  });
+
+  test("X01 to Cricket to X01 replaces mode effects and preserves feature configuration", async ({ page }) => {
+    await expectCheckout(page, expect, { target: 20, score: 40 });
+    const before = await page.evaluate(() => window.matchRecovery.runtime.getSnapshot().features);
+    await enterCricket(page);
+    await expect(page.locator("#ad-ext-checkout-targets, .ad-ext-checkout-possible, .ad-ext-tv-board-zoom")).toHaveCount(0);
+    await page.evaluate(() => {
+      const api = window.matchRecovery;
+      api.visit.variant = "X01";
+      api.visit.turn += 1;
+      api.replaceHost("X01");
+      api.publish();
+    });
+    await expectCheckout(page, expect, { target: 20, score: 40 });
+    await expect(page.locator("#ad-ext-cricket-targets, .ad-ext-crfx-root")).toHaveCount(0);
+    const after = await page.evaluate(() => window.matchRecovery.runtime.getSnapshot().features);
+    expect(Object.fromEntries(Object.entries(after).map(([key, value]) => [key, value.config])))
+      .toEqual(Object.fromEntries(Object.entries(before).map(([key, value]) => [key, value.config])));
+  });
 });

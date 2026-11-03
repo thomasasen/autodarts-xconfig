@@ -126,6 +126,12 @@ Do not run full validation merely because source code changed.
 
 ## SonarQube
 
+Connection: `http://192.168.2.50:9005`, project key `xConfig`.
+Read the token from `C:\Users\User\.codex\sonarqube-token.txt` directly into
+`SONARQUBE_CLI_TOKEN`; set `SONARQUBE_CLI_SERVER` to the server URL. Never print
+the token. The secrets analyzer needs `SONAR_SECRETS_ALLOW_UNSECURE_HTTP=true`
+for this configured HTTP server; no interactive login is needed.
+
 SonarQube is Tier 3 only. When Tier 3 requires it, follow
 `$validate-repo-change`; never print or commit the SonarQube token.
 When SonarQube cleanup is explicitly requested, query all unresolved project

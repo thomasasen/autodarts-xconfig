@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import { test, expect } from "@playwright/test";
 import { build } from "esbuild";
 import { USERSCRIPT_ASSET_LOADERS } from "../scripts/userscript-build-config.mjs";
+import { openMatchRuntime, setVisit, expectCheckout, stopMatchRuntime, readZoomTransform,
+  settleMatch, expectNoCheckout, deliverMatchFrame } from "./helpers/match-runtime.js";
 
 let bundle;
 let fixtureHtml;
@@ -316,4 +318,217 @@ test("Chromium observers keep checkout targets and TV zoom aligned through darts
     requestAnimationFrame: true,
     cssTransform: true,
   });
+});
+
+test.describe("checkout state recovery through native Chromium observers", () => {
+  test.beforeEach(async ({ page }) => openMatchRuntime(page));
+  test.afterEach(async ({ page }) => stopMatchRuntime(page));
+
+  // Unlike rule tests, these assertions observe mounted consumers after DOM and
+  // game-state updates, including real MutationObserver and RAF scheduling.
+  test("undo restores D20 across targets, score highlight and checkout zoom", async ({ page }) => {
+    await expectCheckout(page, expect, { target: 20, score: 40 });
+    const initialZoom = await readZoomTransform(page);
+    await setVisit(page, { scores: [20, 32], throws: [{ segment: { name: "S20" }, score: 20 }], route: ["D10"], total: "20" });
+    await expectCheckout(page, expect, { target: 10, score: 20 });
+    await expect.poll(() => readZoomTransform(page)).not.toEqual(initialZoom);
+    await setVisit(page, { scores: [40, 32], throws: [], route: ["D20"], total: "0" });
+    await expectCheckout(page, expect, { target: 20, score: 40 });
+    await expect.poll(() => readZoomTransform(page)).toEqual(initialZoom);
+    await expect(page.locator('#ad-ext-checkout-targets [data-target-value="10"]')).toHaveCount(0);
+  });
+
+  test("first-dart Bust releases zoom and the next player owns the new D16 checkout", async ({ page }) => {
+    await expectCheckout(page, expect, { target: 20, score: 40 });
+    await setVisit(page, { throws: [{ segment: { name: "T20" }, score: 60 }], route: [], total: "BUST" });
+    await expect(page.locator(".ad-ext-tv-board-zoom")).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => [...document.querySelectorAll('[aria-label="Dartboard"] svg')]
+      .every((node) => !node.style.transform))).toBe(true);
+    await setVisit(page, { player: 1, throws: [], route: ["D16"], total: "0", turn: 2 });
+    await expectCheckout(page, expect, { target: 16, score: 32, player: 1 });
+    await expect(page.locator('#ad-ext-checkout-targets [data-target-value="20"]')).toHaveCount(0);
+    expect(await page.evaluate(() => window.matchRecovery.readModernMatchSurface(document, window)
+      .players[0].scoreNode.textContent)).toBe("40");
+  });
+
+  test("unchanged checkout survives nested host replacement without a state notification", async ({ page }) => {
+    await page.evaluate(() => {
+      const main = document.querySelector("main");
+      const host = document.createElement("section");
+      host.id = "recovery-semantic-host";
+      const wrapper = document.createElement("div");
+      [...main.children].filter((node) => !node.matches('[aria-label="Dartboard"]')).forEach((node) => wrapper.append(node));
+      host.append(wrapper);
+      main.prepend(host);
+    });
+    await expectCheckout(page, expect, { target: 20, score: 40 });
+    await page.evaluate(() => {
+      const wrapper = document.querySelector("#recovery-semantic-host > div");
+      const replacement = wrapper.cloneNode(true);
+      replacement.querySelectorAll(".ad-ext-checkout-possible").forEach((node) => {
+        node.className = [...node.classList].filter((name) => !name.startsWith("ad-ext-")).join(" ");
+      });
+      wrapper.replaceWith(replacement);
+    });
+    await expectCheckout(page, expect, { target: 20, score: 40 });
+    await expect(page.locator("#recovery-semantic-host .ad-ext-checkout-possible")).toHaveCount(1);
+    await setVisit(page, { scores: [20, 32], throws: [{ segment: { name: "S20" }, score: 20 }], route: ["D10"], total: "20" }, { publish: false });
+    await expectCheckout(page, expect, { target: 10, score: 20 });
+  });
+
+  test("unchanged checkout binds to a new board after a missing-board gap", async ({ page }) => {
+    await expectCheckout(page, expect, { target: 20, score: 40 });
+    await page.evaluate(() => document.querySelector('[aria-label="Dartboard"]').remove());
+    await expect(page.locator("#ad-ext-checkout-targets")).toHaveCount(0);
+    await page.evaluate(() => document.querySelector("main").insertAdjacentHTML("beforeend", window.matchRecovery.boardHtml));
+    await expectCheckout(page, expect, { target: 20, score: 40 });
+    await expect(page.locator('[aria-label="Dartboard"] #ad-ext-checkout-targets')).toHaveCount(1);
+  });
+
+  test("configuration toggles restore one score highlight and zoom through three cycles", async ({ page }) => {
+    for (let cycle = 0; cycle < 3; cycle++) {
+      await expectCheckout(page, expect, { target: 20, score: 40 });
+      for (const feature of ["checkout-score-highlight", "tv-board-zoom"]) {
+        await page.evaluate((key) => window.matchRecovery.runtime.setFeatureEnabled(key, false), feature);
+      }
+      await setVisit(page, { scores: [20, 32], route: ["D10"] });
+      await expect(page.locator('#ad-ext-checkout-targets .ad-ext-checkout-target[data-target-value="10"]')).toHaveCount(1);
+      await expect(page.locator(".ad-ext-checkout-possible")).toHaveCount(0);
+      await expect(page.locator(".ad-ext-tv-board-zoom")).toHaveCount(0);
+      for (const feature of ["checkout-score-highlight", "tv-board-zoom"]) {
+        await page.evaluate((key) => window.matchRecovery.runtime.setFeatureEnabled(key, true), feature);
+      }
+      await expectCheckout(page, expect, { target: 10, score: 20 });
+      await setVisit(page, { scores: [40, 32], route: ["D20"] });
+      await expectCheckout(page, expect, { target: 20, score: 40 });
+    }
+    const snapshot = await page.evaluate(() => window.matchRecovery.runtime.getSnapshot());
+    expect(snapshot.features["tv-board-zoom"].config.zoomLevel).toBe(1.75);
+    expect(snapshot.features["checkout-score-highlight"].config.effect).toBe("grow-only");
+  });
+
+  for (const order of ["score-first", "player-first"]) {
+    test(`${order} host updates converge on the next player's checkout`, async ({ page }) => {
+      await expectCheckout(page, expect, { target: 20, score: 40 });
+      const first = order === "score-first" ? { scores: [40, 20], route: ["D10"] } : { player: 1, route: ["D16"] };
+      await setVisit(page, first, { publish: false });
+      // Separate rendering passes without assuming an atomic Autodarts update.
+      await page.evaluate(() => new Promise(requestAnimationFrame));
+      await setVisit(page, { player: 1, scores: [40, 20], route: ["D10"], turn: 2 });
+      await expectCheckout(page, expect, { target: 10, score: 20, player: 1 });
+      await expect(page.locator('#ad-ext-checkout-targets [data-target-value="20"]')).toHaveCount(0);
+    });
+  }
+
+  // These cases exercise lifecycle holds through real browser scheduling; rule
+  // tests alone cannot prove that the mounted renderer releases a held transform.
+  test("third-dart Bust holds the last checkout zoom until the next player", async ({ page }) => {
+    const misses = [{ segment: { name: "MISS" }, score: 0 }, { segment: { name: "MISS" }, score: 0 }];
+    await setVisit(page, { throws: misses });
+    await settleMatch(page);
+    await expectCheckout(page, expect, { target: 20, score: 40 });
+    const heldZoom = await readZoomTransform(page);
+    await setVisit(page, { throws: [...misses, { segment: { name: "T20" }, score: 60 }], route: [], total: "BUST" });
+    await settleMatch(page);
+    await expect(page.locator(".ad-ext-tv-board-zoom")).toHaveCount(1);
+    expect(await readZoomTransform(page)).toEqual(heldZoom);
+    await setVisit(page, { player: 1, scores: [40, 301], throws: [], route: [], total: "0", turn: 2 });
+    await expectNoCheckout(page);
+    await setVisit(page, { scores: [40, 32], route: ["D16"] });
+    await expectCheckout(page, expect, { target: 16, score: 32, player: 1 });
+    await expect.poll(() => readZoomTransform(page)).not.toEqual(heldZoom);
+  });
+
+  test("third-dart checkout holds zoom until a new leg clears the previous game", async ({ page }) => {
+    const misses = [{ segment: { name: "MISS" }, score: 0 }, { segment: { name: "MISS" }, score: 0 }];
+    await setVisit(page, { throws: misses });
+    await settleMatch(page);
+    await expectCheckout(page, expect, { target: 20, score: 40 });
+    const heldZoom = await readZoomTransform(page);
+    await setVisit(page, { scores: [0, 32], throws: [...misses, { segment: { name: "D20" }, score: 40 }], route: [], total: "WIN" });
+    await settleMatch(page);
+    await expect(page.locator(".ad-ext-tv-board-zoom")).toHaveCount(1);
+    expect(await readZoomTransform(page)).toEqual(heldZoom);
+    await setVisit(page, { gameId: "x01-next-leg", scores: [301, 301], throws: [], route: [], total: "0", turn: 1 });
+    await expectNoCheckout(page);
+    await setVisit(page, { scores: [32, 301], route: ["D16"] });
+    await expectCheckout(page, expect, { target: 16, score: 32 });
+    await expect(page.locator('#ad-ext-checkout-targets [data-target-value="20"]')).toHaveCount(0);
+  });
+
+  test("new match quarantines a late frame from the previous match and recovers", async ({ page }) => {
+    await expectCheckout(page, expect, { target: 20, score: 40 });
+    const previousMatch = await page.evaluate(() => window.matchRecovery.runtime.context.gameState.getSnapshot().match);
+    await page.evaluate(() => {
+      const api = window.matchRecovery;
+      history.pushState({}, "", "/matches/next-match");
+      Object.assign(api.visit, { matchId: "next-match", gameId: "next-game", scores: [301, 301], route: [] });
+      api.replaceHost("X01");
+      api.publish();
+    });
+    await expectNoCheckout(page);
+    await deliverMatchFrame(page, previousMatch);
+    expect(await page.evaluate(() => window.matchRecovery.runtime.context.gameState.getSnapshot().match.id)).toBe("modern-match");
+    await settleMatch(page);
+    await expectNoCheckout(page);
+    await setVisit(page, { scores: [32, 301], route: ["D16"] });
+    await expectCheckout(page, expect, { target: 16, score: 32 });
+    expect(await page.evaluate(() => window.matchRecovery.runtime.context.gameState.getSnapshot().match.id)).toBe("next-match");
+  });
+
+  test("equal scores still move checkout ownership to the next player", async ({ page }) => {
+    await setVisit(page, { scores: [40, 40] });
+    await expectCheckout(page, expect, { target: 20, score: 40 });
+    await setVisit(page, { player: 1, turn: 2 });
+    await expectCheckout(page, expect, { target: 20, score: 40, player: 1 });
+    await setVisit(page, { scores: [40, 20], throws: [{ segment: { name: "S20" }, score: 20 }], route: ["D10"], total: "20" });
+    await expectCheckout(page, expect, { target: 10, score: 20, player: 1 });
+    await expect(page.locator('#ad-ext-checkout-targets [data-target-value="20"]')).toHaveCount(0);
+  });
+
+  test("native correction click pauses zoom and a corrected dart resumes the new target", async ({ page }) => {
+    await setVisit(page, { scores: [20, 32], throws: [{ segment: { name: "S20" }, score: 20 }], route: ["D10"], total: "20" });
+    await expectCheckout(page, expect, { target: 10, score: 20 });
+    const previousZoom = await readZoomTransform(page);
+    await page.evaluate(() => {
+      window.matchRecovery.findModernTurnSurface(document, window).throwRows[0].id = "recovery-correction-dart";
+    });
+    await page.locator("#recovery-correction-dart").click();
+    await expect(page.locator(".ad-ext-tv-board-zoom")).toHaveCount(0);
+    await expect.poll(() => readZoomTransform(page)).toEqual([]);
+    await page.evaluate(() => window.matchRecovery.publish());
+    await settleMatch(page);
+    await expect(page.locator(".ad-ext-tv-board-zoom")).toHaveCount(0);
+    // Correct the same dart: count remains one, segment and score change.
+    await setVisit(page, { scores: [32, 32], throws: [{ segment: { name: "S8" }, score: 8 }], route: ["D16"], total: "8" });
+    await expectCheckout(page, expect, { target: 16, score: 32 });
+    await expect.poll(() => readZoomTransform(page)).not.toEqual(previousZoom);
+  });
+
+  for (const leadingSource of ["DOM", "state"]) {
+    test(`${leadingSource}-first dart update reconciles delayed host and WebSocket data`, async ({ page }) => {
+      await expectCheckout(page, expect, { target: 20, score: 40 });
+      const previousMatch = await page.evaluate(() => window.matchRecovery.runtime.context.gameState.getSnapshot().match);
+      const nextVisit = { scores: [20, 32], throws: [{ segment: { name: "S20" }, score: 20 }], route: ["D10"], total: "20" };
+      const initialZoom = await readZoomTransform(page);
+      await setVisit(page, nextVisit, { publish: false, writeHost: leadingSource === "DOM" });
+      const nextMatch = await page.evaluate(() => window.matchRecovery.buildMatch());
+      if (leadingSource === "state") await deliverMatchFrame(page, nextMatch);
+      await expect(page.locator('#ad-ext-checkout-targets .ad-ext-checkout-target[data-target-value="10"]')).toHaveCount(1);
+      await expect(page.locator('#ad-ext-checkout-targets [data-target-value="20"]')).toHaveCount(0);
+      await expect.poll(() => readZoomTransform(page)).not.toEqual(initialZoom);
+      if (leadingSource === "DOM") {
+        // Re-deliver the old snapshot while the DOM already shows the new dart.
+        await deliverMatchFrame(page, previousMatch);
+        await settleMatch(page);
+        await expectCheckout(page, expect, { target: 10, score: 20 });
+        await deliverMatchFrame(page, nextMatch);
+      } else {
+        expect(await page.evaluate(() => window.matchRecovery.readModernMatchSurface(document, window).activeScore)).toBe(40);
+        await page.evaluate(() => window.matchRecovery.writeHost());
+      }
+      await expectCheckout(page, expect, { target: 10, score: 20 });
+      expect(await page.evaluate(() => window.matchRecovery.runtime.context.gameState.getActiveScore())).toBe(20);
+    });
+  }
 });
