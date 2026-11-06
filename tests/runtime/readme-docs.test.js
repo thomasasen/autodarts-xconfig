@@ -437,3 +437,47 @@ test("runtime audit docs exist and cover entry points plus findings", () => {
   assert.match(performanceAuditDoc, /Verification/i);
   assert.match(performanceAuditDoc, /duplicate game-state wakeups/i);
 });
+
+
+test("README and generated feature reference resolve local links, anchors and HTML images", () => {
+  const sourceFiles = [readmePath, featuresDocPath];
+  const explicitAnchors = (text) => new Set(
+    [...text.matchAll(/<a\\s+id="([^"]+)"\\s*><\\/a>/g)].map((match) => match[1])
+  );
+  const headingAnchors = (text) => {
+    const used = new Map();
+    return new Set([...text.matchAll(/^#{1,6}\\s+(.+)$/gm)].map((match) => {
+      const base = match[1].trim().toLocaleLowerCase("de")
+        .replace(/[^\\p{L}\\p{N} _-]/gu, "")
+        .replace(/\\s+/g, "-");
+      const count = used.get(base) || 0;
+      used.set(base, count + 1);
+      return count ? `${base}-${count}` : base;
+    }));
+  };
+  for (const source of sourceFiles) {
+    const text = readText(source);
+    const targets = [
+      ...text.matchAll(/!?\\[[^\\]]*\\]\\(([^)]+)\\)/g),
+      ...text.matchAll(/<(?:img|source)\\b[^>]*\\b(?:src|srcset)="([^"]+)"/g),
+    ];
+    for (const match of targets) {
+      const rawTarget = match[1].trim();
+      if (/^(https?:|data:|mailto:)/i.test(rawTarget)) continue;
+      const [relativePath, anchor = ""] = rawTarget.split("#", 2);
+      const resolved = relativePath ? path.resolve(path.dirname(source), relativePath) : source;
+      assert.ok(existsSync(resolved), `broken local link in ${path.basename(source)}: ${rawTarget}`);
+      if (!anchor || !resolved.endsWith(".md")) continue;
+      const targetText = readText(resolved);
+      const decoded = decodeURIComponent(anchor);
+      assert.ok(explicitAnchors(targetText).has(decoded) || headingAnchors(targetText).has(decoded),
+        `broken Markdown anchor in ${path.basename(source)}: ${rawTarget}`);
+    }
+  }
+});
+
+test("README and FEATURES do not link to superseded xConfig shell screenshots", () => {
+  for (const source of [readmePath, featuresDocPath]) {
+    assert.doesNotMatch(readText(source), /docs\\/screenshots\\/ad-xconfig-(?:kachel|einstellungen|theme-background|overview-v3)\\.png|screenshots\\/ad-xconfig-(?:kachel|einstellungen|theme-background|overview-v3)\\.png/);
+  }
+});
