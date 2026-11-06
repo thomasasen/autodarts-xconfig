@@ -271,7 +271,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Sunshine`: Wendet die Vorlage Sunshine mit einem Klick an.
 
 ![Designgalerie aus dem aktuellen xConfig-Renderer (Test-Fixture)](screenshots/xconfig-settings-design-gallery.webp)
-![Globale Vorlagen](screenshots/templates-global-presets.webp)
+![Designwirkung: globale Vorlagen](screenshots/templates-global-presets.webp)
 
 <a id="theme-global-background"></a>
 
@@ -312,7 +312,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
 ![Globales Hintergrundbild: aktuelle Einstellungen (Test-Fixture)](screenshots/xconfig-settings-background.webp)
-![Globaler Hintergrund](screenshots/templates-global-presets.webp)
+![Hintergrundwirkung einer Designvorlage](screenshots/templates-global-presets.webp)
 
 <a id="template-global-typography"></a>
 
