@@ -8,7 +8,9 @@
 
 Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Alle Kacheln stehen gemeinsam auf einer Seite in den Bereichen **Design**, **Alle Modi**, **X01** und **Cricket / Tactics**. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).
 
-![Aktuelle AD xConfig Übersicht](screenshots/ad-xconfig-overview-v3.png)
+![Aktuelle xConfig Design-Kacheln, Playwright-Test-Fixture](screenshots/xconfig-overview-design.webp)
+
+![Aktuelle xConfig Kacheln für alle Modi, Playwright-Test-Fixture](screenshots/xconfig-overview-allmodes.webp)
 
 ## Hinweise zur Konfiguration
 
@@ -268,6 +270,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Price Clayton`: Wendet die Vorlage Price Clayton mit einem Klick an.
 - `Sunshine`: Wendet die Vorlage Sunshine mit einem Klick an.
 
+![Designgalerie aus dem aktuellen xConfig-Renderer (Test-Fixture)](screenshots/xconfig-settings-design-gallery.webp)
 ![Globale Vorlagen](screenshots/templates-global-presets.webp)
 
 <a id="theme-global-background"></a>
@@ -308,6 +311,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Hintergrundbild entfernen`: Entfernt das globale Hintergrundbild.
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
+![Globales Hintergrundbild: aktuelle Einstellungen (Test-Fixture)](screenshots/xconfig-settings-background.webp)
 ![Globaler Hintergrund](screenshots/templates-global-presets.webp)
 
 <a id="template-global-typography"></a>
@@ -434,6 +438,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Leg-Starter anzeigen`: Zeigt einen START-Badge beim Leg-Starter.
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
+![Bildschirmprofile: aktuelle Einstellungen (Test-Fixture)](screenshots/xconfig-settings-screen-profiles.webp)
 ![X01-Spiel-Layout](screenshots/theme-game-layout.webp)
 
 ## Alle Modi
@@ -647,6 +652,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Diagnose: Native Marker hervorheben`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 - `Diagnose: Dart-Bilder anzeigen`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
+![Board-Treffermarkierungen: zwei unabhängige Schalter (Test-Fixture)](screenshots/xconfig-card-board-markers.webp)
 ![Treffermarkierungen hervorheben](screenshots/animation-dart-marker-emphasis.gif)
 
 <a id="animation-autodarts-animate-take-out-darts-alert"></a>
@@ -786,6 +792,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Diagnose: Treffer hervorheben`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 - `Diagnose: Wurfsumme animieren`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
+![Wurfanzeige: drei getrennte Schalter (Test-Fixture)](screenshots/xconfig-card-wurfanzeige.webp)
 ![Punkte animiert zählen](screenshots/animation-turn-points-count.gif)
 ![Punkte animiert zählen – Detail](screenshots/animation-turn-points-count-detail-readme.gif)
 
@@ -859,6 +866,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Diagnose: Finishbaren Restscore hervorheben`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 - `Diagnose: Restscore-Balken anzeigen`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
+![X01-Restscore: zwei unabhängige Schalter (Test-Fixture)](screenshots/xconfig-card-x01-score.webp)
 ![Finishbaren Restscore hervorheben](screenshots/animation-checkout-score-pulse.gif)
 
 <a id="animation-autodarts-animate-checkout-target-highlights"></a>
@@ -1116,6 +1124,7 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Druckfläche`: Legt bei Gegnerdruck eine zusätzliche Druckfläche über betroffene Bereiche.
 - `Diagnose: Status und Effekte`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
+![Cricket-/Tactics-Tabelle: aktuelle Kachel (Test-Fixture)](screenshots/xconfig-card-cricket-table.webp)
 ![Cricket-Layout: schematische Beispielansicht](screenshots/cricket-layout-example.png)
 
 <a id="animation-autodarts-animate-cricket-target-highlighter"></a>
