@@ -50,7 +50,7 @@ const DIALOG_CROP_BEFORE = Object.freeze({
   "xconfig-settings-x01-score": "Sanft blinken",
   "xconfig-settings-cricket-table": "Status und Trefferfeedback",
   "xconfig-settings-design-gallery": "Atmosphäre",
-  "xconfig-settings-background": "20 %",
+  "xconfig-settings-background": "25 %",
   "xconfig-settings-screen-profiles": "Board-Anteil (%)",
   "xconfig-settings-surround": "Precise180 Endorphine Grey",
 });
@@ -120,7 +120,7 @@ try {
           .filter((node) => node.childElementCount === 0 && normalize(node.textContent) === text)
           .map((node) => Math.floor(node.getBoundingClientRect().top - modal.getBoundingClientRect().top))
           .filter((top) => top > 450 && top < modal.clientHeight);
-        return matches.length ? Math.max(...matches) - 14 : 0;
+        return matches.length ? Math.max(...matches) - (text === "Sanft blinken" ? 30 : 14) : 0;
       }, cropBefore);
       if (cropHeight < 450 || cropHeight > 1120) {
         throw new Error(`No safe screenshot boundary for ${fileName} before "${cropBefore}" (${cropHeight}px)`);
