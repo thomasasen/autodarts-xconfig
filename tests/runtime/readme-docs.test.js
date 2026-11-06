@@ -442,14 +442,14 @@ test("runtime audit docs exist and cover entry points plus findings", () => {
 test("README and generated feature reference resolve local links, anchors and HTML images", () => {
   const sourceFiles = [readmePath, featuresDocPath];
   const explicitAnchors = (text) => new Set(
-    [...text.matchAll(/<a\\s+id="([^"]+)"\\s*><\\/a>/g)].map((match) => match[1])
+    [...text.matchAll(/<a\s+id="([^"]+)"\s*><\/a>/g)].map((match) => match[1])
   );
   const headingAnchors = (text) => {
     const used = new Map();
-    return new Set([...text.matchAll(/^#{1,6}\\s+(.+)$/gm)].map((match) => {
+    return new Set([...text.matchAll(/^#{1,6}\s+(.+)$/gm)].map((match) => {
       const base = match[1].trim().toLocaleLowerCase("de")
-        .replace(/[^\\p{L}\\p{N} _-]/gu, "")
-        .replace(/\\s+/g, "-");
+        .replace(/[^\p{L}\p{N} _-]/gu, "")
+        .replace(/\s+/g, "-");
       const count = used.get(base) || 0;
       used.set(base, count + 1);
       return count ? `${base}-${count}` : base;
@@ -458,8 +458,8 @@ test("README and generated feature reference resolve local links, anchors and HT
   for (const source of sourceFiles) {
     const text = readText(source);
     const targets = [
-      ...text.matchAll(/!?\\[[^\\]]*\\]\\(([^)]+)\\)/g),
-      ...text.matchAll(/<(?:img|source)\\b[^>]*\\b(?:src|srcset)="([^"]+)"/g),
+      ...text.matchAll(/!?\[[^\]]*\]\(([^)]+)\)/g),
+      ...text.matchAll(/<(?:img|source)\b[^>]*\b(?:src|srcset)="([^"]+)"/g),
     ];
     for (const match of targets) {
       const rawTarget = match[1].trim();
@@ -478,6 +478,6 @@ test("README and generated feature reference resolve local links, anchors and HT
 
 test("README and FEATURES do not link to superseded xConfig shell screenshots", () => {
   for (const source of [readmePath, featuresDocPath]) {
-    assert.doesNotMatch(readText(source), /docs\\/screenshots\\/ad-xconfig-(?:kachel|einstellungen|theme-background|overview-v3)\\.png|screenshots\\/ad-xconfig-(?:kachel|einstellungen|theme-background|overview-v3)\\.png/);
+    assert.doesNotMatch(readText(source), /docs\/screenshots\/ad-xconfig-(?:kachel|einstellungen|theme-background|overview-v3)\.png|screenshots\/ad-xconfig-(?:kachel|einstellungen|theme-background|overview-v3)\.png/);
   }
 });
