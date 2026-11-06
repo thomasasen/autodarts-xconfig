@@ -28,6 +28,8 @@ jobs:
         run: npm ci
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+      - name: Install ffmpeg for WebP compression
+        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
       - name: Capture actual xConfig shell using Playwright
         run: node scripts/capture-xconfig-docs.mjs
       - name: Check image output
@@ -42,5 +44,7 @@ jobs:
           git add docs/screenshots/xconfig-*.webp
           if ! git diff --cached --quiet; then
             git commit -m "docs: capture current xConfig UI screenshots"
-            git push
+            git fetch origin "$GITHUB_REF_NAME"
+            git rebase "origin/$GITHUB_REF_NAME"
+            git push origin "HEAD:$GITHUB_REF_NAME"
           fi
