@@ -275,12 +275,14 @@ export const xconfigFeatureCopy = deepFreeze({
   "live-board-enhancement": featureCopy({
     cardDescription: "Schärft das vorhandene Board-Livebild mit einstellbarer Stärke.",
     visibleDescription: "Verbessert Schärfe und Kontrast des angezeigten Kamerabilds. Die Darterkennung bleibt unverändert.",
+    images: [image("Livebild-Einstellungen (Test-Fixture)", "xconfig-settings-live-picture.webp")],
     usefulWhen: "Wenn das Livebild auf dem Spielmonitor zu weich wirkt.",
     fields: { intensity: fieldCopy("Regelt den Filter von 0 bis 100. Dezent: 30, Deutlich: 60. Hohe Werte können Rauschen verstärken."), debug: DEBUG_FIELD },
   }),
   "board-surround": featureCopy({
     cardDescription: "Zeigt einen von 34 Surrounds hinter dem Board.",
     visibleDescription: "Das Motiv wird beim ersten Aktivieren geladen und dauerhaft gespeichert. Danach ist es offline verfügbar. Der Surround bleibt beim Checkout-Zoom stehen und lässt das Board frei.",
+    images: [image("Surround-Auswahl (Test-Fixture)", "xconfig-settings-surround.webp")],
     usefulWhen: "Wenn die Scheibe einen passenden Rahmen erhalten soll.",
     fields: { design: fieldCopy("Wählt das Surround-Motiv."), sizePercent: fieldCopy("Passt die Außengröße an; die Board-Fläche bleibt frei."), debug: DEBUG_FIELD },
   }),
@@ -882,6 +884,7 @@ export const xconfigFeatureCopy = deepFreeze({
       "Die native Board-Fläche wird durch ein ausgewähltes, lokal eingebettetes Board-Design ersetzt.",
     visualDescription:
       "Das ausgewählte Design liegt über der nativen Board-Grafik. Treffer-Marker, Checkout-Ziele und Cricket-Hervorhebungen bleiben darüber sichtbar. Im Bot-Modus erscheint das Design nur, wenn der aktive Spieler zuverlässig als Bot erkannt wird.",
+    images: [image("Dartboard-Designs (Test-Fixture)", "xconfig-settings-dartboard-design.webp")],
     usefulWhen:
       "Wenn Bot-Partien ein eigenes Board erhalten sollen oder du dasselbe Board-Design in allen unterstützten Matches verwenden möchtest.",
     fields: {
