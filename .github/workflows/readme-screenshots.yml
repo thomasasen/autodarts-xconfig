@@ -39,8 +39,10 @@ jobs:
       - name: Verify generated documentation is reproducible
         run: |
           npm run sync:xconfig-docs
+          sha256sum README.md docs/FEATURES.md > /tmp/docs-pass1.sha
           npm run sync:xconfig-docs
-          git diff --exit-code -- README.md docs/FEATURES.md
+          sha256sum README.md docs/FEATURES.md > /tmp/docs-pass2.sha
+          diff -u /tmp/docs-pass1.sha /tmp/docs-pass2.sha
       - name: Run focused documentation tests and lint
         run: |
           npx eslint scripts/capture-xconfig-docs.mjs scripts/sync-xconfig-docs.mjs tests/runtime/readme-docs.test.js
@@ -57,8 +59,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin "$GITHUB_REF_NAME"
           git reset --mixed "origin/$GITHUB_REF_NAME"
-          git add docs/screenshots/xconfig-*.webp
+          git add README.md docs/FEATURES.md docs/screenshots/xconfig-*.webp
           if ! git diff --cached --quiet; then
-            git commit -m "docs: capture current xConfig UI screenshots"
+            git commit -m "docs: sync generated reference and current UI screenshots"
             git push origin "HEAD:$GITHUB_REF_NAME"
           fi
