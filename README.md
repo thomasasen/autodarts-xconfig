@@ -182,6 +182,8 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#live-board-enhancement)
 
+![Livebild-Einstellungen (Test-Fixture)](docs/screenshots/xconfig-settings-live-picture.webp)
+
 <a id="board-surround"></a>
 
 ### Board-Surround
@@ -192,6 +194,8 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#board-surround)
 
+![Surround-Auswahl (Test-Fixture)](docs/screenshots/xconfig-settings-surround.webp)
+
 <a id="bot-board-style"></a>
 
 ### Dartboard-Design
@@ -201,6 +205,8 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 - Wann sinnvoll? Wenn Bot-Partien ein eigenes Board erhalten sollen oder du dasselbe Board-Design in allen unterstützten Matches verwenden möchtest.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#bot-board-style)
+
+![Dartboard-Designs (Test-Fixture)](docs/screenshots/xconfig-settings-dartboard-design.webp)
 
 <a id="animation-autodarts-animate-avg-trend-arrow"></a>
 <a id="animation-autodarts-animate-average-trend-arrow"></a>
