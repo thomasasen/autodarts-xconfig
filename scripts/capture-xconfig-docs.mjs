@@ -41,6 +41,20 @@ const dialogs = [
   ["xconfig-settings-dartboard-design", "bot-board-style"],
 ];
 
+// Capture each scrollable dialog up to the next complete setting block.
+// The image is an intentional excerpt; never cut through an option or switch.
+// Labels are resolved against the actual rendered DOM rather than hardcoded pixels.
+const DIALOG_CROP_BEFORE = Object.freeze({
+  "xconfig-settings-wurfanzeige": "Dart-Symbole gestalten",
+  "xconfig-settings-board-markers": "Animation",
+  "xconfig-settings-x01-score": "Sanft blinken",
+  "xconfig-settings-cricket-table": "Status und Trefferfeedback",
+  "xconfig-settings-design-gallery": "Atmosphäre",
+  "xconfig-settings-background": "20 %",
+  "xconfig-settings-screen-profiles": "Board-Anteil (%)",
+  "xconfig-settings-surround": "Precise180 Endorphine Grey",
+});
+
 const bundle = await build({
   stdin: {
     contents: `
@@ -97,9 +111,25 @@ try {
     await locator.waitFor({ state: "visible" });
     const pngPath = path.join(temporary, `${fileName}.png`);
     const webpPath = path.join(outputDirectory, `${fileName}.webp`);
+    const cropBefore = DIALOG_CROP_BEFORE[fileName] || "";
+    let cropHeight = 0;
+    if (cropBefore) {
+      cropHeight = await locator.evaluate((modal, text) => {
+        const normalize = (value) => String(value || "").replace(/\\s+/g, " ").trim();
+        const matches = [...modal.querySelectorAll("*")]
+          .filter((node) => node.childElementCount === 0 && normalize(node.textContent) === text)
+          .map((node) => Math.floor(node.getBoundingClientRect().top - modal.getBoundingClientRect().top))
+          .filter((top) => top > 450 && top < modal.clientHeight);
+        return matches.length ? Math.max(...matches) - 14 : 0;
+      }, cropBefore);
+      if (cropHeight < 450 || cropHeight > 1120) {
+        throw new Error(`No safe screenshot boundary for ${fileName} before "${cropBefore}" (${cropHeight}px)`);
+      }
+    }
     await locator.screenshot({ path: pngPath, animations: "disabled", timeout: 15000 });
     const result = spawnSync("ffmpeg", [
       "-hide_banner", "-loglevel", "error", "-y", "-i", pngPath,
+      ...(cropHeight ? ["-vf", `crop=iw:${cropHeight}:0:0`] : []),
       "-frames:v", "1", "-c:v", "libwebp", "-quality", "79",
       "-compression_level", "6", "-preset", "picture", webpPath,
     ], { encoding: "utf8", maxBuffer: 2 * 1024 * 1024 });
