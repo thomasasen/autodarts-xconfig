@@ -454,6 +454,8 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Stärke`: Regelt den Filter von 0 bis 100. Dezent: 30, Deutlich: 60. Hohe Werte können Rauschen verstärken.
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
+![Livebild-Einstellungen (Test-Fixture)](screenshots/xconfig-settings-live-picture.webp)
+
 <a id="board-surround"></a>
 
 ### Board-Surround
@@ -501,6 +503,8 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
 - `Größe (%)`: Passt die Außengröße an; die Board-Fläche bleibt frei.
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
 
+![Surround-Auswahl (Test-Fixture)](screenshots/xconfig-settings-surround.webp)
+
 <a id="bot-board-style"></a>
 
 ### Dartboard-Design
@@ -524,6 +528,8 @@ Die Aktion `Empfohlene Standards` wendet aktuell dieses Profil an:
   - `Nur bei Bot-Zügen`: Zeigt das Design nur bei eindeutig erkannten Bot-Zügen.
   - `Alle Match-Boards`: Verwendet das Design global auf unterstützten Match-Boards.
 - `Diagnose`: Aktiviert zusätzliche Debug-Ausgaben für die Fehlersuche.
+
+![Dartboard-Designs (Test-Fixture)](screenshots/xconfig-settings-dartboard-design.webp)
 
 <a id="animation-autodarts-animate-avg-trend-arrow"></a>
 <a id="animation-autodarts-animate-average-trend-arrow"></a>
