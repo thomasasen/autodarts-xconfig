@@ -8,6 +8,10 @@ on:
       - scripts/capture-xconfig-docs.mjs
       - .github/workflows/readme-screenshots.yml
 
+concurrency:
+  group: readme-screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -51,10 +55,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin "$GITHUB_REF_NAME"
+          git reset --mixed "origin/$GITHUB_REF_NAME"
           git add docs/screenshots/xconfig-*.webp
           if ! git diff --cached --quiet; then
             git commit -m "docs: capture current xConfig UI screenshots"
-            git fetch origin "$GITHUB_REF_NAME"
-            git rebase "origin/$GITHUB_REF_NAME"
             git push origin "HEAD:$GITHUB_REF_NAME"
           fi
