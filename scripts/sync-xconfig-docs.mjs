@@ -98,7 +98,9 @@ function buildFeaturesDocSections() {
     "",
     "Die gesamte Steuerung läuft über **AD xConfig** direkt im Spiel. Alle Kacheln stehen gemeinsam auf einer Seite in den Bereichen **Design**, **Alle Modi**, **X01** und **Cricket / Tactics**. Die schnelle Benutzer-Einführung findest du in der [README](../README.md).",
     "",
-    "![Aktuelle AD xConfig Übersicht](screenshots/ad-xconfig-overview-v3.png)",
+    "![Aktuelle xConfig Design-Kacheln, Playwright-Test-Fixture](screenshots/xconfig-overview-design.webp)",
+    "",
+    "![Aktuelle xConfig Kacheln für alle Modi, Playwright-Test-Fixture](screenshots/xconfig-overview-allmodes.webp)",
     "",
     buildXConfigOverviewSection("Hinweise zur Konfiguration", overviewCounts).trim(),
   ].join("\n");
