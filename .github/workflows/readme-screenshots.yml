@@ -32,6 +32,16 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
       - name: Capture actual xConfig shell using Playwright
         run: node scripts/capture-xconfig-docs.mjs
+      - name: Verify generated documentation is reproducible
+        run: |
+          npm run sync:xconfig-docs
+          npm run sync:xconfig-docs
+          git diff --exit-code -- README.md docs/FEATURES.md
+      - name: Run focused documentation tests and lint
+        run: |
+          npx eslint scripts/capture-xconfig-docs.mjs scripts/sync-xconfig-docs.mjs tests/runtime/readme-docs.test.js
+          node --test tests/runtime/readme-docs.test.js
+          git diff --check
       - name: Check image output
         run: |
           find docs/screenshots -maxdepth 1 -name 'xconfig-*.webp' -printf '%f %k KB\n'
