@@ -115,7 +115,7 @@ try {
     let cropHeight = 0;
     if (cropBefore) {
       cropHeight = await locator.evaluate((modal, text) => {
-        const normalize = (value) => String(value || "").replace(/\\s+/g, " ").trim();
+        const normalize = (value) => String(value || "").replace(/\s+/g, " ").trim();
         const matches = [...modal.querySelectorAll("*")]
           .filter((node) => node.childElementCount === 0 && normalize(node.textContent) === text)
           .map((node) => Math.floor(node.getBoundingClientRect().top - modal.getBoundingClientRect().top))
