@@ -79,7 +79,7 @@ Bei einer wirklich frischen Installation ohne gespeicherte xConfig-Konfiguration
 
 ![Aktuelle Kachel Board-Treffermarkierungen mit zwei Schaltern](docs/screenshots/xconfig-card-board-markers.webp)
 
-In jeder Kachel findest du eine Vorschau, eine kurze Funktionsbeschreibung, die Gültigkeit für Spielmodi und die Bedienelemente. **Einstellungen** öffnet die Detailansicht, **README** springt zur passenden Modulbeschreibung. Bei zusammengefassten Funktionen lassen sich die einzelnen Teile direkt an der Kachel schalten.
+In jeder Kachel findest du eine Vorschau, eine kurze Funktionsbeschreibung, die Gültigkeit für Spielmodi und die Bedienelemente. Über **Einstellungen** öffnest du die Detailansicht, **README** springt zur passenden Modulbeschreibung. Bei zusammengefassten Funktionen lassen sich die einzelnen Teile direkt an der Kachel schalten.
 
 ## So sieht das Einstellungsfenster aus
 
