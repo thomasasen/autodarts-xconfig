@@ -55,6 +55,15 @@ Bei einer wirklich frischen Installation ohne gespeicherte xConfig-Konfiguration
 4. Öffne bei Bedarf über **Einstellungen** die Detailoptionen. Änderungen werden direkt gespeichert.
 5. Verwende **Exportieren** für eine Sicherung deiner Konfiguration, bevor du größere Änderungen vornimmst.
 
+## Im Überblick
+
+- Insgesamt `19` Module: `15` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
+- `↺ Zurücksetzen`: Setzt alle Einstellungen vollständig auf Standard zurück, deaktiviert alle Module, schaltet die Diagnose aus und entfernt globales Hintergrundbild sowie Dart-Upload.
+- `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
+- `Exportieren` / `Importieren`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.
+- Hintergrundbild: Die Kachel `Hintergrund` verwendet ein gemeinsames Wallpaper oder das Wallpaper der zuletzt angewendeten Vorlage in allen Spielansichten.
+- Bildgröße: Für das globale Wallpaper gilt ein empfohlenes Limit von `1,5 MiB`; der separate Dart-Upload wird kompakter gespeichert.
+
 ## Wo finde ich was?
 
 | Bereich | Inhalt |
@@ -77,15 +86,6 @@ In jeder Kachel findest du eine Vorschau, eine kurze Funktionsbeschreibung, die 
 ![Aktuelle Einstellungen der gruppierten Wurfanzeige](docs/screenshots/xconfig-settings-wurfanzeige.webp)
 
 Die Optionen sind nach Teilfunktion gegliedert. Auswahlfelder, Regler und Schalter speichern Änderungen direkt. Die **Diagnose**-Optionen sind für die Fehlersuche gedacht und sollten im normalen Betrieb ausgeschaltet bleiben.
-
-## Im Überblick
-
-- Insgesamt `19` Module: `15` Anzeigen und Komfortfunktionen sowie `4` Designmodule.
-- `↺ Zurücksetzen`: Setzt alle Einstellungen vollständig auf Standard zurück, deaktiviert alle Module, schaltet die Diagnose aus und entfernt globales Hintergrundbild sowie Dart-Upload.
-- `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
-- `Exportieren` / `Importieren`: Sichert Einstellungen als versioniertes JSON-Backup und übernimmt auch ältere oder teilweise inkompatible Backups fehlertolerant.
-- Hintergrundbild: Die Kachel `Hintergrund` verwendet ein gemeinsames Wallpaper oder das Wallpaper der zuletzt angewendeten Vorlage in allen Spielansichten.
-- Bildgröße: Für das globale Wallpaper gilt ein empfohlenes Limit von `1,5 MiB`; der separate Dart-Upload wird kompakter gespeichert.
 
 <!-- xconfig-generated:start -->
 ## Modul-Finder
