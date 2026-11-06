@@ -289,7 +289,7 @@ export const xconfigFeatureCopy = deepFreeze({
     visibleDescription: "Steuert ein gemeinsames Hintergrundbild und die Transparenz der Spielerfelder unter /matches.",
     visualDescription: "Das Wallpaper liegt hinter dem unveränderten Autodarts-Spielaufbau. Bildanpassung, Sichtbarkeit und Durchsichtigkeit der Spielerfelder lassen sich unabhängig von Schrift, Farben und Darts in der Wurfanzeige einstellen.",
     usefulWhen: "Wenn alle Spielvarianten denselben Hintergrund erhalten sollen.",
-    images: [image("Globaler Hintergrund", "templates-global-presets.webp")],
+    images: [image("Globales Hintergrundbild: aktuelle Einstellungen (Test-Fixture)", "xconfig-settings-background.webp"), image("Hintergrundwirkung einer Designvorlage", "templates-global-presets.webp")],
     fields: {
       applyMenuBackground: fieldCopy("Lädt und speichert zusätzlich das Menübild der Community-Vorlage für die Anzeige außerhalb von Matches."),
       backgroundDisplayMode: THEME_BACKGROUND_DISPLAY_FIELD,
@@ -341,7 +341,7 @@ export const xconfigFeatureCopy = deepFreeze({
       "Der optionale START-Badge bleibt beim Leg-Starter und ist unabhängig davon, wer gerade wirft.",
       "Bei vielen Spielern bleibt der aktive Spieler im Rotationsmodus oben sichtbar; die übrigen Spieler lassen sich weiter durchscrollen.",
     ],
-    images: [image("X01-Spiel-Layout", "theme-game-layout.webp")],
+    images: [image("Bildschirmprofile: aktuelle Einstellungen (Test-Fixture)", "xconfig-settings-screen-profiles.webp"), image("X01-Spiel-Layout", "theme-game-layout.webp")],
     fields: {
       screenProfile: fieldCopy("Wählt bisheriges Layout, Automatisch, Desktop, TV oder Hochformat."),
       boardShare: fieldCopy("Regelt im Querformat den Platzanteil für das Board. Im Hochformat begrenzt der Wert die Board-Größe relativ zur Fensterhöhe."),
@@ -371,7 +371,7 @@ export const xconfigFeatureCopy = deepFreeze({
     visibleDescription: "Wendet Hintergrundbild, Schrift und Farben gemeinsam an, ohne die Darts in der Wurfanzeige zu verändern.",
     visualDescription: "Kleine Vorschaubilder sind mitgeliefert und offline verfügbar. Beim Anwenden werden nur die benötigten Motive geladen und dauerhaft gespeichert. Bei einem Fehler bleibt die bisherige Darstellung erhalten; die Auswahl kann erneut angewendet werden. Die Aktion aktiviert Hintergrund sowie Schrift & Farben und ersetzt ein eigenes Hintergrundbild.",
     usefulWhen: "Wenn du einen vollständigen Look mit einem Klick auswählen möchtest.",
-    images: [image("Globale Vorlagen", "templates-global-presets.webp")],
+    images: [image("Designgalerie aus dem aktuellen xConfig-Renderer (Test-Fixture)", "xconfig-settings-design-gallery.webp"), image("Designwirkung: globale Vorlagen", "templates-global-presets.webp")],
     fields: { ...THEME_GLOBAL_TEMPLATE_PRESET_FIELD_COPY,
       includeSurround: fieldCopy("Übernimmt einen zugeordneten Surround beim nächsten Vorlagenwechsel. Ohne diese Auswahl bleibt der aktuelle Surround erhalten."),
       includeGlow: fieldCopy("Übernimmt den Glow beim nächsten Vorlagenwechsel. Ohne diese Auswahl bleiben die Glow-Einstellungen erhalten."),
@@ -407,7 +407,7 @@ export const xconfigFeatureCopy = deepFreeze({
       "Die aktive Restpunktzahl erhält einen Finish-Effekt. Der Balken stellt verbleibende Punkte relativ zum Startscore dar. Seine 170er-Zone ist eine Bereichsmarkierung und kein Nachweis eines aktuell möglichen Finishes.",
     featuresDetails: ["Zahlenhervorhebung und Balken bleiben unabhängig schaltbar. Farben und Animationen werden für beide Bereiche getrennt gespeichert."],
     usefulWhen: "Wenn du Checkout-Momente schneller am Score erkennen möchtest.",
-    images: [image("Finishbaren Restscore hervorheben", "animation-checkout-score-pulse.gif")],
+    images: [image("X01-Restscore: zwei unabhängige Schalter (Test-Fixture)", "xconfig-card-x01-score.webp"), image("Finishbaren Restscore hervorheben", "animation-checkout-score-pulse.gif")],
     fields: {
       effect: fieldCopy(
         "Wählt, ob die Restpunktzahl pulsiert, glüht, skaliert oder blinkt.",
@@ -742,7 +742,7 @@ export const xconfigFeatureCopy = deepFreeze({
     },
   }),
   "cricket-layout": featureCopy({
-    images: [image("Cricket-Layout: schematische Beispielansicht", "cricket-layout-example.png")],
+    images: [image("Cricket-/Tactics-Tabelle: aktuelle Kachel (Test-Fixture)", "xconfig-card-cricket-table.webp"), image("Cricket-Layout: schematische Beispielansicht", "cricket-layout-example.png")],
     cardDescription: "Gestaltet die Cricket-/Tactics-Tabelle mit passendem Layout, Zustandsfarben und Trefferfeedback.",
     visibleDescription: "Eine gemeinsame Tabellenkachel bietet Layout und Status/Effekte mit getrennten Schaltern.",
     visualDescription: "Layoutprofile verteilen Platz und Schriftgrößen. Farben und Muster zeigen Punktemöglichkeiten, Gegnerdruck und geschlossene Ziele; Trefferfeedback ergänzt kurze Hinweise. Native Marks, Zielreihenfolge und Spielerpositionen bleiben erhalten.",
@@ -908,7 +908,7 @@ export const xconfigFeatureCopy = deepFreeze({
     featuresDetails: ["Original-Marker ausblenden wirkt nur bei aktiven Dart-Bildern. Wird dieser Bereich ausgeschaltet, kehren die nativen Marker mit ihrer gespeicherten Hervorhebung zurück."],
     usefulWhen:
       "Wenn die Standardmarker zu klein oder zu unauffällig sind.",
-    images: [image("Treffermarkierungen hervorheben", "animation-dart-marker-emphasis.gif")],
+    images: [image("Board-Treffermarkierungen: zwei unabhängige Schalter (Test-Fixture)", "xconfig-card-board-markers.webp"), image("Treffermarkierungen hervorheben", "animation-dart-marker-emphasis.gif")],
     fields: {
       size: fieldCopy(
         "Vergrößert oder verkleinert die vorhandenen Marker.",
@@ -1105,6 +1105,7 @@ export const xconfigFeatureCopy = deepFreeze({
     featuresDetails: ["Alle drei Bereiche sind getrennt schaltbar. Die Dart-Bilder dieser Wurfanzeige und die Dart-Bilder auf dem Board besitzen jeweils eigene Designs und Größen."],
     usefulWhen: "Wenn du Punktwechsel im Spielbild leichter verfolgen möchtest.",
     images: [
+      image("Wurfanzeige: drei getrennte Schalter (Test-Fixture)", "xconfig-card-wurfanzeige.webp"),
       image("Punkte animiert zählen", "animation-turn-points-count.gif"),
       image("Punkte animiert zählen – Detail", "animation-turn-points-count-detail-readme.gif"),
     ],
