@@ -75,6 +75,15 @@ Bei einer wirklich frischen Installation ohne gespeicherte xConfig-Konfiguration
 
 **xConfig enthält 24 technische Features in 19 sichtbaren Kacheln.** Vier Kacheln fassen verwandte Funktionen zusammen. Die Schalter innerhalb dieser Kacheln bleiben getrennt: **Wurfanzeige** (3), **Board-Treffermarkierungen** (2), **X01-Restscore** (2) und **Cricket-/Tactics-Tabelle** (2). `Designvorlagen` ist eine Aktionskachel ohne eigenen Aktivierungsschalter.
 
+<details>
+<summary>Weitere aktuelle Kacheln: X01 und Cricket / Tactics</summary>
+
+![Aktuelle X01-Kacheln aus dem xConfig-Renderer](docs/screenshots/xconfig-overview-x01.webp)
+
+![Aktuelle Cricket- und Tactics-Kacheln aus dem xConfig-Renderer](docs/screenshots/xconfig-overview-cricket.webp)
+
+</details>
+
 ## So ist eine Kachel aufgebaut
 
 ![Aktuelle Kachel Board-Treffermarkierungen mit zwei Schaltern](docs/screenshots/xconfig-card-board-markers.webp)
