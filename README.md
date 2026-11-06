@@ -87,6 +87,8 @@ In jeder Kachel findest du eine Vorschau, eine kurze Funktionsbeschreibung, die 
 
 Die Optionen sind nach Teilfunktion gegliedert. Auswahlfelder, Regler und Schalter speichern Änderungen direkt. Die **Diagnose**-Optionen sind für die Fehlersuche gedacht und sollten im normalen Betrieb ausgeschaltet bleiben.
 
+Die Aufnahme zeigt einen Ausschnitt des scrollbaren Dialogs. Weitere Einstellungen folgen darunter; [die vollständige Feature-Referenz](docs/FEATURES.md) beschreibt alle verfügbaren Optionen.
+
 <!-- xconfig-generated:start -->
 ## Modul-Finder
 
