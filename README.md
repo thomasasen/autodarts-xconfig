@@ -8,56 +8,52 @@
 
 # xConfig für Autodarts
 
-> **Inoffizielle Erweiterung für Autodarts.** Visuelle Erweiterungen für bessere Lesbarkeit, klarere Hinweise, Themes und optionale Effekte.  
-> Die Spiellogik bleibt unverändert.
+> **Inoffizielle Erweiterung für Autodarts.** xConfig ergänzt die Spielansicht um Designvorlagen, besser lesbare Anzeigen und optionale visuelle oder akustische Effekte. Die Spielregeln und die Darterkennung werden nicht verändert.
 
-## Version 3.0: Migration auf die neue Autodarts-Oberfläche abgeschlossen
+Alle Einstellungen werden direkt über die xConfig-Oberfläche in Autodarts verwaltet. Einzelne Effekte können unabhängig aktiviert werden; eine vorhandene Konfiguration bleibt bei Updates erhalten.
 
-Die Migration aller xConfig-Module auf die neue Autodarts-Oberfläche ist abgeschlossen. Die Verwaltung verwendet angepasste Karten und Dialoge; alle Kacheln stehen gemeinsam auf einer Seite und sind nach **Design**, **Alle Modi**, **X01** und **Cricket / Tactics** geordnet.
+## Produktvorschau
 
-Noch konnten nicht alle Funktionen in jeder Spielsituation ausführlich getestet werden. Wir freuen uns deshalb über Rückmeldungen und Hinweise auf Fehler. Einen gefundenen Bug kannst du direkt als [GitHub-Issue melden](https://github.com/thomasasen/autodarts-xconfig/issues/new).
+Die folgenden Aufnahmen zeigen den **aktuellen xConfig-Renderer in einem reproduzierbaren Browser-Testaufbau**. Sie sind keine Aufnahmen aus einem angemeldeten Autodarts-Match. Die Spielbeispiele in den Funktionsabschnitten ergänzen diese Oberfläche.
 
-Viel Spaß beim Ausprobieren!
+![xConfig Design: vier aktuelle Funktionskacheln](docs/screenshots/xconfig-overview-design.webp)
 
-Bei einer frischen Installation und beim Anwenden von `Empfohlene Standards` bleiben zunächst alle Module ausgeschaltet. Aktiviere benötigte Module gezielt. Bereits gespeicherte Einstellungen bleiben beim Update erhalten.
+![xConfig Alle Modi: aktuelle Funktionskacheln](docs/screenshots/xconfig-overview-allmodes.webp)
 
 ## Installieren
 
-1. Installiere [Tampermonkey](https://www.tampermonkey.net/) in Chrome/Chromium 111 oder neuer beziehungsweise Firefox 121 oder neuer.
-2. Öffne die Erweiterungsdetails von Tampermonkey und aktiviere `Nutzerscripts zulassen` sowie `Zugriff auf Datei-URLs zulassen`.
-3. Klicke auf den Installationsbutton:
+1. Installiere [Tampermonkey](https://www.tampermonkey.net/) in einem unterstützten Browser. Die dokumentierten Test-Baselines sind Chrome/Chromium 111+ und Firefox 121+; eine Live-Kompatibilitätsgarantie für jede Version ist das nicht.
+2. Aktiviere in den Erweiterungseinstellungen von Tampermonkey die Ausführung von Nutzerscripts. Falls Tampermonkey einen Injection- oder Berechtigungshinweis anzeigt, folge diesem. Den Dateizugriff benötigst du nicht pauschal für die Autodarts-Webseite.
+3. Installiere das aktuelle stabile Userscript über den Button:
 
    [![Installieren](https://img.shields.io/badge/Installieren-autodarts--xconfig.user.js-1f6feb?style=for-the-badge)](https://github.com/thomasasen/autodarts-xconfig/releases/latest/download/autodarts-xconfig.user.js)
 
-4. Öffne die heruntergeladene Datei `autodarts-xconfig.user.js` und bestätige die Installation in Tampermonkey.
-5. Lade `https://play.autodarts.com/` neu. Öffne rechts oben über dein Profilbild das Benutzermenü und wähle dort direkt unter `Legal` den Eintrag **xConfig**.
+4. Bestätige die Installation der Datei `autodarts-xconfig.user.js` in Tampermonkey.
+5. Lade [play.autodarts.com](https://play.autodarts.com/) neu. Öffne rechts oben das Profilmenü und wähle **xConfig** direkt unter `Legal`.
 
-**Installiere immer nur die Datei `autodarts-xconfig.user.js`.** Der Button lädt automatisch die neueste stabile Version herunter.
+**Nur `.user.js` installieren.** Die Datei `autodarts-xconfig.meta.js` ist für die automatische Update-Prüfung bestimmt und wird nicht manuell installiert. Das Userscript läuft gemäß Metadaten auf `https://play.autodarts.com/*`, mit Ausnahme der Board-Verwaltungsseiten unter `/boards`.
 
-Die ebenfalls bei GitHub Releases angebotene Datei `autodarts-xconfig.meta.js` ist nur für die automatische Update-Prüfung bestimmt und muss nicht heruntergeladen oder installiert werden.
+<details>
+<summary>Tampermonkey: Berechtigungen und Injection-Hinweise</summary>
 
-![Tampermonkey Erweiterungseinstellungen](docs/screenshots/Erweiterung_Einstellung_Tempermonkey.png)
+![Erweiterungseinstellungen von Tampermonkey](docs/screenshots/Erweiterung_Einstellung_Tempermonkey.png)
 
-Wenn Tampermonkey einen Injection-Hinweis zeigt, aktiviere die dort empfohlene Browser-Einstellung:
+![Möglicher Tampermonkey-Injection-Hinweis](docs/screenshots/tempermonkey-injection.png)
 
-![Tampermonkey Injection-Hinweis](docs/screenshots/tempermonkey-injection.png)
+Die konkreten Schalter unterscheiden sich je nach Browser und Tampermonkey-Version. Das Userscript nutzt lokale Konfigurationsspeicherung und kann freigegebene GitHub-Ressourcen laden. Es benötigt keine Autodarts-Anmeldedaten.
+</details>
 
-Die Screenshots und Bezeichnungen in dieser Anleitung stammen aus einem Chrome-/Chromium-Setup. In anderen Browsern können Menüpunkte und Schalter leicht anders heißen oder an einer etwas anderen Stelle liegen.
+[Alle Releases](https://github.com/thomasasen/autodarts-xconfig/releases) · [Änderungsübersicht](CHANGELOG.md)
 
-[Releases und Downloads](https://github.com/thomasasen/autodarts-xconfig/releases) · [Changelog](CHANGELOG.md)
+## Nach der Installation
 
-## Was ist xConfig?
+Bei einer wirklich frischen Installation ohne gespeicherte xConfig-Konfiguration wird das Profil `Empfohlene Standards` vorbereitet. Es sind ausgewogene Presets vorbereitet; alle Module bleiben zunächst ausgeschaltet. Eine bestehende Konfiguration bleibt dagegen unverändert.
 
-`autodarts-xconfig` ergänzt Autodarts um Themes, Animationen und kleine Komfortfunktionen. Du kannst damit das Spiel übersichtlicher machen und die Oberfläche nach deinem Geschmack anpassen.
-
-Alles wird direkt im Spiel über **xConfig** eingestellt. Du findest den Eintrag rechts oben im Benutzermenü direkt unter `Legal`. Du musst nichts programmieren und keine Dateien ändern.
-
-## Was bringt es mir?
-
-- ein globaler Look aus Hintergrund, Schrift und fertigen Vorlagen
-- besser sichtbare Hinweise für Checkouts, Spielerwechsel und Treffer
-- Einstellungen direkt im Spiel statt in einzelnen Skripten
-- ein eigenes globales Wallpaper sowie unabhängig gestaltbare Wurffeld-Darts
+1. Öffne **xConfig** im Profilmenü direkt unter `Legal`.
+2. Wähle unter **Design** eine Vorlage oder stelle Hintergrund, Schrift und Bildschirmprofil einzeln ein.
+3. Aktiviere in **Alle Modi**, **X01** und **Cricket / Tactics** nur die benötigten Funktionen.
+4. Öffne bei Bedarf über **Einstellungen** die Detailoptionen. Änderungen werden direkt gespeichert.
+5. Verwende **Exportieren** für eine Sicherung deiner Konfiguration, bevor du größere Änderungen vornimmst.
 
 ## Im Überblick
 
@@ -68,135 +64,37 @@ Alles wird direkt im Spiel über **xConfig** eingestellt. Du findest den Eintrag
 - Hintergrundbild: Die Kachel `Hintergrund` verwendet ein gemeinsames Wallpaper oder das Wallpaper der zuletzt angewendeten Vorlage in allen Spielansichten.
 - Bildgröße: Für das globale Wallpaper gilt ein empfohlenes Limit von `1,5 MiB`; der separate Dart-Upload wird kompakter gespeichert.
 
-## Was du zuerst lesen solltest
-
-- Neu hier? Starte mit [Installieren](#installieren) und lies danach [Nach der Installation](#nach-der-installation).
-- Wenn das Menü da ist, helfen dir [Wo finde ich was?](#wo-finde-ich-was), [So ist eine Kachel aufgebaut](#so-ist-eine-kachel-aufgebaut) und [So sieht das Einstellungsfenster aus](#so-sieht-das-einstellungsfenster-aus).
-- Für einzelne Module nutzt du am schnellsten den [Modul-Finder](#modul-finder) oder direkt im Spiel den Button `📖 README`.
-- Wenn du Updates verstehen oder neu anstoßen willst, gehe zu [Updates erkennen und installieren](#updates-erkennen-und-installieren).
-- Nur wenn du am Repository arbeitest, ist der Abschnitt [Für Entwickler](#für-entwickler) relevant.
-
-## Nach der Installation
-
-Bei einer wirklich frischen Installation ohne vorhandene oder ältere xConfig-Einstellungen wird automatisch das Profil `Empfohlene Standards` angelegt. Dadurch sind ausgewogene Presets vorbereitet; alle Module bleiben zunächst ausgeschaltet. Eine bestehende Konfiguration bleibt dagegen unverändert und wird nicht mit dem empfohlenen Profil überschrieben.
-
-1. Öffne rechts oben über dein Profilbild das Benutzermenü und wähle direkt unter `Legal` den Eintrag **xConfig**.
-2. Stelle im Bereich `Design` Hintergrund, Schrift, Farben und das X01-Spiel-Layout ein oder wende eine Designvorlage an. Die übrigen Module findest du direkt darunter nach Spielbereich geordnet.
-3. Nutze `↺ Zurücksetzen`, wenn du bewusst mit vollständig deaktivierten Modulen und ohne globales Wallpaper oder Dart-Upload beginnen möchtest.
-4. Mit `Empfohlene Standards` kannst du das kuratierte Profil später erneut anwenden; eigenes Wallpaper und Dart-Upload bleiben dabei erhalten.
-
-![Aktuelle AD xConfig Übersicht](docs/screenshots/ad-xconfig-overview-v3.png)
-
-### Wo öffne ich xConfig?
-
-Klicke rechts oben auf dein Profilbild. Im seitlichen Benutzermenü steht **xConfig** direkt unter `Legal` und unmittelbar vor dem Bereich `Tools for Autodarts`.
-
-## Wenn AD xConfig nicht erscheint
-
-1. In Tampermonkey prüfen, ob `autodarts-xconfig` installiert und aktiviert ist.
-2. `https://play.autodarts.com/` beziehungsweise die noch verwendete `.io`-Adresse vollständig neu laden.
-3. In den Browsererweiterungen bei Tampermonkey `Nutzerscripts zulassen` und `Zugriff auf Datei-URLs zulassen` aktivieren.
-4. Falls Tampermonkey beim Installieren oder Aktualisieren einen zusätzlichen Tab geöffnet hat, die Installation dort vollständig bestätigen.
-5. Wenn ein Injection-Hinweis erscheint, die empfohlene Browser-Einstellung übernehmen.
-6. Danach rechts oben das Benutzermenü über das Profilbild öffnen und direkt unter `Legal` nach **xConfig** suchen.
-
 ## Wo finde ich was?
 
-- `Design`: Fertige Designvorlagen, Hintergrund, Schrift, Farben und das X01-Spiel-Layout.
-- `Alle Modi`: Anzeigen, Darts, Treffermarkierungen und Komfortfunktionen für alle Spielmodi.
-- `X01`: Checkout, Restscore, BUST und Board-Zoom.
-- `Cricket / Tactics`: Ziel- und Matrixeffekte für beide Spielmodi.
-- `⚙ Einstellungen`: Mit diesem Button öffnest du die Einstellungen einer Kachel.
-- `📖 README`: Mit diesem Button öffnest du die GitHub-README direkt an der passenden Modulstelle in einem neuen Tab.
-- An/Aus-Schalter: Hier schaltest du ein Modul direkt ein oder aus. Die Aktionskachel `Vorlagen` hat bewusst keinen Schalter.
+| Bereich | Inhalt |
+| --- | --- |
+| **Design** | Vorlagen, globaler Hintergrund, Schrift, Farben, Glow und Bildschirmprofile |
+| **Alle Modi** | Wurfanzeige, Treffermarker, Surrounds, Dartboard, Livebild und Komfortfunktionen |
+| **X01** | Restscore, Checkout-Vorschläge und -Ziele, BUST und Board-Zoom |
+| **Cricket / Tactics** | Tabellenlayout, Status- und Trefferfeedback sowie Board-Ziele |
 
-## Der obere Bereich im Menü
+**xConfig enthält 24 technische Features in 19 sichtbaren Kacheln.** Vier Kacheln fassen verwandte Funktionen zusammen. Die Schalter innerhalb dieser Kacheln bleiben getrennt: **Wurfanzeige** (3), **Board-Treffermarkierungen** (2), **X01-Restscore** (2) und **Cricket-/Tactics-Tabelle** (2). `Designvorlagen` ist eine Aktionskachel ohne eigenen Aktivierungsschalter.
 
-- `Zurück`: Schließt xConfig und stellt die zuvor geöffnete Autodarts-Seite einschließlich ihrer Filter in der Adresse wieder her.
-- `↺ Zurücksetzen`: Setzt alle Einstellungen vollständig auf Standard zurück. Alle Module werden deaktiviert, die Diagnose wird ausgeschaltet und globales Hintergrundbild sowie Dart-Upload werden entfernt.
-- `Empfohlene Standards`: Übernimmt ausgewogene Presets, schaltet alle Module aus und lässt globales Wallpaper sowie Dart-Upload unangetastet.
-- `Exportieren`: Erstellt ein lokales JSON-Backup. Eigenes Wallpaper und Dart-Bild sind standardmäßig enthalten, können für eine kleinere Datei aber abgewählt werden.
-- `Importieren`: Prüft ein Backup vor dem Speichern und zeigt, welche Einstellungen übernommen, migriert oder ausgelassen werden.
-- Versionsstatus: Hier siehst du, ob deine Version aktuell ist, ob ein Update verfügbar ist oder ob die Update-Prüfung fehlgeschlagen ist.
-- `Changelog` / `Was ist neu?`: Öffnet direkt die veröffentlichten Änderungen auf GitHub in einem neuen Tab.
-- `Neu prüfen`: Startet sofort eine neue Update-Prüfung.
-- Die native Autodarts-Kopfzeile bleibt sichtbar; alle vier xConfig-Bereiche sind gleichzeitig geöffnet.
+<details>
+<summary>Weitere aktuelle Kacheln: X01 und Cricket / Tactics</summary>
 
-## Einstellungen exportieren und importieren
+![Aktuelle X01-Kacheln aus dem xConfig-Renderer](docs/screenshots/xconfig-overview-x01.webp)
 
-Mit `Exportieren` lädst du ein versioniertes Backup aller AD xConfig Einstellungen herunter. Das Backup enthält keine Autodarts-Anmeldedaten und wird nicht an einen externen Dienst übertragen. Wenn `Eigenes Wallpaper und Dart-Bild einschließen` aktiv ist, werden auch lokal gespeicherte Bilder mitgesichert; dadurch kann die Datei deutlich größer werden.
+![Aktuelle Cricket- und Tactics-Kacheln aus dem xConfig-Renderer](docs/screenshots/xconfig-overview-cricket.webp)
 
-Beim `Importieren` wird die ausgewählte JSON-Datei zuerst vollständig geprüft. Der Prüfbericht zeigt gültige, migrierte und nicht mehr unterstützte Einstellungen einzeln an. Ein veraltetes oder aus einer neueren Version stammendes Feature bricht den Import nicht ab: kompatible Einstellungen werden weiterhin übernommen, unbekannte oder ungültige Werte werden ausgelassen.
-
-- `Sicher zusammenführen`: Überschreibt nur gültige Werte aus dem Backup. Fehlende oder inkompatible Einstellungen behalten ihren aktuellen Stand.
-- `Vollständig ersetzen`: Beginnt bei den heutigen Standards und wendet danach alle gültigen Backup-Werte an. Bilddaten, die im Export ausdrücklich nicht enthalten waren, bleiben erhalten.
-
-Erst `Import bestätigen` schreibt die geprüfte Konfiguration. Bei unlesbarem JSON, einer unbekannten Grundstruktur oder einem Speicherfehler bleibt die aktuelle Konfiguration unverändert.
-
-## Updates erkennen und installieren
-
-1. AD xConfig prüft direkt beim Start und danach regelmäßig im Hintergrund, ob auf GitHub eine neuere Version verfügbar ist. Wegen Zwischenspeicherung wird ohne Klick auf `Neu prüfen` höchstens ungefähr einmal pro Stunde wirklich online verglichen.
-2. Wenn ein Update verfügbar ist, erscheinen ein orangefarbener Punkt am Menüpunkt **xConfig** im Benutzermenü und die Meldung `Update verfügbar` im geöffneten xConfig-Menü.
-3. `Was ist neu?` öffnet den Changelog, damit du die Änderungen vor der Installation prüfen kannst.
-4. `Update installieren` öffnet die vollständige Userscript-Datei. Bestätige anschließend die Aktualisierung in Tampermonkey.
-
-Die automatische Versionsprüfung lädt nur die kleine Metadaten-Datei; das vollständige Userscript wird erst bei einer tatsächlichen Installation oder Aktualisierung abgerufen. Bestehende ältere Installationen bleiben über die dauerhafte Raw-Kompatibilitätsadresse updatefähig und können Zwischenversionen überspringen. Für eine manuelle Neuinstallation verwendest du den Abschnitt [Installieren](#installieren).
-
-Alle stabil veröffentlichten Versionen findest du unter [GitHub Releases](https://github.com/thomasasen/autodarts-xconfig/releases). Der [Changelog](CHANGELOG.md) beschreibt die Änderungen der einzelnen Versionen.
+</details>
 
 ## So ist eine Kachel aufgebaut
 
-![Beispiel für eine AD xConfig Kachel](docs/screenshots/ad-xconfig-kachel.png)
+![Aktuelle Kachel Board-Treffermarkierungen mit zwei Schaltern](docs/screenshots/xconfig-card-board-markers.webp)
 
-- Oben siehst du eine abgegrenzte Vorschau; darunter steht die Überschrift des Moduls.
-- Darunter steht eine kurze Beschreibung, was das Modul macht.
-- `Gilt für` zeigt dir, in welchen Spielmodi das Modul gedacht ist.
-- Die Zahl bei `Einstellungen` zeigt, wie viele Einstellmöglichkeiten es gibt.
-- `⚙ Einstellungen` öffnet das Einstellungsfenster dieser Kachel.
-- `📖 README` öffnet die GitHub-README direkt an der passenden Modulstelle.
-- Der Hinweis unten zeigt bei `Hintergrund` zum Beispiel an, ob schon ein eigenes Wallpaper gespeichert ist.
-- Der An/Aus-Schalter oben rechts aktiviert das jeweilige Modul; `Designvorlagen` ist stattdessen eine reine Aktionskachel ohne Schalter.
+In jeder Kachel findest du eine Vorschau, eine kurze Funktionsbeschreibung, die Gültigkeit für Spielmodi und die Bedienelemente. Über **Einstellungen** öffnest du die Detailansicht, **README** springt zur passenden Modulbeschreibung. Bei zusammengefassten Funktionen lassen sich die einzelnen Teile direkt an der Kachel schalten.
 
 ## So sieht das Einstellungsfenster aus
 
-![AD xConfig Einstellungsfenster](docs/screenshots/ad-xconfig-einstellungen.png)
+![Aktuelle Einstellungen der gruppierten Wurfanzeige](docs/screenshots/xconfig-settings-wurfanzeige.webp)
 
-- Oben findest du wieder den Button `📖 README`, der die GitHub-README direkt beim gerade geöffneten Modul öffnet.
-- Die Einstellungen sind in Gruppen aufgeteilt, damit du nicht alles auf einmal suchen musst.
-- Viele Gruppen funktionieren wie eine Einzelauswahl. Meist ist pro Gruppe nur eine Option gleichzeitig aktiv.
-- Die aktuell ausgewählte Option ist mit `Aktuell` markiert.
-- Manche Einstellungen sind einfache An/Aus-Schalter.
-- `Diagnose` ist nur für Entwicklung und Fehlersuche gedacht. Diese Option nur aktivieren, wenn du ausdrücklich dazu aufgefordert wirst. Sonst kann es zu unerwünschten Nebeneffekten kommen.
-
-## Globales Hintergrundbild
-
-![Theme-Hintergrundbild in AD xConfig](docs/screenshots/ad-xconfig-theme-background.png)
-
-In der Kachel `Hintergrund` kannst du ein eigenes Hintergrundbild hochladen und später wieder entfernen. Das Bild gilt für alle Spielansichten unter `/matches`. Empfohlen ist ein Bild bis `1,5 MiB`, damit Upload und Speicherung im Browser stabil bleiben.
-
-Eine Designvorlage kann das eigene Hintergrundbild durch ihr mitgeliefertes Bild ersetzen und aktiviert dabei `Hintergrund` und `Schrift & Farben`. Die Darts in der Wurfanzeige bleiben von Designvorlagen unverändert.
-
-Den globalen Hintergrund kannst du zusätzlich anpassen:
-
-- `Bildanpassung`: Hier legst du fest, wie das Bild platziert wird.
-- `Sichtbarkeit des Hintergrundbilds`: Hier regelst du, wie stark das Bild sichtbar bleibt.
-- `Durchsichtigkeit der Spielerfelder`: Hier bestimmst du, wie stark die Spielerfelder den Hintergrund durchlassen.
-
-Hinweis: Die Option `Diagnose` ist in allen Modulen nur für Fehlersuche gedacht. Im normalen Spielbetrieb sollte sie deaktiviert bleiben.
-
-## Bildschirmprofile und Community-Designs
-
-`Spiel-Layout` bietet neben `Bisheriges Layout` die Profile `Automatisch`, `Desktop`, `TV / Fernansicht` und `Hochformat`. Bestehende Einstellungen bleiben beim bisherigen Layout. Automatisch verwendet bei weniger als 900 Pixel verfügbarer Breite oder einem höheren als breiten Fenster das Hochformat. Board-Anteil, Textgröße und Nebenanzeigen sind einstellbar. Die Profile arbeiten mit den gemeinsamen Spieler-/Tabellenflächen der Spielmodi; bei einer unbekannten oder unvollständigen Oberfläche bleibt die native Anordnung erhalten.
-
-`Livebild optimieren` schärft ausschließlich das vorhandene Board-Kamerabild. `Dezent` entspricht Stärke 30, `Deutlich` Stärke 60. Die Darterkennung bleibt unverändert. Stärke 0 lässt das Bild unbearbeitet; hohe Werte können Bildrauschen verstärken. Die tatsächliche Wirkung und Grafikleistung hängen von Kamera, Browser und Hardware ab.
-
-`Board-Surround` bietet 34 Motive. Beim ersten Aktivieren wird das ausgewählte Motiv geladen und dauerhaft gespeichert. Der Rahmen bleibt beim Checkout-Zoom stehen. Unter `Schrift & Farben` ergänzt ein optionaler Glow den aktiven Spieler beziehungsweise Cricket-Spaltenkopf. Er kann gleichmäßig leuchten oder sanft pulsieren; bei reduzierter Bewegung bleibt er gleichmäßig.
-
-Die Vorlagen enthalten zusätzlich 78 aktuelle öffentliche Designs aus Autodarts Layouts, mit Suche nach Name, Autor und Format. Es sind an xConfig angepasste Vorlagen. Ein Vorlagenwechsel verändert Hintergrund, Schrift und Farben. `Surround übernehmen` und `Glow übernehmen` sind zunächst ausgeschaltet; ein zugeordnetes Extra wird nur bei ausdrücklicher Auswahl übernommen. Bildschirmprofil, Livebildfilter und Spieleffekte bleiben erhalten. Kontextabhängige Bilder für Cricket und Hochformat werden bei Bedarf geladen; ein Vorlagen-Menübild wird nur mit `Menühintergrund der Vorlage anwenden` aktiviert.
-
-Die Galerie verwendet kleine, mitgelieferte Vorschaubilder und funktioniert sofort offline. Vollständige Hintergrund- und Surround-Bilder werden erst beim Aktivieren beziehungsweise beim Wechsel in einen noch nicht gespeicherten Bildkontext geladen. Sie stammen aus dem zur xConfig-Version gehörenden festen GitHub-Release-Tag. Nach erfolgreicher Prüfsummenprüfung und Speicherung im Tampermonkey-Speicher sind geladene Motive auch nach Reload und xConfig-Updates offline verfügbar, solange ihr Bildinhalt unverändert bleibt. Bei Download- oder Speicherfehlern bleibt die bisherige Darstellung erhalten und xConfig zeigt einen Fehler mit erneuter Versuchsmöglichkeit. Der Bildspeicher ist von den Einstellungen getrennt; Einstellungsbackups behalten Bildschlüssel, eigene Uploads werden weiterhin nach der bisherigen Exportoption behandelt. Auf einem neuen Gerät werden die benötigten Bibliotheksbilder erneut geladen.
-
-Herkunft und Importverfahren sind unter [Community-Designs](src/assets/theme-presets/community/README.md) dokumentiert. Alle neuen Effekte sind standardmäßig ausgeschaltet. Die Kompatibilität wird durch gezielte DOM- und Konfigurationstests abgesichert; eine Liveprüfung aller Spielmodi und Hardwarekonfigurationen ist damit nicht ersetzt.
+Die Optionen sind nach Teilfunktion gegliedert. Auswahlfelder, Regler und Schalter speichern Änderungen direkt. Die **Diagnose**-Optionen sind für die Fehlersuche gedacht und sollten im normalen Betrieb ausgeschaltet bleiben.
 
 <!-- xconfig-generated:start -->
 ## Modul-Finder
@@ -243,7 +141,7 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#theme-global-presets)
 
-![Globale Vorlagen](docs/screenshots/templates-global-presets.webp)
+![Designgalerie aus dem aktuellen xConfig-Renderer (Test-Fixture)](docs/screenshots/xconfig-settings-design-gallery.webp)
 
 <a id="theme-global-background"></a>
 
@@ -255,7 +153,7 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#theme-global-background)
 
-![Globaler Hintergrund](docs/screenshots/templates-global-presets.webp)
+![Globales Hintergrundbild: aktuelle Einstellungen (Test-Fixture)](docs/screenshots/xconfig-settings-background.webp)
 
 <a id="template-global-typography"></a>
 
@@ -279,7 +177,7 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#theme-game-layout)
 
-![X01-Spiel-Layout](docs/screenshots/theme-game-layout.webp)
+![Bildschirmprofile: aktuelle Einstellungen (Test-Fixture)](docs/screenshots/xconfig-settings-screen-profiles.webp)
 
 ## Alle Modi
 
@@ -293,6 +191,8 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#live-board-enhancement)
 
+![Livebild-Einstellungen (Test-Fixture)](docs/screenshots/xconfig-settings-live-picture.webp)
+
 <a id="board-surround"></a>
 
 ### Board-Surround
@@ -303,6 +203,8 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#board-surround)
 
+![Surround-Auswahl (Test-Fixture)](docs/screenshots/xconfig-settings-surround.webp)
+
 <a id="bot-board-style"></a>
 
 ### Dartboard-Design
@@ -312,6 +214,8 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 - Wann sinnvoll? Wenn Bot-Partien ein eigenes Board erhalten sollen oder du dasselbe Board-Design in allen unterstützten Matches verwenden möchtest.
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#bot-board-style)
+
+![Dartboard-Designs (Test-Fixture)](docs/screenshots/xconfig-settings-dartboard-design.webp)
 
 <a id="animation-autodarts-animate-avg-trend-arrow"></a>
 <a id="animation-autodarts-animate-average-trend-arrow"></a>
@@ -339,7 +243,7 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-dartboard-marker-highlight)
 
-![Treffermarkierungen hervorheben](docs/screenshots/animation-dart-marker-emphasis.gif)
+![Board-Treffermarkierungen: zwei unabhängige Schalter (Test-Fixture)](docs/screenshots/xconfig-card-board-markers.webp)
 
 <a id="animation-autodarts-animate-take-out-darts-alert"></a>
 <a id="animation-autodarts-animate-remove-darts-notification"></a>
@@ -379,7 +283,7 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-turn-score-counter)
 
-![Punkte animiert zählen](docs/screenshots/animation-turn-points-count.gif)
+![Wurfanzeige: drei getrennte Schalter (Test-Fixture)](docs/screenshots/xconfig-card-wurfanzeige.webp)
 
 ## X01
 
@@ -396,7 +300,7 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#animation-autodarts-animate-checkout-score-highlight)
 
-![Finishbaren Restscore hervorheben](docs/screenshots/animation-checkout-score-pulse.gif)
+![X01-Restscore: zwei unabhängige Schalter (Test-Fixture)](docs/screenshots/xconfig-card-x01-score.webp)
 
 <a id="animation-autodarts-animate-checkout-target-highlights"></a>
 <a id="animation-autodarts-animate-checkout-board-targets"></a>
@@ -462,7 +366,7 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 [Alle Einstellungen und Optionen in der Feature-Referenz](docs/FEATURES.md#cricket-tactics-layout)
 
-![Cricket-Layout: schematische Beispielansicht](docs/screenshots/cricket-layout-example.png)
+![Cricket-/Tactics-Tabelle: aktuelle Kachel (Test-Fixture)](docs/screenshots/xconfig-card-cricket-table.webp)
 
 <a id="animation-autodarts-animate-cricket-target-highlighter"></a>
 <a id="animation-autodarts-animate-cricket-highlighter"></a>
@@ -477,36 +381,70 @@ Die Aktion `Empfohlene Standards` übernimmt ausgewogene Presets, schaltet alle 
 
 ![Cricket-Ziele hervorheben](docs/screenshots/animation-cricket-target-highlighter.png)
 <!-- xconfig-generated:end -->
+
+## Globales Hintergrundbild
+
+![Globaler Hintergrund: aktuelle Einstellungen](docs/screenshots/xconfig-settings-background.webp)
+
+In der Kachel **Hintergrund** verwaltest du ein gemeinsames Wallpaper für Spielansichten unter `/matches`. Eigene Bilder werden lokal verarbeitet und bis zum dokumentierten Limit von 1,5 MiB gespeichert. Du kannst die Bildanpassung, Sichtbarkeit und Transparenz der Spielerfelder getrennt einstellen. Eine angewendete Designvorlage kann das bestehende Wallpaper ersetzen, ohne die Dart-Symbole in der Wurfanzeige zu verändern.
+
+## Bildschirmprofile und Community-Designs
+
+![Bildschirmprofile: aktuelle Einstellmöglichkeiten](docs/screenshots/xconfig-settings-screen-profiles.webp)
+
+**Spiel-Layout** bietet `Bisheriges Layout`, `Automatisch`, `Desktop`, `TV` und `Hochformat`. Der automatische Modus wechselt bei schmalen oder hohen Fenstern; Board-Anteil, Textgröße, Nebenanzeigen, Spielerreihenfolge und Wechsel-Effekt sind anpassbar. Bei unbekanntem oder unvollständigem DOM bleibt die native Darstellung erhalten.
+
+**Designvorlagen** kombinieren Hintergrund, Schrift und Farben. Die Galerie enthält mitgelieferte und Community-Vorlagen, die durchsucht werden können. Ein zugeordneter Surround oder Glow wird nur übernommen, wenn die entsprechende Option aktiv ist. Die Wirkung der Vorlagen ist global; Bildschirmprofile und Spielfunktionen bleiben getrennt einstellbar.
+
+[Quellen und Importverfahren der Community-Vorlagen](src/assets/theme-presets/community/README.md) · [Alle Designoptionen](docs/FEATURES.md#theme-global-presets)
+
+## Einstellungen exportieren und importieren
+
+Mit **Exportieren** erhältst du ein versioniertes JSON-Backup. Eigene Bilder können auf Wunsch eingeschlossen werden; ohne Bilder ist die Datei kleiner. Es werden keine Autodarts-Anmeldedaten exportiert.
+
+Beim **Importieren** werden Werte vor dem Speichern geprüft. Unbekannte oder nicht mehr unterstützte Einstellungen werden ausgelassen. Du kannst **Sicher zusammenführen** (nur gültige Backup-Werte übernehmen) oder **Vollständig ersetzen** (aktuelle Standardkonfiguration plus gültige Backup-Werte) auswählen. Erst **Import bestätigen** schreibt die neue Konfiguration.
+
+**Empfohlene Standards** setzt kuratierte Werte, deaktiviert aber alle Module und lässt eigene Uploads erhalten. **↺ Zurücksetzen** setzt sämtliche Module auf ihre Ausgangswerte zurück und entfernt auch das globale Wallpaper und den eigenen Dart-Upload. Ein Backup ist vor dem vollständigen Zurücksetzen sinnvoll.
+
+## Updates erkennen und installieren
+
+xConfig zeigt verfügbare Updates im Profilmenü und in der eigenen Oberfläche an. Über **Was ist neu?** kommst du zum Changelog; **Neu prüfen** startet eine zusätzliche Versionskontrolle. **Update installieren** öffnet die vollständige `.user.js`-Datei zur Bestätigung in Tampermonkey. Die automatische Prüfung verwendet die kleinere `.meta.js`-Datei.
+
+Eine bestehende Konfiguration bleibt bei Updates grundsätzlich erhalten. Bei Problemen prüfe die installierte Version in Tampermonkey und installiere die aktuelle [stabile Version](https://github.com/thomasasen/autodarts-xconfig/releases/latest) erneut.
+
+## Kompatibilität und Einschränkungen
+
+xConfig ist eine inoffizielle Erweiterung für die aktuelle Autodarts-Weboberfläche. Die Darstellung hängt von den von Autodarts gelieferten DOM-Strukturen ab. Nicht jede Kombination aus Browser, Bildschirm, Spielmodus, Kamera und Drittanbieter-Erweiterung ist live geprüft. Wenn ein Element nicht zuverlässig erkannt wird, kann die Funktion ausbleiben, ohne die Spiellogik zu beeinflussen. Animationen können durch reduzierte Bewegung des Betriebssystems eingeschränkt werden.
+
+**Livebild optimieren** verändert nur die Darstellung des Kamerabildes, nicht die Darterkennung. **Cricket/Tactics** verfügt über eigene Tabellen- und Zielzustände. Die in dieser README gezeigten xConfig-Dialoge stammen aus reproduzierbaren Browser-Fixtures mit dem aktuellen Renderer, nicht aus einem privaten Autodarts-Konto.
+
+## Wenn xConfig nicht erscheint
+
+1. In Tampermonkey prüfen, ob `autodarts-xconfig` installiert und aktiviert ist.
+2. `https://play.autodarts.com/` neu laden und das Profilmenü erneut öffnen.
+3. Bei Browser- oder Tampermonkey-Hinweisen die Nutzerscript-Ausführung beziehungsweise Injection-Einstellungen prüfen.
+4. Sicherstellen, dass die Installation des vollständigen `.user.js`-Skripts bestätigt wurde, und doppelte ältere Kopien deaktivieren.
+5. Bei weiterhin fehlender Oberfläche Browser, Tampermonkey-Version, xConfig-Version und Fehlermeldungen in einem [GitHub-Issue](https://github.com/thomasasen/autodarts-xconfig/issues/new) dokumentieren.
+
 ## Weitere Dokumentation
 
-### Für Nutzer
-
-- [Änderungen / Changelog](CHANGELOG.md)
-- [Feature-Übersicht](docs/FEATURES.md)
-
-### Für Entwicklung und Maintenance
-
+- [Ausführliche Feature-Referenz mit allen Feldern und Optionen](docs/FEATURES.md)
+- [Changelog](CHANGELOG.md)
 - [Technische Architektur](docs/TECHNICAL-ARCHITECTURE.md)
 - [Runtime-Entrypoints](docs/RUNTIME-ENTRYPOINTS.md)
-- [Performance-Audit](docs/PERFORMANCE-AUDIT.md)
 - [QA-Checkliste](docs/QA-CHECKLIST.md)
-- [Dart-Rule-Module](docs/DART-RULE-MODULES.md)
-- [Dart-Rules-Referenz](docs/DART-RULES-REFERENCE.md)
-- [Dart-Rule-Audit](docs/DART-RULE-AUDIT.md)
-- [Legacy-Konfigurationspfade](docs/LEGACY-CONFIG-DEPRECATION.md)
-- [UI-/UX-Finalisierung](docs/UI-UX-FINALIZATION.md)
-- [Archivierte Migrationsdokumente](docs/archive/README.md)
+- [Dart-Regeln](docs/DART-RULES-REFERENCE.md)
 
 ## Für Entwickler
 
-Wenn du xConfig nur nutzen möchtest, kannst du diesen Abschnitt überspringen. Für Beiträge, lokale Prüfungen und Release-nahes Arbeiten sind diese Befehle relevant:
+Die Feature-Beschreibungen werden aus `src/features/xconfig-ui/copy.js`, `descriptors.js` und `presentation-groups.js` über `scripts/sync-xconfig-docs.mjs` synchronisiert. Änderungen an den generierten Bereichen gehören deshalb in die Quellen, nicht nur in die Markdown-Dateien. Screenshots mit dem aktuellen Renderer lassen sich über `scripts/capture-xconfig-docs.mjs` in einem isolierten Playwright-Testaufbau neu aufnehmen.
 
 ```bash
-npm install
-npm run lint
-npm run check:syntax
-npm run build
-npm test
-npm run check:changelog
-npm run verify
+npm ci
+npm run sync:xconfig-docs
+node --test tests/runtime/readme-docs.test.js
+# Für lokale Screenshot-Aufnahmen: Chromium und ffmpeg installieren
+node scripts/capture-xconfig-docs.mjs
 ```
+
+Die generierten Abschnitte beginnen bei `<!-- xconfig-generated:start -->` und enden bei `<!-- xconfig-generated:end -->`. Runtime-Dateien und Spiellogik sind von dieser Dokumentation getrennt.
